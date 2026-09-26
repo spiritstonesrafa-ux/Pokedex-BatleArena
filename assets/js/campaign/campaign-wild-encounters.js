@@ -8,7 +8,7 @@
   const MAX_CAPTURES_PER_REGION = 9;
   const MAX_REGION_1_CAPTURES = MAX_CAPTURES_PER_REGION;
   const CAPTURE_CHANCE = 0.72;
-  const RARITY_WEIGHTS = Object.freeze({ COMMON: 70, UNCOMMON: 25, RARE: 5 });
+  const RARITY_WEIGHTS = Object.freeze({ COMMON: 60, UNCOMMON: 25, RARE: 15 });
   const REGIONS = Object.freeze({
     'region-1': Object.freeze({
       name: 'Região 1', biome: 'mata', zoneLabel: 'Explorar mata',

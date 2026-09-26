@@ -317,7 +317,7 @@ test('Wild capture — suspense precedes both the success and escape result', ()
   }
 });
 
-test('Wild Phase 2 — three thematic pools use 70/25/5 weighted rarity without reserved species', () => {
+test('Wild exploration — thematic pools use 60/25/15 weighted rarity without reserved species', () => {
   const reserved = new Set([
     ...Catalog.MASTER_SPECIES, ...Catalog.SUPER_TEAM,
     ...Catalog.LEGENDARY_TRIAL_TEAM, ...Catalog.MYTHICAL_TRIAL_TEAM,
@@ -325,7 +325,7 @@ test('Wild Phase 2 — three thematic pools use 70/25/5 weighted rarity without 
   ].map(pokemon => pokemon.id));
   assert.deepEqual(Object.keys(Wild.REGIONS), ['region-1', 'region-2', 'region-3']);
   assert.equal(Wild.REGIONS['region-endgame'], undefined);
-  assert.deepEqual(Wild.RARITY_WEIGHTS, { COMMON: 70, UNCOMMON: 25, RARE: 5 });
+  assert.deepEqual(Wild.RARITY_WEIGHTS, { COMMON: 60, UNCOMMON: 25, RARE: 15 });
   assert.equal(Wild.REGION_POOLS['region-1'], Wild.REGION_1_POOL);
   for (const [regionId, config] of Object.entries(Wild.REGIONS)) {
     const pool = Wild.REGION_POOLS[regionId];
@@ -339,7 +339,7 @@ test('Wild Phase 2 — three thematic pools use 70/25/5 weighted rarity without 
       assert.ok(pokemon.bst >= config.minBst && pokemon.bst <= config.maxBst);
       assert.ok(Catalog.DRAFT.some(candidate => candidate.id === id));
     }
-    for (const [roll, rarity] of [[0.3, 'COMMON'], [0.82, 'UNCOMMON'], [0.98, 'RARE']]) {
+    for (const [roll, rarity] of [[0.3, 'COMMON'], [0.6, 'UNCOMMON'], [0.85, 'RARE']]) {
       assert.equal(Wild.getRarity(regionId, Wild.choose([], roll, regionId)), rarity);
     }
     const commonIds = pool.filter(id => Wild.getRarity(regionId, id) === 'COMMON');
@@ -542,10 +542,17 @@ test('Wild exploration — nine thematic points have distinct map targets and sa
         assert.ok(!pokemon.legendary && !pokemon.mythical && !reserved.has(id));
         assert.ok(pokemon.types.some(type => point.types.includes(type)));
       }
-      for (const [roll, rarity] of [[0.3, 'COMMON'], [0.82, 'UNCOMMON'], [0.98, 'RARE']]) {
+      for (const [roll, rarity] of [[0.3, 'COMMON'], [0.6, 'UNCOMMON'], [0.85, 'RARE']]) {
         const id = Wild.choose([], roll, regionId, point.id);
         assert.equal(Wild.getRarity(regionId, id, point.id), rarity);
       }
+      const bands = { COMMON: 0, UNCOMMON: 0, RARE: 0 };
+      for (let index = 0; index < 100; index++) {
+        const id = Wild.choose([], (index + .5) / 100, regionId, point.id);
+        bands[Wild.getRarity(regionId, id, point.id)]++;
+      }
+      assert.deepEqual(bands, { COMMON: 60, UNCOMMON: 25, RARE: 15 },
+        `${point.id} should honor the new base odds`);
     }
   }
   assert.equal(Wild.isPointId('region-1', 'r2-volcano'), false);
@@ -613,6 +620,7 @@ test('Wild exploration — rarity is prominent before choosing to leave or fight
   assert.match(container.innerHTML, /Local: Santuário/);
   assert.match(container.innerHTML, /wild-rarity-badge--rare/);
   assert.match(container.innerHTML, /RARIDADE: RARO/);
+  assert.match(container.innerHTML, /15% dos encontros/);
   assert.match(container.innerHTML, /Deixar ir e explorar novamente/);
   assert.match(container.innerHTML, /Enfrentar para tentar capturar/);
   buttons.get('#pickerBack').onclick();

@@ -92,7 +92,7 @@
     const point = Wild.getPoint(wild.active.regionId, wild.active.pointId);
     const rarity = Wild.getRarity(wild.active.regionId, pokemon.id, wild.active.pointId);
     const rarityLabel = { COMMON: 'COMUM', UNCOMMON: 'INCOMUM', RARE: 'RARO' }[rarity] || 'DESCONHECIDA';
-    const rarityHint = { COMMON: '70%', UNCOMMON: '25%', RARE: '5%' }[rarity] || '';
+    const rarityHint = { COMMON: '60%', UNCOMMON: '25%', RARE: '15%' }[rarity] || '';
     this.container.innerHTML = `
       <section class="campaign-shell wild-encounter-screen" data-region="${wild.active.regionId}">
         <button id="pickerBack" class="campaign-secondary" type="button">← Deixar ir e explorar novamente</button>

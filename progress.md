@@ -2,6 +2,14 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 26/09/2026: raros mais frequentes na exploração
+
+- A chance-base de encontrar Pokémon raros subiu de 5% para 15%. Os encontros comuns passaram a 60%; os incomuns permanecem em 25%.
+- O aviso de raridade, os testes e a documentação atual refletem a nova distribuição. As regras de captura e seus limites não mudaram.
+- Validação automatizada: **824/824** testes da suíte completa aprovados.
+
+---
+
 ## Atualização — 26/09/2026: nove pontos de exploração selvagem
 
 - Cada uma das Regiões 1, 2 e 3 agora tem três pontos temáticos no mapa; o avatar caminha até o ponto selecionado. Cada ponto permite três capturas bem-sucedidas, totalizando até 27. A Região Final continua sem encontros.
