@@ -96,11 +96,11 @@
       LEGENDARY: 'LENDÁRIO', MYTHICAL: 'MÍTICO'
     }[rarity] || 'DESCONHECIDA';
     const rarityHint = {
-      COMMON: '55%', UNCOMMON: '25%', RARE: '15%',
-      LEGENDARY: '5%', MYTHICAL: '5%'
+      COMMON: '45%', UNCOMMON: '25%', RARE: '20%',
+      LEGENDARY: '10%', MYTHICAL: '10%'
     }[rarity] || '';
     const rarityFrequency = rarity === 'LEGENDARY' || rarity === 'MYTHICAL'
-      ? '5% dos encontros (lendários e míticos juntos)'
+      ? '10% dos encontros (lendários e míticos juntos)'
       : rarityHint + ' dos encontros';
     this.container.innerHTML = `
       <section class="campaign-shell wild-encounter-screen" data-region="${wild.active.regionId}">

@@ -14,7 +14,7 @@ Na Fase 2, as Regiões 2 e 3 também recebem pontos de exploração. Cada regiã
 
 A Fase 3 acrescenta cenas por região, efeitos procedurais de captura, botão de som e ajustes de celular/acessibilidade sem alterar as regras. Detalhes e checklist de conferência manual em `CAMPAIGN_WILD_PHASE_3.md`.
 
-**Regra atual:** cada uma das três primeiras regiões oferece três pontos distintos de exploração, com até três capturas bem-sucedidas em cada ponto (27 no total). A distribuição-base é 55% comum, 25% incomum, 15% raro e 5% especial (lendário ou mítico). Antes da luta, o jogador vê a raridade e escolhe se deixa o Pokémon ir para explorar de novo ou se enfrenta o selvagem. Nenhuma espécie dos quatro desafios finais ou do Super Treinador aparece no sorteio. O limite antigo de duas capturas por região e a distribuição de raridade descritos nas fases históricas acima não se aplicam mais. Detalhes em `CAMPAIGN_WILD_NINE_POINTS.md` e `CAMPAIGN_WILD_SPECIAL_ENCOUNTERS.md`.
+**Regra atual:** cada uma das três primeiras regiões oferece três pontos distintos de exploração, com até três capturas bem-sucedidas em cada ponto (27 no total). A distribuição-base é 45% comum, 25% incomum, 20% raro e 10% especial (lendários e míticos juntos). Antes da luta, o jogador vê a raridade e escolhe se deixa o Pokémon ir para explorar de novo ou se enfrenta o selvagem. Nenhuma espécie dos quatro desafios finais ou do Super Treinador aparece no sorteio. O limite antigo de duas capturas por região e a distribuição de raridade descritos nas fases históricas acima não se aplicam mais. Detalhes em `CAMPAIGN_WILD_NINE_POINTS.md` e `CAMPAIGN_WILD_SPECIAL_ENCOUNTERS.md`.
 
 ## Draft expansion: Seleção Inicial de 450 Pokémon
 
@@ -147,31 +147,28 @@ A interface (`assets/js/campaign/campaign-view.js` e `assets/css/campaign.css`) 
 
 ---
 
-## Provas do Endgame (3 contra 1): Prova Lendária, Mítica, dos Titãs e Celestial
-
-As quatro Provas de Endgame servem como preparação avançada para o confronto final contra o Super Treinador. Originalmente executadas em formato de equipe 3 contra 3 com escolha de recompensa ao término, as Provas utilizam o formato **3 contra 1**:
-
-### 1. Seleção Prévia do Adversário
-- **Visualização Clara dos Três Candidatos:** Na tela de preparação da Prova, o jogador visualiza os três chefes disponíveis com seus tipos e atributos.
-- **Escolha de Um Adversário:** O jogador escolhe exatamente **um** adversário para enfrentar antes de iniciar a batalha.
-- **Identificação de Posse e Prevenção de Duplicatas:** Candidatos já presentes no elenco do jogador são destacados visualmente com a tag "Já no elenco" e desabilitados para seleção antes do primeiro resgate, impedindo que uma escolha gere Pokémon duplicado.
-- **Seleção da Equipe do Jogador:** O jogador deve obrigatoriamente selecionar três Pokémon do seu elenco, preservando a personalização de golpes já implementada.
-- **Prévia Tática Segmentada:** O guia de confronto (`campaign-matchup-guide.js`) avalia tipos, riscos e vantagens exclusivamente contra o adversário individual selecionado. Se nenhum adversário estiver selecionado, a prévia aguarda a seleção.
-- **Validação de Início:** O botão de iniciar a Prova exige que um adversário válido esteja selecionado e que os três Pokémon do jogador estejam escolhidos. Ao navegar para fora ou alternar de Prova, a seleção de adversário é redefinida com segurança para evitar reutilizações acidentais.
-
-### 2. Motor de Batalha e Formato 3 contra 1 (`TRIAL_3X1`)
-- **Equipe Real 3 contra 1:** A batalha é inicializada no motor com três Pokémon reais na equipe do jogador e estritamente um único integrante real na equipe adversária. Não são gerados adversários vazios ou falsos reservas.
-- **Resolução Imediata de Vitória:** O motor de combate (`BattleEngine`) reconhece a derrota do único adversário como vitória imediata (`PLAYER_WIN`), emitindo os eventos de conclusão sem transitar para espera de substituição da IA nem requisitar troca indevida.
-- **Substituições do Jogador:** As trocas do jogador entre os seus 3 integrantes continuam funcionando com total fidelidade tática.
-- **Tratamento de Derrota:** Caso os três Pokémon do jogador sejam derrotados, a Prova é computada como derrota sem concessão de recompensa, incrementando o contador de tentativas (`attempts`) e permitindo tentar novamente contra o mesmo ou outro adversário.
-
-### 3. Recompensa Direta e Persistência
-- **Recompensa Única e Imediata:** Ao vencer, o jogador ganha o direito de resgatar **exatamente o Pokémon enfrentado**. A tela de vitória exibe a confirmação direta desse Pokémon, sem oferecer uma nova escolha entre os três.
-- **Uma Recompensa por Prova:** Cada Prova concede no máximo uma recompensa de Pokémon (`rewardClaimed: true`). Após o resgate, a Prova pode ser repetida para treino/conquista, mas novas vitórias não concedem novos Pokémon.
+## Provas do Endgame (3 contra 3): Prova Lendária, Mítica, dos Titãs e Celestial
+ 
+As quatro Provas de Endgame servem como preparação avançada para o confronto final contra o Super Treinador. As Provas funcionam no formato canônico de equipe **3 contra 3**:
+ 
+### 1. Preparação da Batalha
+- **Equipe Fixa de Três Chefes:** Na tela de preparação da Prova, o jogador visualiza os três chefes que compõem a equipe adversária completa, com seus tipos e atributos.
+- **Seleção da Equipe do Jogador:** O jogador escolhe exatamente **três** Pokémon de seu elenco para a batalha, mantendo a personalização de golpes já implementada.
+- **Prévia Tática Completa:** O guia de confronto (`campaign-matchup-guide.js`) avalia tipos, riscos e vantagens contra a equipe adversária completa de três Pokémon.
+- **Validação de Início:** O botão de iniciar exige que os três Pokémon do jogador estejam selecionados sem duplicatas.
+ 
+### 2. Motor de Batalha (Formato 3 contra 3)
+- **Batalha Real 3 contra 3:** A batalha utiliza o fluxo padrão de equipe (3 Pokémon do jogador contra os 3 chefes da Prova).
+- **Substituições e KOs:** O nocaute do primeiro ou segundo inimigo aciona a entrada dos próximos chefes da equipe. Apenas após a derrota dos 3 Pokémon inimigos é declarada a vitória (`PLAYER_WIN`).
+- **Tratamento de Derrota:** Caso os três Pokémon do jogador sejam derrotados, a Prova é registrada como derrota sem concessão de recompensa, incrementando o contador de tentativas (`attempts`) e permitindo tentar novamente.
+ 
+### 3. Recompensa e Persistência
+- **Escolha de Recompensa após Primeira Vitória:** Ao vencer a Prova pela primeira vez, são disponibilizados os três Pokémon que compõem a Prova. O jogador escolhe **exatamente um** para integrar seu elenco permanente.
+- **Uma Recompensa por Prova:** Cada Prova concede no máximo um Pokémon (`rewardClaimed: true`). Após o resgate, a Prova pode ser repetida para treino/conquista, mas novas vitórias não concedem novo Pokémon.
 - **Compatibilidade Retroativa com Saves Legados:**
-  - Saves antigos que possuam uma vitória pendente obtida pelo fluxo anterior 3 contra 3 (contendo os 3 candidatos originais) têm suas opções integralmente preservadas na sanitização do store (`campaign-store.js`) e continuam permitindo o resgate conforme a regra antiga.
-  - Novas vitórias gravam estritamente o candidato único enfrentado (`candidates: [opponentPokemonId]`), que permanece inalterado e seguro mesmo se o jogador recarregar a página antes de confirmar o resgate.
-- **Preservação dos Outros Modos:** O formato 3 contra 1 é estritamente restrito a essas quatro Provas. Batalhas normais 3 contra 3 (Mestres), Super Treinador, Shadow Super Trainer, Final Stand e Batalha Rápida permanecem inalterados.
+  - Saves antigos que possuam `pendingReward` contendo 3 candidatos continuam permitindo escolher um entre os 3.
+  - Saves legados do período transitório 3x1 com `pendingReward` contendo apenas o Pokémon enfrentado têm sua recompensa preservada intacta (sem alteração retroativa silenciosa).
+  - Campanhas sem Prova concluída jogam normalmente no novo formato 3x3.
 
 ---
 

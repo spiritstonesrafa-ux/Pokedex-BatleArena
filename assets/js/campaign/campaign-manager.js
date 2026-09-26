@@ -9,19 +9,21 @@
  CampaignManager.prototype.getBattleConfig=function(kind,id,teamIds,options){
     if(kind!=='LEGENDARY_TRIAL'&&kind!=='MYTHICAL_TRIAL'&&kind!=='TITANS_TRIAL'&&kind!=='CELESTIAL_TRIAL')return previousBattle.call(this,kind,id,teamIds);
     if(!this.canChallenge(kind))throw new Error('Desafio indisponível.');
-    const team=[...new Set((teamIds||[]).map(Number))];
-    if(team.length!==3||team.some(x=>!this.getRosterIds().includes(x)))throw new Error('Escolha exatamente três Pokémon do elenco da campanha.');
+    let actualTeamIds = teamIds;
+    if(Array.isArray(id) && teamIds === undefined){
+      actualTeamIds = id;
+    }
+    const rawList = (actualTeamIds || []).map(Number);
+    const team = [...new Set(rawList)];
+    if(rawList.length !== 3 || team.length !== 3 || team.some(x => !this.getRosterIds().includes(x))) {
+      throw new Error('Escolha exatamente três Pokémon do elenco da campanha.');
+    }
     const d=trialDefinition[kind];
-    const oppId=(id!==null&&id!==undefined&&Number.isInteger(Number(id)))?Number(id):Number(options?.opponentPokemonId||options?.opponentId||(typeof id==='object'&&id?(id.opponentPokemonId||id.opponentId):NaN));
-    if(!Number.isInteger(oppId)||!d.team.some(p=>p.id===oppId))throw new Error('Escolha um adversário válido para a Prova.');
-    const t=trials(this)[d.key];
-    if(!t.rewardClaimed&&this.getRosterIds().includes(oppId))throw new Error('Este adversário já pertence ao seu elenco.');
-    const candidate=d.team.find(p=>p.id===oppId);
-    const candidateName=candidate?(candidate.name.charAt(0).toUpperCase()+candidate.name.slice(1)):'Guardião';
+    const enemy=d.team.map(p=>p.id);
     return {
       playerTeamIds:team,
-      enemyTeamIds:[oppId],
-      metadata:{mode:'CAMPAIGN',kind,id:oppId,opponentPokemonId:oppId,battleFormat:'TRIAL_3X1',opponentName:`${d.name} — ${candidateName}`},
+      enemyTeamIds:enemy,
+      metadata:{mode:'CAMPAIGN',kind,id:kind,opponentName:d.name},
       modifiers:{}
     };
   };
@@ -30,15 +32,12 @@
     if(kind!=='LEGENDARY_TRIAL'&&kind!=='MYTHICAL_TRIAL'&&kind!=='TITANS_TRIAL'&&kind!=='CELESTIAL_TRIAL')return previousRecord.call(this,result);
     const d=trialDefinition[kind],t=trials(this)[d.key],battleId=result.battleId;
     if(typeof battleId!=='string'||this.data.processedBattleIds.includes(battleId))return {processed:false,duplicate:true};
-    const oppId=Number(result.opponentPokemonId??result.id);
-    if(!Number.isInteger(oppId)||!d.team.some(p=>p.id===oppId))throw new Error(`Adversário inválido para a ${d.name}.`);
-    if(result.winner==='player'&&!t.completed&&!t.rewardClaimed&&this.getRosterIds().includes(oppId))throw new Error('Adversário já pertence ao seu elenco.');
     this.data.processedBattleIds.push(battleId);
     this.data.processedBattleIds=this.data.processedBattleIds.slice(-C.MAX_PROCESSED);
     t.attempts++;
     if(result.winner==='player'&&!t.completed){
       t.completed=true;
-      this.data.pendingReward={kind,challengeId:d.key,candidates:[oppId]};
+      this.data.pendingReward={kind,challengeId:d.key,candidates:d.team.map(x=>x.id)};
     }
     this.save('TRIAL_RECORDED');
     return {processed:true,pendingReward:this.data.pendingReward};

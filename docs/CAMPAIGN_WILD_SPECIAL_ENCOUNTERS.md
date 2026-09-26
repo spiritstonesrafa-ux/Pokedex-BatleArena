@@ -1,6 +1,6 @@
 # Encontros especiais selvagens
 
-Cada exploração nas três primeiras regiões usa a distribuição-base: **55% comum, 25% incomum, 15% raro e 5% especial**. A faixa especial é compartilhada entre lendários e míticos; não são 5% para cada grupo. Em cada ponto, o sorteio considera apenas espécies especiais compatíveis com seus tipos, ainda não pertencentes ao elenco. Se uma faixa não tiver candidatos, as faixas restantes são normalizadas.
+Cada exploração nas três primeiras regiões usa a distribuição-base: **45% comum, 25% incomum, 20% raro e 10% especial**. A faixa especial é compartilhada entre lendários e míticos (10% especial = lendários e míticos juntos); não são 10% para cada grupo. Em cada ponto, o sorteio considera apenas espécies especiais compatíveis com seus tipos, ainda não pertencentes ao elenco. Se uma faixa não tiver candidatos, as faixas restantes são normalizadas.
 
 Há **25 espécies especiais** cadastradas para encontros: 19 lendárias já presentes no catálogo e seis míticas acrescentadas para esta experiência. Todas têm metadados e quatro golpes compatíveis com a batalha offline. A classificação dos seis míticos foi conferida na [PokéAPI](https://pokeapi.co/docs/v2).
 

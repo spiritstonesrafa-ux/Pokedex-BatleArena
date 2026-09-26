@@ -249,63 +249,40 @@
     if (!definition) return renderPicker.call(this);
 
     const roster = this.manager.getRoster();
-    const ownedIds = new Set(this.manager.getRosterIds());
     const trialState = this.manager.getState().endgameTrials?.[definition.key] || {};
     const isRewardClaimed = Boolean(trialState.rewardClaimed);
 
-    const selectedOpponentId = (this.pending.opponentId !== undefined && this.pending.opponentId !== null)
-      ? Number(this.pending.opponentId) : null;
-    const selectedOpponent = selectedOpponentId ? definition.team.find(p => p.id === selectedOpponentId) : null;
-    const hasValidOpponent = Boolean(selectedOpponent && (isRewardClaimed || !ownedIds.has(selectedOpponent.id)));
-
-    const candidateCards = definition.team.map(pokemon => {
-      const isOwned = ownedIds.has(pokemon.id);
-      const isSelected = selectedOpponentId === pokemon.id;
-      const isUnavailable = !isRewardClaimed && isOwned;
-      const badge = isSelected
-        ? '<span class="trial-candidate-badge selected"><i class="fa-solid fa-circle-check"></i> ADVERSÁRIO ESCOLHIDO</span>'
-        : isUnavailable
-          ? '<span class="trial-candidate-badge owned"><i class="fa-solid fa-lock"></i> JÁ NO ELENCO</span>'
-          : '<span class="trial-candidate-badge available">Escolher como adversário</span>';
-
-      return `<button type="button" class="opponent-preview-card trial-candidate-card ${isSelected ? 'selected' : ''} ${isUnavailable ? 'unavailable' : ''}" data-opponent-id="${pokemon.id}" ${isUnavailable ? 'disabled' : ''} aria-pressed="${isSelected}"><img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" loading="lazy"><strong>${cap(pokemon.name)}</strong><span>${pokemon.types.map(type => `<i class="type-chip type-${type}">${type}</i>`).join('')}</span><small>BST ${pokemon.bst}</small><div class="trial-candidate-action">${badge}</div></button>`;
-    }).join('');
+    const previewCards = definition.team.map(pokemon => `
+      <article class="opponent-preview-card">
+        <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" loading="lazy">
+        <strong>${cap(pokemon.name)}</strong>
+        <span>${pokemon.types.map(type => `<i class="type-chip type-${type}">${type}</i>`).join('')}</span>
+        <small>BST ${pokemon.bst}</small>
+      </article>
+    `).join('');
 
     let rewardCallout = '';
     if (isRewardClaimed) {
       const claimedMon = C.byId(trialState.rewardPokemonId);
-      rewardCallout = `<div class="trial-reward-callout claimed"><i class="fa-solid fa-trophy"></i> Recompensa desta Prova já resgatada (${claimedMon ? cap(claimedMon.name) : 'Pokémon'}). Esta batalha é uma revanche 3 contra 1 sem nova recompensa.</div>`;
-    } else if (selectedOpponent) {
-      rewardCallout = `<div class="trial-reward-callout highlight"><i class="fa-solid fa-gift"></i> <strong>Recompensa ao vencer: ${cap(selectedOpponent.name)}</strong> (confirme o resgate após a vitória para adicioná-lo ao seu elenco permanente).</div>`;
+      rewardCallout = `<div class="trial-reward-callout claimed"><i class="fa-solid fa-trophy"></i> Recompensa desta Prova já resgatada (${claimedMon ? cap(claimedMon.name) : 'Pokémon'}). Esta batalha é uma revanche sem nova recompensa.</div>`;
     } else {
-      rewardCallout = `<div class="trial-reward-callout pending"><i class="fa-solid fa-circle-question"></i> <strong>Recompensa ao vencer:</strong> Escolha um dos três guardiões acima para definir sua recompensa.</div>`;
+      rewardCallout = `<div class="trial-reward-callout highlight"><i class="fa-solid fa-gift"></i> <strong>Recompensa ao vencer:</strong> Escolha um dos três guardiões da Prova para o seu elenco permanente.</div>`;
     }
 
-    const previewSection = `<section class="opponent-team-preview" aria-label="Equipe adversária"><div class="opponent-team-preview__head"><p class="eyebrow">ESCOLHA SEU ADVERSÁRIO (1 DE 3)</p><p class="trial-instruction-text">Selecione o guardião que deseja enfrentar no formato <strong>3 contra 1</strong>.</p></div><div class="opponent-team-preview__grid">${candidateCards}</div>${rewardCallout}</section>`;
+    const previewSection = `<section class="opponent-team-preview" aria-label="Equipe adversária"><div class="opponent-team-preview__head"><p class="eyebrow">EQUIPE ADVERSÁRIA</p></div><div class="opponent-team-preview__grid">${previewCards}</div>${rewardCallout}</section>`;
 
-    const isReady = hasValidOpponent && this.pick.length === 3;
-    const countText = !hasValidOpponent
-      ? 'Selecione 1 adversário acima para enfrentar'
-      : this.pick.length < 3
-        ? `Selecione mais ${3 - this.pick.length} Pokémon (${this.pick.length}/3)`
-        : `Equipe completa (3/3) contra ${cap(selectedOpponent.name)} — Pronto para a batalha!`;
+    const isReady = this.pick.length === 3;
+    const countText = isReady
+      ? 'Equipe completa (3/3) — Pronto para a batalha!'
+      : `Selecione mais ${3 - this.pick.length} Pokémon (${this.pick.length}/3)`;
 
     const btnText = isReady
-      ? '<i class="fa-solid fa-play"></i> INICIAR BATALHA (3 vs 1)'
-      : !hasValidOpponent
-        ? '<i class="fa-solid fa-lock"></i> Selecione o adversário'
-        : `<i class="fa-solid fa-lock"></i> Iniciar batalha (${this.pick.length}/3)`;
+      ? '<i class="fa-solid fa-play"></i> INICIAR BATALHA'
+      : `<i class="fa-solid fa-lock"></i> Iniciar batalha (${this.pick.length}/3)`;
 
-    this.container.innerHTML = `<section class="campaign-shell"><button id="pickerBack" class="campaign-secondary">← Voltar</button><section class="campaign-preparation campaign-preparation--trial"><div class="campaign-preparation__copy"><p class="eyebrow">PROVA ESPECIAL</p><h2>${definition.title}</h2><span class="trial-format-badge"><i class="fa-solid fa-shield-halved"></i> FORMATO: 3 CONTRA 1</span><p>Batalha tática de três Pokémon do seu elenco contra apenas o guardião escolhido.</p><strong class="trial-difficulty">DIFICULDADE: ${definition.difficulty}</strong></div>${previewSection}</section><div class="campaign-hero picker-choice"><h2>Escolha exatamente 3 Pokémon</h2><p>O primeiro selecionado será o líder. ${this.pick.length}/3 selecionados.</p></div><div class="campaign-grid draft-grid">${roster.map(pokemon => this.card(pokemon, this.pick.includes(pokemon.id))).join('')}</div><div class="picker-action-bar" id="pickerActionBar"><div class="picker-status-hint ${isReady ? 'complete' : 'incomplete'}"><i class="fa-solid ${isReady ? 'fa-circle-check' : 'fa-circle-info'}"></i><span>${countText}</span></div><button id="startCampaignBattle" class="campaign-primary ${isReady ? 'ready-to-battle' : ''}" ${isReady ? '' : 'disabled'}>${btnText}</button></div></section>`;
+    this.container.innerHTML = `<section class="campaign-shell"><button id="pickerBack" class="campaign-secondary">← Voltar</button><section class="campaign-preparation campaign-preparation--trial"><div class="campaign-preparation__copy"><p class="eyebrow">PROVA ESPECIAL</p><h2>${definition.title}</h2><span class="trial-format-badge"><i class="fa-solid fa-shield-halved"></i> FORMATO: 3 CONTRA 3</span><p>Batalha de equipe: vença os três guardiões da Prova.</p><strong class="trial-difficulty">DIFICULDADE: ${definition.difficulty}</strong></div>${previewSection}</section><div class="campaign-hero picker-choice"><p class="eyebrow">SUA EQUIPE</p><h2>Escolha exatamente 3 Pokémon</h2><p>O primeiro selecionado será o líder. ${this.pick.length}/3 selecionados.</p></div><div class="campaign-grid draft-grid">${roster.map(pokemon => this.card(pokemon, this.pick.includes(pokemon.id))).join('')}</div><div class="picker-action-bar" id="pickerActionBar"><div class="picker-status-hint ${isReady ? 'complete' : 'incomplete'}"><i class="fa-solid ${isReady ? 'fa-circle-check' : 'fa-circle-info'}"></i><span>${countText}</span></div><button id="startCampaignBattle" class="campaign-primary ${isReady ? 'ready-to-battle' : ''}" ${isReady ? '' : 'disabled'}>${btnText}</button></div></section>`;
 
     this.container.querySelector('#pickerBack').onclick = () => { this.pending = null; this.pick = []; this.render(); };
-    this.container.querySelectorAll('.trial-candidate-card:not(:disabled)').forEach(button => {
-      button.onclick = () => {
-        const id = Number(button.dataset.opponentId);
-        this.pending.opponentId = (this.pending.opponentId === id) ? null : id;
-        this.render();
-      };
-    });
     this.container.querySelectorAll('.draft-grid .campaign-mon').forEach(button => {
       button.onclick = () => {
         const id = Number(button.dataset.id);
@@ -315,9 +292,8 @@
     });
     this.setupBattleStart(isReady, 3, async () => {
       try {
-        if (!hasValidOpponent) throw new Error('Selecione um adversário válido.');
         if (this.pick.length !== 3) throw new Error('Selecione exatamente 3 Pokémon.');
-        await this.coordinator.start(this.pending.kind, selectedOpponent.id, this.pick, { opponentId: selectedOpponent.id, opponentPokemonId: selectedOpponent.id });
+        await this.coordinator.start(this.pending.kind, null, this.pick);
         this.pending = null;
         window.switchAppTab('battle');
       } catch (error) { alert(error.message); }
@@ -338,7 +314,7 @@
           <div class="campaign-hero">
             <p class="eyebrow">RECOMPENSA DA PROVA CONQUISTADA</p>
             <h2>${definition.label}: ${cap(p.name)}</h2>
-            <p>Você venceu o desafio 3 contra 1 e conquistou exatamente o Pokémon enfrentado. Não há escolha adicional.</p>
+            <p>Confirme o resgate deste Pokémon conquistado na Prova para o seu elenco permanente.</p>
           </div>
           <div class="trial-reward-confirm-container">
             <div class="campaign-mon trial-single-reward-card">
@@ -362,7 +338,8 @@
     }
 
     renderReward.call(this, reward);
-    this.container.querySelector('.campaign-hero h2').textContent = `Escolha seu Pokémon — ${definition.label}`;
+    const heroH2 = this.container.querySelector('.campaign-hero h2');
+    if (heroH2) heroH2.textContent = `Escolha seu Pokémon — ${definition.label}`;
   };
 })();
 /* PBA-015H — Shadow presentation only; no campaign or battle rules are changed. */

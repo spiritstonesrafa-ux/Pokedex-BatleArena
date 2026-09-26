@@ -2,6 +2,17 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 26/09/2026: rebalanceamento selvagem (45/25/20/10) e Provas Finais em 3x3
+
+- **Encontros selvagens rebalanceados:** distribuição-base atualizada para 45% comum, 25% incomum, 20% raro e 10% especial (lendários e míticos juntos). Os 10% são compartilhados entre os lendários e míticos elegíveis, preservando exclusões das Provas/Super Treinador, limites de capturas por ponto e compatibilidade de tipos.
+- **As Quatro Provas Finais retornam ao formato 3x3:**
+  - `LEGENDARY_TRIAL`, `MYTHICAL_TRIAL`, `TITANS_TRIAL` e `CELESTIAL_TRIAL` deixam de usar `TRIAL_3X1` e voltam a ser batalhas reais de equipe 3 contra 3 (3 Pokémon do jogador contra os 3 chefes canônicos da Prova).
+  - Removida a seleção de adversário único da interface e preparação; o guia tático agora avalia a equipe adversária completa de três chefes.
+  - O motor de batalha exige derrota dos três integrantes inimigos para `PLAYER_WIN`.
+  - Recompensa da Prova: na primeira vitória, o jogador escolhe exatamente um Pokémon entre os três integrantes da Prova (`rewardClaimed = true`). Replays não concedem novos Pokémon.
+  - Compatibilidade de saves: preservados integralmente saves legados com recompensa pendente de 3 candidatos e saves da fase 3x1 com recompensa de candidato único (sem reescrita retroativa).
+- Validação automatizada: campanha **189/189**, suíte completa **827/827** testes aprovados.
+
 ## Atualização — 26/09/2026: encontros especiais selvagens
 
 - Encontros lendários ou míticos agora ocupam juntos 5% da distribuição-base. As demais faixas ficam em 55% comum, 25% incomum e 15% raro.

@@ -38,7 +38,7 @@ function unlock18(manager) {
   assert.equal(manager.getRosterIds().length, 24);
 }
 
-function trial(manager, kind, battleId, opponentId = null) {
+function trial(manager, kind, battleId) {
   const team = manager.getRosterIds().slice(0, 3);
   const trialDef = {
     LEGENDARY_TRIAL: K.LEGENDARY_TRIAL_TEAM,
@@ -46,18 +46,17 @@ function trial(manager, kind, battleId, opponentId = null) {
     TITANS_TRIAL: K.TITANS_TRIAL_TEAM,
     CELESTIAL_TRIAL: K.CELESTIAL_TRIAL_TEAM
   }[kind];
-  const chosenOpponentId = opponentId || trialDef.find(p => !manager.getRosterIds().includes(p.id))?.id || trialDef[0].id;
-  const config = manager.getBattleConfig(kind, chosenOpponentId, team);
-  assert.equal(config.enemyTeamIds.length, 1);
-  assert.equal(config.enemyTeamIds[0], chosenOpponentId);
+  const config = manager.getBattleConfig(kind, null, team);
+  assert.equal(config.playerTeamIds.length, 3);
+  assert.equal(config.enemyTeamIds.length, 3);
+  assert.deepEqual(config.enemyTeamIds, trialDef.map(p => p.id));
   assert.equal(config.metadata.kind, kind);
-  assert.equal(config.metadata.battleFormat, 'TRIAL_3X1');
   assert.deepEqual(config.modifiers, {});
-  return manager.recordBattle({ battleId, kind, id: chosenOpponentId, opponentPokemonId: chosenOpponentId, winner: 'player' });
+  return manager.recordBattle({ battleId, kind, winner: 'player' });
 }
 
-function eliteTrial(manager, kind, battleId, opponentId = null) {
-  return trial(manager, kind, battleId, opponentId);
+function eliteTrial(manager, kind, battleId) {
+  return trial(manager, kind, battleId);
 }
 
 test('PBA-015E canonical trial teams are battle-compatible and exclude the Super team', () => {
@@ -83,91 +82,70 @@ test('PBA-015E canonical trial teams are battle-compatible and exclude the Super
   }
 });
 
-test('3x1 Trial Battle — Valid and invalid opponent selection in getBattleConfig and recordBattle', () => {
+test('3x3 Trial Battle — Valid 3x3 team configuration and validation in getBattleConfig', () => {
   const manager = fresh();
   unlock18(manager);
   const team = manager.getRosterIds().slice(0, 3);
 
-  // Missing opponent throws
-  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', null, team), /Escolha um adversário válido/);
-  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', undefined, team), /Escolha um adversário válido/);
-
-  // Foreign opponent (Mewtwo 150 in Legendary Trial) throws
-  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', 150, team), /Escolha um adversário válido/);
-  assert.throws(() => manager.getBattleConfig('MYTHICAL_TRIAL', 999, team), /Escolha um adversário válido/);
-
-  // Valid candidates for each of the 4 trials
+  // Valid 3x3 candidates for each of the 4 trials
   for (const [kind, teamDef] of [
     ['LEGENDARY_TRIAL', K.LEGENDARY_TRIAL_TEAM],
     ['MYTHICAL_TRIAL', K.MYTHICAL_TRIAL_TEAM],
     ['TITANS_TRIAL', K.TITANS_TRIAL_TEAM],
     ['CELESTIAL_TRIAL', K.CELESTIAL_TRIAL_TEAM]
   ]) {
-    for (const cand of teamDef) {
-      const config = manager.getBattleConfig(kind, cand.id, team);
-      assert.equal(config.enemyTeamIds.length, 1);
-      assert.equal(config.enemyTeamIds[0], cand.id);
-      assert.equal(config.metadata.battleFormat, 'TRIAL_3X1');
-      assert.equal(config.metadata.opponentPokemonId, cand.id);
-      assert.equal(config.playerTeamIds.length, 3);
-    }
+    const config = manager.getBattleConfig(kind, null, team);
+    assert.equal(config.playerTeamIds.length, 3);
+    assert.equal(config.enemyTeamIds.length, 3);
+    assert.deepEqual(config.enemyTeamIds, teamDef.map(p => p.id));
+    assert.equal(config.metadata.kind, kind);
+    assert.deepEqual(config.modifiers, {});
   }
 
   // Player team invalid size throws
-  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', 145, [team[0]]), /Escolha exatamente três Pokémon/);
-  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', 145, [team[0], team[1]]), /Escolha exatamente três Pokémon/);
-  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', 145, [team[0], team[0], team[1]]), /Escolha exatamente três Pokémon/);
-
-  // Invalid opponent in recordBattle throws
-  assert.throws(() => manager.recordBattle({
-    battleId: 'invalid-opp',
-    kind: 'LEGENDARY_TRIAL',
-    opponentPokemonId: 999,
-    winner: 'player'
-  }), /Adversário inválido/);
+  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', null, [team[0]]), /Escolha exatamente três Pokémon/);
+  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', null, [team[0], team[1]]), /Escolha exatamente três Pokémon/);
+  // Duplicate in player team throws
+  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', null, [team[0], team[0], team[1]]), /Escolha exatamente três Pokémon/);
+  // Foreign pokemon not in roster throws
+  assert.throws(() => manager.getBattleConfig('LEGENDARY_TRIAL', null, [team[0], team[1], 9999]), /Escolha exatamente três Pokémon/);
 });
 
-test('3x1 Trial Battle — rejected results leave progress intact and the battle ID reusable', () => {
+test('3x3 Trial Battle — defeat and duplicate battle IDs handled cleanly', () => {
   const manager = fresh();
   unlock18(manager);
 
-  for (const [kind, key, candidate] of [
-    ['LEGENDARY_TRIAL', 'legendary', 145],
-    ['MYTHICAL_TRIAL', 'mythical', 151],
-    ['TITANS_TRIAL', 'titans', 1007],
-    ['CELESTIAL_TRIAL', 'celestial', 889]
+  for (const [kind, key] of [
+    ['LEGENDARY_TRIAL', 'legendary'],
+    ['MYTHICAL_TRIAL', 'mythical'],
+    ['TITANS_TRIAL', 'titans'],
+    ['CELESTIAL_TRIAL', 'celestial']
   ]) {
-    const battleId = `rejected-${kind}`;
-    const before = manager.getState();
-    const savedBefore = mem.get(C.STORAGE_KEY);
-    for (const winner of ['player', 'enemy']) {
-      assert.throws(() => manager.recordBattle({
-        battleId, kind, opponentPokemonId: 999, winner
-      }), /Adversário inválido/);
-      assert.deepEqual(manager.getState(), before, `${kind}: resultado inválido não pode alterar o estado em memória`);
-      assert.equal(mem.get(C.STORAGE_KEY), savedBefore, `${kind}: resultado inválido não pode alterar o save`);
-      const reloaded = fresh(false).getState();
-      assert.equal(reloaded.endgameTrials[key].attempts, before.endgameTrials[key].attempts);
-      assert.equal(reloaded.processedBattleIds.includes(battleId), false);
-    }
-
-    const retry = manager.recordBattle({ battleId, kind, opponentPokemonId: candidate, winner: 'enemy' });
-    assert.equal(retry.processed, true, `${kind}: o ID rejeitado deve continuar disponível`);
-    assert.equal(manager.getState().processedBattleIds.includes(battleId), true);
+    const battleId = `defeat-${kind}`;
+    const result = manager.recordBattle({ battleId, kind, winner: 'enemy' });
+    assert.equal(result.processed, true);
+    assert.equal(result.pendingReward, null);
+    assert.equal(manager.getState().endgameTrials[key].completed, false);
     assert.equal(manager.getState().endgameTrials[key].attempts, 1);
     assert.equal(manager.getState().pendingReward, null);
+
+    // Duplicate battle ID is rejected
+    const dup = manager.recordBattle({ battleId, kind, winner: 'player' });
+    assert.equal(dup.processed, false);
+    assert.equal(dup.duplicate, true);
+    assert.equal(manager.getState().endgameTrials[key].completed, false);
   }
 });
 
-test('3x1 Trial Battle — preparation copy matches the post-victory reward confirmation', () => {
+test('3x3 Trial Battle — preparation copy matches the post-victory reward confirmation', () => {
   const fs = require('node:fs'), path = require('node:path');
   const source = fs.readFileSync(path.join(__dirname, '../../assets/js/campaign/campaign-view.js'), 'utf8');
-  assert.match(source, /confirme o resgate após a vitória/);
+  assert.match(source, /FORMATO: 3 CONTRA 3/);
   assert.match(source, /Confirmar e Resgatar/);
-  assert.doesNotMatch(source, /será recrutado imediatamente/);
+  assert.doesNotMatch(source, /FORMATO: 3 CONTRA 1/);
 });
 
-test('3x1 Trial Battle — Engine accepts 3x1 format, defeats single opponent immediately without replacement, and handles player loss', () => {
+test('3x3 Trial Battle — Engine accepts 3x3 trial battle: KO of 1st and 2nd enemy does not end battle, 3rd KO ends with PLAYER_WIN, player team loss ends with defeat', () => {
   const mon = (id, hp = 80, speed = 70) => ({
     id,
     name: 'mon-' + id,
@@ -176,40 +154,57 @@ test('3x1 Trial Battle — Engine accepts 3x1 format, defeats single opponent im
     moves: [{ id: 1, name: 'tackle', type: 'normal', power: 50, accuracy: 100, damageClass: 'physical', pp: 35 }]
   });
 
-  // Regular createTeamBattle requires 3x3 and rejects 3x1
-  assert.throws(() => E.createTeamBattle([1, 2, 3].map(id => mon(id)), [mon(145)]));
-
-  // TRIAL_3X1 requires exactly 3 player Pokémon and 1 enemy Pokémon
-  assert.throws(() => E.createTeamBattle([mon(1), mon(2)], [mon(145)], { battleFormat: 'TRIAL_3X1' }));
-  assert.throws(() => E.createTeamBattle([mon(1), mon(2), mon(3)], [mon(145), mon(245)], { battleFormat: 'TRIAL_3X1' }));
-
-  // Valid 3x1 initialization
-  const state = E.createTeamBattle([1, 2, 3].map(id => mon(id)), [mon(145)], { battleFormat: 'TRIAL_3X1' });
-  assert.equal(state.player.team.length, 3);
-  assert.equal(state.enemy.team.length, 1);
-  assert.equal(state.status, 'IN_PROGRESS');
-
-  // Fast player defeats single enemy in one turn
-  const pLead = mon(1, 100, 100); // fast player
+  // Valid 3x3 initialization
+  const pLead = mon(1, 100, 100);
   pLead.moves[0].power = 500; // instant knockout
-  const eSolo = mon(145, 50, 10); // slow enemy
-  const btl = E.createTeamBattle([pLead, mon(2), mon(3)], [eSolo], { battleFormat: 'TRIAL_3X1' });
+  const pTeam = [pLead, mon(2), mon(3)];
+  const eTeam = [mon(145, 50, 10), mon(245, 50, 10), mon(381, 50, 10)];
 
-  const turnResult = E.resolveTurn(btl, {
+  const btl = E.createTeamBattle(pTeam, eTeam);
+  assert.equal(btl.player.team.length, 3);
+  assert.equal(btl.enemy.team.length, 3);
+  assert.equal(btl.status, 'IN_PROGRESS');
+
+  // Turn 1: Player KOs 1st enemy (145)
+  const turn1 = E.resolveTurn(btl, {
     player: { moveId: 1, damageRoll: 100 },
     enemy: { moveId: 1, damageRoll: 100 }
   });
+  // 1st KO does not end battle, requires enemy replacement
+  assert.equal(turn1.state.status, 'AWAITING_REPLACEMENT');
+  assert.equal(turn1.state.enemy.team[0].currentHp, 0);
+  assert.equal(turn1.state.winner, null);
 
-  // Enemy is defeated immediately: winner is player, status PLAYER_WIN
-  assert.equal(turnResult.state.status, 'PLAYER_WIN');
-  assert.equal(turnResult.state.winner, 'player');
-  assert.equal(turnResult.state.enemy.team[0].currentHp, 0);
+  // Resolve replacement to 2nd enemy (245)
+  const rep1 = E.resolveReplacement(turn1.state, { enemy: { targetPokemonId: 245 } });
+  assert.equal(rep1.state.status, 'IN_PROGRESS');
+  assert.equal(rep1.state.enemy.activeIndex, 1);
 
-  // No enemy REPLACEMENT_REQUIRED event is emitted
-  const replEvents = turnResult.events.filter(e => e.type === 'REPLACEMENT_REQUIRED');
-  assert.equal(replEvents.length, 0);
-  assert.ok(turnResult.events.some(e => e.type === 'TEAM_DEFEATED' && e.side === 'enemy'));
-  assert.ok(turnResult.events.some(e => e.type === 'BATTLE_ENDED' && e.winner === 'player'));
+  // Turn 2: Player KOs 2nd enemy (245)
+  const turn2 = E.resolveTurn(rep1.state, {
+    player: { moveId: 1, damageRoll: 100 },
+    enemy: { moveId: 1, damageRoll: 100 }
+  });
+  // 2nd KO does not end battle
+  assert.equal(turn2.state.status, 'AWAITING_REPLACEMENT');
+  assert.equal(turn2.state.enemy.team[1].currentHp, 0);
+  assert.equal(turn2.state.winner, null);
+
+  // Resolve replacement to 3rd enemy (381)
+  const rep2 = E.resolveReplacement(turn2.state, { enemy: { targetPokemonId: 381 } });
+  assert.equal(rep2.state.status, 'IN_PROGRESS');
+  assert.equal(rep2.state.enemy.activeIndex, 2);
+
+  // Turn 3: Player KOs 3rd enemy (381)
+  const turn3 = E.resolveTurn(rep2.state, {
+    player: { moveId: 1, damageRoll: 100 },
+    enemy: { moveId: 1, damageRoll: 100 }
+  });
+  // 3rd KO ends battle with PLAYER_WIN!
+  assert.equal(turn3.state.status, 'PLAYER_WIN');
+  assert.equal(turn3.state.winner, 'player');
+  assert.ok(turn3.events.some(e => e.type === 'TEAM_DEFEATED' && e.side === 'enemy'));
+  assert.ok(turn3.events.some(e => e.type === 'BATTLE_ENDED' && e.winner === 'player'));
 
   // Player loss: enemy with high power defeats player's 3 Pokémon
   const manager = fresh();
@@ -217,7 +212,6 @@ test('3x1 Trial Battle — Engine accepts 3x1 format, defeats single opponent im
   const defeatResult = manager.recordBattle({
     battleId: 'legendary-defeat',
     kind: 'LEGENDARY_TRIAL',
-    opponentPokemonId: 145,
     winner: 'enemy'
   });
   assert.equal(defeatResult.processed, true);
@@ -226,83 +220,87 @@ test('3x1 Trial Battle — Engine accepts 3x1 format, defeats single opponent im
   assert.equal(manager.getState().endgameTrials.legendary.attempts, 1);
   assert.equal(manager.getState().pendingReward, null);
 
-  // Player can retry with same or different opponent after loss
+  // Player can retry after loss
   const retryResult = manager.recordBattle({
     battleId: 'legendary-retry-win',
     kind: 'LEGENDARY_TRIAL',
-    opponentPokemonId: 245,
     winner: 'player'
   });
   assert.equal(retryResult.processed, true);
   assert.equal(manager.getState().endgameTrials.legendary.completed, true);
-  assert.deepEqual(manager.getState().pendingReward.candidates, [245]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [145, 245, 381]);
 });
 
-test('PBA-015E Legendary trial 3x1 grants exactly the chosen opponent, prevents switching, and permits replay without new reward', () => {
+test('PBA-015E Legendary trial 3x3 offers all 3 candidates, allows choosing exactly one, and permits replay without new reward', () => {
   const manager = fresh();
   unlock18(manager);
   assert.equal(manager.canChallenge('LEGENDARY_TRIAL'), true);
 
-  // Challenge and defeat Suicune (245)
-  assert.equal(trial(manager, 'LEGENDARY_TRIAL', 'legendary-suicune-win', 245).processed, true);
+  // Challenge and win
+  assert.equal(trial(manager, 'LEGENDARY_TRIAL', 'legendary-win').processed, true);
   assert.equal(manager.getState().endgameTrials.legendary.completed, true);
   assert.equal(manager.getState().pendingReward.kind, 'LEGENDARY_TRIAL');
-  assert.deepEqual(manager.getState().pendingReward.candidates, [245]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [145, 245, 381]);
 
-  // Candidates only offers Suicune (245)
+  // Candidates offers all 3 options
   const candidates = manager.getRewardCandidates();
-  assert.equal(candidates.length, 1);
-  assert.equal(candidates[0].id, 245);
-  assert.equal(candidates[0].selectable, true);
+  assert.equal(candidates.length, 3);
+  assert.deepEqual(candidates.map(c => c.id), [145, 245, 381]);
+  assert.ok(candidates.every(c => c.selectable));
 
-  // Attempt to claim Zapdos (145) or Latios (381) fails
-  assert.equal(manager.claimReward(145).ok, false);
-  assert.equal(manager.claimReward(381).ok, false);
+  // Attempt to claim invalid ID fails
+  assert.equal(manager.claimReward(999).ok, false);
 
-  // Reload keeps exactly Suicune (245) without allowing switch
+  // Reload keeps all 3 candidates
   const reloaded = fresh(false);
   assert.equal(reloaded.getState().endgameTrials.legendary.completed, true);
-  assert.deepEqual(reloaded.getState().pendingReward.candidates, [245]);
-  assert.equal(reloaded.getRewardCandidates().length, 1);
-  assert.equal(reloaded.getRewardCandidates()[0].id, 245);
+  assert.deepEqual(reloaded.getState().pendingReward.candidates, [145, 245, 381]);
+  assert.equal(reloaded.getRewardCandidates().length, 3);
 
-  // Claim Suicune
+  // Claim Suicune (245)
   assert.equal(reloaded.claimReward(245).ok, true);
   assert.equal(reloaded.getState().endgameTrials.legendary.rewardClaimed, true);
   assert.equal(reloaded.getState().endgameTrials.legendary.rewardPokemonId, 245);
   assert.ok(reloaded.getRosterIds().includes(245));
   assert.equal(reloaded.getRosterIds().length, 25);
 
+  // Cannot claim another from same trial
+  assert.equal(reloaded.claimReward(145).ok, false);
+  assert.equal(reloaded.claimReward(381).ok, false);
+
   // Replay without second reward
   const claimedReload = fresh(false);
   assert.equal(claimedReload.canChallenge('LEGENDARY_TRIAL'), true);
-  assert.equal(trial(claimedReload, 'LEGENDARY_TRIAL', 'legendary-replay', 145).pendingReward, null);
+  assert.equal(trial(claimedReload, 'LEGENDARY_TRIAL', 'legendary-replay').pendingReward, null);
   assert.equal(claimedReload.claimReward(145).ok, false);
   assert.equal(claimedReload.getRosterIds().length, 25);
 });
 
-test('PBA-015E Mythical trial 3x1 grants exactly the chosen opponent, prevents switching, and permits replay', () => {
+test('PBA-015E Mythical trial 3x3 offers all 3 candidates, allows choosing exactly one, and permits replay', () => {
   const manager = fresh();
   unlock18(manager);
   assert.equal(manager.canChallenge('MYTHICAL_TRIAL'), true);
 
-  // Challenge and defeat Victini (494)
-  assert.equal(trial(manager, 'MYTHICAL_TRIAL', 'mythical-victini-win', 494).processed, true);
-  assert.deepEqual(manager.getState().pendingReward.candidates, [494]);
+  // Challenge and win
+  assert.equal(trial(manager, 'MYTHICAL_TRIAL', 'mythical-win').processed, true);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [151, 385, 494]);
 
   const reloaded = fresh(false);
   const candidates = reloaded.getRewardCandidates();
-  assert.equal(candidates.length, 1);
-  assert.equal(candidates[0].id, 494);
+  assert.equal(candidates.length, 3);
+  assert.deepEqual(candidates.map(c => c.id), [151, 385, 494]);
 
-  // Claim Victini
+  // Claim Victini (494)
   assert.equal(reloaded.claimReward(494).ok, true);
   assert.equal(reloaded.getState().endgameTrials.mythical.rewardClaimed, true);
   assert.equal(reloaded.getRosterIds().length, 25);
 
+  // Cannot claim another
+  assert.equal(reloaded.claimReward(151).ok, false);
+
   // Replay
   const claimedReload = fresh(false);
-  assert.equal(trial(claimedReload, 'MYTHICAL_TRIAL', 'mythical-replay', 151).pendingReward, null);
+  assert.equal(trial(claimedReload, 'MYTHICAL_TRIAL', 'mythical-replay').pendingReward, null);
   assert.equal(claimedReload.claimReward(151).ok, false);
   assert.equal(new Set(claimedReload.getRosterIds()).size, claimedReload.getRosterIds().length);
 });
@@ -311,13 +309,13 @@ test('PBA-015E trial rewards support final rosters of 25, 26 and 27 without relo
   const manager = fresh();
   unlock18(manager);
 
-  const first = trial(manager, 'LEGENDARY_TRIAL', 'legendary-roster', 145);
+  const first = trial(manager, 'LEGENDARY_TRIAL', 'legendary-roster');
   assert.equal(first.processed, true);
   assert.equal(manager.claimReward(145).ok, true);
   assert.equal(manager.getRosterIds().length, 25);
   assert.equal(manager.canChallenge('SUPER'), true);
 
-  const second = trial(manager, 'MYTHICAL_TRIAL', 'mythical-roster', 151);
+  const second = trial(manager, 'MYTHICAL_TRIAL', 'mythical-roster');
   assert.equal(second.processed, true);
   assert.equal(manager.claimReward(151).ok, true);
   assert.equal(manager.getRosterIds().length, 26);
@@ -373,6 +371,39 @@ test('PBA-015E legacy save migration preserves pending 3-choice reward and isola
   // Player can choose any of the 3 in legacy flow
   assert.equal(manager.claimReward(381).ok, true);
   assert.equal(manager.getState().endgameTrials.legendary.rewardPokemonId, 381);
+});
+
+test('PBA-015E legacy save migration preserves single-candidate 3x1 pending reward intact without rewriting', () => {
+  const rawLegacy1Candidate = {
+    version: C.VERSION,
+    status: 'ACTIVE',
+    startedAt: '2026-01-01T00:00:00.000Z',
+    startingRosterIds: K.DRAFT.slice(0, 6).map(p => p.id),
+    challenges: {},
+    superTrainer: { attempts: 0, defeated: false },
+    shadowTrainer: { revealed: false },
+    pendingReward: { kind: 'LEGENDARY_TRIAL', challengeId: 'legendary', candidates: [245] },
+    endgameTrials: {
+      legendary: { completed: true, rewardClaimed: false, rewardPokemonId: null, attempts: 1 },
+      mythical: { completed: false, rewardClaimed: false, rewardPokemonId: null, attempts: 0 },
+      titans: { completed: false, rewardClaimed: false, rewardPokemonId: null, attempts: 0 },
+      celestial: { completed: false, rewardClaimed: false, rewardPokemonId: null, attempts: 0 }
+    },
+    processedBattleIds: []
+  };
+
+  const migrated = S.sanitize(rawLegacy1Candidate);
+  assert.deepEqual(migrated.pendingReward.candidates, [245]);
+
+  mem.clear();
+  mem.set(C.STORAGE_KEY, JSON.stringify(rawLegacy1Candidate));
+  const manager = fresh(false);
+  const candidates = manager.getRewardCandidates();
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].id, 245);
+  assert.equal(manager.claimReward(145).ok, false);
+  assert.equal(manager.claimReward(245).ok, true);
+  assert.equal(manager.getState().endgameTrials.legendary.rewardPokemonId, 245);
 });
 
 test('PBA-015E retains existing Super, false-ending, Shadow and aura contracts', () => {
@@ -437,56 +468,59 @@ test('PBA-015G Titans and Celestial are canonical, independent at 18 badges and 
   assert.equal(manager.canChallenge('CELESTIAL_TRIAL'), true);
 });
 
-test('PBA-015G Titans 3x1 pending reload, one reward, replay and duplicate rejection', () => {
+test('PBA-015G Titans 3x3 pending reload, one reward among 3, replay and duplicate rejection', () => {
   const manager = fresh();
   unlock18(manager);
-  // Defeat Koraidon (1007)
-  assert.equal(eliteTrial(manager, 'TITANS_TRIAL', 'titans-win', 1007).processed, true);
+  assert.equal(eliteTrial(manager, 'TITANS_TRIAL', 'titans-win').processed, true);
   assert.equal(manager.getState().pendingReward.kind, 'TITANS_TRIAL');
-  assert.deepEqual(manager.getState().pendingReward.candidates, [1007]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [1007, 383, 717]);
 
   const reloaded = fresh(false);
   assert.equal(reloaded.getState().pendingReward.kind, 'TITANS_TRIAL');
-  assert.deepEqual(reloaded.getState().pendingReward.candidates, [1007]);
-  const reward = reloaded.getRewardCandidates().find(x => x.selectable);
-  assert.equal(reward.id, 1007);
+  assert.deepEqual(reloaded.getState().pendingReward.candidates, [1007, 383, 717]);
+  const candidates = reloaded.getRewardCandidates();
+  assert.equal(candidates.length, 3);
+  const reward = candidates.find(x => x.id === 1007);
   assert.equal(reloaded.claimReward(reward.id).ok, true);
   assert.equal(reloaded.getRosterIds().length, 25);
 
-  // Cannot challenge Koraidon again before rewardClaimed or generate duplicate
-  assert.equal(eliteTrial(reloaded, 'TITANS_TRIAL', 'titans-replay', 383).pendingReward, null);
+  // Cannot claim another
+  assert.equal(reloaded.claimReward(383).ok, false);
+
+  // Replay without second reward
+  assert.equal(eliteTrial(reloaded, 'TITANS_TRIAL', 'titans-replay').pendingReward, null);
   assert.equal(reloaded.claimReward(383).ok, false);
   assert.equal(new Set(reloaded.getRosterIds()).size, reloaded.getRosterIds().length);
 });
 
-test('PBA-015G Celestial 3x1 pending reload, one reward and replay without a second reward', () => {
+test('PBA-015G Celestial 3x3 pending reload, one reward among 3 and replay without a second reward', () => {
   const manager = fresh();
   unlock18(manager);
-  // Defeat Giratina (487)
-  assert.equal(eliteTrial(manager, 'CELESTIAL_TRIAL', 'celestial-win', 487).processed, true);
-  assert.deepEqual(manager.getState().pendingReward.candidates, [487]);
+  assert.equal(eliteTrial(manager, 'CELESTIAL_TRIAL', 'celestial-win').processed, true);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [889, 791, 487]);
 
   const reloaded = fresh(false);
   assert.equal(reloaded.getState().pendingReward.kind, 'CELESTIAL_TRIAL');
-  const reward = reloaded.getRewardCandidates().find(x => x.selectable);
-  assert.equal(reward.id, 487);
+  const candidates = reloaded.getRewardCandidates();
+  assert.equal(candidates.length, 3);
+  const reward = candidates.find(x => x.id === 487);
   assert.equal(reloaded.claimReward(reward.id).ok, true);
   assert.equal(reloaded.getState().endgameTrials.celestial.rewardClaimed, true);
-  assert.equal(eliteTrial(reloaded, 'CELESTIAL_TRIAL', 'celestial-replay', 791).pendingReward, null);
+  assert.equal(eliteTrial(reloaded, 'CELESTIAL_TRIAL', 'celestial-replay').pendingReward, null);
   assert.equal(new Set(reloaded.getRosterIds()).size, reloaded.getRosterIds().length);
 });
 
 test('PBA-015G roster expands through 27, 28 and 29 while Super remains available', () => {
   const manager = fresh();
   unlock18(manager);
-  for (const [kind, battleId, oppId] of [
+  for (const [kind, battleId, claimId] of [
     ['LEGENDARY_TRIAL', 'g-legendary', 145],
     ['MYTHICAL_TRIAL', 'g-mythical', 151],
     ['TITANS_TRIAL', 'g-titans', 1007],
     ['CELESTIAL_TRIAL', 'g-celestial', 889]
   ]) {
-    eliteTrial(manager, kind, battleId, oppId);
-    assert.equal(manager.claimReward(manager.getRewardCandidates().find(x => x.selectable).id).ok, true);
+    eliteTrial(manager, kind, battleId);
+    assert.equal(manager.claimReward(claimId).ok, true);
   }
   assert.equal(manager.getRosterIds().length, 28);
   assert.equal(manager.canChallenge('SUPER'), true);

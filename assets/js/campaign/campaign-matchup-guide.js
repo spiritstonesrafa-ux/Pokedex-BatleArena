@@ -109,13 +109,8 @@
       if (!this.pending || !this.container || !this.container.querySelector) return result;
       const kind = this.pending.kind;
       const master = kind === 'MASTER' && this.manager && this.manager.getMaster(this.pending.id);
-      const isTrial = ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL'].includes(kind);
       let opponents;
-      if (isTrial) {
-        const chosenId = Number(this.pending.opponentId || this.selectedOpponentId || this.pending.id);
-        const chosenMon = Number.isInteger(chosenId) ? (catalog.byId ? catalog.byId(chosenId) : (catalog.CANONICAL_BY_ID ? catalog.CANONICAL_BY_ID[chosenId] : null)) : null;
-        opponents = chosenMon ? [chosenMon] : [];
-      } else if (master) {
+      if (master) {
         opponents = master.team;
       } else {
         opponents = catalog[TEAMS[kind]];
