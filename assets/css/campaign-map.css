@@ -475,6 +475,11 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
 }
 
+.campaign-map-wild-zone[data-wild-point="r2-glacier"],
+.campaign-map-wild-zone[data-wild-point="r3-shrine"] {
+  transform: translate(calc(-100% - 16px), 8px);
+}
+
 .campaign-map-wild-zone:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 3px;

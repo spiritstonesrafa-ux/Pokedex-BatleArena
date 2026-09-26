@@ -27,26 +27,27 @@
     return [...new Set([...previousRoster.call(this), ...(this.data.wild?.capturedIds || [])])];
   };
 
-  Manager.prototype.beginWildEncounter = function (regionId, roll) {
-    if (!Wild.isRegionId(regionId) || !this.isStarted()
+  Manager.prototype.beginWildEncounter = function (regionId, roll, pointId = Wild.defaultPointId(regionId)) {
+    if (!Wild.isPointId(regionId, pointId) || !this.isStarted()
       || this.data.status === C.CAMPAIGN_STATUS.COMPLETED || this.data.pendingReward) {
       return { ok: false, reason: 'UNAVAILABLE' };
     }
     const wild = this.data.wild || (this.data.wild = Wild.getDefaultState());
     if (wild.pendingCapture || wild.result) return { ok: false, reason: 'RESOLVE_PREVIOUS' };
     if (wild.active) {
-      return wild.active.regionId === regionId
-        ? { ok: true, pokemonId: wild.active.pokemonId, resumed: true }
+      return wild.active.regionId === regionId && wild.active.pointId === pointId
+        ? { ok: true, pokemonId: wild.active.pokemonId, pointId, resumed: true }
         : { ok: false, reason: 'RESOLVE_PREVIOUS' };
     }
-    if (Wild.getRegionCaptureCount(wild, regionId) >= Wild.MAX_CAPTURES_PER_REGION) {
-      return { ok: false, reason: 'REGION_LIMIT' };
+    if (Wild.getPointCaptureCount(wild, regionId, pointId) >= Wild.MAX_CAPTURES_PER_POINT) {
+      return { ok: false, reason: 'POINT_LIMIT' };
     }
-    const pokemonId = Wild.choose(this.getRosterIds(), roll === undefined ? Wild.randomUnit() : roll, regionId);
+    const pokemonId = Wild.choose(this.getRosterIds(),
+      roll === undefined ? Wild.randomUnit() : roll, regionId, pointId);
     if (!pokemonId) return { ok: false, reason: 'POOL_EMPTY' };
-    wild.active = { regionId, pokemonId, encounterId: encounterId() };
+    wild.active = { regionId, pointId, pokemonId, encounterId: encounterId() };
     this.save('WILD_ENCOUNTER_STARTED');
-    return { ok: true, pokemonId, resumed: false };
+    return { ok: true, pokemonId, pointId, resumed: false };
   };
 
   Manager.prototype.cancelWildEncounter = function () {
@@ -79,6 +80,7 @@
       metadata: {
         mode: 'CAMPAIGN', kind: 'WILD', id: pokemonId, opponentPokemonId: pokemonId,
         regionId: this.data.wild.active.regionId,
+        pointId: this.data.wild.active.pointId,
         battleFormat: 'TRIAL_3X1', opponentName: 'Pokémon selvagem — ' + pokemon.name
       },
       modifiers: {}
@@ -103,7 +105,10 @@
     if (result.winner === 'player') {
       wild.pendingCapture = { ...wild.active, battleId };
     } else {
-      wild.result = { status: 'LOST', pokemonId, regionId: wild.active.regionId };
+      wild.result = {
+        status: 'LOST', pokemonId,
+        regionId: wild.active.regionId, pointId: wild.active.pointId
+      };
     }
     wild.active = null;
     this.save('WILD_BATTLE_RECORDED');
@@ -118,13 +123,20 @@
       return { ok: false, reason: 'INVALID_ROLL' };
     }
     const captured = Number.isFinite(roll) ? roll < Wild.CAPTURE_CHANCE : Wild.randomUnit() < Wild.CAPTURE_CHANCE;
-    if (captured && Wild.getRegionCaptureCount(wild, pending.regionId) < Wild.MAX_CAPTURES_PER_REGION
+    if (captured && Wild.getPointCaptureCount(wild, pending.regionId, pending.pointId) < Wild.MAX_CAPTURES_PER_POINT
       && !this.getRosterIds().includes(pending.pokemonId)) {
       wild.capturedIds.push(pending.pokemonId);
       wild.captureRegions[pending.pokemonId] = pending.regionId;
-      wild.result = { status: 'CAUGHT', pokemonId: pending.pokemonId, regionId: pending.regionId };
+      wild.capturePoints[pending.pokemonId] = pending.pointId;
+      wild.result = {
+        status: 'CAUGHT', pokemonId: pending.pokemonId,
+        regionId: pending.regionId, pointId: pending.pointId
+      };
     } else {
-      wild.result = { status: 'FLED', pokemonId: pending.pokemonId, regionId: pending.regionId };
+      wild.result = {
+        status: 'FLED', pokemonId: pending.pokemonId,
+        regionId: pending.regionId, pointId: pending.pointId
+      };
     }
     wild.pendingCapture = null;
     this.save('WILD_CAPTURE_RESOLVED');

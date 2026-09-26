@@ -2,6 +2,16 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 26/09/2026: nove pontos de exploração selvagem
+
+- Cada uma das Regiões 1, 2 e 3 agora tem três pontos temáticos no mapa; o avatar caminha até o ponto selecionado. Cada ponto permite três capturas bem-sucedidas, totalizando até 27. A Região Final continua sem encontros.
+- O Pokémon e sua raridade são apresentados antes da batalha. O jogador pode deixá-lo ir e explorar novamente ou enfrentar o encontro 3 contra 1 para tentar a captura.
+- Saves antigos migram para os pontos originais de cada região, preservando capturas e encontros em andamento. O Final Stand pode reunir até 64 Pokémon com todos os recrutamentos e reforços temporários.
+- Validação automatizada: campanha **186/186**, suíte completa **824/824**. Conferência visual manual no navegador ainda recomendada para computador e celular.
+- Regras e conferência em `docs/CAMPAIGN_WILD_NINE_POINTS.md`.
+
+---
+
 ## Atualização — 26/09/2026: encontros selvagens, Fase 3
 
 - Cenas regionais, transição de encontro e captura com efeitos sonoros procedurais no mixer já existente. Botão de som com preferência local; mudo e aba oculta respeitados.

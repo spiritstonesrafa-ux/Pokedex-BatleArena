@@ -66,8 +66,8 @@
   View.prototype.renderHome = function () {
     previousHome.call(this);
     if (this.mapView) {
-      this.mapView.onWildEncounter = regionId => {
-        const result = this.manager.beginWildEncounter(regionId);
+      this.mapView.onWildEncounter = (regionId, pointId) => {
+        const result = this.manager.beginWildEncounter(regionId, undefined, pointId);
         if (!result.ok) {
           this.mapView?.announce?.('Encontro indisponível no momento.');
         } else if (!result.resumed) {
@@ -89,11 +89,13 @@
     const roster = this.manager.getRoster();
     const ready = this.pick.length === 3;
     const region = Wild.REGIONS[wild.active.regionId];
-    const rarity = Wild.getRarity(wild.active.regionId, pokemon.id);
-    const rarityLabel = { COMMON: 'comum', UNCOMMON: 'incomum', RARE: 'raro' }[rarity] || 'desconhecida';
+    const point = Wild.getPoint(wild.active.regionId, wild.active.pointId);
+    const rarity = Wild.getRarity(wild.active.regionId, pokemon.id, wild.active.pointId);
+    const rarityLabel = { COMMON: 'COMUM', UNCOMMON: 'INCOMUM', RARE: 'RARO' }[rarity] || 'DESCONHECIDA';
+    const rarityHint = { COMMON: '70%', UNCOMMON: '25%', RARE: '5%' }[rarity] || '';
     this.container.innerHTML = `
       <section class="campaign-shell wild-encounter-screen" data-region="${wild.active.regionId}">
-        <button id="pickerBack" class="campaign-secondary" type="button">← Voltar ao mapa</button>
+        <button id="pickerBack" class="campaign-secondary" type="button">← Deixar ir e explorar novamente</button>
         ${soundButton()}
         <div class="campaign-hero wild-encounter-hero" data-region="${wild.active.regionId}">
           <p class="eyebrow">ENCONTRO SELVAGEM · ${region.name.toUpperCase()}</p>
@@ -101,8 +103,12 @@
           <div class="wild-encounter-preview" aria-hidden="true">
             <img src="${pokemon.sprite}" alt="" width="112" height="112">
           </div>
-          <p>Encontrado no ${region.biome}. Raridade: ${rarityLabel}.</p>
-          <p>Vença a batalha 3 contra 1 para tentar capturá-lo. Se voltar, este encontro será encerrado.</p>
+          <p class="wild-encounter-location">Local: ${point?.name || region.biome}</p>
+          <p class="wild-rarity-badge wild-rarity-badge--${rarity?.toLowerCase() || 'unknown'}"
+             aria-label="Raridade: ${rarityLabel.toLowerCase()}. Frequência aproximada: ${rarityHint}">
+            RARIDADE: ${rarityLabel} <span>${rarityHint} dos encontros</span>
+          </p>
+          <p>Você pode deixar este Pokémon ir e explorar novamente, ou enfrentá-lo com 3 Pokémon contra 1 para tentar capturá-lo.</p>
         </div>
         <div class="campaign-hero picker-choice">
           <h2>Escolha exatamente 3 Pokémon</h2>
@@ -112,7 +118,7 @@
           ${roster.map(member => this.card(member, this.pick.includes(member.id))).join('')}
         </div>
         <button id="startCampaignBattle" class="campaign-primary" type="button" ${ready ? '' : 'disabled'}>
-          Iniciar encontro selvagem
+          Enfrentar para tentar capturar
         </button>
       </section>`;
     bindSoundButton(this);
@@ -231,7 +237,10 @@
     focusHeading(this, 'result:' + result.status + ':' + result.pokemonId);
     this.container.querySelector('#wildResultContinue').onclick = () => {
       this.manager.acknowledgeWildResult();
-      const target = this.container.querySelector('#wildEncounterZone:not(:disabled)')
+      const pointSelector = result.pointId === Wild.defaultPointId(result.regionId)
+        ? '#wildEncounterZone:not(:disabled)'
+        : `#wildEncounterZone-${result.pointId}:not(:disabled)`;
+      const target = this.container.querySelector(pointSelector)
         || this.container.querySelector('#tab-' + (result.regionId || 'region-1'));
       target?.focus?.({ preventScroll: true });
     };

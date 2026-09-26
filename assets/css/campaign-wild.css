@@ -88,6 +88,46 @@
   animation: wildPokemonArrive .55s .08s ease-out both;
 }
 
+.wild-encounter-location {
+  margin: .5rem auto;
+  font-weight: 700;
+}
+
+.wild-rarity-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .7rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: .8rem auto;
+  padding: .65rem 1rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background: #172a23;
+  color: #cbffbd;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.wild-rarity-badge span {
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.wild-rarity-badge--uncommon {
+  background: #18314a;
+  color: #c1e7ff;
+}
+
+.wild-rarity-badge--rare {
+  background: #473316;
+  color: #ffe3a3;
+  box-shadow: 0 0 18px rgba(255, 195, 94, .25);
+}
+
 .wild-sound-toggle {
   display: inline-flex;
   align-items: center;
@@ -372,6 +412,11 @@
 
   .wild-encounter-preview {
     height: 145px;
+  }
+
+  .wild-rarity-badge {
+    flex-wrap: wrap;
+    border-radius: 16px;
   }
 
   .wild-capture-stage {

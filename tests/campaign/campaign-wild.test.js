@@ -60,7 +60,7 @@ test('Wild Phase 1 — Região 1 sorteia somente espécies seguras e não perten
   assert.equal(reloaded.beginWildEncounter('region-2').ok, false);
 });
 
-test('Wild Phase 1 — batalha 3x1, captura salva no elenco, máximo de duas e recompensas intactas', () => {
+test('Wild Phase 1 — batalha 3x1, captura salva no elenco, máximo de três por ponto e recompensas intactas', () => {
   let manager = fresh();
   const initialRoster = manager.getRosterIds();
   const first = manager.beginWildEncounter('region-1', 0).pokemonId;
@@ -90,8 +90,12 @@ test('Wild Phase 1 — batalha 3x1, captura salva no elenco, máximo de duas e r
   manager.recordBattle({ battleId: 'wild-win-2', kind: 'WILD', id: second, winner: 'player' });
   assert.equal(manager.attemptWildCapture(0).captured, true);
   manager.acknowledgeWildResult();
-  assert.equal(manager.beginWildEncounter('region-1').reason, 'REGION_LIMIT');
-  assert.equal(manager.getRosterIds().length, initialRoster.length + 2);
+  const third = manager.beginWildEncounter('region-1', 0).pokemonId;
+  manager.recordBattle({ battleId: 'wild-win-3', kind: 'WILD', id: third, winner: 'player' });
+  assert.equal(manager.attemptWildCapture(0).captured, true);
+  manager.acknowledgeWildResult();
+  assert.equal(manager.beginWildEncounter('region-1').reason, 'POINT_LIMIT');
+  assert.equal(manager.getRosterIds().length, initialRoster.length + 3);
 
   const master = Catalog.MASTERS[0];
   manager.recordBattle({ battleId: 'master-after-wild', kind: 'MASTER', id: master.challengeId, winner: 'player' });
@@ -344,30 +348,36 @@ test('Wild Phase 2 — three thematic pools use 70/25/5 weighted rarity without 
   }
 });
 
-test('Wild Phase 2 — two captures per region survive reload and allow 43-member Final Stand', () => {
+test('Wild exploration — three captures per point survive reload and allow 64-member Final Stand', () => {
   let manager = fresh();
   assert.equal(manager.beginWildEncounter('region-endgame').ok, false);
-  for (const regionId of Object.keys(Wild.REGIONS)) {
-    for (let index = 0; index < 2; index++) {
-      const encounter = manager.beginWildEncounter(regionId, index === 0 ? 0 : 0.8);
-      assert.equal(encounter.ok, true, `${regionId} deve oferecer encontro`);
+  for (const [regionId, region] of Object.entries(Wild.REGIONS)) {
+    for (const point of region.points) {
+      for (let index = 0; index < 3; index++) {
+      const encounter = manager.beginWildEncounter(regionId, index === 0 ? 0 : 0.8, point.id);
+      assert.equal(encounter.ok, true, `${point.id} deve oferecer encontro`);
       const pokemonId = encounter.pokemonId;
       assert.equal(manager.getState().wild.active.regionId, regionId);
+      assert.equal(manager.getState().wild.active.pointId, point.id);
       assert.equal(manager.getBattleConfig('WILD', pokemonId, manager.getRosterIds().slice(0, 3))
         .metadata.regionId, regionId);
-      manager.recordBattle({ battleId: `phase2-${regionId}-${index}`,
+      manager.recordBattle({ battleId: `points-${point.id}-${index}`,
         kind: 'WILD', id: pokemonId, winner: 'player' });
       assert.equal(manager.attemptWildCapture(0).captured, true);
       assert.equal(manager.getState().wild.captureRegions[pokemonId], regionId);
+      assert.equal(manager.getState().wild.capturePoints[pokemonId], point.id);
       manager = new CampaignManager(Store);
       assert.equal(manager.getState().wild.result.regionId, regionId);
+      assert.equal(manager.getState().wild.result.pointId, point.id);
       assert.equal(manager.acknowledgeWildResult(), true);
+      }
+      assert.equal(Wild.getPointCaptureCount(manager.getState().wild, regionId, point.id), 3);
+      assert.equal(manager.beginWildEncounter(regionId, 0, point.id).reason, 'POINT_LIMIT');
     }
-    assert.equal(Wild.getRegionCaptureCount(manager.getState().wild, regionId), 2);
-    assert.equal(manager.beginWildEncounter(regionId).reason, 'REGION_LIMIT');
+    assert.equal(Wild.getRegionCaptureCount(manager.getState().wild, regionId), 9);
   }
-  assert.equal(manager.getState().wild.capturedIds.length, 6);
-  assert.equal(manager.getRosterIds().length, 12);
+  assert.equal(manager.getState().wild.capturedIds.length, 27);
+  assert.equal(manager.getRosterIds().length, 33);
   for (const master of Catalog.MASTERS) {
     manager.recordBattle({ battleId: 'phase2-master-' + master.challengeId,
       kind: 'MASTER', id: master.challengeId, winner: 'player' });
@@ -390,7 +400,7 @@ test('Wild Phase 2 — two captures per region survive reload and allow 43-membe
   }
   manager.recordBattle({ battleId: 'phase2-super', kind: 'SUPER', winner: 'player' });
   assert.equal(manager.claimReward(Catalog.SUPER_TEAM[0].id).ok, true);
-  assert.equal(manager.getShadowFinalStandArmy(manager.getRosterIds()[0]).length, 43);
+  assert.equal(manager.getShadowFinalStandArmy(manager.getRosterIds()[0]).length, 64);
 });
 
 test('Wild Phase 2 — old captures migrate to Region 1 and bad regional data is discarded', () => {
@@ -403,9 +413,11 @@ test('Wild Phase 2 — old captures migrate to Region 1 and bad regional data is
   }
   const legacy = manager.getState();
   delete legacy.wild.captureRegions;
+  delete legacy.wild.capturePoints;
   memory.set(Store.STORAGE_KEY, JSON.stringify(legacy));
   manager = new CampaignManager(Store);
   assert.equal(Wild.getRegionCaptureCount(manager.getState().wild, 'region-1'), 2);
+  assert.equal(Wild.getPointCaptureCount(manager.getState().wild, 'region-1', 'r1-forest'), 2);
   assert.equal(Wild.getRegionCaptureCount(manager.getState().wild, 'region-2'), 0);
   assert.equal(manager.beginWildEncounter('region-2', 0).ok, true);
   assert.equal(manager.beginWildEncounter('region-3', 0).reason, 'RESOLVE_PREVIOUS');
@@ -463,8 +475,8 @@ test('Wild Phase 2 — encounter screen names the current region and its rarity'
     const encounter = manager.beginWildEncounter(regionId, 0.98);
     assert.equal(encounter.ok, true);
     assert.match(container.innerHTML, new RegExp(Wild.REGIONS[regionId].name.toUpperCase()));
-    assert.match(container.innerHTML, /Raridade: raro/);
-    assert.match(container.innerHTML, new RegExp(Wild.REGIONS[regionId].biome));
+    assert.match(container.innerHTML, /RARIDADE: RARO/);
+    assert.match(container.innerHTML, new RegExp(Wild.getPoint(regionId, Wild.defaultPointId(regionId)).name));
     view.deactivate();
   }
 });
@@ -483,6 +495,11 @@ test('Wild Phase 2 — pending capture and regional map limits remain correct af
     id: nextId, winner: 'player' });
   manager.attemptWildCapture(0);
   manager.acknowledgeWildResult();
+  const thirdId = manager.beginWildEncounter('region-2', 0).pokemonId;
+  manager.recordBattle({ battleId: 'phase2-region-2-third', kind: 'WILD',
+    id: thirdId, winner: 'player' });
+  manager.attemptWildCapture(0);
+  manager.acknowledgeWildResult();
 
   for (const [regionId, shouldDisable] of [['region-1', false], ['region-2', true], ['region-3', false]]) {
     const wildButton = { disabled: false, onclick: null };
@@ -494,10 +511,139 @@ test('Wild Phase 2 — pending capture and regional map limits remain correct af
     const map = new CampaignMapView({ manager, container,
       initialRegionId: regionId, initialViewMode: 'MAP' });
     map.render();
-    assert.match(container.innerHTML, shouldDisable ? /Área explorada/ : /\/2/);
+    assert.match(container.innerHTML, shouldDisable ? /Área explorada/ : /\/3/);
     assert.equal(/id="wildEncounterZone"[^>]*disabled/.test(container.innerHTML), shouldDisable);
+    if (regionId === 'region-2') {
+      for (const pointId of ['r2-volcano', 'r2-glacier']) {
+        assert.equal(new RegExp(`id="wildEncounterZone-${pointId}"[^>]*disabled`)
+          .test(container.innerHTML), false, 'Other points remain explorable');
+      }
+    }
     map.destroy();
   }
+});
+
+test('Wild exploration — nine thematic points have distinct map targets and safe rarity pools', () => {
+  const reserved = new Set([
+    ...Catalog.MASTER_SPECIES, ...Catalog.SUPER_TEAM,
+    ...Catalog.LEGENDARY_TRIAL_TEAM, ...Catalog.MYTHICAL_TRIAL_TEAM,
+    ...Catalog.TITANS_TRIAL_TEAM, ...Catalog.CELESTIAL_TRIAL_TEAM
+  ].map(pokemon => pokemon.id));
+  assert.equal(Object.keys(Wild.POINTS).length, 9);
+  for (const [regionId, region] of Object.entries(Wild.REGIONS)) {
+    assert.equal(region.points.length, 3);
+    assert.equal(new Set(region.points.map(point => point.zoneNodeId)).size, 3);
+    for (const point of region.points) {
+      assert.equal(Wild.isPointId(regionId, point.id), true);
+      const pool = Wild.POINT_POOLS[point.id];
+      assert.ok(pool.length >= 10, `${point.id} should have enough species for repeated encounters`);
+      for (const id of pool) {
+        const pokemon = Catalog.byId(id);
+        assert.ok(!pokemon.legendary && !pokemon.mythical && !reserved.has(id));
+        assert.ok(pokemon.types.some(type => point.types.includes(type)));
+      }
+      for (const [roll, rarity] of [[0.3, 'COMMON'], [0.82, 'UNCOMMON'], [0.98, 'RARE']]) {
+        const id = Wild.choose([], roll, regionId, point.id);
+        assert.equal(Wild.getRarity(regionId, id, point.id), rarity);
+      }
+    }
+  }
+  assert.equal(Wild.isPointId('region-1', 'r2-volcano'), false);
+  assert.deepEqual(Wild.getPool([], 'region-1', 'r2-volcano'), []);
+});
+
+test('Wild exploration — every map button walks to its own point without opening a Master', () => {
+  const manager = fresh();
+  for (const [regionId, config] of Object.entries(Wild.REGIONS)) {
+    const buttons = new Map(config.points.map(point => [
+      point.id === config.defaultPointId ? '#wildEncounterZone' : '#wildEncounterZone-' + point.id,
+      { disabled: false, onclick: null }
+    ]));
+    const container = {
+      innerHTML: '',
+      querySelector: selector => buttons.get(selector) || null,
+      querySelectorAll: () => []
+    };
+    const visits = [];
+    const challenges = [];
+    const map = new CampaignMapView({ manager, container, initialRegionId: regionId,
+      initialViewMode: 'MAP', onWildEncounter: (...args) => visits.push(args),
+      onChallenge: challenge => challenges.push(challenge) });
+    map.render();
+    assert.equal((container.innerHTML.match(/data-wild-point=/g) || []).length, 3);
+    for (const point of config.points) {
+      const selector = point.id === config.defaultPointId
+        ? '#wildEncounterZone' : '#wildEncounterZone-' + point.id;
+      buttons.get(selector).onclick();
+      assert.deepEqual(visits.at(-1), [regionId, point.id]);
+      assert.equal(map.avatarNodeByRegion.get(regionId), point.zoneNodeId);
+    }
+    assert.deepEqual(challenges, []);
+    map.destroy();
+  }
+});
+
+test('Wild exploration — leaving an encounter allows another roll without using a capture', () => {
+  const manager = fresh();
+  const pointId = 'r1-meadow';
+  const first = manager.beginWildEncounter('region-1', 0, pointId);
+  assert.equal(first.ok, true);
+  assert.equal(manager.beginWildEncounter('region-1', 0.99, 'r1-coast').reason, 'RESOLVE_PREVIOUS');
+  assert.equal(manager.cancelWildEncounter(), true);
+  const second = manager.beginWildEncounter('region-1', 0.99, pointId);
+  assert.equal(second.ok, true);
+  assert.notEqual(second.pokemonId, first.pokemonId);
+  assert.equal(Wild.getPointCaptureCount(manager.getState().wild, 'region-1', pointId), 0);
+});
+
+test('Wild exploration — rarity is prominent before choosing to leave or fight', () => {
+  const manager = fresh();
+  const buttons = new Map();
+  const container = {
+    innerHTML: '',
+    querySelector(selector) {
+      if (!buttons.has(selector)) buttons.set(selector, { onclick: null, disabled: false });
+      return buttons.get(selector);
+    },
+    querySelectorAll: () => []
+  };
+  const view = new CampaignView({ manager, coordinator: { start: async () => {} }, container });
+  const encounter = manager.beginWildEncounter('region-3', 0.98, 'r3-shrine');
+  assert.equal(encounter.ok, true);
+  assert.match(container.innerHTML, /Local: Santuário/);
+  assert.match(container.innerHTML, /wild-rarity-badge--rare/);
+  assert.match(container.innerHTML, /RARIDADE: RARO/);
+  assert.match(container.innerHTML, /Deixar ir e explorar novamente/);
+  assert.match(container.innerHTML, /Enfrentar para tentar capturar/);
+  buttons.get('#pickerBack').onclick();
+  assert.equal(manager.getState().wild.active, null);
+  assert.equal(Wild.getPointCaptureCount(manager.getState().wild, 'region-3', 'r3-shrine'), 0);
+  view.deactivate();
+});
+
+test('Wild exploration — old saves restore active, pending and captured Pokémon to legacy points', () => {
+  let manager = fresh();
+  const captured = manager.beginWildEncounter('region-2', 0).pokemonId;
+  manager.recordBattle({ battleId: 'migration-captured', kind: 'WILD', id: captured, winner: 'player' });
+  manager.attemptWildCapture(0);
+  manager.acknowledgeWildResult();
+  const active = manager.beginWildEncounter('region-2', 0.98).pokemonId;
+  const activeLegacy = manager.getState();
+  delete activeLegacy.wild.capturePoints;
+  delete activeLegacy.wild.active.pointId;
+  memory.set(Store.STORAGE_KEY, JSON.stringify(activeLegacy));
+  manager = new CampaignManager(Store);
+  assert.equal(manager.getState().wild.capturePoints[captured], 'r2-canyon');
+  assert.equal(manager.getState().wild.active.pointId, 'r2-canyon');
+  assert.equal(manager.getState().wild.active.pokemonId, active);
+  manager.recordBattle({ battleId: 'migration-pending', kind: 'WILD', id: active, winner: 'player' });
+  const pendingLegacy = manager.getState();
+  delete pendingLegacy.wild.capturePoints;
+  delete pendingLegacy.wild.pendingCapture.pointId;
+  memory.set(Store.STORAGE_KEY, JSON.stringify(pendingLegacy));
+  manager = new CampaignManager(Store);
+  assert.equal(manager.getState().wild.pendingCapture.pointId, 'r2-canyon');
+  assert.equal(manager.getState().wild.capturePoints[captured], 'r2-canyon');
 });
 
 test('Wild Phase 3 — capture cues reuse the UI mixer and obey mute, preference and hidden tab', () => {

@@ -14,6 +14,8 @@ Na Fase 2, as Regiões 2 e 3 também recebem pontos de exploração. Cada regiã
 
 A Fase 3 acrescenta cenas por região, efeitos procedurais de captura, botão de som e ajustes de celular/acessibilidade sem alterar as regras. Detalhes e checklist de conferência manual em `CAMPAIGN_WILD_PHASE_3.md`.
 
+**Regra atual:** cada uma das três primeiras regiões oferece três pontos distintos de exploração, com até três capturas bem-sucedidas em cada ponto (27 no total). Antes da luta, o jogador vê a raridade e escolhe se deixa o Pokémon ir para explorar de novo ou se enfrenta o selvagem. O limite antigo de duas capturas por região descrito nas fases históricas acima não se aplica mais. Detalhes em `CAMPAIGN_WILD_NINE_POINTS.md`.
+
 ## Draft expansion: Seleção Inicial de 450 Pokémon
 
 A seleção inicial de novos treinadores na campanha foi expandida de 144 para **450 Pokémon canônicos**, distribuídos uniformemente em exatamente **50 Pokémon por geração oficial** (da Geração 1 à Geração 9).

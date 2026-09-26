@@ -612,17 +612,24 @@
         .join('');
       const wildConfig = Wild?.REGIONS?.[region.id];
       const campaignState = wildConfig ? this.manager?.getState?.() : null;
-      const wildCaptured = wildConfig ? Wild.getRegionCaptureCount(campaignState?.wild, region.id) : 0;
-      const wildLimit = Wild?.MAX_CAPTURES_PER_REGION || 2;
       const wildZoneHtml = wildConfig
-        ? `<button type="button" id="wildEncounterZone" class="campaign-map-wild-zone" data-region="${region.id}"
-             style="left: ${wildConfig.zonePosition.x}%; top: ${wildConfig.zonePosition.y}%;"
-             aria-label="${wildCaptured >= wildLimit
-               ? `Exploração concluída no ${wildConfig.biome}: ${wildLimit} capturas`
-               : `${wildConfig.zoneLabel} e procurar um Pokémon selvagem. ${wildCaptured} de ${wildLimit} capturas`}"
-             ${wildCaptured >= wildLimit || campaignState?.pendingReward ? 'disabled' : ''}>
-             <span aria-hidden="true">✦</span> ${wildCaptured >= wildLimit ? 'Área explorada' : `${wildConfig.zoneLabel} · ${wildCaptured}/${wildLimit}`}
-           </button>`
+        ? wildConfig.points.map(point => {
+          const count = Wild.getPointCaptureCount(campaignState?.wild, region.id, point.id);
+          const limit = Wild.MAX_CAPTURES_PER_POINT;
+          const completed = count >= limit;
+          const buttonId = point.id === wildConfig.defaultPointId
+            ? 'wildEncounterZone' : `wildEncounterZone-${point.id}`;
+          return `<button type="button" id="${buttonId}" class="campaign-map-wild-zone"
+             data-region="${region.id}" data-wild-point="${point.id}"
+             style="left: ${point.zonePosition.x}%; top: ${point.zonePosition.y}%;"
+             aria-label="${completed
+               ? `Área explorada em ${point.name}: ${limit} capturas`
+               : `${point.zoneLabel} e procurar um Pokémon selvagem. ${count} de ${limit} capturas`}"
+             ${completed || campaignState?.pendingReward ? 'disabled' : ''}>
+             <span aria-hidden="true">✦</span> ${completed ? `${point.name} · Área explorada`
+               : `${point.zoneLabel} · ${count}/${limit}`}
+           </button>`;
+        }).join('')
         : '';
 
       let selectedMarkerHtml = '';
@@ -1093,15 +1100,18 @@
         };
       });
 
-      const wildZone = this.container.querySelector('#wildEncounterZone');
-      if (wildZone) {
+      const wildConfig = Wild?.REGIONS?.[activeRegion.id];
+      for (const point of wildConfig?.points || []) {
+        const buttonId = point.id === wildConfig.defaultPointId
+          ? 'wildEncounterZone' : `wildEncounterZone-${point.id}`;
+        const wildZone = this.container.querySelector('#' + buttonId);
+        if (!wildZone) continue;
         wildZone.onclick = () => {
           if (this._travel || wildZone.disabled) return;
-          const targetId = Wild?.REGIONS?.[activeRegion.id]?.zoneNodeId;
-          const target = activeRegion.nodes.find(node => node.nodeId === targetId);
+          const target = activeRegion.nodes.find(node => node.nodeId === point.zoneNodeId);
           if (!target) return;
-          if (!this._startTravel(target, null, { wildEncounter: true })) {
-            this._completeWildTravel({ node: target });
+          if (!this._startTravel(target, null, { wildEncounter: true, pointId: point.id })) {
+            this._completeWildTravel({ node: target, pointId: point.id });
           }
         };
       }
@@ -1536,7 +1546,8 @@
 
     _completeWildTravel(travel) {
       const regionId = this._activeRegion?.id;
-      if (this._isDestroyed || !Wild?.REGIONS?.[regionId]) return;
+      const pointId = travel.pointId || Wild?.defaultPointId?.(regionId);
+      if (this._isDestroyed || !Wild?.isPointId?.(regionId, pointId)) return;
       this.avatarNodeByRegion.set(regionId, travel.node.nodeId);
       this._persistAvatarProgress();
       this._cancelDrawerOpening();
@@ -1545,7 +1556,7 @@
       this.selectedNodeId = null;
       this.transitionCause = 'NONE';
       this.render();
-      this.onWildEncounter(regionId);
+      this.onWildEncounter(regionId, pointId);
     }
 
     _orientAvatar(travel, dx, dy) {
