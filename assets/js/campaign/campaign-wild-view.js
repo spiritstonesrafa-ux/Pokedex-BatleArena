@@ -91,8 +91,17 @@
     const region = Wild.REGIONS[wild.active.regionId];
     const point = Wild.getPoint(wild.active.regionId, wild.active.pointId);
     const rarity = Wild.getRarity(wild.active.regionId, pokemon.id, wild.active.pointId);
-    const rarityLabel = { COMMON: 'COMUM', UNCOMMON: 'INCOMUM', RARE: 'RARO' }[rarity] || 'DESCONHECIDA';
-    const rarityHint = { COMMON: '60%', UNCOMMON: '25%', RARE: '15%' }[rarity] || '';
+    const rarityLabel = {
+      COMMON: 'COMUM', UNCOMMON: 'INCOMUM', RARE: 'RARO',
+      LEGENDARY: 'LENDÁRIO', MYTHICAL: 'MÍTICO'
+    }[rarity] || 'DESCONHECIDA';
+    const rarityHint = {
+      COMMON: '55%', UNCOMMON: '25%', RARE: '15%',
+      LEGENDARY: '5%', MYTHICAL: '5%'
+    }[rarity] || '';
+    const rarityFrequency = rarity === 'LEGENDARY' || rarity === 'MYTHICAL'
+      ? '5% dos encontros (lendários e míticos juntos)'
+      : rarityHint + ' dos encontros';
     this.container.innerHTML = `
       <section class="campaign-shell wild-encounter-screen" data-region="${wild.active.regionId}">
         <button id="pickerBack" class="campaign-secondary" type="button">← Deixar ir e explorar novamente</button>
@@ -105,8 +114,8 @@
           </div>
           <p class="wild-encounter-location">Local: ${point?.name || region.biome}</p>
           <p class="wild-rarity-badge wild-rarity-badge--${rarity?.toLowerCase() || 'unknown'}"
-             aria-label="Raridade: ${rarityLabel.toLowerCase()}. Frequência aproximada: ${rarityHint}">
-            RARIDADE: ${rarityLabel} <span>${rarityHint} dos encontros</span>
+             aria-label="Raridade: ${rarityLabel.toLowerCase()}. Frequência-base: ${rarityFrequency}">
+            RARIDADE: ${rarityLabel} <span>${rarityFrequency}</span>
           </p>
           <p>Você pode deixar este Pokémon ir e explorar novamente, ou enfrentá-lo com 3 Pokémon contra 1 para tentar capturá-lo.</p>
         </div>

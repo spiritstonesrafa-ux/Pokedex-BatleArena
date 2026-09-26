@@ -2,6 +2,15 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 26/09/2026: encontros especiais selvagens
+
+- Encontros lendários ou míticos agora ocupam juntos 5% da distribuição-base. As demais faixas ficam em 55% comum, 25% incomum e 15% raro.
+- Foram integrados 19 lendários não reservados e 6 míticos novos com dados e golpes offline; nenhuma espécie dos quatro desafios finais ou do Super Treinador entra no sorteio.
+- A batalha continua 3 contra 1, a captura continua em 72% após vitória e o limite permanece três capturas por ponto. Ver `docs/CAMPAIGN_WILD_SPECIAL_ENCOUNTERS.md`.
+- Validação automatizada: campanha **188/188**, suíte completa **826/826**. Conferência visual manual no navegador ainda recomendada.
+
+---
+
 ## Atualização — 26/09/2026: raros mais frequentes na exploração
 
 - A chance-base de encontrar Pokémon raros subiu de 5% para 15%. Os encontros comuns passaram a 60%; os incomuns permanecem em 25%.

@@ -2,6 +2,9 @@
   const Static = typeof module !== 'undefined' && module.exports
     ? require('./campaign-pokemon-catalog.js')
     : window.PBACampaign.CampaignPokemonCatalog;
+  const WildSpecial = typeof module !== 'undefined' && module.exports
+    ? require('./campaign-wild-special-catalog.js')
+    : window.PBACampaign.CampaignWildSpecialCatalog;
   if (!Static) throw new Error('CampaignPokemonCatalog must load before campaign-catalog.');
   const DraftIdsModule = typeof module !== 'undefined' && module.exports
     ? require('./campaign-draft-ids.js')
@@ -69,13 +72,14 @@
     {id:487,name:'giratina',types:['ghost','dragon'],bst:680,generation:4,sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/487.png',legendary:true,mythical:false}
   ].map(freeze => Object.freeze({...freeze,types:Object.freeze(freeze.types)})));
   const trialById = Object.freeze(Object.fromEntries(trialRecords.map(entry => [entry.id,entry])));
-  const allById = Object.freeze({...Static.byId,...trialById});
+  const allById = Object.freeze({...Static.byId,...WildSpecial.byId,...trialById});
   const LEGENDARY_TRIAL_TEAM = Object.freeze([145,245,381].map(id => allById[id]));
   const MYTHICAL_TRIAL_TEAM = Object.freeze([151,385,494].map(id => allById[id]));
   const TITANS_TRIAL_TEAM = Object.freeze([1007,383,717].map(id => allById[id]));
   const CELESTIAL_TRIAL_TEAM = Object.freeze([889,791,487].map(id => allById[id]));
   const api = Object.freeze({
     DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SUPER_AUDIT, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
+    WILD_SPECIAL_SPECIES: WildSpecial.entries,
     DRAFT_IDS_BY_GENERATION: draftIdsByGeneration,
     CANONICAL_BY_ID: allById,
     byId: id => allById[Number(id)] || null,

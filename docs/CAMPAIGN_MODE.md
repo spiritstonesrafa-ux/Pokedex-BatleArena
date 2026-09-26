@@ -14,7 +14,7 @@ Na Fase 2, as Regiões 2 e 3 também recebem pontos de exploração. Cada regiã
 
 A Fase 3 acrescenta cenas por região, efeitos procedurais de captura, botão de som e ajustes de celular/acessibilidade sem alterar as regras. Detalhes e checklist de conferência manual em `CAMPAIGN_WILD_PHASE_3.md`.
 
-**Regra atual:** cada uma das três primeiras regiões oferece três pontos distintos de exploração, com até três capturas bem-sucedidas em cada ponto (27 no total). A chance-base de encontrar um raro é 15% (comum/incomum/raro: 60%/25%/15%). Antes da luta, o jogador vê a raridade e escolhe se deixa o Pokémon ir para explorar de novo ou se enfrenta o selvagem. O limite antigo de duas capturas por região e a distribuição de raridade descritos nas fases históricas acima não se aplicam mais. Detalhes em `CAMPAIGN_WILD_NINE_POINTS.md`.
+**Regra atual:** cada uma das três primeiras regiões oferece três pontos distintos de exploração, com até três capturas bem-sucedidas em cada ponto (27 no total). A distribuição-base é 55% comum, 25% incomum, 15% raro e 5% especial (lendário ou mítico). Antes da luta, o jogador vê a raridade e escolhe se deixa o Pokémon ir para explorar de novo ou se enfrenta o selvagem. Nenhuma espécie dos quatro desafios finais ou do Super Treinador aparece no sorteio. O limite antigo de duas capturas por região e a distribuição de raridade descritos nas fases históricas acima não se aplicam mais. Detalhes em `CAMPAIGN_WILD_NINE_POINTS.md` e `CAMPAIGN_WILD_SPECIAL_ENCOUNTERS.md`.
 
 ## Draft expansion: Seleção Inicial de 450 Pokémon
 

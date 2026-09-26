@@ -30,7 +30,7 @@ function startedManager(store = memoryStore()) {
 }
 
 test('offline candidate pool is species-specific, canonical and bounded', () => {
-  assert.equal(Object.keys(Fixed.byId).length, 468);
+  assert.equal(Object.keys(Fixed.byId).length, 493);
   assert.equal(Object.keys(Extras.byId).length, 454);
   for (const [key, species] of Object.entries(Fixed.byId)) {
     const pool = Options.getPool(Number(key));

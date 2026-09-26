@@ -8,7 +8,7 @@
   const MAX_CAPTURES_PER_REGION = 9;
   const MAX_REGION_1_CAPTURES = MAX_CAPTURES_PER_REGION;
   const CAPTURE_CHANCE = 0.72;
-  const RARITY_WEIGHTS = Object.freeze({ COMMON: 60, UNCOMMON: 25, RARE: 15 });
+  const RARITY_WEIGHTS = Object.freeze({ COMMON: 55, UNCOMMON: 25, RARE: 15, SPECIAL: 5 });
   const REGIONS = Object.freeze({
     'region-1': Object.freeze({
       name: 'Região 1', biome: 'mata', zoneLabel: 'Explorar mata',
@@ -95,8 +95,16 @@
     Object.freeze(REGION_POOLS[point.regionId]
       .filter(id => Catalog.byId(id).types.some(type => point.types.includes(type))))
   ])));
+  const SPECIAL_POOL = Object.freeze(Catalog.WILD_SPECIAL_SPECIES
+    .filter(pokemon => (pokemon.legendary || pokemon.mythical) && !reserved.has(pokemon.id))
+    .map(pokemon => pokemon.id));
+  const POINT_SPECIAL_POOLS = Object.freeze(Object.fromEntries(Object.values(POINTS).map(point => [
+    point.id,
+    Object.freeze(SPECIAL_POOL.filter(id =>
+      Catalog.byId(id).types.some(type => point.types.includes(type))))
+  ])));
   const allowedByPoint = Object.fromEntries(Object.entries(POINT_POOLS)
-    .map(([pointId, pool]) => [pointId, new Set(pool)]));
+    .map(([pointId, pool]) => [pointId, new Set([...pool, ...POINT_SPECIAL_POOLS[pointId]])]));
   const rarityByPoint = Object.fromEntries(Object.entries(POINT_POOLS).map(([pointId, pool]) => {
     const ranked = [...pool].sort((a, b) => Catalog.byId(a).bst - Catalog.byId(b).bst || a - b);
     const commonEnd = Math.ceil(ranked.length * .5);
@@ -155,12 +163,17 @@
   function getPool(ownedIds = [], regionId = 'region-1', pointId = defaultPointId(regionId)) {
     if (!isPointId(regionId, pointId)) return [];
     const owned = new Set(ownedIds.map(Number));
-    return POINT_POOLS[pointId].filter(id => !owned.has(id));
+    return [...POINT_POOLS[pointId], ...POINT_SPECIAL_POOLS[pointId]]
+      .filter(id => !owned.has(id));
   }
 
   function getRarity(regionId, pokemonId, pointId = defaultPointId(regionId)) {
-    return isPointId(regionId, pointId)
-      ? rarityByPoint[pointId].get(Number(pokemonId)) || null : null;
+    if (!isPointId(regionId, pointId)) return null;
+    const id = Number(pokemonId);
+    if (POINT_SPECIAL_POOLS[pointId].includes(id)) {
+      return Catalog.byId(id).mythical ? 'MYTHICAL' : 'LEGENDARY';
+    }
+    return rarityByPoint[pointId].get(id) || null;
   }
 
   function choose(ownedIds = [], roll = randomUnit(), regionId = 'region-1',
@@ -169,7 +182,9 @@
     if (!pool.length) return null;
     const buckets = Object.entries(RARITY_WEIGHTS)
       .map(([rarity, weight]) => ({
-        rarity, weight, ids: pool.filter(id => getRarity(regionId, id, pointId) === rarity)
+        rarity, weight, ids: pool.filter(id => rarity === 'SPECIAL'
+          ? POINT_SPECIAL_POOLS[pointId].includes(id)
+          : getRarity(regionId, id, pointId) === rarity)
       }))
       .filter(bucket => bucket.ids.length);
     const totalWeight = buckets.reduce((sum, bucket) => sum + bucket.weight, 0);
@@ -253,7 +268,8 @@
   }
 
   const api = Object.freeze({
-    REGIONS, POINTS, REGION_POOLS, POINT_POOLS, REGION_1_POOL, RARITY_WEIGHTS,
+    REGIONS, POINTS, REGION_POOLS, POINT_POOLS, SPECIAL_POOL, POINT_SPECIAL_POOLS,
+    REGION_1_POOL, RARITY_WEIGHTS,
     MAX_CAPTURES_PER_POINT, MAX_CAPTURES_PER_REGION, MAX_REGION_1_CAPTURES, CAPTURE_CHANCE,
     isRegionId, isPointId, getPoint, defaultPointId, getDefaultState,
     getRegionCaptureCount, getPointCaptureCount, getPool, getRarity, choose, randomUnit, sanitize

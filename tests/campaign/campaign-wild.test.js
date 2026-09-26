@@ -317,7 +317,7 @@ test('Wild capture — suspense precedes both the success and escape result', ()
   }
 });
 
-test('Wild exploration — thematic pools use 60/25/15 weighted rarity without reserved species', () => {
+test('Wild exploration — thematic pools use 55/25/15/5 weighted rarity without reserved rewards', () => {
   const reserved = new Set([
     ...Catalog.MASTER_SPECIES, ...Catalog.SUPER_TEAM,
     ...Catalog.LEGENDARY_TRIAL_TEAM, ...Catalog.MYTHICAL_TRIAL_TEAM,
@@ -325,7 +325,7 @@ test('Wild exploration — thematic pools use 60/25/15 weighted rarity without r
   ].map(pokemon => pokemon.id));
   assert.deepEqual(Object.keys(Wild.REGIONS), ['region-1', 'region-2', 'region-3']);
   assert.equal(Wild.REGIONS['region-endgame'], undefined);
-  assert.deepEqual(Wild.RARITY_WEIGHTS, { COMMON: 60, UNCOMMON: 25, RARE: 15 });
+  assert.deepEqual(Wild.RARITY_WEIGHTS, { COMMON: 55, UNCOMMON: 25, RARE: 15, SPECIAL: 5 });
   assert.equal(Wild.REGION_POOLS['region-1'], Wild.REGION_1_POOL);
   for (const [regionId, config] of Object.entries(Wild.REGIONS)) {
     const pool = Wild.REGION_POOLS[regionId];
@@ -472,7 +472,7 @@ test('Wild Phase 2 — encounter screen names the current region and its rarity'
       querySelectorAll: () => []
     };
     const view = new CampaignView({ manager, coordinator: { start: async () => {} }, container });
-    const encounter = manager.beginWildEncounter(regionId, 0.98);
+    const encounter = manager.beginWildEncounter(regionId, 0.9);
     assert.equal(encounter.ok, true);
     assert.match(container.innerHTML, new RegExp(Wild.REGIONS[regionId].name.toUpperCase()));
     assert.match(container.innerHTML, /RARIDADE: RARO/);
@@ -546,17 +546,74 @@ test('Wild exploration — nine thematic points have distinct map targets and sa
         const id = Wild.choose([], roll, regionId, point.id);
         assert.equal(Wild.getRarity(regionId, id, point.id), rarity);
       }
-      const bands = { COMMON: 0, UNCOMMON: 0, RARE: 0 };
+      const bands = { COMMON: 0, UNCOMMON: 0, RARE: 0, SPECIAL: 0 };
       for (let index = 0; index < 100; index++) {
         const id = Wild.choose([], (index + .5) / 100, regionId, point.id);
-        bands[Wild.getRarity(regionId, id, point.id)]++;
+        const rarity = Wild.getRarity(regionId, id, point.id);
+        bands[rarity === 'LEGENDARY' || rarity === 'MYTHICAL' ? 'SPECIAL' : rarity]++;
       }
-      assert.deepEqual(bands, { COMMON: 60, UNCOMMON: 25, RARE: 15 },
+      assert.deepEqual(bands, { COMMON: 55, UNCOMMON: 25, RARE: 15, SPECIAL: 5 },
         `${point.id} should honor the new base odds`);
     }
   }
   assert.equal(Wild.isPointId('region-1', 'r2-volcano'), false);
   assert.deepEqual(Wild.getPool([], 'region-1', 'r2-volcano'), []);
+});
+
+test('Wild special encounters — 19 legendary and 6 mythical candidates exclude every final reward', () => {
+  const Fixed = require('../../assets/js/campaign/campaign-fixed-battle-catalog.js');
+  const reserved = new Set([
+    ...Catalog.SUPER_TEAM, ...Catalog.LEGENDARY_TRIAL_TEAM,
+    ...Catalog.MYTHICAL_TRIAL_TEAM, ...Catalog.TITANS_TRIAL_TEAM,
+    ...Catalog.CELESTIAL_TRIAL_TEAM
+  ].map(pokemon => pokemon.id));
+  assert.equal(Wild.SPECIAL_POOL.length, 25);
+  assert.equal(new Set(Wild.SPECIAL_POOL).size, 25);
+  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).legendary).length, 19);
+  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).mythical).length, 6);
+  for (const id of Wild.SPECIAL_POOL) {
+    const pokemon = Catalog.byId(id);
+    assert.ok(!reserved.has(id), `${pokemon.name} cannot replace a final reward`);
+    assert.equal(Fixed.byId[id].moves.length, 4);
+    assert.ok(Fixed.byId[id].moves.some(move => pokemon.types.includes(move.type)));
+  }
+  for (const [pointId, pool] of Object.entries(Wild.POINT_SPECIAL_POOLS)) {
+    assert.ok(pool.length > 0, pointId + ' needs special encounters');
+    assert.ok(pool.every(id => Catalog.byId(id).types
+      .some(type => Wild.POINTS[pointId].types.includes(type))));
+  }
+});
+
+test('Wild special encounters — mythical battle, capture and reload work offline', async () => {
+  let manager = fresh();
+  const encounter = manager.beginWildEncounter('region-3', .999, 'r3-shrine');
+  assert.equal(encounter.ok, true);
+  assert.equal(Catalog.byId(encounter.pokemonId).mythical, true);
+  assert.equal(Wild.getRarity('region-3', encounter.pokemonId, 'r3-shrine'), 'MYTHICAL');
+  const config = manager.getBattleConfig('WILD', encounter.pokemonId, manager.getRosterIds().slice(0, 3));
+  let apiCalls = 0;
+  const priorDocument = global.document;
+  delete global.document;
+  try {
+    const session = new Session({
+      hydrator: new Hydrator({ api: { getPokemonDetail: async () => { apiCalls++; throw Error('offline'); } } }),
+      engine: Engine, view: { renderState() {} }
+    });
+    const battle = await session.prepareBattle(config);
+    assert.equal(battle.enemy.team.length, 1);
+    assert.equal(battle.enemy.team[0].id, encounter.pokemonId);
+    assert.equal(session.enemyTeam[0].moves.length, 4);
+    assert.equal(apiCalls, 0);
+  } finally {
+    global.document = priorDocument;
+  }
+  manager.recordBattle({ battleId: 'mythical-capture', kind: 'WILD',
+    id: encounter.pokemonId, winner: 'player' });
+  assert.equal(manager.attemptWildCapture(0).captured, true);
+  manager = new CampaignManager(Store);
+  assert.ok(manager.getRosterIds().includes(encounter.pokemonId));
+  assert.equal(manager.getState().wild.capturePoints[encounter.pokemonId], 'r3-shrine');
+  assert.equal(manager.getState().wild.result.status, 'CAUGHT');
 });
 
 test('Wild exploration — every map button walks to its own point without opening a Master', () => {
@@ -615,7 +672,7 @@ test('Wild exploration — rarity is prominent before choosing to leave or fight
     querySelectorAll: () => []
   };
   const view = new CampaignView({ manager, coordinator: { start: async () => {} }, container });
-  const encounter = manager.beginWildEncounter('region-3', 0.98, 'r3-shrine');
+  const encounter = manager.beginWildEncounter('region-3', 0.9, 'r3-shrine');
   assert.equal(encounter.ok, true);
   assert.match(container.innerHTML, /Local: Santuário/);
   assert.match(container.innerHTML, /wild-rarity-badge--rare/);
@@ -626,6 +683,11 @@ test('Wild exploration — rarity is prominent before choosing to leave or fight
   buttons.get('#pickerBack').onclick();
   assert.equal(manager.getState().wild.active, null);
   assert.equal(Wild.getPointCaptureCount(manager.getState().wild, 'region-3', 'r3-shrine'), 0);
+  const mythical = manager.beginWildEncounter('region-3', 0.999, 'r3-shrine');
+  assert.equal(Catalog.byId(mythical.pokemonId).mythical, true);
+  assert.match(container.innerHTML, /wild-rarity-badge--mythical/);
+  assert.match(container.innerHTML, /RARIDADE: MÍTICO/);
+  assert.match(container.innerHTML, /5% dos encontros \(lendários e míticos juntos\)/);
   view.deactivate();
 });
 

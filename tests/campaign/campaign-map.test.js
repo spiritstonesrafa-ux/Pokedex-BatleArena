@@ -517,6 +517,7 @@ test('Caminho Real de Navegador (Script Tag via node:vm sem module/require) — 
     'assets/js/battle/type-chart.js',
     'assets/js/campaign/campaign-constants.js',
     'assets/js/campaign/campaign-pokemon-catalog.js',
+    'assets/js/campaign/campaign-wild-special-catalog.js',
     'assets/js/campaign/campaign-catalog.js',
     'assets/js/campaign/campaign-wild-encounters.js',
     'assets/js/campaign/campaign-wild-audio.js',

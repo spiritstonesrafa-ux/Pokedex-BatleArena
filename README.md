@@ -92,7 +92,7 @@ A apresentação é orientada por eventos: a regra de combate produz eventos est
 
 O modo Campaign é uma jornada persistente: draft inicial, elenco que cresce por recompensas e capturas selvagens opcionais, insígnias e **18 Mestres**, um para cada tipo Pokémon. Cada Mestre possui apresentação com arte de treinador criada especificamente para esta experiência de portfólio.
 
-Os encontros selvagens das três primeiras regiões oferecem três pontos de exploração em cada mapa, até três capturas por ponto, raridade visível antes da luta, escolha de explorar novamente, captura com Poké Bola e efeitos sonoros opcionais que respeitam o mudo do jogo. O modo de movimento reduzido evita a espera da animação.
+Os encontros selvagens das três primeiras regiões oferecem três pontos de exploração em cada mapa, até três capturas por ponto, raridade visível antes da luta, escolha de explorar novamente, captura com Poké Bola e efeitos sonoros opcionais que respeitam o mudo do jogo. Há 5% de chance-base de encontrar um lendário ou mítico não reservado às recompensas finais. O modo de movimento reduzido evita a espera da animação.
 
 Depois do circuito, o endgame inclui as provas **Legendary**, **Mythical**, **Titans** e **Celestial**, o **Super Trainer**, uma falsa conclusão e o verdadeiro desafio contra o **Shadow Super Trainer**. O confronto final aplica Shadow Aura e culmina no **Shadow Final Stand**, seguido pelo True Ending.
 

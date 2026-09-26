@@ -20,11 +20,11 @@ const trialTeams = [
 ];
 const obtainable = new Set([
   ...Campaign.DRAFT, ...Campaign.MASTER_SPECIES, ...Campaign.SUPER_TEAM,
-  ...trialTeams.flat()
+  ...trialTeams.flat(), ...Campaign.WILD_SPECIAL_SPECIES
 ].map(pokemon => pokemon.id));
 
 test('every currently obtainable campaign Pokémon has four distinct supported fixed moves', () => {
-  assert.equal(obtainable.size, 468);
+  assert.equal(obtainable.size, 493);
   assert.equal(Object.keys(Fixed.extras).length, 18);
   for (const id of obtainable) {
     const pokemon = Fixed.byId[id];
@@ -178,12 +178,12 @@ test('an unsupported legacy roster member remains playable through the old path'
   const session = new Session({ hydrator: new Hydrator({ api }), engine: Engine,
     view: { renderState() {} } });
   const battle = await session.prepareBattle({
-    playerTeamIds: [384, 3, 6], enemyTeamIds: Campaign.SUPER_TEAM.map(pokemon => pokemon.id),
+    playerTeamIds: [258, 3, 6], enemyTeamIds: Campaign.SUPER_TEAM.map(pokemon => pokemon.id),
     metadata: { mode: 'CAMPAIGN', kind: 'SUPER' }
   });
   assert.ok(battle);
   assert.equal(apiCalls, 1);
-  assert.equal(session.playerTeam[0].id, 384);
+  assert.equal(session.playerTeam[0].id, 258);
   assert.equal(session.playerTeam[1].moveLoadoutSource, MOVESET_LOADOUT_SOURCE.CAMPAIGN_FIXED_MOVESET);
 });
 
@@ -211,6 +211,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
     'campaign/campaign-constants.js',
     'campaign/campaign-draft-ids.js',
     'campaign/campaign-pokemon-catalog.js',
+    'campaign/campaign-wild-special-catalog.js',
     'campaign/campaign-catalog.js',
     'campaign/campaign-fixed-battle-catalog.js',
     'campaign/campaign-matchup-guide.js'
@@ -219,7 +220,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
     const source = fs.readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8');
     vm.runInContext(source, context, { filename: file });
   }
-  assert.equal(Object.keys(context.PBACampaign.CampaignFixedBattleCatalog.byId).length, 468);
+  assert.equal(Object.keys(context.PBACampaign.CampaignFixedBattleCatalog.byId).length, 493);
   assert.ok(context.PBACampaign.MatchupGuide);
   assert.ok(context.PBABattleSession.BattleSessionController);
   const html = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');

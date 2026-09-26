@@ -4,6 +4,8 @@
     ? require('./campaign-catalog.js') : window.PBACampaign;
   const Draft = typeof module !== 'undefined' && module.exports
     ? require('./campaign-battle-fallback-catalog.js') : Campaign.CampaignBattleFallbackCatalog;
+  const WildSpecial = typeof module !== 'undefined' && module.exports
+    ? require('./campaign-wild-special-catalog.js') : Campaign.CampaignWildSpecialCatalog;
   const Hydrator = typeof module !== 'undefined' && module.exports
     ? require('../battle-session/battle-team-hydrator.js') : window.PBABattleSession;
   const Battle = typeof module !== 'undefined' && module.exports
@@ -80,7 +82,14 @@
     return [id, Object.freeze({ ...species, moves: Object.freeze(species.moves.map(move =>
       move.name === replaced ? Battle.SUPPORTED_STATUS_MOVES[statusName] : move)) })];
   }));
-  const byId = Object.freeze({ ...Draft.byId, ...extras, ...statusOverrides });
+  const wildSpecialBattle = Object.fromEntries(WildSpecial.entries.map(species => [species.id, Object.freeze({
+    id: species.id, number: species.id, name: species.name,
+    types: species.types, stats: species.stats, moves: species.moves,
+    photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + species.id + '.png',
+    animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/' + species.id + '.gif',
+    cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/' + species.id + '.ogg'
+  })]));
+  const byId = Object.freeze({ ...Draft.byId, ...extras, ...wildSpecialBattle, ...statusOverrides });
   const api = Object.freeze({ byId, extras: Object.freeze(extras) });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
