@@ -133,7 +133,11 @@
     bindSoundButton(this);
     focusHeading(this, 'encounter:' + wild.active.encounterId);
     if (typeof this.enhanceMobilePicker === 'function') {
-      try { this.enhanceMobilePicker(); } catch (_) {}
+      try {
+        this.enhanceMobilePicker();
+      } catch (error) {
+        console.error('[Campaign Mobile UI] Failed to enhance wild encounter picker; using standard campaign picker.', error);
+      }
     }
     const wildBack = this.container.querySelector('#pickerBack');
     if (wildBack) {

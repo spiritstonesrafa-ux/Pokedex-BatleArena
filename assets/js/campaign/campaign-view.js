@@ -402,6 +402,11 @@
   };
 })();
 
+if (typeof window !== 'undefined') {
+  window.PBACampaign = window.PBACampaign || {};
+  window.PBACampaign.MOBILE_UI_VERSION = '2.2-mobile';
+}
+
 /* PBA-015M — Mobile Game UI Architecture (FASE 1 – FASE 12) */
 (function () {
   const View = window.PBACampaign && window.PBACampaign.CampaignView;
@@ -630,8 +635,8 @@
     const res = prevPicker.call(this);
     try {
       this.enhanceMobilePicker();
-    } catch (e) {
-      /* safe fallback */
+    } catch (error) {
+      console.error('[Campaign Mobile UI] Failed to enhance battle picker; using standard campaign picker.', error);
     }
     return res;
   };
