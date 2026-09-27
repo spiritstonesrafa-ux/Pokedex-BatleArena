@@ -1316,7 +1316,6 @@
   /* Drawer turns into Bottom Sheet */
   .campaign-details-backdrop {
     position: fixed;
-    z-index: 99;
   }
 
   .campaign-details-drawer {
@@ -1332,7 +1331,6 @@
     border-top: 2px solid rgba(255, 255, 255, 0.25);
     border-radius: 24px 24px 0 0;
     transform: translateY(100%);
-    z-index: 100;
   }
 
   .campaign-details-drawer.is-open {
@@ -1358,6 +1356,20 @@
 }
 
 @media (max-width: 768px) {
+  /* The trainer dialog must cover the fixed map navigation while open. */
+  .campaign-details-backdrop {
+    z-index: 900;
+  }
+
+  .campaign-details-drawer {
+    z-index: 910;
+  }
+
+  .details-drawer-footer {
+    flex: 0 0 auto;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
   .campaign-map-shell {
     padding-bottom: calc(75px + env(safe-area-inset-bottom)) !important;
   }

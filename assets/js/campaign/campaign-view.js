@@ -404,7 +404,7 @@
 
 if (typeof window !== 'undefined') {
   window.PBACampaign = window.PBACampaign || {};
-  window.PBACampaign.MOBILE_UI_VERSION = '2.2-mobile';
+  window.PBACampaign.MOBILE_UI_VERSION = '2.3-mobile';
 }
 
 /* PBA-015M — Mobile Game UI Architecture (FASE 1 – FASE 12) */
