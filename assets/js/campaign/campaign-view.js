@@ -1,5 +1,5 @@
 (function(){
- class CampaignView { constructor({manager,coordinator,container}){this.manager=manager;this.coordinator=coordinator;this.container=container||document.getElementById('campaignView');this.draft=[];this.pick=[];this.pending=null;this.draftDebounceTimer=null;manager.onChange(()=>this.render())} cap(s){return String(s).replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())} clearDraftDebounce(){if(this.draftDebounceTimer){clearTimeout(this.draftDebounceTimer);this.draftDebounceTimer=null;}} render(){if(!this.container)return;const d=this.manager.getState();if(this.manager.isStarted()){this.clearDraftDebounce();}if(!this.manager.isStarted()){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderDraft();}if(d.pendingReward){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderReward(d.pendingReward);}if(d.status==='COMPLETED'){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderComplete();}if(this.pending){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderPicker();}this.renderHome()} card(p,selected=false){if(!p)return'';const rec=p.recommendedForEndgame?'<span class="recommended-badge" title="Recomendado para desafios finais"><i class="fa-solid fa-star"></i> Recomendado</span>':'';return `<button class="campaign-mon ${selected?'selected':''} ${p.recommendedForEndgame?'is-recommended':''}" data-id="${p.id}" aria-pressed="${selected}"><img src="${p.sprite}" alt="${p.name}" loading="lazy"><strong>${this.cap(p.name)}</strong><span>${p.types.map(t=>`<i class="type-chip type-${t}">${t}</i>`).join('')}</span><small>BST ${p.bst}</small>${rec}</button>`} renderDraft(){const C=window.PBACampaign;this.container.innerHTML=`<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">NOVA JORNADA</p><h2>Circuito dos Mestres</h2><p>Escolha 6 Pokémon para começar sua campanha. Essa escolha será permanente. Novos Pokémon entram no elenco ao vencer Mestres, concluir provas ou capturar Pokémon selvagens.</p><strong>Selecionados ${this.draft.length}/6</strong></div><div class="campaign-grid draft-grid">${C.DRAFT.map(p=>this.card(p,this.draft.includes(p.id))).join('')}</div><button id="campaignConfirmDraft" class="campaign-primary" ${this.draft.length===6?'':'disabled'}>Confirmar equipe</button></section>`;this.container.querySelectorAll('.campaign-mon').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.id);this.draft=this.draft.includes(id)?this.draft.filter(x=>x!==id):(this.draft.length<6?[...this.draft,id]:this.draft);this.render()});this.container.querySelector('#campaignConfirmDraft').onclick=()=>{if(confirm('Esses serão seus 6 Pokémon iniciais. Depois de iniciar a campanha, eles não poderão ser trocados. Deseja continuar?'))this.manager.start(this.draft)}} renderHome(){if(!this.mapView||this.mapView.container!==this.container){const MapViewClass=(window.PBACampaign&&window.PBACampaign.CampaignMapView)||(typeof require!=='undefined'?require('./campaign-map-view.js').CampaignMapView:null);if(MapViewClass){this.mapView=new MapViewClass({manager:this.manager,container:this.container,onChallenge:({kind,id})=>{if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();this.pending={kind,id,opponentId:null};this.pick=[];this.render()},onReset:()=>{if(confirm('Resetar somente o progresso da campanha? Seu Perfil, Meu Time e preferências serão preservados.'))this.manager.reset()}})}}if(this.mapView){this.mapView.container=this.container;this.mapView.render()}} renderPicker(){const roster=this.manager.getRoster();this.container.innerHTML=`<section class="campaign-shell"><button id="pickerBack" class="campaign-secondary">← Voltar</button><div class="campaign-hero"><p class="eyebrow">PREPARAR DESAFIO</p><h2>Escolha exatamente 3 Pokémon</h2><p>O primeiro selecionado será o líder. ${this.pick.length}/3 selecionados.</p></div><div class="campaign-grid draft-grid">${roster.map(p=>this.card(p,this.pick.includes(p.id))).join('')}</div><button id="startCampaignBattle" class="campaign-primary" ${this.pick.length===3?'':'disabled'}>Iniciar batalha</button></section>`;this.container.querySelector('#pickerBack').onclick=()=>{this.pending=null;this.render()};this.container.querySelectorAll('.campaign-mon').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.id);this.pick=this.pick.includes(id)?this.pick.filter(x=>x!==id):(this.pick.length<3?[...this.pick,id]:this.pick);this.render()});this.container.querySelector('#startCampaignBattle').onclick=async()=>{try{await this.coordinator.start(this.pending.kind,this.pending.id,this.pick);this.pending=null;window.switchAppTab('battle')}catch(e){alert(e.message)}}} renderReward(reward){const C=window.PBACampaign;this.container.innerHTML=`<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">RECOMPENSA</p><h2>Escolha seu novo recruta</h2><p>Esta decisão é permanente.</p></div><div class="campaign-grid draft-grid">${reward.candidates.map(id=>this.card(C.byId(id))).join('')}</div></section>`;this.container.querySelectorAll('.campaign-mon').forEach(b=>b.onclick=()=>{if(confirm('Confirmar este recruta?'))this.manager.claimReward(Number(b.dataset.id))})} renderComplete(){this.container.innerHTML='<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">JORNADA CONCLUÍDA</p><h2>True Ending</h2><p>Você dominou o Circuito dos Mestres e deixou sua marca.</p></div><button id="campaignReset" class="campaign-reset">Resetar campanha</button></section>';this.container.querySelector('#campaignReset').onclick=()=>{if(confirm('Resetar somente a campanha?'))this.manager.reset()}} deactivate(){this.clearDraftDebounce();if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();}
+ class CampaignView { constructor({manager,coordinator,container}){this.manager=manager;this.coordinator=coordinator;this.container=container||document.getElementById('campaignView');this.draft=[];this.pick=[];this.pending=null;this.draftDebounceTimer=null;manager.onChange(()=>this.render())} cap(s){return String(s).replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())} clearDraftDebounce(){if(this.draftDebounceTimer){clearTimeout(this.draftDebounceTimer);this.draftDebounceTimer=null;}} render(){if(!this.container)return;const d=this.manager.getState();if(this.manager.isStarted()){this.clearDraftDebounce();}if(!this.manager.isStarted()){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderDraft();}if(d.pendingReward){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderReward(d.pendingReward);}if(d.status==='COMPLETED'){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderComplete();}if(this.pending){if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();return this.renderPicker();}this.renderHome()} card(p,selected=false){if(!p)return'';const rec=p.recommendedForEndgame?'<span class="recommended-badge" title="Recomendado para desafios finais"><i class="fa-solid fa-star"></i> Recomendado</span>':'';return `<button class="campaign-mon ${selected?'selected':''} ${p.recommendedForEndgame?'is-recommended':''}" data-id="${p.id}" aria-pressed="${selected}"><img src="${p.sprite}" alt="${p.name}" loading="lazy"><strong>${this.cap(p.name)}</strong><span>${p.types.map(t=>`<i class="type-chip type-${t}">${t}</i>`).join('')}</span><small>BST ${p.bst}</small>${rec}</button>`} renderDraft(){const C=window.PBACampaign;this.container.innerHTML=`<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">NOVA JORNADA</p><h2>Circuito dos Mestres</h2><p>Escolha 6 Pokémon para começar sua campanha. Essa escolha será permanente. Novos Pokémon entram no elenco ao vencer Mestres, concluir provas ou capturar Pokémon selvagens.</p><strong>Selecionados ${this.draft.length}/6</strong></div><div class="campaign-grid draft-grid">${C.DRAFT.map(p=>this.card(p,this.draft.includes(p.id))).join('')}</div><button id="campaignConfirmDraft" class="campaign-primary" ${this.draft.length===6?'':'disabled'}>Confirmar equipe</button></section>`;this.container.querySelectorAll('.campaign-mon').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.id);this.draft=this.draft.includes(id)?this.draft.filter(x=>x!==id):(this.draft.length<6?[...this.draft,id]:this.draft);this.render()});this.container.querySelector('#campaignConfirmDraft').onclick=()=>{if(confirm('Esses serão seus 6 Pokémon iniciais. Depois de iniciar a campanha, eles não poderão ser trocados. Deseja continuar?'))this.manager.start(this.draft)}} renderHome(){if(typeof document!=='undefined'&&document.body)document.body.classList.remove('campaign-mobile-open');this._activeMobileTab='team';if(!this.mapView||this.mapView.container!==this.container){const MapViewClass=(window.PBACampaign&&window.PBACampaign.CampaignMapView)||(typeof require!=='undefined'?require('./campaign-map-view.js').CampaignMapView:null);if(MapViewClass){this.mapView=new MapViewClass({manager:this.manager,container:this.container,onChallenge:({kind,id})=>{if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();this.pending={kind,id,opponentId:null};this.pick=[];this.render()},onReset:()=>{if(confirm('Resetar somente o progresso da campanha? Seu Perfil, Meu Time e preferências serão preservados.'))this.manager.reset()}})}}if(this.mapView){this.mapView.container=this.container;this.mapView.render()}} renderPicker(){const roster=this.manager.getRoster();this.container.innerHTML=`<section class="campaign-shell"><button id="pickerBack" class="campaign-secondary">← Voltar</button><div class="campaign-hero"><p class="eyebrow">PREPARAR DESAFIO</p><h2>Escolha exatamente 3 Pokémon</h2><p>O primeiro selecionado será o líder. ${this.pick.length}/3 selecionados.</p></div><div class="campaign-grid draft-grid">${roster.map(p=>this.card(p,this.pick.includes(p.id))).join('')}</div><button id="startCampaignBattle" class="campaign-primary" ${this.pick.length===3?'':'disabled'}>Iniciar batalha</button></section>`;this.container.querySelector('#pickerBack').onclick=()=>{this.pending=null;this.render()};this.container.querySelectorAll('.campaign-mon').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.id);this.pick=this.pick.includes(id)?this.pick.filter(x=>x!==id):(this.pick.length<3?[...this.pick,id]:this.pick);this.render()});this.container.querySelector('#startCampaignBattle').onclick=async()=>{try{await this.coordinator.start(this.pending.kind,this.pending.id,this.pick);this.pending=null;window.switchAppTab('battle')}catch(e){alert(e.message)}}} renderReward(reward){const C=window.PBACampaign;this.container.innerHTML=`<section class="campaign-shell is-reward"><div class="campaign-hero"><p class="eyebrow">RECOMPENSA</p><h2>Escolha seu novo recruta</h2><p>Esta decisão é permanente.</p></div><div class="campaign-grid draft-grid">${reward.candidates.map(id=>this.card(C.byId(id))).join('')}</div></section>`;this.container.querySelectorAll('.campaign-mon').forEach(b=>b.onclick=()=>{if(confirm('Confirmar este recruta?'))this.manager.claimReward(Number(b.dataset.id))})} renderComplete(){this.container.innerHTML='<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">JORNADA CONCLUÍDA</p><h2>True Ending</h2><p>Você dominou o Circuito dos Mestres e deixou sua marca.</p></div><button id="campaignReset" class="campaign-reset">Resetar campanha</button></section>';this.container.querySelector('#campaignReset').onclick=()=>{if(confirm('Resetar somente a campanha?'))this.manager.reset()}} deactivate(){if(typeof document!=='undefined'&&document.body)document.body.classList.remove('campaign-mobile-open');this.clearDraftDebounce();if(this.mapView&&typeof this.mapView.destroy==='function')this.mapView.destroy();}
  }
  const api={CampaignView};if(typeof window!=='undefined'){window.PBACampaign=window.PBACampaign||{};Object.assign(window.PBACampaign,api)}if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();
@@ -401,3 +401,239 @@
     this.setupBattleStart(isReady, 1, async () => { try { await this.coordinator.start('SHADOW', null, this.pick); this.pending = null; window.switchAppTab('battle'); } catch (error) { alert(error.message); } });
   };
 })();
+
+/* PBA-015M — Mobile Game UI Architecture (FASE 1 – FASE 12) */
+(function () {
+  const View = window.PBACampaign && window.PBACampaign.CampaignView;
+  if (!View) return;
+  const C = window.PBACampaign;
+  const cap = value => String(value || '').replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+  const escape = value => String(value == null ? '' : value).replace(/[&<>"']/g, char =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+
+  const trialInfo = {
+    LEGENDARY_TRIAL: { title: 'PROVA LENDÁRIA', subtitle: '3 contra 3 · Elite', difficulty: 'DIFÍCIL' },
+    MYTHICAL_TRIAL: { title: 'PROVA MÍTICA', subtitle: '3 contra 3 · Elite', difficulty: 'DIFÍCIL' },
+    TITANS_TRIAL: { title: 'PROVA DOS TITÃS', subtitle: '3 contra 3 · Elite', difficulty: 'MUITO DIFÍCIL' },
+    CELESTIAL_TRIAL: { title: 'PROVA CELESTIAL', subtitle: '3 contra 3 · Elite', difficulty: 'MUITO DIFÍCIL' }
+  };
+
+  View.prototype.enhanceMobilePicker = function () {
+    if (!this.container) return;
+    const shell = this.container.querySelector('.campaign-shell');
+    if (!shell) return;
+    shell.classList.add('is-picker');
+
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.add('campaign-mobile-open');
+    }
+
+    const state = this.manager ? this.manager.getState() : {};
+    const kind = this.pending?.kind;
+    const isShadowFinalStand = kind === 'SHADOW' && state.shadowTrainer?.reinforcementsSeen;
+    const requiredCount = isShadowFinalStand ? 1 : 3;
+
+    let title = 'PREPARAR DESAFIO';
+    let subtitle = `${requiredCount} contra ${kind === 'WILD' ? 1 : 3}`;
+    if (kind === 'MASTER') {
+      const master = this.pending?.id ? this.manager.getMaster(this.pending.id) : null;
+      if (master) {
+        title = master.trainerName;
+        subtitle = `${master.trainerTitle} · 3 contra 3`;
+      }
+    } else if (kind && trialInfo[kind]) {
+      title = trialInfo[kind].title;
+      subtitle = trialInfo[kind].subtitle;
+    } else if (kind === 'SUPER') {
+      title = 'SUPER TREINADOR';
+      subtitle = 'O Mestre dos Mais Fortes · 3 contra 3';
+    } else if (kind === 'SHADOW') {
+      title = 'SHADOW SUPER TRAINER';
+      subtitle = isShadowFinalStand ? 'Final Stand · 1 Líder' : 'Desafio Final · 3 contra 3';
+    } else if (kind === 'WILD') {
+      const wild = state.wild;
+      const mon = wild?.active?.pokemonId ? (C.byId ? C.byId(wild.active.pokemonId) : null) : null;
+      if (mon) {
+        title = cap(mon.name);
+        subtitle = 'Encontro Selvagem · 3 contra 1';
+      }
+    }
+
+    if (!this._activeMobileTab) this._activeMobileTab = 'team';
+    shell.setAttribute('data-mobile-active-tab', this._activeMobileTab);
+
+    const roster = [
+      ...this.manager.getRoster(),
+      ...(kind === 'SHADOW' && this.manager.getShadowGuests ? this.manager.getShadowGuests() : [])
+    ];
+    const pickedMons = (this.pick || []).map(id => roster.find(m => m.id === id) || (C && C.byId && C.byId(id))).filter(Boolean);
+
+    const slotsHtml = Array.from({ length: requiredCount }).map((_, i) => {
+      const mon = pickedMons[i];
+      if (mon) {
+        return `
+          <div class="mobile-team-slot is-filled" data-slot-id="${mon.id}" data-slot-index="${i}" role="button" tabindex="0" aria-label="${cap(mon.name)}, ${i === 0 ? 'Líder' : `Slot ${i + 1}`}. Toque para remover.">
+            <span class="mobile-slot-badge">${i === 0 ? '👑 Líder' : `Slot ${i + 1}`}</span>
+            <img src="${mon.sprite}" alt="${cap(mon.name)}" class="mobile-slot-sprite">
+            <span class="mobile-slot-name">${cap(mon.name)}</span>
+            <button type="button" class="mobile-slot-remove-btn" data-remove-slot="${mon.id}" aria-label="Remover ${cap(mon.name)}">×</button>
+          </div>
+        `;
+      }
+      return `
+        <div class="mobile-team-slot is-empty" data-slot-index="${i}" role="button" tabindex="0" aria-label="${i === 0 ? 'Líder' : `Slot ${i + 1}`} vazio. Selecione um Pokémon abaixo.">
+          <span class="mobile-slot-badge">${i === 0 ? '👑 Líder' : `Slot ${i + 1}`}</span>
+          <div class="mobile-slot-empty-icon">?</div>
+          <span class="mobile-slot-name">Vazio</span>
+        </div>
+      `;
+    }).join('');
+
+    const countText = `${this.pick.length}/${requiredCount} selecionados`;
+    const isReady = this.pick.length === requiredCount;
+
+    const topSectionHtml = `
+      <div class="mobile-picker-top-section" id="mobilePickerTopSection">
+        <div class="mobile-picker-header-row">
+          <button type="button" class="mobile-picker-back-btn" id="mobilePickerBackBtn" aria-label="Voltar ao mapa">
+            <i class="fa-solid fa-arrow-left"></i> <span>Voltar</span>
+          </button>
+          <div class="mobile-picker-title-block">
+            <h3>${escape(title)}</h3>
+            <small>${escape(subtitle)}</small>
+          </div>
+        </div>
+
+        <div class="mobile-team-slots" role="region" aria-label="Sua equipe para a batalha">
+          <div class="mobile-team-slots__bar">
+            <span class="mobile-team-slots__title">SUA EQUIPE</span>
+            <span class="mobile-team-slots__count ${isReady ? 'is-complete' : ''}">${countText}</span>
+          </div>
+          <div class="mobile-team-slots__grid ${requiredCount === 1 ? 'is-single' : ''}">
+            ${slotsHtml}
+          </div>
+        </div>
+
+        <nav class="mobile-picker-tabs-bar" role="tablist" aria-label="Abas da preparação">
+          <button type="button" role="tab" class="mobile-picker-tab-btn ${this._activeMobileTab === 'team' ? 'is-active' : ''}" data-target-tab="team" aria-selected="${this._activeMobileTab === 'team'}" aria-controls="mobile-tab-team">
+            <i class="fa-solid fa-users"></i>
+            <span>Equipe</span>
+          </button>
+          <button type="button" role="tab" class="mobile-picker-tab-btn ${this._activeMobileTab === 'enemy' ? 'is-active' : ''}" data-target-tab="enemy" aria-selected="${this._activeMobileTab === 'enemy'}" aria-controls="mobile-tab-enemy">
+            <i class="fa-solid fa-crosshairs"></i>
+            <span>Adversário</span>
+          </button>
+          <button type="button" role="tab" class="mobile-picker-tab-btn ${this._activeMobileTab === 'moves' ? 'is-active' : ''}" data-target-tab="moves" aria-selected="${this._activeMobileTab === 'moves'}" aria-controls="mobile-tab-moves">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Golpes</span>
+          </button>
+          <button type="button" role="tab" class="mobile-picker-tab-btn ${this._activeMobileTab === 'guide' ? 'is-active' : ''}" data-target-tab="guide" aria-selected="${this._activeMobileTab === 'guide'}" aria-controls="mobile-tab-guide">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Análise</span>
+          </button>
+        </nav>
+      </div>
+    `;
+
+    const existingTop = shell.querySelector('#mobilePickerTopSection');
+    if (existingTop) existingTop.remove();
+
+    shell.insertAdjacentHTML('afterbegin', topSectionHtml);
+
+    if (!shell.querySelector('.mobile-tab-empty-hint.for-moves')) {
+      const hint = document.createElement('div');
+      hint.className = 'mobile-tab-empty-hint for-moves';
+      hint.innerHTML = '<i class="fa-solid fa-bolt"></i><p>Selecione pelo menos 1 Pokémon na aba <strong>Equipe</strong> para personalizar seus golpes.</p>';
+      const actionBar = shell.querySelector('#pickerActionBar') || shell.querySelector('#startCampaignBattle');
+      if (actionBar) shell.insertBefore(hint, actionBar);
+      else shell.appendChild(hint);
+    }
+    if (!shell.querySelector('.mobile-tab-empty-hint.for-guide')) {
+      const hint = document.createElement('div');
+      hint.className = 'mobile-tab-empty-hint for-guide';
+      hint.innerHTML = '<i class="fa-solid fa-chart-pie"></i><p>Selecione Pokémon na aba <strong>Equipe</strong> para ver a análise tática completa contra este adversário.</p>';
+      const actionBar = shell.querySelector('#pickerActionBar') || shell.querySelector('#startCampaignBattle');
+      if (actionBar) shell.insertBefore(hint, actionBar);
+      else shell.appendChild(hint);
+    }
+
+    const mobileBack = shell.querySelector('#mobilePickerBackBtn');
+    const originalBack = shell.querySelector('#pickerBack');
+    if (mobileBack && originalBack) {
+      mobileBack.onclick = (e) => {
+        e.preventDefault();
+        if (typeof document !== 'undefined' && document.body) {
+          document.body.classList.remove('campaign-mobile-open');
+        }
+        this._activeMobileTab = 'team';
+        originalBack.click();
+      };
+    }
+
+    if (originalBack) {
+      const origOnClick = originalBack.onclick;
+      originalBack.onclick = (e) => {
+        if (typeof document !== 'undefined' && document.body) {
+          document.body.classList.remove('campaign-mobile-open');
+        }
+        this._activeMobileTab = 'team';
+        if (typeof origOnClick === 'function') origOnClick.call(originalBack, e);
+      };
+    }
+
+    shell.querySelectorAll('.mobile-picker-tab-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const target = btn.dataset.targetTab;
+        this._activeMobileTab = target;
+        shell.setAttribute('data-mobile-active-tab', target);
+        shell.querySelectorAll('.mobile-picker-tab-btn').forEach(t => {
+          const active = t.dataset.targetTab === target;
+          t.classList.toggle('is-active', active);
+          t.setAttribute('aria-selected', String(active));
+        });
+      };
+    });
+
+    shell.querySelectorAll('[data-remove-slot]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = Number(btn.dataset.removeSlot);
+        this.pick = this.pick.filter(x => x !== id);
+        this.render();
+      };
+    });
+
+    shell.querySelectorAll('.mobile-team-slot.is-filled').forEach(slot => {
+      slot.onclick = () => {
+        const id = Number(slot.dataset.slotId);
+        this.pick = this.pick.filter(x => x !== id);
+        this.render();
+      };
+    });
+
+    shell.querySelectorAll('.mobile-team-slot.is-empty').forEach(slot => {
+      slot.onclick = () => {
+        this._activeMobileTab = 'team';
+        shell.setAttribute('data-mobile-active-tab', 'team');
+        shell.querySelectorAll('.mobile-picker-tab-btn').forEach(t => {
+          const active = t.dataset.targetTab === 'team';
+          t.classList.toggle('is-active', active);
+          t.setAttribute('aria-selected', String(active));
+        });
+      };
+    });
+  };
+
+  const prevPicker = View.prototype.renderPicker;
+  View.prototype.renderPicker = function () {
+    const res = prevPicker.call(this);
+    try {
+      this.enhanceMobilePicker();
+    } catch (e) {
+      /* safe fallback */
+    }
+    return res;
+  };
+})();
+

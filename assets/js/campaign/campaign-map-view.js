@@ -82,6 +82,7 @@
       this.viewMode = initialViewMode || this._getStoredViewMode();
       this.selectedNodeId = null;
       this.isDrawerOpen = false;
+      this.mobileNavTab = 'MAP';
       this.lastFocusedNodeId = null;
       this.lastFocusedAction = 'map-node';
       this.ariaLiveMessage = '';
@@ -268,6 +269,7 @@
       this.pendingAriaAnnouncement = '';
       this.isDrawerOpen = false;
       this.selectedNodeId = null;
+      this.mobileNavTab = 'MAP';
       if (typeof document !== 'undefined') {
         document.removeEventListener('keydown', this._handleKeyDown);
       }
@@ -406,6 +408,8 @@
                aria-hidden="true"></div>
 
           ${this._renderDrawer(selectedNode, viewModel)}
+          ${this._renderMobileNav(viewModel)}
+          ${this._renderMobileSheets(viewModel)}
         </section>
       `;
 
@@ -989,6 +993,88 @@
       `;
     }
 
+    _renderMobileNav(viewModel) {
+      const activeTab = this.mobileNavTab || 'MAP';
+      return `
+        <nav class="campaign-mobile-nav" aria-label="Navegação da Campanha">
+          <button type="button" class="campaign-mobile-nav-btn ${activeTab === 'MAP' ? 'is-active' : ''}" data-mobile-nav="MAP" aria-label="Mapa da Campanha">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>MAPA</span>
+          </button>
+          <button type="button" class="campaign-mobile-nav-btn ${activeTab === 'TEAM' ? 'is-active' : ''}" data-mobile-nav="TEAM" aria-label="Equipe da Campanha">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>EQUIPE</span>
+          </button>
+          <button type="button" class="campaign-mobile-nav-btn ${activeTab === 'ROSTER' ? 'is-active' : ''}" data-mobile-nav="ROSTER" aria-label="Elenco Completo">
+            <i class="fa-solid fa-box-archive"></i>
+            <span>ELENCO</span>
+          </button>
+        </nav>
+      `;
+    }
+
+    _renderMobileSheets(viewModel) {
+      const activeTab = this.mobileNavTab;
+      const isTeamOpen = activeTab === 'TEAM';
+      const isRosterOpen = activeTab === 'ROSTER';
+      const roster = this.manager ? this.manager.getRoster() : [];
+      const C = window.PBACampaign;
+      const byId = (id) => (CatalogModule && typeof CatalogModule.byId === 'function')
+        ? CatalogModule.byId(id)
+        : (C && typeof C.byId === 'function')
+          ? C.byId(id)
+          : (typeof require !== 'undefined' ? require('./campaign-catalog.js').byId(id) : null);
+      const state = this.manager ? this.manager.getState() : {};
+      const starters = Array.isArray(state.starterDraft) ? state.starterDraft.map(byId).filter(Boolean) : [];
+      const displayTeam = starters.length ? starters : roster.slice(0, 6);
+
+      return `
+        <div id="mobileSheetBackdrop" class="campaign-mobile-sheet-backdrop ${(isTeamOpen || isRosterOpen) ? 'is-open' : ''}" aria-hidden="true"></div>
+
+        <div id="mobileTeamSheet" class="campaign-mobile-sheet ${isTeamOpen ? 'is-open' : ''}" role="dialog" aria-modal="true" aria-label="Equipe da Campanha">
+          <div class="campaign-mobile-sheet__header">
+            <h3><i class="fa-solid fa-shield-halved"></i> Equipe da Campanha</h3>
+            <button type="button" class="campaign-mobile-sheet__close" data-close-sheet="TEAM" aria-label="Fechar painel de equipe">×</button>
+          </div>
+          <p class="campaign-mobile-sheet__desc">Sua equipe inicial de ${displayTeam.length} Pokémon selecionada para a jornada.</p>
+          <div class="campaign-mobile-sheet__team-grid">
+            ${displayTeam.map(p => `
+              <article class="mobile-sheet-mon-card">
+                <img src="${p.sprite}" alt="${cap(p.name)}" loading="lazy">
+                <div class="mobile-sheet-mon-info">
+                  <strong>${cap(p.name)}</strong>
+                  <span>${(p.types || []).map(t => `<i class="type-chip type-${t}">${t}</i>`).join('')}</span>
+                  <small>BST ${p.bst || p.baseStats?.total || '—'}</small>
+                </div>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+
+        <div id="mobileRosterSheet" class="campaign-mobile-sheet ${isRosterOpen ? 'is-open' : ''}" role="dialog" aria-modal="true" aria-label="Elenco Completo de Pokémon">
+          <div class="campaign-mobile-sheet__header">
+            <h3><i class="fa-solid fa-box-archive"></i> Elenco (${roster.length} Pokémon)</h3>
+            <button type="button" class="campaign-mobile-sheet__close" data-close-sheet="ROSTER" aria-label="Fechar painel de elenco">×</button>
+          </div>
+          <div class="campaign-mobile-sheet__search">
+            <input type="text" id="mobileRosterFilter" placeholder="Buscar no elenco..." aria-label="Buscar Pokémon no elenco">
+          </div>
+          <div class="campaign-mobile-sheet__roster-grid" id="mobileRosterGrid">
+            ${roster.map(p => `
+              <article class="mobile-sheet-mon-card mobile-roster-item" data-name="${(p.name || '').toLowerCase()}">
+                <img src="${p.sprite}" alt="${cap(p.name)}" loading="lazy">
+                <div class="mobile-sheet-mon-info">
+                  <strong>${cap(p.name)}</strong>
+                  <span>${(p.types || []).map(t => `<i class="type-chip type-${t}">${t}</i>`).join('')}</span>
+                  <small>BST ${p.bst || p.baseStats?.total || '—'}</small>
+                </div>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     _attachEventListeners(viewModel, activeRegion) {
       if (typeof document === 'undefined') return;
 
@@ -1213,6 +1299,42 @@
             }, 50);
           }
         }
+      }
+
+      // Mobile Navigation & Sheets Event Listeners
+      this.container.querySelectorAll('[data-mobile-nav]').forEach(btn => {
+        btn.onclick = () => {
+          if (this._travel) return;
+          const tab = btn.dataset.mobileNav;
+          this.mobileNavTab = (this.mobileNavTab === tab && tab !== 'MAP') ? 'MAP' : tab;
+          this.render();
+        };
+      });
+
+      this.container.querySelectorAll('[data-close-sheet]').forEach(btn => {
+        btn.onclick = () => {
+          this.mobileNavTab = 'MAP';
+          this.render();
+        };
+      });
+
+      const sheetBackdrop = this.container.querySelector('#mobileSheetBackdrop');
+      if (sheetBackdrop) {
+        sheetBackdrop.onclick = () => {
+          this.mobileNavTab = 'MAP';
+          this.render();
+        };
+      }
+
+      const rosterFilterInput = this.container.querySelector('#mobileRosterFilter');
+      if (rosterFilterInput) {
+        rosterFilterInput.oninput = (e) => {
+          const q = (e.target.value || '').trim().toLowerCase();
+          this.container.querySelectorAll('.mobile-roster-item').forEach(card => {
+            const name = card.dataset.name || '';
+            card.style.display = (!q || name.includes(q)) ? '' : 'none';
+          });
+        };
       }
 
       this._setupBackgroundImageFallback();

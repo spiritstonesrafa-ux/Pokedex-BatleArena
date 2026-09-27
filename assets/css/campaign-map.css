@@ -1258,6 +1258,15 @@
 /* --------------------------------------------------------------------------
    RESPONSIVE DESIGN (MOBILE BREAKPOINTS)
    -------------------------------------------------------------------------- */
+/* Desktop Isolation: Mobile Campaign Navigation MUST NOT appear on screens > 768px */
+@media (min-width: 769px) {
+  .campaign-mobile-nav,
+  .campaign-mobile-sheet,
+  .campaign-mobile-sheet-backdrop {
+    display: none !important;
+  }
+}
+
 @media (max-width: 640px) {
   .campaign-map-shell {
     padding: 0.5rem 0.75rem 2rem;
@@ -1345,6 +1354,234 @@
 
   .campaign-list-view {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .campaign-map-shell {
+    padding-bottom: calc(75px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .campaign-map-header {
+    padding: 0.75rem 1rem !important;
+    gap: 0.5rem !important;
+    border-radius: 16px !important;
+  }
+
+  .campaign-map-header__titles {
+    min-width: 0 !important;
+  }
+
+  .campaign-map-header__titles h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .campaign-map-header__meta {
+    gap: 0.4rem !important;
+  }
+
+  .campaign-map-stat-badge {
+    padding: 0.25rem 0.65rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Fixed Bottom Navigation (FASE 2) */
+  .campaign-mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 800;
+    background: rgba(11, 14, 30, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.55);
+  }
+
+  .campaign-mobile-nav-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+    user-select: none;
+  }
+
+  .campaign-mobile-nav-btn i {
+    font-size: 1rem;
+  }
+
+  .campaign-mobile-nav-btn.is-active {
+    color: #ffd166;
+    text-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
+  }
+
+  .campaign-mobile-nav-btn:active {
+    transform: scale(0.94);
+  }
+
+  /* Mobile Bottom Sheets (EQUIPE e ELENCO) */
+  .campaign-mobile-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 840;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .campaign-mobile-sheet-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .campaign-mobile-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 82vh;
+    border-radius: 20px 20px 0 0;
+    background: linear-gradient(180deg, #141936 0%, #0a0d1c 100%);
+    border-top: 2px solid #ffd166;
+    z-index: 850;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 1rem calc(70px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7);
+    box-sizing: border-box;
+  }
+
+  .campaign-mobile-sheet.is-open {
+    transform: translateY(0);
+  }
+
+  .campaign-mobile-sheet__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .campaign-mobile-sheet__header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #ffd166;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .campaign-mobile-sheet__close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 1.1rem;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .campaign-mobile-sheet__desc {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin: 0 0 0.85rem;
+  }
+
+  .campaign-mobile-sheet__search {
+    margin-bottom: 0.75rem;
+  }
+
+  .campaign-mobile-sheet__search input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+  }
+
+  .campaign-mobile-sheet__team-grid,
+  .campaign-mobile-sheet__roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.6rem;
+  }
+
+  .mobile-sheet-mon-card {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .mobile-sheet-mon-card img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .mobile-sheet-mon-info {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mobile-sheet-mon-info strong {
+    display: block;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #f1f5f9;
+  }
+
+  .mobile-sheet-mon-info span {
+    display: block;
+    margin: 0.15rem 0;
+  }
+
+  .mobile-sheet-mon-info .type-chip {
+    font-size: 0.6rem;
+    padding: 0.08rem 0.3rem;
+  }
+
+  .mobile-sheet-mon-info small {
+    display: block;
+    font-size: 0.68rem;
+    color: #94a3b8;
   }
 }
 

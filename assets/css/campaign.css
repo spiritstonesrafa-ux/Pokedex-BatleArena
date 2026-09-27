@@ -612,3 +612,602 @@
   box-shadow: 0 0 28px rgba(255, 209, 102, 0.35);
   background: radial-gradient(circle at 50% 25%, rgba(246, 211, 101, 0.18), transparent 70%), #171724;
 }
+
+/* ==========================================================================
+   MOBILE GAME UI ARCHITECTURE (BREAKPOINT: <= 768px)
+   FASE 1 – FASE 12: Videogame experience, HUD, 3 fixed slots, 4 contextual tabs,
+   horizontal draft carousel, sticky bottom CTA, clean mobile reward screen.
+   ========================================================================== */
+
+/* Desktop Isolation: Mobile elements MUST NOT appear on screens > 768px */
+@media (min-width: 769px) {
+  .mobile-picker-top-section,
+  .mobile-tab-empty-hint {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body.campaign-mobile-open {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Fullscreen game panel for preparation */
+  .campaign-shell.is-picker {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1000 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: radial-gradient(circle at 50% -20%, #1c254a 0%, #090c18 65%, #05070e 100%) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box !important;
+  }
+
+  /* Hide the legacy desktop back button in mobile picker since mobile top section has its own */
+  .campaign-shell.is-picker > #pickerBack {
+    display: none !important;
+  }
+
+  /* Fixed Top Section: Back button + Title/Subtitle + 3 Slots + 4 Tabs */
+  .mobile-picker-top-section {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex: 0 0 auto;
+    background: rgba(13, 17, 36, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: max(0.5rem, env(safe-area-inset-top)) 0.75rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  .mobile-picker-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .mobile-picker-back-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
+    padding: 0.4rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .mobile-picker-back-btn:active {
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(0.96);
+  }
+
+  .mobile-picker-title-block {
+    text-align: right;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mobile-picker-title-block h3 {
+    margin: 0;
+    font-size: 0.96rem;
+    color: #ffd166;
+    font-weight: 900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.04em;
+  }
+
+  .mobile-picker-title-block small {
+    display: block;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+  }
+
+  /* 3 Fixed Team Slots (FASE 4) */
+  .mobile-team-slots {
+    background: rgba(6, 8, 18, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.4rem 0.55rem;
+  }
+
+  .mobile-team-slots__bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem;
+  }
+
+  .mobile-team-slots__title {
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: #ffd166;
+  }
+
+  .mobile-team-slots__count {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-team-slots__count.is-complete {
+    background: rgba(34, 197, 94, 0.22);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.45);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+  }
+
+  .mobile-team-slots__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+  }
+
+  .mobile-team-slots__grid.is-single {
+    grid-template-columns: 1fr;
+    max-width: 160px;
+    margin: 0 auto;
+  }
+
+  .mobile-team-slot {
+    position: relative;
+    border-radius: 10px;
+    padding: 0.3rem 0.2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 66px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .mobile-team-slot:active {
+    transform: scale(0.97);
+  }
+
+  .mobile-team-slot.is-filled {
+    background: linear-gradient(145deg, rgba(88, 101, 242, 0.28), rgba(15, 23, 42, 0.9));
+    border: 1.5px solid #ffd166;
+    box-shadow: 0 0 12px rgba(255, 209, 102, 0.22);
+  }
+
+  .mobile-team-slot.is-empty {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1.5px dashed rgba(255, 255, 255, 0.22);
+  }
+
+  .mobile-slot-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    margin-bottom: 0.1rem;
+    line-height: 1;
+  }
+
+  .mobile-team-slot.is-filled .mobile-slot-badge {
+    color: #ffd166;
+  }
+
+  .mobile-slot-sprite {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  .mobile-slot-empty-icon {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 900;
+  }
+
+  .mobile-slot-name {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 0.1rem;
+    line-height: 1.1;
+  }
+
+  .mobile-team-slot.is-empty .mobile-slot-name {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .mobile-slot-remove-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: 1.5px solid #fff;
+    font-size: 0.72rem;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    z-index: 2;
+  }
+
+  /* Contextual Tabs Navigation (FASE 5) */
+  .mobile-picker-tabs-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: rgba(6, 8, 18, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .mobile-picker-tab-btn {
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.45rem 0.2rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 42px;
+  }
+
+  .mobile-picker-tab-btn i {
+    font-size: 0.88rem;
+  }
+
+  .mobile-picker-tab-btn.is-active {
+    background: #ffd166;
+    color: #171724;
+    box-shadow: 0 2px 10px rgba(255, 209, 102, 0.35);
+    transform: scale(1.02);
+  }
+
+  /* Content area spacing to prevent fixed bottom CTA overlap */
+  .campaign-shell.is-picker {
+    padding-bottom: 120px !important;
+  }
+
+  /* Content display rules driven by [data-mobile-active-tab] */
+  /* TAB: EQUIPE (Default) */
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .master-context,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .campaign-preparation,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .type-guide,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .opponent-team-preview,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .wild-encounter-hero,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .wild-sound-toggle,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .campaign-move-editor,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .campaign-matchup,
+  .campaign-shell.is-picker:not([data-mobile-active-tab="enemy"]):not([data-mobile-active-tab="moves"]):not([data-mobile-active-tab="guide"]) .mobile-tab-empty-hint {
+    display: none !important;
+  }
+
+  /* TAB: ADVERSÁRIO */
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .picker-choice,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .draft-grid,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .campaign-move-editor,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .campaign-matchup,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .mobile-tab-empty-hint {
+    display: none !important;
+  }
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .master-context,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .campaign-preparation,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .type-guide,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .opponent-team-preview,
+  .campaign-shell.is-picker[data-mobile-active-tab="enemy"] .wild-encounter-hero {
+    display: block !important;
+    margin: 0.75rem 0.75rem 1rem !important;
+    animation: fadeInTab 0.2s ease-out;
+  }
+
+  /* TAB: GOLPES */
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .picker-choice,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .draft-grid,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .master-context,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .campaign-preparation,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .type-guide,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .opponent-team-preview,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .wild-encounter-hero,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .wild-sound-toggle,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .campaign-matchup,
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .mobile-tab-empty-hint.for-guide {
+    display: none !important;
+  }
+  .campaign-shell.is-picker[data-mobile-active-tab="moves"] .campaign-move-editor {
+    display: block !important;
+    margin: 0.75rem 0.75rem 1rem !important;
+    animation: fadeInTab 0.2s ease-out;
+  }
+
+  /* TAB: ANÁLISE */
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .picker-choice,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .draft-grid,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .master-context,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .campaign-preparation,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .type-guide,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .opponent-team-preview,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .wild-encounter-hero,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .wild-sound-toggle,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .campaign-move-editor,
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .mobile-tab-empty-hint.for-moves {
+    display: none !important;
+  }
+  .campaign-shell.is-picker[data-mobile-active-tab="guide"] .campaign-matchup {
+    display: block !important;
+    margin: 0.75rem 0.75rem 1rem !important;
+    animation: fadeInTab 0.2s ease-out;
+  }
+
+  @keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Empty hint when tab content is not yet populated */
+  .mobile-tab-empty-hint {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    margin: 1.5rem 1rem;
+    background: rgba(14, 18, 38, 0.6);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    color: #94a3b8;
+  }
+  .mobile-tab-empty-hint i {
+    font-size: 2.2rem;
+    color: #ffd166;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+  .mobile-tab-empty-hint p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* Compact Roster Picker in Equipe Tab (FASE 4) */
+  .campaign-shell.is-picker .picker-choice {
+    margin: 0.5rem 0.75rem 0.25rem !important;
+    padding: 0.65rem 0.85rem !important;
+    border-radius: 12px !important;
+  }
+  .campaign-shell.is-picker .picker-choice h2 {
+    font-size: 1rem !important;
+    margin: 0 0 0.15rem !important;
+  }
+  .campaign-shell.is-picker .picker-choice p {
+    font-size: 0.76rem !important;
+    margin: 0 !important;
+    color: #cbd5e1 !important;
+  }
+
+  /* Horizontal Snap Carousel for Roster */
+  .campaign-shell.is-picker .draft-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x proximity !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.65rem !important;
+    padding: 0.5rem 0.75rem 1rem !important;
+    margin: 0.25rem 0 !important;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon {
+    flex: 0 0 135px !important;
+    width: 135px !important;
+    min-width: 135px !important;
+    scroll-snap-align: center;
+    padding: 0.6rem 0.4rem !important;
+    border-radius: 14px !important;
+    background: rgba(18, 22, 44, 0.9) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon:active {
+    transform: scale(0.96);
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon img {
+    width: 58px !important;
+    height: 58px !important;
+    object-fit: contain !important;
+    margin: 0 auto 0.2rem !important;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon strong {
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon span {
+    margin: 0.2rem 0 !important;
+    display: flex !important;
+    gap: 0.15rem !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon .type-chip {
+    font-size: 0.62rem !important;
+    padding: 0.1rem 0.35rem !important;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon small {
+    font-size: 0.68rem !important;
+    margin-top: 0.2rem !important;
+    color: #94a3b8 !important;
+  }
+
+  .campaign-shell.is-picker .draft-grid .campaign-mon.selected {
+    border-color: #ffd166 !important;
+    background: radial-gradient(circle at 50% 20%, rgba(255, 209, 102, 0.22), transparent 75%), rgba(24, 30, 60, 0.95) !important;
+    box-shadow: 0 0 14px rgba(255, 209, 102, 0.35) !important;
+    outline: none !important;
+    transform: none !important;
+  }
+
+  /* Fixed Bottom CTA: LUTAR (FASE 6) */
+  .campaign-shell.is-picker .picker-action-bar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1050 !important;
+    background: rgba(10, 13, 28, 0.96) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+    padding: 0.6rem 1rem max(0.6rem, env(safe-area-inset-bottom)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.35rem !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6) !important;
+    margin: 0 !important;
+  }
+
+  .campaign-shell.is-picker .picker-action-bar .picker-status-hint {
+    font-size: 0.75rem !important;
+    padding: 0.15rem 0.5rem !important;
+  }
+
+  .campaign-shell.is-picker .picker-action-bar #startCampaignBattle {
+    margin: 0 !important;
+    width: 100% !important;
+    padding: 0.85rem 1rem !important;
+    font-size: 0.96rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.06em !important;
+    border-radius: 12px !important;
+    min-height: 48px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .campaign-shell.is-picker .picker-action-bar #startCampaignBattle.ready-to-battle {
+    background: linear-gradient(135deg, #ffd166 0%, #f59e0b 100%) !important;
+    color: #171724 !important;
+    box-shadow: 0 0 20px rgba(255, 209, 102, 0.5) !important;
+  }
+
+  /* Move Editor on mobile (FASE 7) */
+  .campaign-shell.is-picker .campaign-move-editor {
+    border-radius: 14px;
+    padding: 1rem;
+    background: rgba(14, 18, 38, 0.85);
+  }
+  .campaign-shell.is-picker .campaign-move-editor__pokemon-list {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.4rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .campaign-shell.is-picker .campaign-move-editor__pokemon {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.75rem;
+  }
+
+  /* Matchup Guide on mobile (FASE 8) */
+  .campaign-shell.is-picker .campaign-matchup {
+    border-radius: 14px;
+    padding: 1rem;
+    background: rgba(14, 18, 38, 0.85);
+  }
+  .campaign-shell.is-picker .campaign-matchup__grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Reward Screen on Mobile (FASE 9) */
+  .campaign-shell.is-reward {
+    min-height: 100dvh;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center;
+    padding: 1.5rem 1rem !important;
+    box-sizing: border-box;
+  }
+  .campaign-shell.is-reward .campaign-hero {
+    max-width: 480px;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .campaign-shell.is-reward .draft-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    max-width: 480px;
+    width: 100%;
+  }
+  .campaign-shell.is-reward .draft-grid .campaign-mon {
+    flex: 1 1 130px !important;
+    max-width: 150px;
+  }
+}
+

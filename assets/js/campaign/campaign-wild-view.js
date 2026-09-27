@@ -132,11 +132,21 @@
       </section>`;
     bindSoundButton(this);
     focusHeading(this, 'encounter:' + wild.active.encounterId);
-    this.container.querySelector('#pickerBack').onclick = () => {
-      this.pending = null;
-      this.pick = [];
-      this.manager.cancelWildEncounter();
-    };
+    if (typeof this.enhanceMobilePicker === 'function') {
+      try { this.enhanceMobilePicker(); } catch (_) {}
+    }
+    const wildBack = this.container.querySelector('#pickerBack');
+    if (wildBack) {
+      wildBack.onclick = () => {
+        if (typeof document !== 'undefined' && document.body) {
+          document.body.classList.remove('campaign-mobile-open');
+        }
+        this._activeMobileTab = 'team';
+        this.pending = null;
+        this.pick = [];
+        this.manager.cancelWildEncounter();
+      };
+    }
     this.container.querySelectorAll('.draft-grid .campaign-mon').forEach(button => {
       button.onclick = () => {
         const id = Number(button.dataset.id);
