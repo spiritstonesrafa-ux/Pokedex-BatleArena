@@ -11,7 +11,7 @@
 
 ---
 
-### 🎮 [Abrir Demonstração ao Vivo no GitHub Pages](https://spiritstonesrafa-ux.github.io/js-developer-pokedex/)
+### 🎮 [Abrir Demonstração ao Vivo no GitHub Pages](https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/)
 
 ---
 
@@ -29,8 +29,8 @@
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/spiritstonesrafa-ux/js-developer-pokedex.git
-cd js-developer-pokedex
+git clone https://github.com/spiritstonesrafa-ux/Pokedex-BatleArena.git
+cd Pokedex-BatleArena
 
 # 2. Execute a suíte com 651 testes automatizados
 npm test
@@ -173,8 +173,8 @@ node --test tests/ui/battle-ui.test.js tests/campaign/trainer-avatar.test.js
 ## Executando localmente
 
 ```bash
-git clone https://github.com/spiritstonesrafa-ux/js-developer-pokedex.git
-cd js-developer-pokedex
+git clone https://github.com/spiritstonesrafa-ux/Pokedex-BatleArena.git
+cd Pokedex-BatleArena
 ```
 
 Abra `index.html` em um navegador moderno ou sirva a pasta com um servidor HTTP simples. A aplicação requer recursos de navegadores modernos, incluindo ES6+, Fetch, LocalStorage, CSS Grid/Flexbox e Web Audio API.

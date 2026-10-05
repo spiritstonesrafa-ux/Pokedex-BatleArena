@@ -58,5 +58,5 @@ The high-stakes trials and climactic boss showdowns feature exclusive high-tier 
 
 ## Live Demo
 Experience the full release live on GitHub Pages:
-- 🎮 [Play Pokédex Pro + Battle Arena](https://spiritstonesrafa-ux.github.io/js-developer-pokedex/)
-- 🧪 [Visual Arena Harness](https://spiritstonesrafa-ux.github.io/js-developer-pokedex/tests/visual/type-arena-harness.html)
+- 🎮 [Play Pokédex Pro + Battle Arena](https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/)
+- 🧪 [Visual Arena Harness](https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/tests/visual/type-arena-harness.html)

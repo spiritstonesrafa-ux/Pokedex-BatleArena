@@ -2,6 +2,14 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 05/10/2026: links públicos após renomeação do repositório
+
+- Corrigidos o botão de demonstração do README e os links de demonstração/harness na documentação para `https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/`.
+- As instruções de clonagem do README e o remoto local `origin` usam o nome atual `spiritstonesrafa-ux/Pokedex-BatleArena`.
+- A causa do 404 era o caminho antigo `/js-developer-pokedex/`, que não redireciona no GitHub Pages após a renomeação.
+
+---
+
 ## Atualização — 26/09/2026: rebalanceamento selvagem (45/25/20/10) e Provas Finais em 3x3
 
 - **Encontros selvagens rebalanceados:** distribuição-base atualizada para 45% comum, 25% incomum, 20% raro e 10% especial (lendários e míticos juntos). Os 10% são compartilhados entre os lendários e míticos elegíveis, preservando exclusões das Provas/Super Treinador, limites de capturas por ponto e compatibilidade de tipos.

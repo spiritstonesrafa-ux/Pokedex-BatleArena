@@ -26,4 +26,4 @@ Na baseline de release candidate v1.0: **575 testes aprovados**, **0 falhas**, *
 
 ## Live Demo
 
-[Abra a demonstração pública](https://spiritstonesrafa-ux.github.io/js-developer-pokedex/).
+[Abra a demonstração pública](https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/).

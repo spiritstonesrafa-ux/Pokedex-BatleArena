@@ -6,7 +6,7 @@
 - Local and `origin/main`: `a9d546a96278f367457b164d0530227f02c8e578`
 - Working tree: clean before the audit.
 - Regression: 575 pass, 0 fail, 0 cancelled, 21 suites.
-- Public demo: https://spiritstonesrafa-ux.github.io/js-developer-pokedex/
+- Public demo: https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/
 
 ## Public and responsive audit
 
