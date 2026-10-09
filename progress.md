@@ -2,7 +2,35 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
-## Atualização — 09/10/2026: Conclusão Definitiva da Fase 1 UI/UX (Preservação de Contexto e Proteção contra Respostas Obsoletas na Pokédex)
+## Atualização — 09/10/2026: Correção Final da Fase 1 UI/UX (Listagem por Tipo com Escopo de Geração e Escopo Canônico)
+
+Resolução da última pendência identificada na Fase 1 de UI/UX da Pokédex: o carregamento por tipo agora respeita simultaneamente a geração selecionada, o tipo selecionado e o escopo canônico de espécies suportado (IDs 1 a 1025).
+
+1. **Falha Corrigida:**
+   - O método `loadPokemonsByType` requisitava globalmente os primeiros 60 Pokémon do tipo sem filtrar a geração ativa (`pokeApi.getPokemonsByType(type, 60)`), e atribuía `loadedGeneration = requestGen`. Com isso, ao selecionar Elétrico na Geração 1 ou ao limpar uma busca com esse filtro, espécies de gerações posteriores (como Mareep #179 da Gen 2) apareciam indevidamente na tela da Geração 1. Além disso, se a filtragem ocorresse após o fatiamento de 60 itens, gerações recentes poderiam ficar vazias mesmo contendo espécies válidas.
+
+2. **Solução Aplicada:**
+   - Em `assets/js/main.js` (`loadPokemonsByType`) e `assets/js/poke-api.js` (`getPokemonsByType`), o pipeline de carregamento por tipo foi reestruturado em 6 etapas estritas:
+     1. Obtenção dos IDs associados ao tipo via índice leve `pokeApi.getTypePokemonIds(type)`.
+     2. Restrição dos IDs ao intervalo da geração selecionada (`generationRanges[requestGen]`, onde `minId = range.offset + 1` e `maxId = Math.min(range.max, 1025)`) e ao escopo canônico suportado (1..1025).
+     3. Aplicação de ordenação determinística crescente por número (`eligibleIds.sort((a, b) => a - b)`).
+     4. Aplicação do limite de carregamento (`TYPE_PAGE_LIMIT = 60`) estritamente **após** a filtragem de geração e escopo.
+     5. Requisição dos detalhes (`pokeApi.getPokemonDetail`) **apenas** para as espécies elegíveis fatiadas, reaproveitando o cache em memória (`searchDetailsCache`). Espécies descartadas não geram chamadas desnecessárias à PokéAPI.
+     6. Validação estrita de contexto e concorrência (`loadToken === regularLoadSequenceToken && selectedType === requestType && selectedGeneration === requestGen && !isSearchingCatalog`) antes de comprometer os dados em `allLoadedPokemons`, atualizar `loadedGeneration` e `loadedType`, e invocar `applyFiltersAndSort()`.
+   - Em `applyFiltersAndSort()`, garantido que a opção "Todas as Gerações" restringe a visualização ao escopo canônico (1..1025), excluindo formas alternativas com ID > 1025.
+   - Na mudança de geração (`generationSelect.addEventListener('change')`), o tipo selecionado (`selectedType`) é preservado caso diferente de 'all', recarregando `loadPokemonsByType(selectedType)` para a nova geração em vez de forçar reset visual.
+
+3. **Testes Obrigatórios Implementados (`tests/ui/pokedex-search-accessibility.test.js`):**
+   - **Cenário 11 (Teste A — Gen 1 + Elétrico):** Com índice misto (IDs 25 e 179) e Geração 1 selecionada, após pesquisa e `clearSearch`, apenas Pikachu (#25) aparece, Mareep (#179) é excluído, o contexto carregado corresponde aos filtros ('1' e 'electric') e o contador exibe "1 Pokémon".
+   - **Cenário 15 (Teste B — Gen 2 + Elétrico):** Com o mesmo índice misto e Geração 2 selecionada, Mareep (#179) aparece e Pikachu (#25) é excluído.
+   - **Cenário 16 (Teste C — Geração recente com candidatos depois do limite global):** Com 65 espécies anteriores (IDs 1..65) seguidas de candidatos válidos da Geração 9 (#921 Pawmi, #923 Pawmot), comprova que os candidatos da Gen 9 são encontrados (filtragem antes do limite de 60) e que nenhuma das 65 espécies descartadas tem detalhes carregados.
+   - **Cenário 17 (Teste D — Todas as Gerações):** Com espécies de múltiplas gerações (#25, #179, #921) e formas alternativas fora do escopo (10001, 10100), comprova que as espécies canônicas são exibidas e IDs > 1025 são excluídos.
+   - **Cenário 18 (Teste E — Resposta atrasada por geração) e Cenário 13 (Teste E — Resposta atrasada por tipo):** Respostas lentas de requisições anteriores são descartadas e não sobrescrevem o contexto quando o usuário altera a geração ou o tipo durante o carregamento.
+
+4. **Resultados e Validação:**
+   - Suíte de acessibilidade e busca (`pokedex-search-accessibility.test.js`): **18/18 testes aprovados**.
+   - Suíte completa do projeto: **845/845 testes aprovados** (22 suítes, 0 falhas).
+   - Validação visual em navegador executada via subagente de navegação (`index.html`), confirmando filtros de Gen 1 + Elétrico (9 Pokémon, sem Mareep), Gen 2 + Elétrico (8 Pokémon, com Mareep), contadores dinâmicos e estados vazios com gravação WebP e screenshots arquivadas.
 
 Resolução das duas falhas restantes identificadas na restauração da listagem da Pokédex após buscas:
 

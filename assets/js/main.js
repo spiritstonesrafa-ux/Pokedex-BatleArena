@@ -371,6 +371,7 @@ function loadPokemonItems(initial = false) {
 
 /**
  * Carrega a lista quando o usuário seleciona um tipo específico nas pílulas.
+ * Respeita simultaneamente o tipo, a geração ativa e o escopo canônico (1..1025).
  */
 async function loadPokemonsByType(type) {
   if (!pokemonListElement || !loadMoreButton) return;
@@ -383,9 +384,57 @@ async function loadPokemonsByType(type) {
   loadMoreButton.style.display = 'none';
 
   try {
-    const pokemons = await pokeApi.getPokemonsByType(type, 60);
+    // 1. Obter os IDs associados ao tipo via índice leve
+    const idSet = (typeof pokeApi.getTypePokemonIds === 'function')
+      ? await pokeApi.getTypePokemonIds(type)
+      : null;
 
-    // Validação estrita de contexto e concorrência
+    let rawIds = [];
+    if (idSet && typeof idSet.forEach === 'function') {
+      rawIds = Array.from(idSet);
+    } else if (Array.isArray(idSet)) {
+      rawIds = idSet;
+    } else if (typeof pokeApi.getPokemonsByType === 'function') {
+      const legacyPokemons = await pokeApi.getPokemonsByType(type, 1025);
+      rawIds = (legacyPokemons || []).map(p => p.number);
+    }
+
+    // Validação estrita de contexto antes de carregar detalhes
+    if (loadToken !== regularLoadSequenceToken) return;
+    if (selectedType !== requestType || selectedGeneration !== requestGen) return;
+    if (isSearchingCatalog) return;
+
+    // 2. Restringir os IDs ao intervalo da geração selecionada e ao escopo canônico suportado (1..1025)
+    const genRange = generationRanges[requestGen] || generationRanges['all'];
+    const minId = genRange.offset + 1;
+    const maxId = Math.min(genRange.max, 1025);
+
+    const eligibleIds = rawIds
+      .map(Number)
+      .filter(id => Number.isInteger(id) && id >= minId && id <= maxId);
+
+    // 3. Aplicar ordenação determinística (crescente por número)
+    eligibleIds.sort((a, b) => a - b);
+
+    // 4. Aplicar o limite de carregamento (máximo 60 espécies elegíveis da geração)
+    const TYPE_PAGE_LIMIT = 60;
+    const targetIds = eligibleIds.slice(0, TYPE_PAGE_LIMIT);
+
+    // 5. Carregar os detalhes SOMENTE das espécies elegíveis (reaproveitando searchDetailsCache)
+    const detailPromises = targetIds.map(async (id) => {
+      if (searchDetailsCache.has(id)) {
+        return searchDetailsCache.get(id);
+      }
+      const detail = await pokeApi.getPokemonDetail(id);
+      if (detail) {
+        searchDetailsCache.set(detail.number, detail);
+      }
+      return detail;
+    });
+
+    const pokemons = (await Promise.all(detailPromises)).filter(Boolean);
+
+    // 6. Atualizar a listagem e seu contexto após validar a operação
     if (loadToken !== regularLoadSequenceToken) return;
     if (selectedType !== requestType || selectedGeneration !== requestGen) return;
     if (isSearchingCatalog) return;
@@ -397,7 +446,6 @@ async function loadPokemonsByType(type) {
     if (typeof window !== 'undefined') {
       window.allLoadedPokemons = allLoadedPokemons;
     }
-    (pokemons || []).forEach(p => searchDetailsCache.set(p.number, p));
     applyFiltersAndSort();
   } catch (err) {
     if (loadToken !== regularLoadSequenceToken) return;
@@ -433,6 +481,16 @@ function applyFiltersAndSort() {
   // Filtro de Tipo
   if (selectedType !== 'all' && !filtered.every(p => p.types.includes(selectedType))) {
     filtered = filtered.filter(p => p.types.includes(selectedType));
+  }
+
+  // Filtro de Geração na exibição
+  if (selectedGeneration !== 'all') {
+    const range = generationRanges[selectedGeneration];
+    if (range) {
+      filtered = filtered.filter(p => p.number > range.offset && p.number <= range.max);
+    }
+  } else {
+    filtered = filtered.filter(p => p.number >= 1 && p.number <= 1025);
   }
 
   // Algoritmos de Ordenação (Array.prototype.sort)
@@ -1558,13 +1616,15 @@ if (sortSelect) {
 if (generationSelect) {
   generationSelect.addEventListener('change', (e) => {
     selectedGeneration = e.target.value;
-    selectedType = 'all';
-    typePills.forEach(p => p.classList.toggle('active', p.dataset.type === 'all'));
     regularLoadSequenceToken++;
     if (isSearchingCatalog && searchInput && searchInput.value.trim() !== '') {
       executeCatalogSearch(searchInput.value.trim());
     } else if (!isSearchingCatalog) {
-      loadPokemonItems(true);
+      if (selectedType === 'all') {
+        loadPokemonItems(true);
+      } else {
+        loadPokemonsByType(selectedType);
+      }
     }
   });
 }

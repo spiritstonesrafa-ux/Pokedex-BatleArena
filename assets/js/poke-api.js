@@ -209,13 +209,35 @@ pokeApi.getPokemonEvolutionChain = async (speciesUrl) => {
  * @param {number} limit - Quantidade máxima a carregar.
  * @returns {Promise<Pokemon[]>}
  */
-pokeApi.getPokemonsByType = async (type, limit = 40) => {
-  const url = `https://pokeapi.co/api/v2/type/${type}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  const pokemonEntries = data.pokemon.slice(0, limit);
-  const detailPromises = pokemonEntries.map(entry => pokeApi.getPokemonDetail(entry.pokemon.url));
-  return Promise.all(detailPromises);
+pokeApi.getPokemonsByType = async (type, limit = 60, generation = 'all') => {
+  const idSet = await pokeApi.getTypePokemonIds(type);
+  const rawIds = idSet ? Array.from(idSet) : [];
+
+  const genRanges = {
+    '1': { offset: 0, max: 151 },
+    '2': { offset: 151, max: 251 },
+    '3': { offset: 251, max: 386 },
+    '4': { offset: 386, max: 493 },
+    '5': { offset: 493, max: 649 },
+    '6': { offset: 649, max: 721 },
+    '7': { offset: 721, max: 809 },
+    '8': { offset: 809, max: 905 },
+    '9': { offset: 905, max: 1025 },
+    'all': { offset: 0, max: 1025 }
+  };
+
+  const range = genRanges[generation] || genRanges['all'];
+  const minId = range.offset + 1;
+  const maxId = Math.min(range.max, 1025);
+
+  const eligibleIds = rawIds
+    .map(Number)
+    .filter(id => Number.isInteger(id) && id >= minId && id <= maxId);
+
+  eligibleIds.sort((a, b) => a - b);
+  const targetIds = limit ? eligibleIds.slice(0, limit) : eligibleIds;
+  const detailPromises = targetIds.map(id => pokeApi.getPokemonDetail(id));
+  return (await Promise.all(detailPromises)).filter(Boolean);
 };
 
 // Cache em memória para o índice leve do catálogo completo (ID, Nome e URL)
