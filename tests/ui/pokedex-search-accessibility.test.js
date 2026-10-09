@@ -232,6 +232,7 @@ describe('FASE 1: BUSCA POKÉDEX & ACESSIBILIDADE DE TECLADO (IMPLEMENTAÇÃO RE
     mainModule.resetSearchState();
     mainModule.setSelectedGeneration('1');
     mainModule.setLoadedGeneration('1');
+    if (mainModule.setLoadedType) mainModule.setLoadedType('all');
     mainModule.setIsModalOpen(false);
     mainModule.setLastFocusedElement(null);
     mainModule.setSelectedType('all');
@@ -635,5 +636,326 @@ describe('FASE 1: BUSCA POKÉDEX & ACESSIBILIDADE DE TECLADO (IMPLEMENTAÇÃO RE
     const actionClose = cardHtml.indexOf('</button>');
     const favStart = cardHtml.indexOf('class="fav-btn');
     assert.ok(favStart > actionClose, 'Botão de favoritos não pode estar dentro do botão de detalhes');
+  });
+
+  // --------------------------------------------------------------------------
+  // CENÁRIO 11 (TESTE A): Tipo alterado durante a busca e restauração após clearSearch
+  // --------------------------------------------------------------------------
+  it('Cenário 11 (Teste A): Alterar tipo durante a busca e limpar o campo recarrega a listagem do tipo selecionado sem estado vazio indevido', async () => {
+    const originalGetPokemons = pokeApi.getPokemons;
+    const originalGetPokemonsByType = pokeApi.getPokemonsByType;
+    const originalGetDetail = pokeApi.getPokemonDetail;
+    try {
+      // 1. Simula lote inicial da Geração 1 com 20 espécies, nenhuma sendo do tipo electric (IDs 1..20)
+      pokeApi.getPokemons = async (offset, limit) => {
+        const list = [];
+        for (let i = offset + 1; i <= offset + limit; i++) {
+          list.push({
+            number: i,
+            name: `mon-${i}`,
+            type: 'normal',
+            types: ['normal'],
+            stats: { total: 300 },
+            photo: `mon-${i}.png`
+          });
+        }
+        return list;
+      };
+
+      pokeApi.getPokemonDetail = async (id) => MOCK_DETAILS[id] || {
+        number: id,
+        name: `mon-${id}`,
+        type: 'normal',
+        types: ['normal'],
+        stats: { total: 300 },
+        photo: ''
+      };
+
+      // pokeApi.getPokemonsByType retorna os Pokémon elétricos (Pikachu #25 e Raichu #26)
+      pokeApi.getPokemonsByType = async (type, limit) => {
+        if (type === 'electric') {
+          return [MOCK_DETAILS[25], MOCK_DETAILS[26]];
+        }
+        return [];
+      };
+
+      // Carrega listagem normal da Gen 1
+      mainModule.setSelectedGeneration('1');
+      mainModule.setSelectedType('all');
+      await mainModule.loadPokemonItems(true);
+
+      assert.equal(mainModule.getLoadedGeneration(), '1');
+      assert.equal(mainModule.getLoadedType(), 'all');
+      assert.equal(mainModule.getAllLoadedPokemons().length, 20);
+      assert.ok(!mainModule.getAllLoadedPokemons().some(p => p.types.includes('electric')), 'Lote inicial não deve ter elétricos');
+
+      // 2. Realiza busca real por Pikachu
+      await mainModule.executeCatalogSearch('pikachu');
+      assert.equal(mainModule.getSearchState().isSearchingCatalog, true);
+      assert.ok(mainModule.getCurrentPokemons().some(p => p.number === 25));
+
+      // 3. Usuário seleciona o filtro Elétrico durante a busca
+      mainModule.setSelectedType('electric');
+
+      // 4. Usuário limpa o campo de busca
+      await mainModule.clearSearch(false);
+      assert.equal(mainModule.getSearchState().isSearchingCatalog, false);
+
+      // 5. Confirmações:
+      // Filtros preservados
+      assert.equal(mainModule.getSelectedGeneration(), '1', 'Geração selecionada deve permanecer 1');
+      assert.equal(mainModule.getSelectedType(), 'electric', 'Filtro de tipo elétrico deve permanecer ativo');
+      assert.equal(mainModule.getLoadedType(), 'electric', 'Contexto carregado deve ser atualizado para electric');
+
+      // Listagem adequada carregada (não vazia)
+      const current = mainModule.getCurrentPokemons();
+      assert.ok(current.length > 0, 'A listagem não deve ficar vazia');
+      assert.ok(current.every(p => p.types.includes('electric')), 'Todos os Pokémon exibidos devem ser elétricos');
+      assert.ok(current.some(p => p.number === 25), 'Pikachu (#25) deve estar presente na listagem');
+
+      // Contador e estado vazio no DOM
+      const resultCountText = dom.elements.get('resultCount').textContent;
+      assert.ok(resultCountText.includes('2 Pokémon'), `Contador deve exibir 2 Pokémon: ${resultCountText}`);
+      const listHtml = dom.elements.get('pokemonList').innerHTML;
+      assert.ok(!listHtml.includes('Nenhum Pokémon encontrado'), 'Não deve exibir empty state');
+      assert.ok(listHtml.includes('pikachu'), 'DOM deve conter o card do Pikachu');
+
+      // Botão de paginação oculto para filtragem por tipo
+      assert.equal(dom.elements.get('loadMoreButton').style.display, 'none', 'Carregar Mais deve ficar oculto para filtro de tipo');
+    } finally {
+      pokeApi.getPokemons = originalGetPokemons;
+      pokeApi.getPokemonsByType = originalGetPokemonsByType;
+      pokeApi.getPokemonDetail = originalGetDetail;
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // CENÁRIO 12 (TESTE B): Resposta antiga de loadPokemonItems descartada após mudança de geração
+  // --------------------------------------------------------------------------
+  it('Cenário 12 (Teste B): Resposta antiga da Geração 1 não contamina o contexto ou limites ao mudar para Geração 2', async () => {
+    const originalGetPokemons = pokeApi.getPokemons;
+    const originalGetDetail = pokeApi.getPokemonDetail;
+    try {
+      let resolveDelayedGen1 = null;
+      const delayedGen1Promise = new Promise((resolve) => {
+        resolveDelayedGen1 = resolve;
+      });
+
+      pokeApi.getPokemonDetail = async (id) => MOCK_DETAILS[id] || {
+        number: id,
+        name: `mon-${id}`,
+        type: 'normal',
+        types: ['normal'],
+        stats: { total: 300 },
+        photo: ''
+      };
+
+      pokeApi.getPokemons = async (offset, limit) => {
+        // Se for requisição da Gen 1 (offset 0), aguarda promessa controlada
+        if (offset === 0) {
+          await delayedGen1Promise;
+          const gen1List = [];
+          for (let i = 1; i <= limit; i++) {
+            gen1List.push(MOCK_DETAILS[i] || {
+              number: i,
+              name: `gen1-mon-${i}`,
+              type: 'normal',
+              types: ['normal'],
+              stats: { total: 300 },
+              photo: ''
+            });
+          }
+          return gen1List;
+        }
+
+        // Se for Gen 2 (offset 151)
+        const gen2List = [];
+        for (let i = offset + 1; i <= offset + limit; i++) {
+          gen2List.push(MOCK_DETAILS[i] || {
+            number: i,
+            name: `gen2-mon-${i}`,
+            type: 'grass',
+            types: ['grass'],
+            stats: { total: 300 },
+            photo: ''
+          });
+        }
+        return gen2List;
+      };
+
+      // 1. Inicia carregamento regular da Geração 1 com resposta mantida pendente
+      mainModule.setSelectedGeneration('1');
+      mainModule.setSelectedType('all');
+      const pendingGen1Load = mainModule.loadPokemonItems(true);
+
+      // 2. Inicia busca e muda para Geração 2 durante a busca
+      await mainModule.executeCatalogSearch('chiko');
+      mainModule.switchGenerationFilter('2');
+      assert.equal(mainModule.getSelectedGeneration(), '2');
+
+      // 3. Libera a resposta antiga da Geração 1
+      resolveDelayedGen1();
+      await pendingGen1Load;
+
+      // 4. Limpa a busca
+      await mainModule.clearSearch(false);
+
+      // 5. Confirmações:
+      assert.equal(mainModule.getSelectedGeneration(), '2', 'Geração ativa deve ser 2');
+      assert.equal(mainModule.getLoadedGeneration(), '2', 'Contexto carregado deve pertencer à Geração 2');
+
+      const current = mainModule.getCurrentPokemons();
+      assert.ok(current.length > 0, 'Deve exibir Pokémon da Geração 2');
+      assert.ok(!current.some(p => p.number >= 1 && p.number <= 151), 'Nenhum Pokémon da Geração 1 pode aparecer');
+      assert.ok(current.every(p => p.number >= 152 && p.number <= 251), 'Todos os Pokémon devem pertencer ao intervalo da Gen 2 (152..251)');
+
+      // Limites e contexto da paginação
+      const offsets = mainModule.getOffsets();
+      assert.equal(offsets.maxLimit, 251, 'Limite da paginação deve ser 251 (Gen 2)');
+      assert.ok(offsets.offset >= 152, `Offset da paginação (${offsets.offset}) deve pertencer à Gen 2`);
+    } finally {
+      pokeApi.getPokemons = originalGetPokemons;
+      pokeApi.getPokemonDetail = originalGetDetail;
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // CENÁRIO 13 (TESTE C): Resposta antiga de loadPokemonsByType descartada após mudança de contexto
+  // --------------------------------------------------------------------------
+  it('Cenário 13 (Teste C): Resposta antiga de carregamento por tipo é descartada e não sobrescreve o novo contexto', async () => {
+    const originalGetPokemonsByType = pokeApi.getPokemonsByType;
+    try {
+      let resolveDelayedWater = null;
+      const delayedWaterPromise = new Promise((resolve) => {
+        resolveDelayedWater = resolve;
+      });
+
+      pokeApi.getPokemonsByType = async (type, limit) => {
+        if (type === 'water') {
+          await delayedWaterPromise;
+          return [MOCK_DETAILS[7]]; // Squirtle (#7, Water)
+        }
+        if (type === 'fire') {
+          return [MOCK_DETAILS[4]]; // Charmander (#4, Fire)
+        }
+        return [];
+      };
+
+      // 1. Inicia carregamento por tipo 'water' com resposta pendente
+      mainModule.setSelectedGeneration('1');
+      mainModule.setSelectedType('water');
+      const pendingWaterLoad = mainModule.loadPokemonsByType('water');
+
+      // 2. Usuário muda de contexto antes da conclusão (seleciona 'fire')
+      mainModule.setSelectedType('fire');
+      await mainModule.loadPokemonsByType('fire');
+
+      // Verifica que o contexto ativo é 'fire' com Charmander
+      assert.equal(mainModule.getSelectedType(), 'fire');
+      assert.equal(mainModule.getLoadedType(), 'fire');
+      assert.ok(mainModule.getCurrentPokemons().some(p => p.number === 4));
+
+      // 3. Libera a resposta antiga de 'water'
+      resolveDelayedWater();
+      await pendingWaterLoad;
+
+      // 4. Confirmações: a resposta de 'water' NÃO pode ter sobrescrito os dados de 'fire'
+      assert.equal(mainModule.getSelectedType(), 'fire', 'Tipo selecionado deve continuar fire');
+      assert.equal(mainModule.getLoadedType(), 'fire', 'Contexto carregado deve continuar fire');
+
+      const current = mainModule.getCurrentPokemons();
+      assert.equal(current.length, 1);
+      assert.equal(current[0].number, 4, 'Listagem deve manter Charmander (#4)');
+      assert.ok(!current.some(p => p.number === 7), 'Squirtle (#7) da resposta antiga não pode aparecer');
+
+      const listHtml = dom.elements.get('pokemonList').innerHTML;
+      assert.ok(listHtml.includes('charmander'), 'DOM deve exibir Charmander');
+      assert.ok(!listHtml.includes('squirtle'), 'DOM não pode conter Squirtle');
+    } finally {
+      pokeApi.getPokemonsByType = originalGetPokemonsByType;
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // CENÁRIO 14 (TESTE D): Restauração de contexto compatível sem duplicação ou requisições redundantes
+  // --------------------------------------------------------------------------
+  it('Cenário 14 (Teste D): Restaurar listagem com contexto compatível não gera requisições redundantes nem duplicações', async () => {
+    const originalGetPokemons = pokeApi.getPokemons;
+    const originalGetPokemonsByType = pokeApi.getPokemonsByType;
+    const originalGetDetail = pokeApi.getPokemonDetail;
+    try {
+      let getPokemonsCalls = 0;
+      let getPokemonsByTypeCalls = 0;
+
+      pokeApi.getPokemonDetail = async (id) => MOCK_DETAILS[id] || {
+        number: id,
+        name: `mon-${id}`,
+        type: 'normal',
+        types: ['normal'],
+        stats: { total: 300 },
+        photo: ''
+      };
+
+      pokeApi.getPokemons = async (offset, limit) => {
+        getPokemonsCalls++;
+        const list = [];
+        for (let i = offset + 1; i <= offset + limit; i++) {
+          list.push(MOCK_DETAILS[i] || {
+            number: i,
+            name: `mon-${i}`,
+            type: 'normal',
+            types: ['normal'],
+            stats: { total: 300 },
+            photo: ''
+          });
+        }
+        return list;
+      };
+
+      pokeApi.getPokemonsByType = async (type, limit) => {
+        getPokemonsByTypeCalls++;
+        return [];
+      };
+
+      // 1. Carrega uma listagem válida da Geração 1, tipo 'all'
+      mainModule.setSelectedGeneration('1');
+      mainModule.setSelectedType('all');
+      await mainModule.loadPokemonItems(true);
+
+      const initialCount = mainModule.getCurrentPokemons().length;
+      assert.equal(initialCount, 20);
+      assert.equal(getPokemonsCalls, 1);
+      assert.equal(getPokemonsByTypeCalls, 0);
+
+      // 2. Entra na busca por "pikachu"
+      await mainModule.executeCatalogSearch('pikachu');
+      assert.equal(mainModule.getSearchState().isSearchingCatalog, true);
+
+      // 3. Limpa o campo sem alterar os filtros (permanece Gen 1, tipo 'all')
+      await mainModule.clearSearch(false);
+      assert.equal(mainModule.getSearchState().isSearchingCatalog, false);
+
+      // 4. Confirmações:
+      // Sem recarregamento redundante da API
+      assert.equal(getPokemonsCalls, 1, 'Não deve fazer novas requisições a getPokemons');
+      assert.equal(getPokemonsByTypeCalls, 0, 'Não deve chamar getPokemonsByType');
+
+      // Restauração correta e sem duplicação
+      const restored = mainModule.getCurrentPokemons();
+      assert.equal(restored.length, initialCount, 'Contagem de Pokémon deve ser idêntica');
+
+      const numbers = restored.map(p => p.number);
+      assert.equal(new Set(numbers).size, numbers.length, 'Não deve existir nenhum ID duplicado na listagem');
+      assert.equal(restored[0].number, 1, 'Primeiro Pokémon deve ser Bulbasaur (#1)');
+
+      // Controles restaurados
+      assert.equal(dom.elements.get('loadMoreButton').style.display, 'flex');
+      assert.equal(dom.elements.get('loadMoreButton').disabled, false);
+      assert.ok(dom.elements.get('resultCount').textContent.includes('Mostrando 20 Pokémon'));
+    } finally {
+      pokeApi.getPokemons = originalGetPokemons;
+      pokeApi.getPokemonsByType = originalGetPokemonsByType;
+      pokeApi.getPokemonDetail = originalGetDetail;
+    }
   });
 });

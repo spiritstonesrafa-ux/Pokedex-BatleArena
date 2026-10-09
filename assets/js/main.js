@@ -77,6 +77,7 @@ if (typeof window !== 'undefined') {
 let selectedType = 'all';       // Tipo selecionado no filtro
 let selectedGeneration = '1';   // Geração selecionada
 let loadedGeneration = '1';     // Geração a que pertence o lote atual em allLoadedPokemons (Fase 1 UX)
+let loadedType = 'all';         // Tipo a que pertence o lote atual em allLoadedPokemons (Fase 1 UX)
 let regularLoadSequenceToken = 0; // Proteção contra respostas atrasadas do carregamento regular
 let currentSearchTerm = '';     // Termo de busca digitado pelo usuário
 let currentSort = 'id-asc';     // Tipo de ordenação ativa
@@ -290,12 +291,18 @@ if (typeof window !== 'undefined') {
 function loadPokemonItems(initial = false) {
   if (!loadMoreButton || !pokemonListElement) return Promise.resolve();
 
+  // Captura os parâmetros exatos e token único no início da operação
   const loadToken = ++regularLoadSequenceToken;
+  const requestGen = selectedGeneration;
+  const requestType = selectedType;
+  const genRange = generationRanges[requestGen] || generationRanges['1'];
+
+  const requestOffset = initial ? genRange.offset : offset;
+  const requestMaxLimit = initial ? genRange.max : maxLimit;
 
   if (initial) {
-    offset = generationRanges[selectedGeneration].offset;
-    maxLimit = generationRanges[selectedGeneration].max;
-    loadedGeneration = selectedGeneration;
+    offset = requestOffset;
+    maxLimit = requestMaxLimit;
     allLoadedPokemons = [];
     currentPokemons = [];
     pokemonListElement.innerHTML = createSkeletonsHtml(8);
@@ -304,23 +311,28 @@ function loadPokemonItems(initial = false) {
   loadMoreButton.disabled = true;
   loadMoreButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Carregando...';
 
-  const currentLimit = Math.min(limit, maxLimit - offset);
+  const currentLimit = Math.min(limit, requestMaxLimit - requestOffset);
 
   if (currentLimit <= 0) {
     loadMoreButton.style.display = 'none';
     return Promise.resolve();
   }
 
-  return pokeApi.getPokemons(offset, currentLimit)
+  return pokeApi.getPokemons(requestOffset, currentLimit)
     .then((newPokemons = []) => {
+      // Verificação estrita de validade: descarta respostas obsoletas, fora de contexto ou enquanto em busca ativa
       if (loadToken !== regularLoadSequenceToken) return;
+      if (selectedGeneration !== requestGen || selectedType !== requestType) return;
+      if (isSearchingCatalog) return;
 
       if (initial) {
         allLoadedPokemons = newPokemons || [];
       } else {
         allLoadedPokemons.push(...(newPokemons || []));
       }
-      loadedGeneration = selectedGeneration;
+      loadedGeneration = requestGen;
+      loadedType = requestType;
+
       if (typeof window !== 'undefined') {
         window.allLoadedPokemons = allLoadedPokemons;
       }
@@ -328,7 +340,8 @@ function loadPokemonItems(initial = false) {
       // Adiciona ao cache detalhado de busca
       (newPokemons || []).forEach(p => searchDetailsCache.set(p.number, p));
 
-      offset += (newPokemons || []).length;
+      offset = requestOffset + (newPokemons || []).length;
+      maxLimit = requestMaxLimit;
       applyFiltersAndSort();
 
       if (offset >= maxLimit || selectedType !== 'all') {
@@ -341,6 +354,9 @@ function loadPokemonItems(initial = false) {
     })
     .catch((err) => {
       if (loadToken !== regularLoadSequenceToken) return;
+      if (selectedGeneration !== requestGen || selectedType !== requestType) return;
+      if (isSearchingCatalog) return;
+
       console.error(err);
       pokemonListElement.innerHTML = `
         <div class="empty-state">
@@ -358,19 +374,45 @@ function loadPokemonItems(initial = false) {
  */
 async function loadPokemonsByType(type) {
   if (!pokemonListElement || !loadMoreButton) return;
+
+  const loadToken = ++regularLoadSequenceToken;
+  const requestGen = selectedGeneration;
+  const requestType = type;
+
   pokemonListElement.innerHTML = createSkeletonsHtml(8);
   loadMoreButton.style.display = 'none';
 
   try {
     const pokemons = await pokeApi.getPokemonsByType(type, 60);
-    allLoadedPokemons = pokemons;
+
+    // Validação estrita de contexto e concorrência
+    if (loadToken !== regularLoadSequenceToken) return;
+    if (selectedType !== requestType || selectedGeneration !== requestGen) return;
+    if (isSearchingCatalog) return;
+
+    allLoadedPokemons = pokemons || [];
+    loadedGeneration = requestGen;
+    loadedType = requestType;
+
     if (typeof window !== 'undefined') {
       window.allLoadedPokemons = allLoadedPokemons;
     }
-    pokemons.forEach(p => searchDetailsCache.set(p.number, p));
+    (pokemons || []).forEach(p => searchDetailsCache.set(p.number, p));
     applyFiltersAndSort();
   } catch (err) {
+    if (loadToken !== regularLoadSequenceToken) return;
+    if (selectedType !== requestType || selectedGeneration !== requestGen) return;
+    if (isSearchingCatalog) return;
+
     console.error(err);
+    pokemonListElement.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Erro ao carregar Pokémon</h3>
+        <p>Verifique sua conexão e tente novamente.</p>
+      </div>
+    `;
+    loadMoreButton.style.display = 'none';
   }
 }
 
@@ -508,11 +550,23 @@ function clearSearch(focusInput = true) {
   searchRenderOffset = 0;
   lastSearchQuery = '';
 
-  // Restaura listagem da geração atual em memória: se a geração foi alterada durante
-  // a busca ou se não há dados válidos da geração em memória, recarrega o lote inicial da geração ativa
+  // Invalida requisições regulares prévias para isolar o novo ciclo
+  regularLoadSequenceToken++;
+
+  // Restaura listagem da geração e tipo atualmente selecionados:
+  // Se o contexto em memória diferir dos filtros ativos ou estiver vazio,
+  // recarrega a listagem adequada para o contexto atual
   let loadPromise = Promise.resolve();
-  if (loadedGeneration !== selectedGeneration || allLoadedPokemons.length === 0) {
-    loadPromise = loadPokemonItems(true);
+  const isContextCompatible = (loadedGeneration === selectedGeneration) &&
+                              (loadedType === selectedType) &&
+                              (allLoadedPokemons && allLoadedPokemons.length > 0);
+
+  if (!isContextCompatible) {
+    if (selectedType === 'all') {
+      loadPromise = loadPokemonItems(true);
+    } else {
+      loadPromise = loadPokemonsByType(selectedType);
+    }
   } else {
     applyFiltersAndSort();
 
@@ -541,6 +595,7 @@ async function executeCatalogSearch(query) {
     return;
   }
 
+  regularLoadSequenceToken++; // Invalida qualquer carregamento regular pendente ao iniciar a busca
   const token = ++searchSequenceToken;
   if (searchAbortController) {
     try { searchAbortController.abort(); } catch (e) {}
@@ -906,9 +961,13 @@ function switchGenerationFilter(gen) {
   selectedGeneration = gen;
   selectedType = 'all';
   typePills.forEach(p => p.classList.toggle('active', p.dataset.type === 'all'));
+  regularLoadSequenceToken++;
 
-  if (searchInput && searchInput.value.trim() !== '') {
-    executeCatalogSearch(searchInput.value.trim());
+  if (isSearchingCatalog || (searchInput && searchInput.value.trim() !== '')) {
+    const q = (searchInput && searchInput.value.trim()) || lastSearchQuery;
+    if (q) {
+      executeCatalogSearch(q);
+    }
   } else {
     loadPokemonItems(true);
   }
@@ -919,8 +978,13 @@ function disableFavoritesFilter() {
   if (favoritesToggleBtn) {
     favoritesToggleBtn.classList.remove('active');
   }
-  if (searchInput && searchInput.value.trim() !== '') {
-    executeCatalogSearch(searchInput.value.trim());
+  if (isSearchingCatalog || (searchInput && searchInput.value.trim() !== '')) {
+    const q = (searchInput && searchInput.value.trim()) || lastSearchQuery;
+    if (q) {
+      executeCatalogSearch(q);
+    } else {
+      applyFiltersAndSort();
+    }
   } else {
     applyFiltersAndSort();
   }
@@ -929,8 +993,13 @@ function disableFavoritesFilter() {
 function clearTypeFilter() {
   selectedType = 'all';
   typePills.forEach(p => p.classList.toggle('active', p.dataset.type === 'all'));
-  if (searchInput && searchInput.value.trim() !== '') {
-    executeCatalogSearch(searchInput.value.trim());
+  regularLoadSequenceToken++;
+
+  if (isSearchingCatalog || (searchInput && searchInput.value.trim() !== '')) {
+    const q = (searchInput && searchInput.value.trim()) || lastSearchQuery;
+    if (q) {
+      executeCatalogSearch(q);
+    }
   } else {
     loadPokemonItems(true);
   }
@@ -1491,9 +1560,10 @@ if (generationSelect) {
     selectedGeneration = e.target.value;
     selectedType = 'all';
     typePills.forEach(p => p.classList.toggle('active', p.dataset.type === 'all'));
+    regularLoadSequenceToken++;
     if (isSearchingCatalog && searchInput && searchInput.value.trim() !== '') {
       executeCatalogSearch(searchInput.value.trim());
-    } else {
+    } else if (!isSearchingCatalog) {
       loadPokemonItems(true);
     }
   });
@@ -1505,10 +1575,11 @@ typePills.forEach(pill => {
     typePills.forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
     selectedType = pill.dataset.type;
+    regularLoadSequenceToken++;
 
     if (isSearchingCatalog && searchInput && searchInput.value.trim() !== '') {
       executeCatalogSearch(searchInput.value.trim());
-    } else {
+    } else if (!isSearchingCatalog) {
       if (selectedType === 'all') {
         loadPokemonItems(true);
       } else {
@@ -1817,7 +1888,18 @@ if (typeof window !== 'undefined') {
     handleSearchInput,
     clearSearch,
     executeCatalogSearch,
+    loadPokemonItems,
+    loadPokemonsByType,
     applyFiltersAndSort,
+    getLoadedGeneration: () => loadedGeneration,
+    setLoadedGeneration: (gen) => { loadedGeneration = gen; },
+    getLoadedType: () => loadedType,
+    setLoadedType: (type) => { loadedType = type; },
+    getLoadedContext: () => ({ generation: loadedGeneration, type: loadedType }),
+    setLoadedContext: (ctx) => {
+      if (ctx && ctx.generation !== undefined) loadedGeneration = ctx.generation;
+      if (ctx && ctx.type !== undefined) loadedType = ctx.type;
+    },
     getSearchState: () => ({
       isSearchingCatalog,
       currentSearchTerm,
@@ -1847,6 +1929,7 @@ if (typeof module !== 'undefined' && module.exports) {
     executeCatalogSearch,
     loadMoreSearchResults,
     loadPokemonItems,
+    loadPokemonsByType,
     applyFiltersAndSort,
     switchModalTab,
     switchGenerationFilter,
@@ -1864,6 +1947,13 @@ if (typeof module !== 'undefined' && module.exports) {
     setLoadedGeneration: (gen) => { loadedGeneration = gen; },
     setSelectedType: (type) => { selectedType = type; },
     getSelectedType: () => selectedType,
+    getLoadedType: () => loadedType,
+    setLoadedType: (type) => { loadedType = type; },
+    getLoadedContext: () => ({ generation: loadedGeneration, type: loadedType }),
+    setLoadedContext: (ctx) => {
+      if (ctx && ctx.generation !== undefined) loadedGeneration = ctx.generation;
+      if (ctx && ctx.type !== undefined) loadedType = ctx.type;
+    },
     setShowingFavoritesOnly: (val) => { showingFavoritesOnly = val; },
     getShowingFavoritesOnly: () => showingFavoritesOnly,
     getFavorites: () => favoritePokemonIds,

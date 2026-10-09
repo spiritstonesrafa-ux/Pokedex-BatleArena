@@ -2,6 +2,29 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 09/10/2026: Conclusão Definitiva da Fase 1 UI/UX (Preservação de Contexto e Proteção contra Respostas Obsoletas na Pokédex)
+
+Resolução das duas falhas restantes identificadas na restauração da listagem da Pokédex após buscas:
+
+1. **Correção A — Limpeza de busca após alteração de tipo (`clearSearch` e contexto regular):**
+   - **Falha corrigida:** Ao carregar os primeiros 20 Pokémon da Geração 1, pesquisar "Pikachu", selecionar o filtro "Elétrico" durante a busca e limpar o campo, a Pokédex ficava com lista vazia e botão "Carregar Mais" oculto, pois `clearSearch` verificava apenas `loadedGeneration` e tentava filtrar o lote inicial de 20 espécies (IDs 1..20, onde não há elétricos).
+   - **Abordagem de identificação e validação de contexto:** Rastreamento unificado de contexto da listagem regular (`loadedGeneration` e `loadedType`), espelhando a geração e o tipo efetivamente carregados em memória. Ao acionar `clearSearch`, a aplicação valida `(loadedGeneration === selectedGeneration && loadedType === selectedType && allLoadedPokemons.length > 0)`. Havendo divergência de tipo ou geração, o sistema carrega a listagem adequada ao contexto ativo (`loadPokemonsByType(selectedType)` ou `loadPokemonItems(true)`), preservando filtros e atualizando contadores, controles e paginação sem estados vazios espúrios. Se o contexto for compatível, restaura os dados em memória sem recarregamento desnecessário.
+
+2. **Correção B — Respostas assíncronas antigas marcadas indevidamente para novo contexto:**
+   - **Falha corrigida:** Ao disparar uma requisição regular da Geração 1, entrar em busca, alternar para a Geração 2 durante a busca e liberar a resposta lenta da Geração 1, `loadPokemonItems` atribuía cegamente `loadedGeneration = selectedGeneration` ('2'), injetando Pokémon de Kanto (Bulbasaur) e limites de paginação da Gen 1 na visualização de Johto ao limpar a busca.
+   - **Abordagem de identificação e validação de contexto:** Captura estrita dos parâmetros da requisição no início da operação (`loadToken = ++regularLoadSequenceToken`, `requestGen = selectedGeneration`, `requestType = selectedType`, `requestOffset`, `requestMaxLimit`). Na conclusão das requisições (aplicado a `loadPokemonItems` e `loadPokemonsByType`), o retorno só atualiza estado ou DOM se `loadToken === regularLoadSequenceToken && selectedGeneration === requestGen && selectedType === requestType && !isSearchingCatalog`. Mudanças de geração, pílulas de tipo e entrada na busca incrementam `regularLoadSequenceToken`, invalidando e descartando respostas defasadas sem efeitos colaterais.
+
+3. **Testes de Regressão Adicionados (`tests/ui/pokedex-search-accessibility.test.js`):**
+   - **Cenário 11 (Teste A):** Tipo alterado para Elétrico durante busca por Pikachu; após `clearSearch`, preserva filtros, recarrega Pokémons elétricos reais (#25 Pikachu, #26 Raichu), exibe contador correto e oculta paginação sem apresentar empty state.
+   - **Cenário 12 (Teste B):** Resposta controlada e pendente da Gen 1 liberada após troca para Gen 2 durante busca; ao limpar a busca, confirma que nenhum Pokémon da Gen 1 aparece em Gen 2 e que os limites de paginação pertencem à Gen 2 (offset 171, max 251).
+   - **Cenário 13 (Teste C):** Resposta pendente de carregamento por tipo (`water`) liberada após mudança para `fire`; confirma que a resposta de água é descartada e não sobrescreve os dados ou controles de fogo ativos.
+   - **Cenário 14 (Teste D):** Restauração de listagem com contexto compatível (Gen 1, all) após busca; valida restauração idêntica (20 itens), ausência de IDs duplicados, nenhum recarregamento redundante da API e reativação do botão "Carregar Mais".
+
+4. **Resultados e Limitações:**
+   - Suíte de acessibilidade e busca (`pokedex-search-accessibility.test.js`): **14/14 testes aprovados**.
+   - Suíte completa de testes automatizados do projeto: **841/841 testes aprovados** (22 suítes, 0 falhas).
+   - Limitação registrada: A verificação visual via subagente de navegador não pôde ser executada devido a indisponibilidade 503 temporária do modelo do subagente no servidor (`UNAVAILABLE: No capacity available for model gemini-3-flash on the server`), sendo registrada conforme orientações do projeto sem declaração indevida de aprovação visual.
+
 ## Atualização — 09/10/2026: Conclusão e Correções da Fase 1 UI/UX (Busca Pokédex e Acessibilidade)
 
 Revisão completa e resolução das quatro pendências reais da Fase 1, além da reescrita dos testes para executar a implementação oficial da aplicação:
