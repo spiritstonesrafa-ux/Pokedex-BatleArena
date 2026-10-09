@@ -166,18 +166,30 @@
 
 .clear-search-btn {
   position: absolute;
-  right: 1rem;
+  right: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
+  background: transparent;
+  border: none;
   color: var(--text-muted);
   font-size: 1.1rem;
-  padding: 0.2rem;
+  padding: 0.3rem;
   display: none;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: color var(--transition-fast);
+  border-radius: var(--radius-sm, 4px);
+  line-height: 1;
+  transition: color var(--transition-fast), background var(--transition-fast);
 }
 
 .clear-search-btn:hover {
+  color: var(--text-primary);
+}
+
+.clear-search-btn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
   color: var(--text-primary);
 }
 

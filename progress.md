@@ -2,7 +2,36 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
-## Atualização — 05/10/2026: links públicos após renomeação do repositório
+## Atualização — 09/10/2026: UI/UX Fase 1 — Busca completa da Pokédex e acessibilidade por teclado
+
+- **Busca completa da Pokédex (Catálogo PokéAPI 1–1025):**
+  - Implementado carregamento e cache de índice leve (`pokeApi.getPokemonIndex`) cobrindo todas as 9 gerações (1 a 1025 espécies) em memória e `sessionStorage`.
+  - Suporte completo a pesquisas por nome exato ("Pikachu"), minúsculo ("pikachu"), parcial ("pika"), número ("25") e formato hashtag ("#25", "#025"), com remoção automática de espaços e insensibilidade a maiúsculas/minúsculas.
+  - Debounce de 300 ms, cache de resultados em Map (`searchResultsCache`), token incremental de sequência (`searchSequenceToken`) e cancelamento via `AbortController` para prevenir condições de corrida com respostas fora de ordem.
+  - Respeito estrito aos filtros ativos de geração, tipo e favoritos: quando um Pokémon existe no catálogo mas não atende aos filtros vigentes, a interface exibe feedback contextual com botões de atalho (ex.: mudar para a geração do Pokémon ou limpar filtro de tipo/favoritos).
+  - Estados visuais explícitos para carregamento (skeletons animados), nenhum resultado encontrado e falha de rede/conexão com botão interativo de "Tentar novamente".
+  - Paginação na busca com lotes de 20 resultados (`SEARCH_PAGE_SIZE`) e botão "Carregar Mais".
+  - Botão nativo acessível `#clearSearchBtn` para limpar a busca, restaurando com segurança a listagem paginada inicial sem duplicação de cards.
+
+- **Cards acessíveis por teclado:**
+  - O card permanece um elemento `li` sem transformar o item inteiro em botão nem aninhar botões interativos.
+  - Implementado botão nativo dedicado `.pokemon-card-action-btn` posicionado sobre o card, com `aria-label="Ver detalhes de [Nome]"`, acessível via navegação sequencial por `Tab`, acionável por `Enter`/`Espaço` e com contorno de foco visível de alto contraste (`:focus-visible`).
+  - O botão de favoritos (`.fav-btn`) permanece desacoplado e independente, acionado com `event.stopPropagation()`, garantindo que favoritar não abra o modal de detalhes e vice-versa.
+
+- **Modal de detalhes acessível:**
+  - Overlay e diálogo configurados com `role="dialog"`, `aria-modal="true"`, `aria-labelledby="modalPokemonName"` e sincronização de `aria-hidden` ("false" quando aberto, "true" quando fechado).
+  - Gerenciamento completo de foco: foco inicial atribuído ao botão de fechar (`#closeModalBtn`), ciclo de navegação circular fechado dentro do modal (`Tab` e `Shift+Tab`) e fechamento imediato via tecla `Escape`.
+  - Isolamento de conteúdo de fundo através de `inert` e `aria-hidden="true"` nos elementos irmãos durante o tempo em que o modal permanece aberto.
+  - Restauração segura do foco para o elemento disparador original após o fechamento, com fallback seguro caso o elemento não exista mais.
+  - Proteção assíncrona contra corridas de abertura rápida (`modalLoadSeq`), evitando que dados obsoletos de outro Pokémon sobrescrevam a tela atual.
+  - Estágios evolutivos reestruturados como botões nativos interativos (`<button type="button" class="evo-stage">`), acessíveis por teclado e foco visível.
+
+- **Validação e Homologação:**
+  - Criada suíte automatizada `tests/ui/pokedex-search-accessibility.test.js` cobrindo integralmente os 11 gates de homologação da Fase 1 (11/11 aprovados).
+  - Suíte completa do projeto: **838/838** testes aprovados (22 suítes, 0 falhas, 0 regressões).
+  - Limitação registrada: a conferência visual automatizada via subagente encontrou indisponibilidade 503 temporária do modelo no servidor; conferência visual direta manual no navegador (desktop e celular) continua recomendada.
+
+---
 
 - Corrigidos o botão de demonstração do README e os links de demonstração/harness na documentação para `https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/`.
 - As instruções de clonagem do README e o remoto local `origin` usam o nome atual `spiritstonesrafa-ux/Pokedex-BatleArena`.

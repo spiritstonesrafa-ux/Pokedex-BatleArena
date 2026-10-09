@@ -8,13 +8,39 @@
 
 const pokeApi = {};
 
+let PokemonClass = typeof Pokemon !== 'undefined' ? Pokemon : null;
+if (!PokemonClass && typeof require !== 'undefined') {
+  try {
+    PokemonClass = require('./pokemon-model.js');
+  } catch (e) {}
+}
+if (!PokemonClass) {
+  PokemonClass = class Pokemon {
+    constructor() {
+      this.number = 0;
+      this.name = '';
+      this.types = [];
+      this.type = '';
+      this.photo = '';
+      this.animatedPhoto = '';
+      this.height = 0;
+      this.weight = 0;
+      this.abilities = [];
+      this.moves = [];
+      this.stats = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0, total: 0 };
+      this.speciesUrl = '';
+      this.cry = '';
+    }
+  };
+}
+
 /**
  * Converte o JSON bruto da PokéAPI em um objeto padronizado da nossa classe Pokemon.
  * @param {Object} pokeDetail - Objeto retornado pela API contendo dados do Pokémon.
  * @returns {Pokemon} Instância formatada com apenas as propriedades que usamos.
  */
 function convertPokeApiDetailToPokemon(pokeDetail) {
-  const pokemon = new Pokemon();
+  const pokemon = new PokemonClass();
   pokemon.number = pokeDetail.id;
   pokemon.name = pokeDetail.name;
 
@@ -87,7 +113,7 @@ function convertPokeApiDetailToPokemon(pokeDetail) {
  * @param {string|Object} pokemonOrUrl - URL de detalhes ou objeto simples com a URL.
  * @returns {Promise<Pokemon>} Promise com o Pokémon formatado.
  */
-pokeApi.getPokemonDetail = (pokemonOrUrl) => {
+pokeApi.getPokemonDetail = (pokemonOrUrl, signal = null) => {
   let url = '';
   if (typeof pokemonOrUrl === 'string' && pokemonOrUrl.startsWith('http')) {
     url = pokemonOrUrl;
@@ -97,7 +123,9 @@ pokeApi.getPokemonDetail = (pokemonOrUrl) => {
     url = `https://pokeapi.co/api/v2/pokemon/${pokemonOrUrl}`;
   }
 
-  return fetch(url)
+  const fetchOptions = signal ? { signal } : {};
+
+  return fetch(url, fetchOptions)
     .then((response) => {
       if (!response.ok) throw new Error('Pokémon não encontrado na PokéAPI');
       return response.json(); // Converte a resposta bruta em objeto JavaScript
@@ -185,6 +213,90 @@ pokeApi.getPokemonsByType = async (type, limit = 40) => {
   const detailPromises = pokemonEntries.map(entry => pokeApi.getPokemonDetail(entry.pokemon.url));
   return Promise.all(detailPromises);
 };
+
+// Cache em memória para o índice leve do catálogo completo (ID, Nome e URL)
+let pokemonIndexCache = null;
+
+/**
+ * Obtém o catálogo leve de nomes e IDs de todos os Pokémon da PokéAPI (Fase 1 UX).
+ * Permite busca instantânea por nome parcial ou número sem puxar detalhes completos antecipadamente.
+ *
+ * @param {number} limit - Limite máximo de entradas (padrão: 1025, cobrindo Gens 1 a 9).
+ * @param {AbortSignal|null} signal - Sinal para cancelamento de requisição (AbortController).
+ * @returns {Promise<Array<{ id: number, name: string, url: string }>>}
+ */
+pokeApi.getPokemonIndex = async (limit = 1025, signal = null) => {
+  if (pokemonIndexCache && pokemonIndexCache.length >= limit) {
+    return pokemonIndexCache.slice(0, limit);
+  }
+
+  // Tenta ler do sessionStorage se estiver no navegador
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const stored = window.sessionStorage.getItem('pba_pokemon_index');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length >= limit) {
+          pokemonIndexCache = parsed;
+          return parsed.slice(0, limit);
+        }
+      }
+    } catch (e) {
+      // Ignora falhas de storage (ex: navegação privada ou restrições de sandbox)
+    }
+  }
+
+  const url = `https://pokeapi.co/api/v2/pokemon?limit=${limit}`;
+  const fetchOptions = signal ? { signal } : {};
+  const response = await fetch(url, fetchOptions);
+  if (!response.ok) {
+    throw new Error(`Erro ao carregar índice de Pokémon na PokéAPI (status: ${response.status})`);
+  }
+
+  const jsonBody = await response.json();
+  const rawResults = Array.isArray(jsonBody.results) ? jsonBody.results : [];
+
+  const index = rawResults.map((item) => {
+    const match = item.url ? item.url.match(/\/pokemon\/(\d+)\//) : null;
+    const id = match ? parseInt(match[1], 10) : 0;
+    return {
+      id,
+      name: item.name ? String(item.name).toLowerCase() : '',
+      url: item.url || ''
+    };
+  }).filter((entry) => entry.id > 0);
+
+  pokemonIndexCache = index;
+
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      window.sessionStorage.setItem('pba_pokemon_index', JSON.stringify(index));
+    } catch (e) {}
+  }
+
+  return index.slice(0, limit);
+};
+
+/**
+ * Injeta manualmente o índice leve (útil para testes unitários offline e simulação determinística).
+ * @param {Array<{ id: number, name: string, url: string }>} entries
+ */
+pokeApi.setPokemonIndex = (entries) => {
+  pokemonIndexCache = Array.isArray(entries) ? [...entries] : [];
+};
+
+/**
+ * Limpa o cache do índice em memória e no sessionStorage.
+ */
+pokeApi.clearPokemonIndex = () => {
+  pokemonIndexCache = null;
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      window.sessionStorage.removeItem('pba_pokemon_index');
+    } catch (e) {}
+  }
+};
+
 
 // Cache em memória para golpes já consultados (evita requisições redundantes à PokéAPI)
 const moveDetailCache = new Map();
@@ -285,6 +397,8 @@ pokeApi.clearMoveCache = () => {
 };
 
 pokeApi.getMoveCache = () => moveDetailCache;
+pokeApi.convertPokeApiDetailToPokemon = convertPokeApiDetailToPokemon;
+pokeApi.pokeApi = pokeApi;
 
 if (typeof window !== 'undefined') {
   window.pokeApi = pokeApi;

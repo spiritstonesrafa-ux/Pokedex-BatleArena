@@ -103,7 +103,9 @@
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
           <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome ou número (ex: Pikachu, 25)..." autocomplete="off">
-          <i class="fa-solid fa-xmark clear-search-btn" id="clearSearchBtn"></i>
+          <button type="button" class="clear-search-btn" id="clearSearchBtn" aria-label="Limpar campo de busca" title="Limpar busca" style="display: none;">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
         </div>
 
         <div class="filters-row">
@@ -201,7 +203,7 @@
 
     <!-- 4. MODAL FLUTUANTE (Detalhes, Atributos de Batalha e Evolução) -->
     <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
-      <div class="modal-container" id="pokemonModal" role="dialog" aria-modal="true">
+      <div class="modal-container" id="pokemonModal" role="dialog" aria-modal="true" aria-labelledby="modalPokemonName">
         <div id="modalDynamicContent">
           <!-- Preenchido dinamicamente ao clicar em qualquer Pokémon -->
         </div>
