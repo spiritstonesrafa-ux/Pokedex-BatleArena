@@ -8,13 +8,16 @@
 
 const pokeApi = {};
 
-let PokemonClass = typeof Pokemon !== 'undefined' ? Pokemon : null;
+let PokemonClass = typeof Pokemon === 'function' ? Pokemon : null;
 if (!PokemonClass && typeof require !== 'undefined') {
   try {
-    PokemonClass = require('./pokemon-model.js');
+    const loaded = require('./pokemon-model.js');
+    if (typeof loaded === 'function') {
+      PokemonClass = loaded;
+    }
   } catch (e) {}
 }
-if (!PokemonClass) {
+if (typeof PokemonClass !== 'function') {
   PokemonClass = class Pokemon {
     constructor() {
       this.number = 0;
@@ -123,7 +126,8 @@ pokeApi.getPokemonDetail = (pokemonOrUrl, signal = null) => {
     url = `https://pokeapi.co/api/v2/pokemon/${pokemonOrUrl}`;
   }
 
-  const fetchOptions = signal ? { signal } : {};
+  const isValidSignal = (typeof AbortSignal !== 'undefined' && signal instanceof AbortSignal) || (signal && typeof signal.aborted === 'boolean');
+  const fetchOptions = isValidSignal ? { signal } : {};
 
   return fetch(url, fetchOptions)
     .then((response) => {
@@ -145,7 +149,7 @@ pokeApi.getPokemons = (offset = 0, limit = 20) => {
   return fetch(url)
     .then((response) => response.json())
     .then((jsonBody) => jsonBody.results) // Obtém a lista inicial de nomes e URLs
-    .then((pokemons) => pokemons.map(pokeApi.getPokemonDetail)) // Dispara uma requisição de detalhe para cada um
+    .then((pokemons) => pokemons.map((pokemon) => pokeApi.getPokemonDetail(pokemon))) // Dispara uma requisição de detalhe para cada um
     .then((detailRequests) => Promise.all(detailRequests)) // Aguarda todas as requisições paralelas finalizarem
     .catch((error) => {
       console.error('Erro ao buscar lista de pokemons:', error);
@@ -226,7 +230,7 @@ let pokemonIndexCache = null;
  * @returns {Promise<Array<{ id: number, name: string, url: string }>>}
  */
 pokeApi.getPokemonIndex = async (limit = 1025, signal = null) => {
-  if (pokemonIndexCache && pokemonIndexCache.length >= limit) {
+  if (pokemonIndexCache && (pokemonIndexCache.length >= limit || pokemonIndexCache._isMock)) {
     return pokemonIndexCache.slice(0, limit);
   }
 
@@ -283,6 +287,9 @@ pokeApi.getPokemonIndex = async (limit = 1025, signal = null) => {
  */
 pokeApi.setPokemonIndex = (entries) => {
   pokemonIndexCache = Array.isArray(entries) ? [...entries] : [];
+  if (pokemonIndexCache) {
+    pokemonIndexCache._isMock = true;
+  }
 };
 
 /**
@@ -297,6 +304,88 @@ pokeApi.clearPokemonIndex = () => {
   }
 };
 
+// Cache em memória para os IDs de Pokémon por Tipo (Fase 1 UX)
+const typePokemonIdsCache = new Map();
+
+/**
+ * Obtém o conjunto de IDs de Pokémon associados a um tipo específico na PokéAPI.
+ * Permite filtrar por tipo antes da paginação sem precisar carregar detalhes completos.
+ * @param {string} type - Nome do tipo ('fire', 'water', etc.)
+ * @param {AbortSignal|null} signal - Sinal para cancelamento de requisição.
+ * @returns {Promise<Set<number>>}
+ */
+pokeApi.getTypePokemonIds = async (type, signal = null) => {
+  const normType = String(type).toLowerCase().trim();
+  if (typePokemonIdsCache.has(normType)) {
+    return typePokemonIdsCache.get(normType);
+  }
+
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const stored = window.sessionStorage.getItem(`pba_type_index_${normType}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const set = new Set(parsed);
+          typePokemonIdsCache.set(normType, set);
+          return set;
+        }
+      }
+    } catch (_) {}
+  }
+
+  const url = `https://pokeapi.co/api/v2/type/${normType}`;
+  const fetchOptions = signal ? { signal } : {};
+  const response = await fetch(url, fetchOptions);
+  if (!response.ok) {
+    throw new Error(`Falha ao obter índice do tipo ${type} na PokéAPI`);
+  }
+  const data = await response.json();
+  const idSet = new Set();
+  const idList = [];
+
+  if (Array.isArray(data.pokemon)) {
+    data.pokemon.forEach(entry => {
+      if (entry && entry.pokemon && entry.pokemon.url) {
+        const match = entry.pokemon.url.match(/\/pokemon\/(\d+)\/?$/);
+        if (match) {
+          const id = parseInt(match[1], 10);
+          idSet.add(id);
+          idList.push(id);
+        }
+      }
+    });
+  }
+
+  typePokemonIdsCache.set(normType, idSet);
+
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      window.sessionStorage.setItem(`pba_type_index_${normType}`, JSON.stringify(idList));
+    } catch (_) {}
+  }
+
+  return idSet;
+};
+
+/**
+ * Injeta manualmente o índice de IDs por tipo (útil para testes unitários).
+ */
+pokeApi.setTypeIndex = (type, ids) => {
+  const normType = String(type).toLowerCase().trim();
+  typePokemonIdsCache.set(normType, new Set(ids));
+};
+
+/**
+ * Limpa o cache de índices por tipo.
+ */
+pokeApi.clearTypeIndex = (type = null) => {
+  if (type) {
+    typePokemonIdsCache.delete(String(type).toLowerCase().trim());
+  } else {
+    typePokemonIdsCache.clear();
+  }
+};
 
 // Cache em memória para golpes já consultados (evita requisições redundantes à PokéAPI)
 const moveDetailCache = new Map();

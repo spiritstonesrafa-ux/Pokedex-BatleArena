@@ -32,3 +32,7 @@ class Pokemon {
     this.cry = '';            // URL do áudio com o som oficial (cry)
   }
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Pokemon;
+}

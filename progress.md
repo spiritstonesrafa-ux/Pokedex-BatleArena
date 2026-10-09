@@ -2,35 +2,45 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
-## Atualização — 09/10/2026: UI/UX Fase 1 — Busca completa da Pokédex e acessibilidade por teclado
+## Atualização — 09/10/2026: Conclusão e Correções da Fase 1 UI/UX (Busca Pokédex e Acessibilidade)
 
-- **Busca completa da Pokédex (Catálogo PokéAPI 1–1025):**
-  - Implementado carregamento e cache de índice leve (`pokeApi.getPokemonIndex`) cobrindo todas as 9 gerações (1 a 1025 espécies) em memória e `sessionStorage`.
-  - Suporte completo a pesquisas por nome exato ("Pikachu"), minúsculo ("pikachu"), parcial ("pika"), número ("25") e formato hashtag ("#25", "#025"), com remoção automática de espaços e insensibilidade a maiúsculas/minúsculas.
-  - Debounce de 300 ms, cache de resultados em Map (`searchResultsCache`), token incremental de sequência (`searchSequenceToken`) e cancelamento via `AbortController` para prevenir condições de corrida com respostas fora de ordem.
-  - Respeito estrito aos filtros ativos de geração, tipo e favoritos: quando um Pokémon existe no catálogo mas não atende aos filtros vigentes, a interface exibe feedback contextual com botões de atalho (ex.: mudar para a geração do Pokémon ou limpar filtro de tipo/favoritos).
-  - Estados visuais explícitos para carregamento (skeletons animados), nenhum resultado encontrado e falha de rede/conexão com botão interativo de "Tentar novamente".
-  - Paginação na busca com lotes de 20 resultados (`SEARCH_PAGE_SIZE`) e botão "Carregar Mais".
-  - Botão nativo acessível `#clearSearchBtn` para limpar a busca, restaurando com segurança a listagem paginada inicial sem duplicação de cards.
+Revisão completa e resolução das quatro pendências reais da Fase 1, além da reescrita dos testes para executar a implementação oficial da aplicação:
 
-- **Cards acessíveis por teclado:**
-  - O card permanece um elemento `li` sem transformar o item inteiro em botão nem aninhar botões interativos.
-  - Implementado botão nativo dedicado `.pokemon-card-action-btn` posicionado sobre o card, com `aria-label="Ver detalhes de [Nome]"`, acessível via navegação sequencial por `Tab`, acionável por `Enter`/`Espaço` e com contorno de foco visível de alto contraste (`:focus-visible`).
-  - O botão de favoritos (`.fav-btn`) permanece desacoplado e independente, acionado com `event.stopPropagation()`, garantindo que favoritar não abra o modal de detalhes e vice-versa.
+1. **Correção A — Filtro de tipo aplicado antes da paginação:**
+   - Em `main.js` (`executeCatalogSearch`), a combinação de termo de busca, geração ativa e filtro de tipo agora determina os candidatos elegíveis **antes** de fatiar os resultados em páginas (`SEARCH_PAGE_SIZE = 20`).
+   - Empregada indexação leve de IDs por tipo via `pokeApi.getTypePokemonIds` com cache em memória e `sessionStorage`.
+   - Candidatos válidos localizados além do 20º item do catálogo agora aparecem imediatamente na primeira página de resultados.
+   - O contador de resultados e o botão "Carregar Mais" refletem com exatidão a lista de candidatos realmente elegíveis, e o feedback de "tipo impedindo" só é acionado se nenhum candidato da busca pertencer ao tipo selecionado.
 
-- **Modal de detalhes acessível:**
-  - Overlay e diálogo configurados com `role="dialog"`, `aria-modal="true"`, `aria-labelledby="modalPokemonName"` e sincronização de `aria-hidden` ("false" quando aberto, "true" quando fechado).
-  - Gerenciamento completo de foco: foco inicial atribuído ao botão de fechar (`#closeModalBtn`), ciclo de navegação circular fechado dentro do modal (`Tab` e `Shift+Tab`) e fechamento imediato via tecla `Escape`.
-  - Isolamento de conteúdo de fundo através de `inert` e `aria-hidden="true"` nos elementos irmãos durante o tempo em que o modal permanece aberto.
-  - Restauração segura do foco para o elemento disparador original após o fechamento, com fallback seguro caso o elemento não exista mais.
-  - Proteção assíncrona contra corridas de abertura rápida (`modalLoadSeq`), evitando que dados obsoletos de outro Pokémon sobrescrevam a tela atual.
-  - Estágios evolutivos reestruturados como botões nativos interativos (`<button type="button" class="evo-stage">`), acessíveis por teclado e foco visível.
+2. **Correção B — Restauração de geração e limpeza de busca:**
+   - `main.js` agora armazena explicitamente o contexto da listagem (`loadedGeneration`) em paralelo à geração selecionada no filtro (`selectedGeneration`).
+   - Ao executar `clearSearch`, se `loadedGeneration !== selectedGeneration` ou se a memória estiver vazia, o sistema não reutiliza o array anterior da Geração 1: ele aciona `loadPokemonItems(true)` para carregar a geração ativa, restabelece os limites corretos de paginação (`offset` e `maxLimit`) e retorna a Promise de carregamento.
+   - Respostas assíncronas defasadas são invalidadas pelo token `regularLoadSequenceToken`.
 
-- **Validação e Homologação:**
-  - Criada suíte automatizada `tests/ui/pokedex-search-accessibility.test.js` cobrindo integralmente os 11 gates de homologação da Fase 1 (11/11 aprovados).
-  - Suíte completa do projeto: **838/838** testes aprovados (22 suítes, 0 falhas, 0 regressões).
-  - Limitação registrada: a conferência visual automatizada via subagente encontrou indisponibilidade 503 temporária do modelo no servidor; conferência visual direta manual no navegador (desktop e celular) continua recomendada.
+3. **Correção C — Invalidação e versionamento de favoritos no cache de busca:**
+   - Introduzido contador de versão `favoritesVersion`, incrementado a cada alteração na lista de favoritos.
+   - A chave de cache de buscas (`searchResultsCache`) agora incorpora `fav:${favoritesVersion}`, invalidando consultas cacheadas obsoletas quando favoritos são adicionados ou removidos.
+   - Em `executeCatalogSearch`, os ramos de retorno antecipado (sem resultados de geração, tipo ou favoritos) limpam explicitamente `currentSearchCandidates = []` e `currentPokemons = []`, evitando retenção de Pokémon removidos na memória da aplicação.
 
+4. **Correção D — Focus trap do modal restrito a controles realmente visíveis:**
+   - Implementada a função de detecção `isModalElementVisible(el)`, que inspeciona classes de abas ativas (`.tab-content.active`), propriedades `hidden`, `disabled`, `aria-hidden`, `inert` e visibilidade computada.
+   - A armadilha de foco em `handleModalTrapKeydown` avalia apenas os controles verdadeiramente visíveis, impedindo que botões de abas inativas (como `#tab-evolution`) capturem `Tab` ou `Shift+Tab`.
+   - `Shift+Tab` no primeiro controle visível circula confiavelmente para o último controle visível da aba ativa, `Tab` no último retorna ao primeiro, e `Escape` fecha o modal restaurando o foco ao elemento acionador original.
+   - A navegação entre estágios evolutivos dentro do modal preserva o elemento chamador original na Pokédex sem sobrescrevê-lo.
+
+5. **Correção de cliques e toques nos cards (`pokedex.css`):**
+   - Aplicado `pointer-events: none` aos elementos textuais e visuais do card (`.card-header`, `.pokemon-name`, `.card-body`) e `pointer-events: auto` com `z-index: 3` ao botão `.fav-btn`.
+   - Cliques e toques em qualquer área do card (nome, arte, badges de status) acionam diretamente o botão nativo do card (`.pokemon-card-action-btn`), enquanto o botão de favoritos permanece clicável e independente sem abrir os detalhes.
+
+6. **Reestruturação da Suíte de Testes (`tests/ui/pokedex-search-accessibility.test.js`):**
+   - Removidas todas as simulações internas que mascaravam o comportamento da aplicação (`simulateSearch`, `simulateKeydown`, `openModalMock`, `closeModalMock`, `loadPokemonModal`).
+   - Todos os 10 cenários obrigatórios executam os métodos reais (`executeCatalogSearch`, `clearSearch`, `openPokemonDetails`, `closeModal`, `handleModalTrapKeydown`, `createPokemonCard`, `toggleFavorite`, `isModalElementVisible`) sobre o DOM de testes.
+   - Correção do teste BAL38 (`tests/balance/battle-balance.test.js`) para utilizar o hydrator determinístico offline (`{ api: null }`), evitando dependência de requisições de rede ao vivo que causavam divergência de loadout.
+
+7. **Resultados e Métricas:**
+   - `tests/ui/pokedex-search-accessibility.test.js`: **10/10** cenários aprovados com execução real.
+   - Suíte de testes completa do projeto: **837/837** testes aprovados (22 suítes, 0 falhas).
+   - Limitação registrada: a conferência visual automatizada via subagente de navegador registrou indisponibilidade 503 temporária do modelo no servidor; a verificação do servidor local e execução dos fluxos foram concluídas e testadas.
 ---
 
 - Corrigidos o botão de demonstração do README e os links de demonstração/harness na documentação para `https://spiritstonesrafa-ux.github.io/Pokedex-BatleArena/`.

@@ -301,7 +301,7 @@ describe('PHASE PBA-014B — BATTLE BALANCE FOUNDATION (BAL01–BAL40)', () => {
 
   // BAL38 — Quick Battle Real E2E Simulation
   it('BAL38 — Quick Battle Real E2E: simula ciclo de combate com stats normalizados e dano com variância', () => {
-    const hydrator = new BattleTeamHydrator();
+    const hydrator = new BattleTeamHydrator({ api: null });
     const c1 = hydrator.hydratePokemon(4); // Charmander (114 HP)
     const c2 = hydrator.hydratePokemon(1); // Bulbasaur (120 HP)
     return Promise.all([c1, c2]).then(([p1, p2]) => {
