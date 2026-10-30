@@ -633,7 +633,8 @@ describe('PHASE PBA-013 — GATES UI01–UI50 (BATTLE UI & EXPERIENCE)', () => {
 
   it('UI49 — Mobile Responsive: CSS media queries exist for mobile breakpoint', () => {
     const fs = require('node:fs');
-    const cssContent = fs.readFileSync('d:/GamePokemon/assets/css/battle-arena.css', 'utf-8');
+    const path = require('node:path');
+    const cssContent = fs.readFileSync(path.resolve(__dirname, '../../assets/css/battle-arena.css'), 'utf-8');
     assert.ok(cssContent.includes('@media (max-width: 640px)'));
     assert.ok(cssContent.includes('.battle-view-container'));
   });
@@ -808,7 +809,8 @@ describe('PHASE PBA-013-SPRITE-FIX — GATES SPR01–SPR20 (SPRITE RENDERING & B
 
   it('SPR20 — Battle "EM BREVE" Badge Removed: index.html navigation does not contain Em breve on Batalhar', () => {
     const fs = require('node:fs');
-    const indexHtml = fs.readFileSync('d:/GamePokemon/index.html', 'utf-8');
+    const path = require('node:path');
+    const indexHtml = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf-8');
 
     // Extrai o botão navBattleBtn
     const match = indexHtml.match(/<button id="navBattleBtn"[\s\S]*?<\/button>/);
