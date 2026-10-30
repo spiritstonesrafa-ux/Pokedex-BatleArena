@@ -173,6 +173,7 @@
     'psywave': Object.freeze({ name: 'psywave', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'RANDOM_LEVEL_MULTIPLIER' }),
     'super-fang': Object.freeze({ name: 'super-fang', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
     'nature-s-madness': Object.freeze({ name: 'nature-s-madness', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
+    'natures-madness': Object.freeze({ name: 'natures-madness', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
     'ruination': Object.freeze({ name: 'ruination', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
     'endeavor': Object.freeze({ name: 'endeavor', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'SETS_TARGET_HP_TO_USER_HP' }),
 
@@ -182,6 +183,8 @@
     'metal-burst': Object.freeze({ name: 'metal-burst', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_LAST_DAMAGE' }),
     'bide': Object.freeze({ name: 'bide', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_STORED_DAMAGE' }),
     'comeuppance': Object.freeze({ name: 'comeuppance', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_LAST_DAMAGE' }),
+    'shell-trap': Object.freeze({ name: 'shell-trap', category: 'UNSUPPORTED_COUNTER', reason: 'PREPARATION_AND_PHYSICAL_TRIGGER_REQUIRED' }),
+    'beak-blast': Object.freeze({ name: 'beak-blast', category: 'UNSUPPORTED_COUNTER', reason: 'PREPARATION_AND_CONTACT_BURN_REQUIRED' }),
 
     // Multi-hit moves
     'double-slap': Object.freeze({ name: 'double-slap', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_2_TO_5_TIMES' }),
@@ -292,17 +295,58 @@
 
   /**
    * Determina se um golpe é mecanicamente suportado pelo Battle Engine atual.
-   * Descarta status não curados, golpes sem poder positivo e mecânicas especiais não suportadas.
+   * Diferencia consulta de capacidade (identificador de golpe) da validação de integridade de payload.
+   * Quando recebe um objeto representando um golpe, valida estritamente seus dados com validateMoveData.
    *
-   * @param {Object} moveDetail - Objeto do golpe (com damageClass/power/name).
+   * @param {Object|string|number} moveDetail - Objeto ou identificador do golpe.
    * @returns {boolean}
    */
   function isMechanicallySupportedMove(moveDetail) {
-    if (!moveDetail || typeof moveDetail !== 'object') return false;
+    if (!moveDetail) return false;
+
+    // Obtém battleConstants de forma segura e universal (Node.js e Browser)
+    const bc = typeof module !== 'undefined' && module.exports
+      ? (function () {
+          try { return require('../battle/battle-constants.js'); } catch (_) { return battleConstants; }
+        })()
+      : ((typeof window !== 'undefined' && window.PBABattle) ? window.PBABattle : battleConstants);
+
+    // 1. Consulta pura de capacidade por identificador (string ou number)
+    if (typeof moveDetail === 'string' || typeof moveDetail === 'number') {
+      if (bc && typeof bc.getMoveCapability === 'function') {
+        try {
+          const capability = bc.getMoveCapability(moveDetail, { throwOnMismatch: false });
+          if (!capability) return false;
+
+          const blockedLevel = bc.MOVE_SUPPORT_LEVEL?.BLOCKED || 'BLOCKED';
+          if (capability.supportLevel === blockedLevel) return false;
+
+          const fullLevel = bc.MOVE_SUPPORT_LEVEL?.FULL || 'FULL';
+          const partialLevel = bc.MOVE_SUPPORT_LEVEL?.PARTIAL || 'PARTIAL';
+          return capability.supportLevel === fullLevel || capability.supportLevel === partialLevel;
+        } catch (_) {
+          return false;
+        }
+      }
+      const name = String(moveDetail).trim().toLowerCase();
+      return !UNSUPPORTED_COMPLEX_MOVES[name];
+    }
+
+    if (typeof moveDetail !== 'object') return false;
+
+    // 2. Validação rigorosa de integridade de payload de golpe
+    if (bc && typeof bc.validateMoveData === 'function') {
+      try {
+        return bc.validateMoveData(moveDetail);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Fallback defensivo estrito caso battle-constants não esteja carregado
     const name = String(moveDetail.name || '').trim().toLowerCase();
     if (UNSUPPORTED_COMPLEX_MOVES[name]) return false;
-
-    if (battleConstants?.getSupportedStatusMove?.(moveDetail)) return true;
+    if (bc?.getSupportedStatusMove?.(moveDetail)) return true;
 
     const dmgClass = String(moveDetail.damageClass || moveDetail.damage_class?.name || moveDetail.damage_class || '').toLowerCase();
     if (dmgClass !== 'physical' && dmgClass !== 'special') return false;
@@ -313,12 +357,26 @@
     return true;
   }
 
+  function validateMoveData(moveDetail, options) {
+    const bc = typeof module !== 'undefined' && module.exports
+      ? (function () {
+          try { return require('../battle/battle-constants.js'); } catch (_) { return battleConstants; }
+        })()
+      : ((typeof window !== 'undefined' && window.PBABattle) ? window.PBABattle : battleConstants);
+
+    if (bc && typeof bc.validateMoveData === 'function') {
+      return bc.validateMoveData(moveDetail, options);
+    }
+    return isMechanicallySupportedMove(moveDetail);
+  }
+
   const constants = {
     BATTLE_UI_STATES,
     SESSION_CONFIG,
     MOVESET_LOADOUT_SOURCE,
     MOVESET_LIMIT_REASON,
     UNSUPPORTED_COMPLEX_MOVES,
+    validateMoveData,
     isMechanicallySupportedMove
   };
 

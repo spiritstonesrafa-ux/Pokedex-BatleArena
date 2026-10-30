@@ -222,7 +222,7 @@
         name: raw.name.trim().toLowerCase(),
         types: normalizedTypes,
         maxHp: Math.floor(hp),
-        currentHp: Math.floor(hp),
+        currentHp: raw.currentHp !== undefined ? Math.max(0, Math.min(Math.floor(hp), Math.floor(raw.currentHp))) : Math.floor(hp),
         attack: Math.floor(attack),
         defense: Math.floor(defense),
         specialAttack: Math.floor(specialAttack),
@@ -545,21 +545,32 @@
         return { state: nextState, events };
       }
 
-      // CENÁRIO 4: AMBOS ESCOLHERAM MOVE (Velocidade determina ordem clássica)
+      // CENÁRIO 4: AMBOS ESCOLHERAM MOVE (Prioridade do golpe e Velocidade determinam a ordem)
       const activePlayer = getActiveCombatant(nextState, 'player');
       const activeEnemy = getActiveCombatant(nextState, 'enemy');
 
-      const order = TurnManager.determineOrder(activePlayer, activeEnemy);
+      const order = TurnManager.determineOrder(activePlayer, activeEnemy, actions.player, actions.enemy);
       const [firstRole, secondRole] = order;
 
       const firstAction = actions[firstRole];
       const secondAction = actions[secondRole];
+      const startingActiveSecond = getActiveCombatant(nextState, secondRole);
 
       // --- AÇÃO DO PRIMEIRO COMBATENTE ---
       executeAction(firstRole, secondRole, nextState, events, firstAction);
 
       // Se o defensor foi nocauteado (ou a batalha terminou), o segundo combatente NÃO contra-ataca
       if (nextState.status !== BATTLE_STATUS.IN_PROGRESS) {
+        finishTurn(nextState, events);
+        return {
+          state: nextState,
+          events
+        };
+      }
+
+      // Se o segundo combatente foi forçado a trocar pelo primeiro ataque, sua ação é invalidada
+      const currentActiveSecond = getActiveCombatant(nextState, secondRole);
+      if (currentActiveSecond.id !== startingActiveSecond.id) {
         finishTurn(nextState, events);
         return {
           state: nextState,
@@ -745,18 +756,47 @@
       });
 
       // 4. Resolução de Type Effectiveness
-      const effectiveness = TypeEffectiveness.calculate(selectedMove.type, defender.types);
-      const effectiveMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} }) : effectiveness.multiplier;
+      let effectiveMultiplier;
+      let effectivenessClassification;
+      let defenderTypesList = defender.types;
 
-      events.push({
-        type: BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED,
-        source: attackerRole,
-        target: defenderRole,
-        attackType: effectiveness.attackType,
-        defenderTypes: effectiveness.defenderTypes,
-        multiplier: effectiveness.multiplier,
-        classification: effectiveness.classification
-      });
+      if (constants.isDualTypeEffectiveness?.(selectedMove)) {
+        const primaryEff = TypeEffectiveness.calculate('fighting', defender.types);
+        const secondaryEff = TypeEffectiveness.calculate('flying', defender.types);
+        const combinedMultiplier = primaryEff.multiplier * secondaryEff.multiplier;
+        effectiveMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
+          ? BattleModifierResolver.resolveTypeMultiplier(combinedMultiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
+          : combinedMultiplier;
+        effectivenessClassification = TypeEffectiveness.getClassification(effectiveMultiplier);
+
+        events.push({
+          type: BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED,
+          source: attackerRole,
+          target: defenderRole,
+          attackType: selectedMove.type,
+          secondaryAttackType: 'flying',
+          defenderTypes: defender.types,
+          multiplier: effectiveMultiplier,
+          classification: effectivenessClassification
+        });
+      } else {
+        const effectiveness = TypeEffectiveness.calculate(selectedMove.type, defender.types);
+        effectiveMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
+          ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
+          : effectiveness.multiplier;
+        effectivenessClassification = effectiveness.classification;
+        defenderTypesList = effectiveness.defenderTypes;
+
+        events.push({
+          type: BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED,
+          source: attackerRole,
+          target: defenderRole,
+          attackType: effectiveness.attackType,
+          defenderTypes: effectiveness.defenderTypes,
+          multiplier: effectiveness.multiplier,
+          classification: effectiveness.classification
+        });
+      }
 
       // 5. Seleção de atributos de ataque e defesa baseados na categoria de dano
       let attackStat;
@@ -766,7 +806,7 @@
         defenseStat = defender.defense;
       } else {
         attackStat = attacker.specialAttack;
-        defenseStat = defender.specialDefense;
+        defenseStat = constants.targetsDefenseWithSpAtk?.(selectedMove) ? defender.defense : defender.specialDefense;
       }
 
       // Validação do roll de dano determinístico (85..100)
@@ -789,6 +829,7 @@
       const previousHp = defender.currentHp;
       const currentHp = Math.max(0, previousHp - finalDamage);
       defender.currentHp = currentHp;
+      const actualDamageDealt = previousHp - currentHp;
 
       // 8. Emite evento de dano aplicado com dados completos
       events.push({
@@ -797,21 +838,103 @@
         target: defenderRole,
         attackType: selectedMove.type,
         damageClass: selectedMove.damageClass,
-        defenderTypes: effectiveness.defenderTypes,
+        defenderTypes: defenderTypesList,
         moveName: selectedMove.name,
         power: selectedMove.power,
         baseDamage,
         damageRoll,
         stabMultiplier,
-        typeMultiplier: effectiveness.multiplier,
-        multiplier: effectiveness.multiplier,
+        typeMultiplier: effectiveMultiplier,
+        multiplier: effectiveMultiplier,
         damage: finalDamage,
         previousHp,
         currentHp
       });
 
-      // 9. Nocaute (Faint Detection)
-      if (currentHp === 0) resolveFaints(state, events, [defenderRole]);
+      // 9. Efeitos de Drenagem de HP (Drain Moves: cura proporcional ao HP efetivamente removido)
+      if (actualDamageDealt > 0 && constants.getDrainRatio?.(selectedMove) > 0) {
+        const drainRatio = constants.getDrainRatio(selectedMove);
+        const rawHeal = Math.max(1, Math.floor(actualDamageDealt * drainRatio));
+        const previousAttackerHp = attacker.currentHp;
+        const newAttackerHp = Math.min(attacker.maxHp, previousAttackerHp + rawHeal);
+        const actualHealed = newAttackerHp - previousAttackerHp;
+        attacker.currentHp = newAttackerHp;
+        if (actualHealed > 0) {
+          events.push({
+            type: BATTLE_EVENTS.DRAIN_APPLIED,
+            target: attackerRole,
+            pokemonName: attacker.name,
+            moveName: selectedMove.name,
+            healedAmount: actualHealed,
+            previousHp: previousAttackerHp,
+            currentHp: newAttackerHp,
+            maxHp: attacker.maxHp
+          });
+        }
+      }
+
+      // 10. Efeitos de Recuo de HP (Recoil Moves: recuo proporcional ao dano efetivamente causado)
+      let attackerFaintedFromRecoil = false;
+      if (actualDamageDealt > 0 && constants.getRecoilRatio?.(selectedMove) > 0) {
+        const recoilRatio = constants.getRecoilRatio(selectedMove);
+        const rawRecoil = Math.max(1, Math.floor(actualDamageDealt * recoilRatio));
+        const previousAttackerHp = attacker.currentHp;
+        const newAttackerHp = Math.max(0, previousAttackerHp - rawRecoil);
+        const actualRecoil = previousAttackerHp - newAttackerHp;
+        attacker.currentHp = newAttackerHp;
+        events.push({
+          type: BATTLE_EVENTS.RECOIL_APPLIED,
+          target: attackerRole,
+          pokemonName: attacker.name,
+          moveName: selectedMove.name,
+          damage: actualRecoil,
+          previousHp: previousAttackerHp,
+          currentHp: newAttackerHp,
+          maxHp: attacker.maxHp
+        });
+        if (newAttackerHp === 0) {
+          attackerFaintedFromRecoil = true;
+        }
+      }
+
+      // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)
+      if (currentHp > 0 && finalDamage > 0 && state.version === 2 && constants.isForcedSwitchMove?.(selectedMove)) {
+        const defenderSide = state[defenderRole];
+        const eligibleBench = defenderSide.team
+          .map((p, idx) => ({ pokemon: p, index: idx }))
+          .filter(item => item.index !== defenderSide.activeIndex && item.pokemon.currentHp > 0);
+
+        if (eligibleBench.length > 0) {
+          let targetIndex = eligibleBench[0].index;
+          if (action && action.forcedSwitchIndex !== undefined) {
+            const forced = eligibleBench.find(item => item.index === Number(action.forcedSwitchIndex));
+            if (forced) targetIndex = forced.index;
+          } else if (action && action.forcedSwitchTargetPokemonId !== undefined) {
+            const forced = eligibleBench.find(item => item.pokemon.id === Number(action.forcedSwitchTargetPokemonId));
+            if (forced) targetIndex = forced.index;
+          }
+
+          const previousActive = defender;
+          defenderSide.activeIndex = targetIndex;
+          const newActive = defenderSide.team[targetIndex];
+
+          events.push({
+            type: BATTLE_EVENTS.POKEMON_SWITCHED,
+            side: defenderRole,
+            previousPokemonId: previousActive.id,
+            newPokemonId: newActive.id,
+            reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FORCED : 'FORCED'
+          });
+        }
+      }
+
+      // 12. Nocaute (Faint Detection - defensor e/ou atacante por recuo)
+      const faintedRoles = [];
+      if (currentHp === 0) faintedRoles.push(defenderRole);
+      if (attackerFaintedFromRecoil) faintedRoles.push(attackerRole);
+      if (faintedRoles.length > 0) {
+        resolveFaints(state, events, faintedRoles, attackerFaintedFromRecoil && currentHp > 0 ? 'recoil' : 'move');
+      }
     }
 
     /**

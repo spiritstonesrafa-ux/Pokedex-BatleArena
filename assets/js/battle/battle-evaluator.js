@@ -91,7 +91,7 @@
       let defenseStat;
       if (damageClass === 'special') {
         attackStat = Number(attacker.specialAttack) || 1;
-        defenseStat = Number(defender.specialDefense) || 1;
+        defenseStat = Number(constants?.targetsDefenseWithSpAtk?.(move) ? defender.defense : defender.specialDefense) || 1;
       } else {
         attackStat = Number(constants?.usesDefenseAsAttack?.(move) ? attacker.defense : attacker.attack) || 1;
         defenseStat = Number(defender.defense) || 1;
@@ -104,8 +104,23 @@
 
       // 3. Efetividade de Tipos (Type Effectiveness)
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];
-      const effectiveness = TypeEffectiveness.calculate(moveType, defenderTypes);
-      const typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, context) : effectiveness.multiplier;
+      let typeMultiplier;
+      let typeClassification;
+      if (constants?.isDualTypeEffectiveness?.(move)) {
+        const primaryEff = TypeEffectiveness.calculate('fighting', defenderTypes);
+        const secondaryEff = TypeEffectiveness.calculate('flying', defenderTypes);
+        const combinedMultiplier = primaryEff.multiplier * secondaryEff.multiplier;
+        typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
+          ? BattleModifierResolver.resolveTypeMultiplier(combinedMultiplier, context)
+          : combinedMultiplier;
+        typeClassification = TypeEffectiveness.getClassification(typeMultiplier);
+      } else {
+        const effectiveness = TypeEffectiveness.calculate(moveType, defenderTypes);
+        typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
+          ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, context)
+          : effectiveness.multiplier;
+        typeClassification = effectiveness.classification;
+      }
 
       // 4. Faixa e Média de Dano (PBA-014B: Level 50 e Variância 85..100)
       const simLevel = (constants && constants.BATTLE_CONFIG && constants.BATTLE_CONFIG.SIMULATION_LEVEL) || 50;
@@ -135,6 +150,25 @@
       const possibleKo = maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 
+      // 7. Avaliação de Efeitos Especiais (Drenagem, Recuo e Prioridade proporcionais ao dano real do alvo)
+      const defenderCurrentHp = Math.max(0, Number(defender.currentHp) || 0);
+      const cappedExpectedDamage = Math.min(defenderCurrentHp, expectedDamage);
+
+      const drainRatio = constants?.getDrainRatio?.(move) || 0;
+      const expectedHeal = (drainRatio > 0 && cappedExpectedDamage > 0)
+        ? Math.min(
+            Math.max(0, (Number(attacker.maxHp) || 0) - (Number(attacker.currentHp) || 0)),
+            Math.max(1, Math.floor(cappedExpectedDamage * drainRatio))
+          )
+        : 0;
+
+      const recoilRatio = constants?.getRecoilRatio?.(move) || 0;
+      const expectedRecoil = (recoilRatio > 0 && cappedExpectedDamage > 0)
+        ? Math.max(1, Math.floor(cappedExpectedDamage * recoilRatio))
+        : 0;
+      const wouldRecoilKo = recoilRatio > 0 && expectedRecoil >= (Number(attacker.currentHp) || 0);
+      const priority = constants?.getMovePriority?.(move) || 0;
+
       return {
         moveId: move.id,
         moveName: move.name || 'unknown',
@@ -151,12 +185,18 @@
         averageDamage,
         stabMultiplier,
         typeMultiplier,
-        typeClassification: effectiveness.classification,
+        typeClassification,
         damageIfHit,
         expectedDamage,
         guaranteedKo,
         possibleKo,
-        wouldKo
+        wouldKo,
+        priority,
+        drainRatio,
+        expectedHeal,
+        recoilRatio,
+        expectedRecoil,
+        wouldRecoilKo
       };
     }
 

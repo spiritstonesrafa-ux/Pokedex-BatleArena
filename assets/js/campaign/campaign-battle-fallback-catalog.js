@@ -17651,12 +17651,12 @@
         "damageClass": "special"
       },
       {
-        "id": 690,
-        "name": "beak-blast",
+        "id": 332,
+        "name": "aerial-ace",
         "type": "flying",
-        "power": 100,
-        "accuracy": 100,
-        "pp": 15,
+        "power": 60,
+        "accuracy": null,
+        "pp": 20,
         "damageClass": "physical"
       },
       {
@@ -19657,12 +19657,12 @@
     "cry": "https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/776.ogg",
     "moves": [
       {
-        "id": 704,
-        "name": "shell-trap",
+        "id": 53,
+        "name": "flamethrower",
         "type": "fire",
-        "power": 150,
+        "power": 90,
         "accuracy": 100,
-        "pp": 5,
+        "pp": 15,
         "damageClass": "special"
       },
       {

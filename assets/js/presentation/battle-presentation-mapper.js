@@ -73,6 +73,34 @@
           }
           break;
 
+        case BATTLE_EVENTS.DRAIN_APPLIED:
+          if (
+            !event.target ||
+            event.previousHp === undefined ||
+            event.currentHp === undefined ||
+            event.healedAmount === undefined ||
+            !Number.isFinite(Number(event.previousHp)) ||
+            !Number.isFinite(Number(event.currentHp)) ||
+            !Number.isFinite(Number(event.healedAmount))
+          ) {
+            throw new Error(`INVALID_EVENT_PAYLOAD: DRAIN_APPLIED requer "target", "previousHp", "currentHp" e "healedAmount" válidos.`);
+          }
+          break;
+
+        case BATTLE_EVENTS.RECOIL_APPLIED:
+          if (
+            !event.target ||
+            event.previousHp === undefined ||
+            event.currentHp === undefined ||
+            event.damage === undefined ||
+            !Number.isFinite(Number(event.previousHp)) ||
+            !Number.isFinite(Number(event.currentHp)) ||
+            !Number.isFinite(Number(event.damage))
+          ) {
+            throw new Error(`INVALID_EVENT_PAYLOAD: RECOIL_APPLIED requer "target", "previousHp", "currentHp" e "damage" válidos.`);
+          }
+          break;
+
         case BATTLE_EVENTS.PP_CHANGED:
           if (
             event.previousPp === undefined ||
@@ -309,6 +337,36 @@
               moveName: event.moveName,
               power: event.power !== undefined ? Number(event.power) : undefined,
               multiplier: event.multiplier !== undefined ? Number(event.multiplier) : 1
+            }
+          ];
+
+        case BATTLE_EVENTS.DRAIN_APPLIED:
+          return [
+            {
+              type: PRESENTATION_COMMANDS.HP_TRANSITION,
+              side: event.target,
+              target: event.target,
+              heal: Number(event.healedAmount),
+              previousHp: Number(event.previousHp),
+              currentHp: Number(event.currentHp),
+              maxHp: event.maxHp !== undefined ? Number(event.maxHp) : undefined,
+              moveName: event.moveName,
+              cause: 'drain'
+            }
+          ];
+
+        case BATTLE_EVENTS.RECOIL_APPLIED:
+          return [
+            {
+              type: PRESENTATION_COMMANDS.HP_TRANSITION,
+              side: event.target,
+              target: event.target,
+              damage: Number(event.damage),
+              previousHp: Number(event.previousHp),
+              currentHp: Number(event.currentHp),
+              maxHp: event.maxHp !== undefined ? Number(event.maxHp) : undefined,
+              moveName: event.moveName,
+              cause: 'recoil'
             }
           ];
 

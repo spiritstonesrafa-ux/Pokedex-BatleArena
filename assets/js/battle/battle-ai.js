@@ -238,6 +238,22 @@
           score += Math.floor(CONFIG.KO_BONUS / 2);
         }
 
+        // Bônus tático para recuperação de HP por drenagem
+        if (evalData.expectedHeal > 0 && myActive.currentHp < myActive.maxHp) {
+          const missingHp = myActive.maxHp - myActive.currentHp;
+          score += Math.min(evalData.expectedHeal, missingHp);
+        }
+
+        // Penalidade para recuo caso o usuário se nocauteie sem garantir a vitória
+        if (evalData.wouldRecoilKo && !evalData.guaranteedKo) {
+          score = Math.max(0, score - Math.floor(CONFIG.KO_BONUS / 2));
+        }
+
+        // Bônus para prioridade positiva em ataques não-imunes
+        if (evalData.priority > 0 && evalData.typeMultiplier > 0) {
+          score += 15 * evalData.priority;
+        }
+
         // Anulação estrita de golpes imunes
         if (evalData.typeMultiplier === 0) {
           score = 0;

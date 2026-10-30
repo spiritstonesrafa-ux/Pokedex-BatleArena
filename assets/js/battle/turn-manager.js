@@ -30,13 +30,37 @@
       return combatant.statusCondition === 'paralysis' && speed > 0
         ? Math.max(1, Math.floor(speed / 2)) : speed;
     }
+    function resolveActionPriority(combatant, action) {
+      if (!action || typeof action !== 'object') return 0;
+      if (typeof action.priority === 'number' && Number.isFinite(action.priority)) {
+        return action.priority;
+      }
+      if (action.type === constants.BATTLE_ACTIONS?.SWITCH) {
+        return 1000;
+      }
+      let move = action.move || null;
+      if (!move && Array.isArray(combatant?.moves)) {
+        if (action.moveId !== undefined) {
+          move = combatant.moves.find(m => m.id === Number(action.moveId));
+        } else if (action.moveName !== undefined) {
+          move = combatant.moves.find(m => String(m.name).toLowerCase() === String(action.moveName).toLowerCase());
+        } else {
+          move = combatant.moves.find(m => m.currentPp > 0) || combatant.moves[0];
+        }
+      }
+      return constants.getMovePriority ? constants.getMovePriority(move) : 0;
+    }
+
     /**
      * Determina a ordem de ação entre dois combatentes.
+     * Considera prioridade de ação/golpe primeiro (+2, +1, 0, -3, -6) e velocidade efetiva como desempate.
      * @param {{ speed: number }} playerCombatant - Combatente do jogador.
      * @param {{ speed: number }} enemyCombatant - Combatente adversário.
+     * @param {Object} [playerAction] - Comando de ação do jogador.
+     * @param {Object} [enemyAction] - Comando de ação do adversário.
      * @returns {Array<'player'|'enemy'>} Array com a ordem dos papéis ['primeiro', 'segundo'].
      */
-    function determineOrder(playerCombatant, enemyCombatant) {
+    function determineOrder(playerCombatant, enemyCombatant, playerAction = null, enemyAction = null) {
       if (!playerCombatant || typeof playerCombatant.speed !== 'number' || Number.isNaN(playerCombatant.speed)) {
         throw new Error('Combatente do jogador com velocidade (speed) inválida.');
       }
@@ -45,6 +69,19 @@
         throw new Error('Combatente adversário com velocidade (speed) inválida.');
       }
 
+      // 1. Resolução por Prioridade do Golpe / Ação
+      const playerPriority = resolveActionPriority(playerCombatant, playerAction);
+      const enemyPriority = resolveActionPriority(enemyCombatant, enemyAction);
+
+      if (playerPriority > enemyPriority) {
+        return ['player', 'enemy'];
+      }
+
+      if (enemyPriority > playerPriority) {
+        return ['enemy', 'player'];
+      }
+
+      // 2. Prioridades iguais -> desempate por velocidade efetiva
       const playerSpeed = effectiveSpeed(playerCombatant);
       const enemySpeed = effectiveSpeed(enemyCombatant);
 
@@ -63,6 +100,7 @@
 
     return {
       effectiveSpeed,
+      resolveActionPriority,
       determineOrder
     };
   })();
