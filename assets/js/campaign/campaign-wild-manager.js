@@ -29,7 +29,7 @@
 
   Manager.prototype.beginWildEncounter = function (regionId, roll, pointId = Wild.defaultPointId(regionId)) {
     if (!Wild.isPointId(regionId, pointId) || !this.isStarted()
-      || this.data.status === C.CAMPAIGN_STATUS.COMPLETED || this.data.pendingReward) {
+      || this.data.pendingReward) {
       return { ok: false, reason: 'UNAVAILABLE' };
     }
     const wild = this.data.wild || (this.data.wild = Wild.getDefaultState());
@@ -39,11 +39,11 @@
         ? { ok: true, pokemonId: wild.active.pokemonId, pointId, resumed: true }
         : { ok: false, reason: 'RESOLVE_PREVIOUS' };
     }
-    if (Wild.getPointCaptureCount(wild, regionId, pointId) >= Wild.MAX_CAPTURES_PER_POINT) {
+    if (Wild.getPointCaptureCount(wild, regionId, pointId) >= Wild.getCaptureLimit(this.data, regionId, pointId)) {
       return { ok: false, reason: 'POINT_LIMIT' };
     }
     const pokemonId = Wild.choose(this.getRosterIds(),
-      roll === undefined ? Wild.randomUnit() : roll, regionId, pointId);
+      roll === undefined ? Wild.randomUnit() : roll, regionId, pointId, this.data);
     if (!pokemonId) return { ok: false, reason: 'POOL_EMPTY' };
     wild.active = { regionId, pointId, pokemonId, encounterId: encounterId() };
     this.save('WILD_ENCOUNTER_STARTED');
@@ -74,6 +74,7 @@
     }
     const pokemonId = Number(id);
     const pokemon = Catalog.byId(pokemonId);
+    if (pokemon?.collectionOnly) throw new Error('Este Pokémon é apenas de coleção. Use a captura sem batalha.');
     return {
       playerTeamIds: team,
       enemyTeamIds: [pokemonId],
@@ -115,6 +116,29 @@
     return { processed: true, pendingCapture: this.data.wild.pendingCapture };
   };
 
+  Manager.prototype.prepareWildCollectionCapture = function () {
+    const wild = this.data.wild;
+    const active = wild?.active;
+    if (!active || !Catalog.byId(active.pokemonId)?.collectionOnly || !this.canChallenge('WILD', active.pokemonId)) {
+      return { ok: false, reason: 'INVALID_COLLECTION_ENCOUNTER' };
+    }
+    const battleId = 'collection-' + active.encounterId;
+    this.data.processedBattleIds.push(battleId);
+    this.data.processedBattleIds = this.data.processedBattleIds.slice(-C.MAX_PROCESSED);
+    wild.pendingCapture = { ...active, battleId };
+    wild.active = null;
+    this.save('WILD_COLLECTION_READY');
+    return { ok: true };
+  };
+
+  const battleConfigWithWild = Manager.prototype.getBattleConfig;
+  Manager.prototype.getBattleConfig = function (kind, id, teamIds, options) {
+    if ((teamIds || []).some(member => Catalog.byId(Number(member))?.collectionOnly)) {
+      throw new Error('Pokémon de coleção não podem participar de batalhas.');
+    }
+    return battleConfigWithWild.call(this, kind, id, teamIds, options);
+  };
+
   Manager.prototype.attemptWildCapture = function (roll) {
     const wild = this.data.wild;
     const pending = wild?.pendingCapture;
@@ -123,7 +147,7 @@
       return { ok: false, reason: 'INVALID_ROLL' };
     }
     const captured = Number.isFinite(roll) ? roll < Wild.CAPTURE_CHANCE : Wild.randomUnit() < Wild.CAPTURE_CHANCE;
-    if (captured && Wild.getPointCaptureCount(wild, pending.regionId, pending.pointId) < Wild.MAX_CAPTURES_PER_POINT
+    if (captured && Wild.getPointCaptureCount(wild, pending.regionId, pending.pointId) < Wild.getCaptureLimit(this.data, pending.regionId, pending.pointId)
       && !this.getRosterIds().includes(pending.pokemonId)) {
       wild.capturedIds.push(pending.pokemonId);
       wild.captureRegions[pending.pokemonId] = pending.regionId;

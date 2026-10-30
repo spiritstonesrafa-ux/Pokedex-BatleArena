@@ -514,6 +514,7 @@ test('Caminho Real de Navegador (Script Tag via node:vm sem module/require) — 
   }
 
   const requiredScripts = [
+    'assets/js/expanded-pokemon-catalog.js',
     'assets/js/battle/type-chart.js',
     'assets/js/campaign/campaign-constants.js',
     'assets/js/campaign/campaign-pokemon-catalog.js',

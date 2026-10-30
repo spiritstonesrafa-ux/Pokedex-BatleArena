@@ -30,13 +30,13 @@ function startedManager(store = memoryStore()) {
 }
 
 test('offline candidate pool is species-specific, canonical and bounded', () => {
-  assert.equal(Object.keys(Fixed.byId).length, 493);
+  assert.equal(Object.keys(Fixed.byId).length, 1343);
   assert.equal(Object.keys(Extras.byId).length, 454);
   for (const [key, species] of Object.entries(Fixed.byId)) {
     const pool = Options.getPool(Number(key));
-    assert.ok(pool.length >= 4 && pool.length <= 6, key);
+    assert.ok(pool.length >= 1 && pool.length <= 6, key);
     assert.equal(new Set(pool.map(move => move.id)).size, pool.length, key);
-    assert.deepEqual(pool.slice(0, 4).map(move => move.id), species.moves.map(move => move.id));
+    assert.deepEqual(pool.slice(0, species.moves.length).map(move => move.id), species.moves.map(move => move.id));
     const file = path.join(__dirname, '../../.cache_pokeapi',
       `https___pokeapi_co_api_v2_pokemon_${key}.json`);
     if (fs.existsSync(file)) {

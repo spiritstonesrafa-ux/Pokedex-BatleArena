@@ -7,6 +7,11 @@
  */
 
 const pokeApi = {};
+const expandedPokemonCatalog = typeof module !== 'undefined' && module.exports
+  ? require('./expanded-pokemon-catalog.js') : window.PBAExpandedCatalog;
+pokeApi.getSupportedPokemonCount = () => expandedPokemonCatalog.count;
+pokeApi.isPokemonInGeneration = (id, generation) => expandedPokemonCatalog.matchesGeneration(id, generation);
+pokeApi.getSupportedPokemon = id => expandedPokemonCatalog.byId[Number(id)] || null;
 
 let PokemonClass = typeof Pokemon === 'function' ? Pokemon : null;
 if (!PokemonClass && typeof require !== 'undefined') {
@@ -213,26 +218,9 @@ pokeApi.getPokemonsByType = async (type, limit = 60, generation = 'all') => {
   const idSet = await pokeApi.getTypePokemonIds(type);
   const rawIds = idSet ? Array.from(idSet) : [];
 
-  const genRanges = {
-    '1': { offset: 0, max: 151 },
-    '2': { offset: 151, max: 251 },
-    '3': { offset: 251, max: 386 },
-    '4': { offset: 386, max: 493 },
-    '5': { offset: 493, max: 649 },
-    '6': { offset: 649, max: 721 },
-    '7': { offset: 721, max: 809 },
-    '8': { offset: 809, max: 905 },
-    '9': { offset: 905, max: 1025 },
-    'all': { offset: 0, max: 1025 }
-  };
-
-  const range = genRanges[generation] || genRanges['all'];
-  const minId = range.offset + 1;
-  const maxId = Math.min(range.max, 1025);
-
   const eligibleIds = rawIds
     .map(Number)
-    .filter(id => Number.isInteger(id) && id >= minId && id <= maxId);
+    .filter(id => Number.isInteger(id) && pokeApi.isPokemonInGeneration(id, generation));
 
   eligibleIds.sort((a, b) => a - b);
   const targetIds = limit ? eligibleIds.slice(0, limit) : eligibleIds;
@@ -247,11 +235,11 @@ let pokemonIndexCache = null;
  * Obtém o catálogo leve de nomes e IDs de todos os Pokémon da PokéAPI (Fase 1 UX).
  * Permite busca instantânea por nome parcial ou número sem puxar detalhes completos antecipadamente.
  *
- * @param {number} limit - Limite máximo de entradas (padrão: 1025, cobrindo Gens 1 a 9).
+ * @param {number} limit - Limite máximo de entradas (padrão: tamanho do catálogo expandido).
  * @param {AbortSignal|null} signal - Sinal para cancelamento de requisição (AbortController).
  * @returns {Promise<Array<{ id: number, name: string, url: string }>>}
  */
-pokeApi.getPokemonIndex = async (limit = 1025, signal = null) => {
+pokeApi.getPokemonIndex = async (limit = expandedPokemonCatalog.count, signal = null) => {
   if (pokemonIndexCache && (pokemonIndexCache.length >= limit || pokemonIndexCache._isMock)) {
     return pokemonIndexCache.slice(0, limit);
   }

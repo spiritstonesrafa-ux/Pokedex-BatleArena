@@ -1,4 +1,6 @@
 (function () {
+  const Expanded = typeof module !== 'undefined' && module.exports
+    ? require('../expanded-pokemon-catalog.js') : window.PBAExpandedCatalog;
   const Static = typeof module !== 'undefined' && module.exports
     ? require('./campaign-pokemon-catalog.js')
     : window.PBACampaign.CampaignPokemonCatalog;
@@ -72,14 +74,21 @@
     {id:487,name:'giratina',types:['ghost','dragon'],bst:680,generation:4,sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/487.png',legendary:true,mythical:false}
   ].map(freeze => Object.freeze({...freeze,types:Object.freeze(freeze.types)})));
   const trialById = Object.freeze(Object.fromEntries(trialRecords.map(entry => [entry.id,entry])));
-  const allById = Object.freeze({...Static.byId,...WildSpecial.byId,...trialById});
+  const originalById = {...Static.byId,...WildSpecial.byId,...trialById};
+  const EXPANSION_SPECIES = Object.freeze(Expanded.entries.filter(entry => !originalById[entry.id]));
+  const allById = Object.freeze({...Expanded.byId,...originalById});
+  const draftSet = new Set(DRAFT.map(entry => entry.id));
+  const EXPLORATION_SPECIES = Object.freeze(Object.values(allById).filter(entry =>
+    !draftSet.has(entry.id)));
   const LEGENDARY_TRIAL_TEAM = Object.freeze([145,245,381].map(id => allById[id]));
   const MYTHICAL_TRIAL_TEAM = Object.freeze([151,385,494].map(id => allById[id]));
   const TITANS_TRIAL_TEAM = Object.freeze([1007,383,717].map(id => allById[id]));
   const CELESTIAL_TRIAL_TEAM = Object.freeze([889,791,487].map(id => allById[id]));
   const api = Object.freeze({
     DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SUPER_AUDIT, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
-    WILD_SPECIAL_SPECIES: WildSpecial.entries,
+    EXPANSION_SPECIES, EXPLORATION_SPECIES,
+    WILD_SPECIAL_SPECIES: Object.freeze([...WildSpecial.entries, ...Expanded.entries.filter(entry =>
+      (entry.legendary || entry.mythical) && !WildSpecial.byId[entry.id])]),
     DRAFT_IDS_BY_GENERATION: draftIdsByGeneration,
     CANONICAL_BY_ID: allById,
     byId: id => allById[Number(id)] || null,

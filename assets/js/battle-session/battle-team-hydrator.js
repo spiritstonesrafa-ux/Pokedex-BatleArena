@@ -18,6 +18,8 @@
  */
 
 (function () {
+  const Expanded = typeof module !== 'undefined' && module.exports
+    ? require('../expanded-pokemon-catalog.js') : window.PBAExpandedCatalog;
   let sessionConstants;
   let pokeApiService;
   let BattleStatNormalizer;
@@ -156,11 +158,12 @@
   function getFallbackSpecies(idOrName) {
     const num = Number(idOrName);
     const fromCampaign = campaignBattleFallbackCatalog && campaignBattleFallbackCatalog.byId && campaignBattleFallbackCatalog.byId[num];
-    const species = TRIAL_FALLBACK_SPECIES[num] || fromCampaign || FALLBACK_SPECIES[num];
+    const species = TRIAL_FALLBACK_SPECIES[num] || fromCampaign || FALLBACK_SPECIES[num] || (Expanded?.byId[num]?.battleSupported ? Expanded.byId[num] : null);
     if (species) {
       return JSON.parse(JSON.stringify(species));
     }
     const allKnown = {
+      ...Object.fromEntries((Expanded?.entries || []).filter(entry => entry.battleSupported).map(entry => [entry.id, entry])),
       ...(campaignBattleFallbackCatalog?.byId || {}),
       ...FALLBACK_SPECIES,
       ...TRIAL_FALLBACK_SPECIES
@@ -277,7 +280,7 @@
       // Resolve loadout de golpes determinístico com descoberta progressiva e qualidade
       const candidateMoves = Array.isArray(pokeData.moves) ? pokeData.moves : [];
       const loadoutResult = pokeData.campaignFixedMoves
-        ? this.createCampaignFixedLoadout(candidateMoves, Boolean(pokeData.campaignCustomMoves))
+        ? this.createCampaignFixedLoadout(candidateMoves, Boolean(pokeData.campaignCustomMoves), Boolean(pokeData.campaignLimitedMoves))
         : await this.selectDeterministicLoadout(candidateMoves, types, stats);
       const moves = loadoutResult.moves || [];
       const moveLoadoutSource = loadoutResult.source || MOVESET_LOADOUT_SOURCE.API_MOVESET;
@@ -307,9 +310,9 @@
     }
 
     /** Preserves curated campaign moves without a network request. */
-    createCampaignFixedLoadout(candidateMoves, customized = false) {
+    createCampaignFixedLoadout(candidateMoves, customized = false, limited = false) {
       const moves = Array.isArray(candidateMoves) ? candidateMoves : [];
-      if ((customized ? moves.length < 1 || moves.length > 4 : moves.length !== 4) ||
+      if (((customized || limited) ? moves.length < 1 || moves.length > 4 : moves.length !== 4) ||
           new Set(moves.map(move => move.id)).size !== moves.length ||
           moves.some(move => !isMechanicallySupportedMove(move) ||
             !Number.isInteger(Number(move.id)) || Number(move.id) <= 0 ||

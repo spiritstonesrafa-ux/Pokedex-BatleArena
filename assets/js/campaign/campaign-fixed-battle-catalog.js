@@ -1,5 +1,7 @@
 /* One loadout source for campaign battles and their tactical preview. */
 (function () {
+  const Expanded = typeof module !== 'undefined' && module.exports
+    ? require('../expanded-pokemon-catalog.js') : window.PBAExpandedCatalog;
   const Campaign = typeof module !== 'undefined' && module.exports
     ? require('./campaign-catalog.js') : window.PBACampaign;
   const Draft = typeof module !== 'undefined' && module.exports
@@ -89,7 +91,7 @@
     animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/' + species.id + '.gif',
     cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/' + species.id + '.ogg'
   })]));
-  const byId = Object.freeze({ ...Draft.byId, ...extras, ...wildSpecialBattle, ...statusOverrides });
+  const byId = Object.freeze({ ...Object.fromEntries(Expanded.entries.filter(entry => entry.battleSupported).map(entry => [entry.id, entry])), ...Draft.byId, ...extras, ...wildSpecialBattle, ...statusOverrides });
   const api = Object.freeze({ byId, extras: Object.freeze(extras) });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {

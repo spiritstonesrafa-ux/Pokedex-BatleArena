@@ -11,6 +11,16 @@
     ? require('./campaign-wild-audio.js') : window.PBACampaign?.CampaignWildAudio;
   if (!View) return;
 
+  const previousComplete = View.prototype.renderComplete;
+  View.prototype.renderComplete = function () {
+    previousComplete.call(this);
+    const button = document.createElement('button');
+    button.id = 'campaignExploreCollection';
+    button.className = 'campaign-primary';
+    button.textContent = 'Continuar explorando e completar a coleção';
+    button.onclick = () => { this._collectionExploration = true; this.renderHome(); };
+    this.container.appendChild(button);
+  };
   const previousRender = View.prototype.render;
   const previousHome = View.prototype.renderHome;
   const previousPicker = View.prototype.renderPicker;
@@ -60,6 +70,10 @@
     } else if (!wild?.active && this.pending?.kind === 'WILD') {
       this.pending = null;
     }
+    if (this.manager.getState().status === 'COMPLETED' && (this._collectionExploration || wild?.active)) {
+      this._collectionExploration = true;
+      return this.pending ? this.renderPicker() : this.renderHome();
+    }
     return previousRender.call(this);
   };
 
@@ -86,11 +100,24 @@
       this.manager.cancelWildEncounter();
       return;
     }
+    if (pokemon.collectionOnly) {
+      this.container.innerHTML = `<section class="campaign-shell wild-encounter-screen" data-region="${wild.active.regionId}">
+        <button id="collectionBack" class="campaign-secondary">Deixar ir e explorar novamente</button>
+        <div class="campaign-hero"><p class="eyebrow">ENCONTRO DE COLEÇÃO</p>
+        <h2 id="wildScreenHeading" tabindex="-1">Um ${cap(pokemon.name)} apareceu!</h2>
+        <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" width="160" height="160">
+        <p>Você pode capturá-lo para sua coleção. Este Pokémon não participa de batalhas.</p></div>
+        <button id="collectionCapture" class="campaign-primary">Tentar capturar</button></section>`;
+      this.container.querySelector('#collectionBack').onclick = () => { this.pending = null; this.manager.cancelWildEncounter(); this.render(); };
+      this.container.querySelector('#collectionCapture').onclick = () => this.manager.prepareWildCollectionCapture();
+      focusHeading(this, 'collection:' + wild.active.encounterId);
+      return;
+    }
     const roster = this.manager.getRoster();
     const ready = this.pick.length === 3;
     const region = Wild.REGIONS[wild.active.regionId];
     const point = Wild.getPoint(wild.active.regionId, wild.active.pointId);
-    const rarity = Wild.getRarity(wild.active.regionId, pokemon.id, wild.active.pointId);
+    const rarity = Wild.getRarity(wild.active.regionId, pokemon.id, wild.active.pointId, this.manager.getState());
     const rarityLabel = {
       COMMON: 'COMUM', UNCOMMON: 'INCOMUM', RARE: 'RARO',
       LEGENDARY: 'LENDÁRIO', MYTHICAL: 'MÍTICO'

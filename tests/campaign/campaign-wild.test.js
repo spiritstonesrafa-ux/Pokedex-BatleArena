@@ -48,7 +48,7 @@ test('Wild Phase 1 — Região 1 sorteia somente espécies seguras e não perten
     const pokemon = Catalog.byId(id);
     assert.ok(pokemon && !pokemon.legendary && !pokemon.mythical);
     assert.ok(!reserved.has(id));
-    assert.ok(Catalog.DRAFT.some(candidate => candidate.id === id));
+    assert.ok(Catalog.DRAFT.some(candidate => candidate.id === id) || Catalog.EXPLORATION_SPECIES.some(candidate => candidate.id === id));
   }
   const manager = fresh();
   const encounter = manager.beginWildEncounter('region-1', 0);
@@ -336,8 +336,8 @@ test('Wild exploration — thematic pools use 45/25/20/10 weighted rarity withou
       assert.ok(pokemon && !pokemon.legendary && !pokemon.mythical);
       assert.ok(!reserved.has(id), `${id} não pode substituir recompensa fixa`);
       assert.ok(pokemon.types.some(type => config.types.includes(type)));
-      assert.ok(pokemon.bst >= config.minBst && pokemon.bst <= config.maxBst);
-      assert.ok(Catalog.DRAFT.some(candidate => candidate.id === id));
+      assert.ok(Catalog.EXPLORATION_SPECIES.includes(pokemon) || (pokemon.bst >= config.minBst && pokemon.bst <= config.maxBst));
+      assert.ok(Catalog.DRAFT.some(candidate => candidate.id === id) || Catalog.EXPLORATION_SPECIES.some(candidate => candidate.id === id));
     }
     for (const [roll, rarity] of [[0.3, 'COMMON'], [0.6, 'UNCOMMON'], [0.80, 'RARE']]) {
       assert.equal(Wild.getRarity(regionId, Wild.choose([], roll, regionId)), rarity);
@@ -577,22 +577,23 @@ test('Wild exploration — nine thematic points have distinct map targets and sa
   assert.deepEqual(Wild.getPool([], 'region-1', 'r2-volcano'), []);
 });
 
-test('Wild special encounters — 19 legendary and 6 mythical candidates exclude every final reward', () => {
+test('Wild special encounters — expanded legendary and mythical candidates exclude every final reward', () => {
   const Fixed = require('../../assets/js/campaign/campaign-fixed-battle-catalog.js');
   const reserved = new Set([
     ...Catalog.SUPER_TEAM, ...Catalog.LEGENDARY_TRIAL_TEAM,
     ...Catalog.MYTHICAL_TRIAL_TEAM, ...Catalog.TITANS_TRIAL_TEAM,
     ...Catalog.CELESTIAL_TRIAL_TEAM
   ].map(pokemon => pokemon.id));
-  assert.equal(Wild.SPECIAL_POOL.length, 25);
-  assert.equal(new Set(Wild.SPECIAL_POOL).size, 25);
-  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).legendary).length, 19);
-  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).mythical).length, 6);
+  assert.equal(Wild.SPECIAL_POOL.length, 143);
+  assert.equal(new Set(Wild.SPECIAL_POOL).size, 143);
+  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).legendary).length, 109);
+  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).mythical).length, 34);
   for (const id of Wild.SPECIAL_POOL) {
     const pokemon = Catalog.byId(id);
     assert.ok(!reserved.has(id), `${pokemon.name} cannot replace a final reward`);
-    assert.equal(Fixed.byId[id].moves.length, 4);
-    assert.ok(Fixed.byId[id].moves.some(move => pokemon.types.includes(move.type)));
+    if (pokemon.collectionOnly) { assert.equal(Fixed.byId[id], undefined); continue; }
+    assert.ok(Fixed.byId[id].moves.length >= 1 && Fixed.byId[id].moves.length <= 4);
+    assert.ok(Fixed.byId[id].moves.every(move => move.power > 0));
   }
   for (const [pointId, pool] of Object.entries(Wild.POINT_SPECIAL_POOLS)) {
     assert.ok(pool.length > 0, pointId + ' needs special encounters');

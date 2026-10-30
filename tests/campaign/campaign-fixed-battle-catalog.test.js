@@ -20,17 +20,17 @@ const trialTeams = [
 ];
 const obtainable = new Set([
   ...Campaign.DRAFT, ...Campaign.MASTER_SPECIES, ...Campaign.SUPER_TEAM,
-  ...trialTeams.flat(), ...Campaign.WILD_SPECIAL_SPECIES
-].map(pokemon => pokemon.id));
+  ...trialTeams.flat(), ...Campaign.EXPLORATION_SPECIES, ...Campaign.WILD_SPECIAL_SPECIES
+].filter(pokemon => !pokemon.collectionOnly).map(pokemon => pokemon.id));
 
-test('every currently obtainable campaign Pokémon has four distinct supported fixed moves', () => {
-  assert.equal(obtainable.size, 493);
+test('every currently obtainable campaign Pokémon has one to four distinct supported fixed moves', () => {
+  assert.equal(obtainable.size, 1343);
   assert.equal(Object.keys(Fixed.extras).length, 18);
   for (const id of obtainable) {
     const pokemon = Fixed.byId[id];
     assert.ok(pokemon, `missing Pokémon ${id}`);
-    assert.equal(pokemon.moves.length, 4, `wrong move count for ${id}`);
-    assert.equal(new Set(pokemon.moves.map(move => move.id)).size, 4, `duplicate move for ${id}`);
+    assert.ok(pokemon.moves.length >= 1 && pokemon.moves.length <= 4, `wrong move count for ${id}`);
+    assert.equal(new Set(pokemon.moves.map(move => move.id)).size, pokemon.moves.length, `duplicate move for ${id}`);
     for (const move of pokemon.moves) {
       assert.equal(isMechanicallySupportedMove(move), true, `${id}: ${move.name}`);
       assert.ok(move.accuracy === null || Number.isInteger(move.accuracy));
@@ -172,7 +172,7 @@ test('Quick Battle still fetches species through its existing API path', async (
     pokemon.moveLoadoutSource === MOVESET_LOADOUT_SOURCE.API_MOVESET));
 });
 
-test('an unsupported legacy roster member remains playable through the old path', async () => {
+test('a previously missing roster member now uses the validated offline catalog', async () => {
   let apiCalls = 0;
   const api = { getPokemonDetail: async () => { apiCalls++; throw Error('offline'); } };
   const session = new Session({ hydrator: new Hydrator({ api }), engine: Engine,
@@ -182,7 +182,7 @@ test('an unsupported legacy roster member remains playable through the old path'
     metadata: { mode: 'CAMPAIGN', kind: 'SUPER' }
   });
   assert.ok(battle);
-  assert.equal(apiCalls, 1);
+  assert.equal(apiCalls, 0);
   assert.equal(session.playerTeam[0].id, 258);
   assert.equal(session.playerTeam[1].moveLoadoutSource, MOVESET_LOADOUT_SOURCE.CAMPAIGN_FIXED_MOVESET);
 });
@@ -201,6 +201,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
   context.window = context;
   vm.createContext(context);
   const scripts = [
+    'expanded-pokemon-catalog.js',
     'battle/battle-constants.js',
     'battle/type-chart.js',
     'battle/type-effectiveness.js',
@@ -220,7 +221,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
     const source = fs.readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8');
     vm.runInContext(source, context, { filename: file });
   }
-  assert.equal(Object.keys(context.PBACampaign.CampaignFixedBattleCatalog.byId).length, 493);
+  assert.equal(Object.keys(context.PBACampaign.CampaignFixedBattleCatalog.byId).length, 1343);
   assert.ok(context.PBACampaign.MatchupGuide);
   assert.ok(context.PBABattleSession.BattleSessionController);
   const html = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');

@@ -103,7 +103,7 @@
     return guests;
   };
   CampaignManager.prototype.getShadowFinalStandArmy = function (leaderId) {
-    const permanent = this.getRosterIds().map(Catalog.byId).filter(Boolean);
+    const permanent = this.getRosterIds().map(Catalog.byId).filter(pokemon => pokemon && !pokemon.collectionOnly);
     const candidates = [...permanent, ...this.getShadowGuests()];
     const unique = candidates.filter((pokemon, index, all) => all.findIndex(other => other.id === pokemon.id) === index);
     const leader = unique.find(pokemon => pokemon.id === Number(leaderId));

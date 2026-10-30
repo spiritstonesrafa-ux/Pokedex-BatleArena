@@ -619,7 +619,7 @@
       const wildZoneHtml = wildConfig
         ? wildConfig.points.map(point => {
           const count = Wild.getPointCaptureCount(campaignState?.wild, region.id, point.id);
-          const limit = Wild.MAX_CAPTURES_PER_POINT;
+          const limit = Wild.getCaptureLimit(campaignState, region.id, point.id);
           const completed = count >= limit;
           const buttonId = point.id === wildConfig.defaultPointId
             ? 'wildEncounterZone' : `wildEncounterZone-${point.id}`;
@@ -1044,7 +1044,7 @@
                 <div class="mobile-sheet-mon-info">
                   <strong>${cap(p.name)}</strong>
                   <span>${(p.types || []).map(t => `<i class="type-chip type-${t}">${t}</i>`).join('')}</span>
-                  <small>BST ${p.bst || p.baseStats?.total || '—'}</small>
+                  <small>${p.collectionOnly ? 'Somente coleção' : 'BST ' + (p.bst || p.baseStats?.total || '—')}</small>
                 </div>
               </article>
             `).join('')}

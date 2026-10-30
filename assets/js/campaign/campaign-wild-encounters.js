@@ -14,12 +14,12 @@
       name: 'Região 1', biome: 'mata', zoneLabel: 'Explorar mata',
       zoneNodeId: 'node-grass', zonePosition: Object.freeze({ x: 28, y: 44 }),
       defaultPointId: 'r1-forest',
-      types: Object.freeze(['normal', 'grass', 'bug', 'water', 'flying']),
+      types: Object.freeze(['normal', 'grass', 'bug', 'water', 'flying', 'electric']),
       minBst: 250, maxBst: 480,
       points: Object.freeze([
         Object.freeze({ id: 'r1-meadow', name: 'Prados', biome: 'prados', zoneLabel: 'Explorar prados',
           zoneNodeId: 'node-normal', zonePosition: Object.freeze({ x: 15, y: 72 }),
-          types: Object.freeze(['normal', 'grass', 'flying']) }),
+          types: Object.freeze(['normal', 'grass', 'flying', 'electric']) }),
         Object.freeze({ id: 'r1-forest', name: 'Mata', biome: 'mata', zoneLabel: 'Explorar mata',
           zoneNodeId: 'node-grass', zonePosition: Object.freeze({ x: 28, y: 44 }),
           types: Object.freeze(['normal', 'grass', 'bug', 'water', 'flying']) }),
@@ -82,10 +82,10 @@
   // regional pool so captures from older saves remain valid after migration.
   const REGION_POOLS = Object.freeze(Object.fromEntries(Object.entries(REGIONS).map(([regionId, config]) => [
     regionId,
-    Object.freeze(Catalog.DRAFT
+    Object.freeze([...Catalog.DRAFT, ...Catalog.EXPLORATION_SPECIES]
       .filter(pokemon => !pokemon.legendary && !pokemon.mythical
         && !reserved.has(pokemon.id)
-        && pokemon.bst >= config.minBst && pokemon.bst <= config.maxBst
+        && (Catalog.EXPLORATION_SPECIES.includes(pokemon) || (pokemon.bst >= config.minBst && pokemon.bst <= config.maxBst))
         && pokemon.types.some(type => config.types.includes(type)))
       .map(pokemon => pokemon.id))
   ])));
@@ -160,31 +160,38 @@
       && (wild.capturePoints?.[id] || defaultPointId(regionId)) === pointId).length;
   }
 
-  function getPool(ownedIds = [], regionId = 'region-1', pointId = defaultPointId(regionId)) {
+  const collectionPointPools = Object.freeze(Object.fromEntries(Object.values(POINTS).map(point => [point.id,
+    Object.freeze(Object.values(Catalog.CANONICAL_BY_ID).filter(pokemon => pokemon.types.some(type => point.types.includes(type))).map(pokemon => pokemon.id))
+  ])));
+  const isSpecial = id => Boolean(Catalog.byId(id)?.legendary || Catalog.byId(id)?.mythical);
+  const allowedAtPoint = (campaign, pointId, id) => campaign?.status === 'COMPLETED'
+    ? collectionPointPools[pointId]?.includes(id) : allowedByPoint[pointId]?.has(id);
+
+  function getPool(ownedIds = [], regionId = 'region-1', pointId = defaultPointId(regionId), campaign = null) {
     if (!isPointId(regionId, pointId)) return [];
     const owned = new Set(ownedIds.map(Number));
-    return [...POINT_POOLS[pointId], ...POINT_SPECIAL_POOLS[pointId]]
+    return (campaign?.status === 'COMPLETED' ? collectionPointPools[pointId] : [...POINT_POOLS[pointId], ...POINT_SPECIAL_POOLS[pointId]])
       .filter(id => !owned.has(id));
   }
 
-  function getRarity(regionId, pokemonId, pointId = defaultPointId(regionId)) {
+  function getRarity(regionId, pokemonId, pointId = defaultPointId(regionId), campaign = null) {
     if (!isPointId(regionId, pointId)) return null;
     const id = Number(pokemonId);
-    if (POINT_SPECIAL_POOLS[pointId].includes(id)) {
+    if (POINT_SPECIAL_POOLS[pointId].includes(id) || (campaign?.status === 'COMPLETED' && isSpecial(id))) {
       return Catalog.byId(id).mythical ? 'MYTHICAL' : 'LEGENDARY';
     }
-    return rarityByPoint[pointId].get(id) || null;
+    return rarityByPoint[pointId].get(id) || (campaign?.status === 'COMPLETED' && allowedAtPoint(campaign, pointId, id) ? 'RARE' : null);
   }
 
   function choose(ownedIds = [], roll = randomUnit(), regionId = 'region-1',
-    pointId = defaultPointId(regionId)) {
-    const pool = getPool(ownedIds, regionId, pointId);
+    pointId = defaultPointId(regionId), campaign = null) {
+    const pool = getPool(ownedIds, regionId, pointId, campaign);
     if (!pool.length) return null;
     const buckets = Object.entries(RARITY_WEIGHTS)
       .map(([rarity, weight]) => ({
         rarity, weight, ids: pool.filter(id => rarity === 'SPECIAL'
-          ? POINT_SPECIAL_POOLS[pointId].includes(id)
-          : getRarity(regionId, id, pointId) === rarity)
+          ? isSpecial(id)
+          : getRarity(regionId, id, pointId, campaign) === rarity)
       }))
       .filter(bucket => bucket.ids.length);
     const totalWeight = buckets.reduce((sum, bucket) => sum + bucket.weight, 0);
@@ -197,6 +204,13 @@
       position -= bucket.weight;
     }
     return buckets[buckets.length - 1].ids.at(-1);
+  }
+
+  function getCaptureLimit(campaign, regionId, pointId) {
+    if (!isPointId(regionId, pointId)) return 0;
+    return campaign?.status === 'COMPLETED'
+      ? collectionPointPools[pointId].length
+      : MAX_CAPTURES_PER_POINT;
   }
 
   function sanitize(raw, campaign) {
@@ -215,9 +229,9 @@
         const id = Number(value);
         const regionId = raw.captureRegions?.[id] || 'region-1';
         const pointId = raw.capturePoints?.[id] || defaultPointId(regionId);
-        if (isPointId(regionId, pointId) && allowedByPoint[pointId].has(id)
+        if (isPointId(regionId, pointId) && allowedAtPoint(campaign, pointId, id)
           && !coreOwned.has(id) && !seen.has(id)
-          && getPointCaptureCount(clean, regionId, pointId) < MAX_CAPTURES_PER_POINT) {
+          && getPointCaptureCount(clean, regionId, pointId) < getCaptureLimit(campaign, regionId, pointId)) {
           clean.capturedIds.push(id);
           clean.captureRegions[id] = regionId;
           clean.capturePoints[id] = pointId;
@@ -226,14 +240,14 @@
       }
     }
     const validPokemon = (regionId, pointId, value) => isPointId(regionId, pointId)
-      && allowedByPoint[pointId].has(Number(value))
+      && allowedAtPoint(campaign, pointId, Number(value))
       && !coreOwned.has(Number(value)) && !seen.has(Number(value));
     const validEncounterId = value => typeof value === 'string' && value.length > 0 && value.length < 100;
     const pending = raw.pendingCapture;
     const pendingRegion = pending?.regionId || 'region-1';
     const pendingPoint = pending?.pointId || defaultPointId(pendingRegion);
     if (pending && validPokemon(pendingRegion, pendingPoint, pending.pokemonId)
-      && getPointCaptureCount(clean, pendingRegion, pendingPoint) < MAX_CAPTURES_PER_POINT
+      && getPointCaptureCount(clean, pendingRegion, pendingPoint) < getCaptureLimit(campaign, pendingRegion, pendingPoint)
       && validEncounterId(pending.encounterId)
       && typeof pending.battleId === 'string' && pending.battleId.length > 0
       && pending.battleId.length < 100
@@ -247,7 +261,7 @@
       const regionId = raw.result.regionId || 'region-1';
       const pointId = raw.result.pointId || defaultPointId(regionId);
       const id = Number(raw.result.pokemonId);
-      if (isPointId(regionId, pointId) && allowedByPoint[pointId].has(id)
+      if (isPointId(regionId, pointId) && allowedAtPoint(campaign, pointId, id)
         && (raw.result.status !== 'CAUGHT'
           || (seen.has(id) && clean.captureRegions[id] === regionId && clean.capturePoints[id] === pointId))) {
         clean.result = { status: raw.result.status, pokemonId: id, regionId, pointId };
@@ -256,7 +270,7 @@
       const regionId = raw.active.regionId || 'region-1';
       const pointId = raw.active.pointId || defaultPointId(regionId);
       if (validPokemon(regionId, pointId, raw.active.pokemonId)
-        && getPointCaptureCount(clean, regionId, pointId) < MAX_CAPTURES_PER_POINT
+        && getPointCaptureCount(clean, regionId, pointId) < getCaptureLimit(campaign, regionId, pointId)
         && validEncounterId(raw.active.encounterId)) {
         clean.active = {
           regionId, pointId, pokemonId: Number(raw.active.pokemonId),
@@ -270,7 +284,7 @@
   const api = Object.freeze({
     REGIONS, POINTS, REGION_POOLS, POINT_POOLS, SPECIAL_POOL, POINT_SPECIAL_POOLS,
     REGION_1_POOL, RARITY_WEIGHTS,
-    MAX_CAPTURES_PER_POINT, MAX_CAPTURES_PER_REGION, MAX_REGION_1_CAPTURES, CAPTURE_CHANCE,
+    getCaptureLimit, MAX_CAPTURES_PER_POINT, MAX_CAPTURES_PER_REGION, MAX_REGION_1_CAPTURES, CAPTURE_CHANCE,
     isRegionId, isPointId, getPoint, defaultPointId, getDefaultState,
     getRegionCaptureCount, getPointCaptureCount, getPool, getRarity, choose, randomUnit, sanitize
   });

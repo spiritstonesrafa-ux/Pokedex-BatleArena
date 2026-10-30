@@ -126,11 +126,13 @@ const generationRanges = {
   '7': { offset: 721, max: 809 },
   '8': { offset: 809, max: 905 },
   '9': { offset: 905, max: 1025 },
-  'all': { offset: 0, max: 1025 }
+  'forms': { offset: 1025, max: (pokeApi.getSupportedPokemonCount?.() || 1025) },
+  'all': { offset: 0, max: (pokeApi.getSupportedPokemonCount?.() || 1025) }
 };
 
 // Rótulos amigáveis de geração para feedback da busca
 const generationLabels = {
+  'forms': 'Formas alternativas',
   '1': '1ª Geração (Kanto)',
   '2': '2ª Geração (Johto)',
   '3': '3ª Geração (Hoenn)',
@@ -371,7 +373,7 @@ function loadPokemonItems(initial = false) {
 
 /**
  * Carrega a lista quando o usuário seleciona um tipo específico nas pílulas.
- * Respeita simultaneamente o tipo, a geração ativa e o escopo canônico (1..1025).
+ * Respeita simultaneamente o tipo, a geração ativa e o escopo canônico (espécies e formas cadastradas).
  */
 async function loadPokemonsByType(type) {
   if (!pokemonListElement || !loadMoreButton) return;
@@ -395,7 +397,7 @@ async function loadPokemonsByType(type) {
     } else if (Array.isArray(idSet)) {
       rawIds = idSet;
     } else if (typeof pokeApi.getPokemonsByType === 'function') {
-      const legacyPokemons = await pokeApi.getPokemonsByType(type, 1025);
+      const legacyPokemons = await pokeApi.getPokemonsByType(type, (pokeApi.getSupportedPokemonCount?.() || 1025));
       rawIds = (legacyPokemons || []).map(p => p.number);
     }
 
@@ -404,14 +406,10 @@ async function loadPokemonsByType(type) {
     if (selectedType !== requestType || selectedGeneration !== requestGen) return;
     if (isSearchingCatalog) return;
 
-    // 2. Restringir os IDs ao intervalo da geração selecionada e ao escopo canônico suportado (1..1025)
-    const genRange = generationRanges[requestGen] || generationRanges['all'];
-    const minId = genRange.offset + 1;
-    const maxId = Math.min(genRange.max, 1025);
-
+    // 2. Restringir os IDs ao intervalo da geração selecionada e ao escopo canônico suportado (espécies e formas cadastradas)
     const eligibleIds = rawIds
       .map(Number)
-      .filter(id => Number.isInteger(id) && id >= minId && id <= maxId);
+      .filter(id => Number.isInteger(id) && pokeApi.isPokemonInGeneration(id, requestGen));
 
     // 3. Aplicar ordenação determinística (crescente por número)
     eligibleIds.sort((a, b) => a - b);
@@ -487,10 +485,10 @@ function applyFiltersAndSort() {
   if (selectedGeneration !== 'all') {
     const range = generationRanges[selectedGeneration];
     if (range) {
-      filtered = filtered.filter(p => p.number > range.offset && p.number <= range.max);
+      filtered = filtered.filter(p => pokeApi.isPokemonInGeneration(p.number, selectedGeneration));
     }
   } else {
-    filtered = filtered.filter(p => p.number >= 1 && p.number <= 1025);
+    filtered = filtered.filter(p => pokeApi.isPokemonInGeneration(p.number, 'all'));
   }
 
   // Algoritmos de Ordenação (Array.prototype.sort)
@@ -563,7 +561,7 @@ function createSkeletonsHtml(count) {
  * ====================================================================
  * BUSCA COMPLETA DA POKÉDEX (Fase 1 UI/UX)
  * ====================================================================
- * Localiza espécies no catálogo completo (1025) por nome, parte do nome ou ID.
+ * Localiza espécies no catálogo completo de espécies e formas por nome, parte do nome ou ID.
  * Implementa debounce (~300ms), cancelamento via AbortController, proteção
  * contra respostas fora de ordem, cache, estados claros de loading/erro/vazio
  * e paginação sob demanda.
@@ -695,7 +693,7 @@ async function executeCatalogSearch(query) {
   // 1. Obtém o catálogo leve da PokéAPI
   let catalog = [];
   try {
-    catalog = await pokeApi.getPokemonIndex(1025, signal);
+    catalog = await pokeApi.getPokemonIndex((pokeApi.getSupportedPokemonCount?.() || 1025), signal);
   } catch (err) {
     if (signal && signal.aborted || token !== searchSequenceToken) return;
     console.error('Erro ao carregar catálogo para busca:', err);
@@ -742,7 +740,7 @@ async function executeCatalogSearch(query) {
   const minId = genRange.offset + 1;
   const maxId = genRange.max;
 
-  const inGenCandidates = matchedCandidates.filter(c => c.id >= minId && c.id <= maxId);
+  const inGenCandidates = matchedCandidates.filter(c => pokeApi.isPokemonInGeneration(c.id, selectedGeneration));
 
   // Se nenhum resultado na geração ativa, mas encontrado em outra geração:
   if (matchedCandidates.length > 0 && inGenCandidates.length === 0) {
@@ -753,8 +751,8 @@ async function executeCatalogSearch(query) {
     const firstMatch = matchedCandidates[0];
     let foundGen = null;
     for (const [gKey, range] of Object.entries(generationRanges)) {
-      if (gKey === 'all') continue;
-      if (firstMatch.id > range.offset && firstMatch.id <= range.max) {
+      if (gKey === 'all' || gKey === 'forms') continue;
+      if (pokeApi.isPokemonInGeneration(firstMatch.id, gKey)) {
         foundGen = gKey;
         break;
       }

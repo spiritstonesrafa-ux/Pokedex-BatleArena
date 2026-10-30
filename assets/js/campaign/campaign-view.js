@@ -686,3 +686,14 @@ if (typeof window !== 'undefined') {
     this.container.querySelector('#recruitConfirmTitle')?.focus?.();
   };
 })();
+
+/* Colecionáveis permanecem visíveis no elenco, mas não podem ser escalados. */
+(function () {
+  const View = window.PBACampaign?.CampaignView;
+  if (!View) return;
+  const card = View.prototype.card;
+  View.prototype.card = function (pokemon, selected) {
+    const html = card.call(this, pokemon, selected);
+    return pokemon?.collectionOnly ? html.replace('<button ', '<button disabled aria-disabled="true" title="Somente coleção" ').replace('</button>', '<small>Somente coleção</small></button>') : html;
+  };
+})();

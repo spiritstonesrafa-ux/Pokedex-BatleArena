@@ -1072,11 +1072,11 @@ describe('FASE 1: BUSCA POKÉDEX & ACESSIBILIDADE DE TECLADO (IMPLEMENTAÇÃO RE
   // --------------------------------------------------------------------------
   // CENÁRIO 17 (TESTE D): Todas as Gerações considera todo o escopo canônico e exclui formas fora do escopo
   // --------------------------------------------------------------------------
-  it('Cenário 17 (Teste D): Todas as Gerações mantém espécies suportadas (1..1025) e exclui IDs > 1025', async () => {
+  it('Cenário 17 (Teste D): Todas as Gerações inclui formas cadastradas e exclui IDs desconhecidos', async () => {
     const originalGetDetail = pokeApi.getPokemonDetail;
     try {
       // Índice contém Gen 1 (#25), Gen 2 (#179), Gen 9 (#921) e formas alternativas fora do escopo (10001, 10100)
-      pokeApi.setTypeIndex('electric', [25, 179, 921, 10001, 10100]);
+      pokeApi.setTypeIndex('electric', [25, 179, 921, 10055, 10100, 99999]);
 
       const requestedDetailIds = new Set();
       pokeApi.getPokemonDetail = async (id) => {
@@ -1101,17 +1101,18 @@ describe('FASE 1: BUSCA POKÉDEX & ACESSIBILIDADE DE TECLADO (IMPLEMENTAÇÃO RE
       assert.equal(mainModule.getLoadedType(), 'electric');
 
       const current = mainModule.getCurrentPokemons();
-      assert.equal(current.length, 3, 'Deve conter as 3 espécies canônicas');
+      assert.equal(current.length, 5, 'Deve conter espécies e formas cadastradas');
       const numbers = current.map(p => p.number);
-      assert.deepEqual(numbers, [25, 179, 921], 'Espécies suportadas de diferentes gerações devem ser carregadas');
+      assert.deepEqual(numbers, [25, 179, 921, 10055, 10100]);
 
       // Formas alternativas fora do escopo não podem ser carregadas
-      assert.ok(!numbers.some(id => id > 1025), 'Nenhum ID > 1025 pode estar presente');
-      assert.ok(!requestedDetailIds.has(10001), 'ID 10001 não pode ter detalhes carregados');
-      assert.ok(!requestedDetailIds.has(10100), 'ID 10100 não pode ter detalhes carregados');
+      assert.ok(!numbers.includes(99999));
+      assert.ok(requestedDetailIds.has(10055));
+      assert.ok(requestedDetailIds.has(10100));
+      assert.ok(!requestedDetailIds.has(99999));
 
       const resultCountText = dom.elements.get('resultCount').textContent;
-      assert.ok(resultCountText.includes('3 Pokémon'), `Contador deve exibir 3 Pokémon: ${resultCountText}`);
+      assert.ok(resultCountText.includes('5 Pokémon'), `Contador deve exibir 5 Pokémon: ${resultCountText}`);
     } finally {
       pokeApi.getPokemonDetail = originalGetDetail;
     }
@@ -1183,4 +1184,41 @@ describe('FASE 1: BUSCA POKÉDEX & ACESSIBILIDADE DE TECLADO (IMPLEMENTAÇÃO RE
       pokeApi.getPokemonDetail = originalGetDetail;
     }
   });
+  it('Expanded catalog: Zygarde Complete is searchable by form and species generation', async () => {
+    const original = pokeApi.getPokemonDetail;
+    const Expanded = require('../../assets/js/expanded-pokemon-catalog.js');
+    pokeApi.setPokemonIndex([718, 10120].map(id => ({ id, name: Expanded.byId[id].name, url: 'https://pokeapi.co/api/v2/pokemon/' + id + '/' })));
+    pokeApi.getPokemonDetail = async id => ({ ...Expanded.byId[id], number: Number(id), type: 'dragon', stats: { ...Expanded.byId[id].stats, total: Expanded.byId[id].bst } });
+    try {
+      mainModule.setSelectedGeneration('forms');
+      await mainModule.executeCatalogSearch('zygarde');
+      assert.deepEqual(mainModule.getCurrentPokemons().map(p => p.number), [10120]);
+      assert.ok(dom.elements.get('pokemonList').innerHTML.includes('zygarde-complete'));
+      mainModule.setSelectedGeneration('6');
+      await mainModule.executeCatalogSearch('zygarde');
+      assert.deepEqual(mainModule.getCurrentPokemons().map(p => p.number), [718, 10120]);
+    } finally { pokeApi.getPokemonDetail = original; }
+  });
+
+  it('Expanded catalog: form pagination traverses API offsets rather than assuming sequential form IDs', async () => {
+    const original = pokeApi.getPokemons;
+    const Expanded = require('../../assets/js/expanded-pokemon-catalog.js');
+    const requests = [];
+    pokeApi.getPokemons = async (offset, limit) => {
+      requests.push({ offset, limit });
+      return Expanded.entries.slice(offset, offset + limit).map(p => ({ ...p, number: p.id, type: p.types[0], stats: { ...p.stats, total: p.bst } }));
+    };
+    try {
+      mainModule.setSelectedGeneration('forms');
+      await mainModule.loadPokemonItems(true);
+      while (mainModule.getOffsets().offset < mainModule.getOffsets().maxLimit) await mainModule.loadPokemonItems(false);
+      const ids = mainModule.getCurrentPokemons().map(p => p.number);
+      assert.equal(requests[0].offset, 1025);
+      assert.equal(ids.length, 326);
+      assert.equal(new Set(ids).size, 326);
+      assert.equal(ids[0], 10001);
+      assert.equal(ids.at(-1), 10326);
+    } finally { pokeApi.getPokemons = original; }
+  });
+
 });
