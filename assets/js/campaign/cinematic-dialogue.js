@@ -24,6 +24,8 @@
       this.typewriterTimer = null;
       this.resolvePromise = null;
       this.keyHandler = null;
+      this._sceneAudio = null;
+      this._audioPlayback = null;
       this.typeSpeed = 22; // ms por caractere
     }
 
@@ -75,6 +77,7 @@
       return new Promise((resolve) => {
         this.resolvePromise = resolve;
         this.mount(options);
+        if (this.isPlaying) this.startSceneMusic(scene, options.audioController);
       });
     }
 
@@ -291,7 +294,29 @@
      * Encerra a cena cinematográfica com fade-out suave e limpeza completa de listeners.
      * @param {boolean} [completed=true]
      */
+    startSceneMusic(scene, injectedController) {
+      const audio = injectedController || (typeof window !== 'undefined' &&
+        window.battleSessionController?.compositeAdapter?.audioController);
+      if (!audio || typeof audio.startDialogueMusic !== 'function') return;
+      const playback = {};
+      this._audioPlayback = playback;
+      this._sceneAudio = audio;
+      // O desbloqueio começa no gesto que abriu a cena; fechamento invalida o retorno.
+      try {
+        Promise.resolve(audio.unlock()).then(() => {
+          if (this.isPlaying && this._audioPlayback === playback) audio.startDialogueMusic(scene);
+        }).catch(err => console.warn('Dialogue music unavailable:', err));
+      } catch (err) { console.warn('Dialogue music unavailable:', err); }
+    }
+
     close(completed = true) {
+      this._audioPlayback = null;
+      const audio = this._sceneAudio;
+      this._sceneAudio = null;
+      if (audio && typeof audio.stopDialogueMusic === 'function') {
+        try { audio.stopDialogueMusic({ fadeDuration: completed ? 0.3 : 0 }); }
+        catch (err) { console.warn('Dialogue music cleanup failed:', err); }
+      }
       if (this.typewriterTimer) {
         clearInterval(this.typewriterTimer);
         this.typewriterTimer = null;

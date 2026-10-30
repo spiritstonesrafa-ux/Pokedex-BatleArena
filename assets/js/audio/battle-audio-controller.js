@@ -408,10 +408,94 @@
       });
     }
 
+    /** Trilha original e contida para leitura; compartilha o mixer da batalha. */
+    startDialogueMusic(scene) {
+      this.stopDialogueMusic({ fadeDuration: 0 });
+      if (!this.isUnlocked() || !scene) return false;
+      this.stopBattleMusic();
+      this.stopShadowBossTheme();
+      const ctx = this.contextManager.getContext();
+      const family = scene.challengeKind === 'SHADOW' ? 'shadow' : scene.challengeKind === 'SUPER' ? 'super' : 'master';
+      const themes = {
+        master: { notes: [261.63, 329.63, 392, 440, 392, 329.63, 293.66, 329.63], bass: 130.81, beat: 560, wave: 'triangle' },
+        super: { notes: [196, 293.66, 392, 369.99, 329.63, 293.66, 246.94, 293.66], bass: 98, beat: 620, wave: 'triangle' },
+        shadow: { notes: [146.83, 155.56, 174.61, 146.83, 130.81, 138.59, 155.56, 130.81], bass: 73.42, beat: 680, wave: 'sine' }
+      };
+      const theme = themes[family];
+      const moment = scene.moment || 'INTRO';
+      const victory = moment === 'VICTORY', defeat = moment === 'DEFEAT';
+      const notes = victory ? [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 392]
+        : defeat ? [220, 196, 174.61, 164.81, 196, 174.61, 164.81, 146.83] : theme.notes;
+      const beat = theme.beat * (moment === 'INTRO' ? 1 : 1.2);
+      this._dialogueTheme = { family, moment };
+      const voices = this._dialogueNodes = new Set();
+      this._dialogueCleanupTimers = new Set();
+      const output = ctx.createGain();
+      output.gain.setValueAtTime(0.001, ctx.currentTime);
+      output.gain.linearRampToValueAtTime(moment === 'INTRO' ? 0.18 : 0.13, ctx.currentTime + 0.3);
+      output.connect(this.mixer ? this.mixer.getChannelNode('MUSIC') : ctx.destination);
+      this._dialogueOutput = output;
+      let step = 0;
+      const note = (frequency, duration, volume, wave) => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        const now = ctx.currentTime;
+        osc.type = wave; osc.frequency.setValueAtTime(frequency, now);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(volume, now + 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain); gain.connect(output);
+        const voice = { osc, gain };
+        voices.add(voice);
+        osc.onended = () => { osc.disconnect(); gain.disconnect(); voices.delete(voice); };
+        osc.start(now); osc.stop(now + duration + 0.02);
+      };
+      const tick = () => {
+        if (!this._dialogueTheme) return;
+        note(notes[step % notes.length] * (defeat ? 0.5 : 1), beat / 1000 * 1.5, 0.24, theme.wave);
+        if (step % 4 === 0) note(victory ? 130.81 : defeat ? 110 : theme.bass, beat / 1000 * 3.7, 0.16, 'sine');
+        step++;
+      };
+      tick();
+      this._dialogueIntervalId = setInterval(tick, beat);
+      return true;
+    }
+
+    stopDialogueMusic({ fadeDuration = 0.3 } = {}) {
+      if (this._dialogueIntervalId) clearInterval(this._dialogueIntervalId);
+      this._dialogueIntervalId = null;
+      this._dialogueTheme = null;
+      if (fadeDuration === 0 && this._dialogueCleanupTimers) {
+        for (const cleanup of this._dialogueCleanupTimers) { clearTimeout(cleanup.timer); cleanup.dispose(); }
+        this._dialogueCleanupTimers.clear();
+      }
+      const output = this._dialogueOutput;
+      if (!output) return;
+      this._dialogueOutput = null;
+      const voices = this._dialogueNodes;
+      const dispose = () => {
+        for (const voice of voices) {
+          voice.osc.onended = null;
+          try { voice.osc.stop(); } catch {}
+          voice.osc.disconnect(); voice.gain.disconnect();
+        }
+        voices.clear(); output.disconnect();
+      };
+      if (fadeDuration <= 0) { dispose(); return; }
+      const ctx = this.contextManager.getContext();
+      output.gain.cancelScheduledValues(ctx.currentTime);
+      output.gain.setValueAtTime(output.gain.value, ctx.currentTime);
+      output.gain.linearRampToValueAtTime(0.001, ctx.currentTime + fadeDuration);
+      const cleanup = { dispose, timer: null };
+      const timers = this._dialogueCleanupTimers;
+      cleanup.timer = setTimeout(() => { dispose(); timers.delete(cleanup); }, fadeDuration * 1000 + 30);
+      timers.add(cleanup);
+    }
+
     /**
      * Cancela sons ativos e interrompe música sem quebrar a timeline.
      */
     cancel() {
+      this.stopDialogueMusic({ fadeDuration: 0 });
       this.stopBattleMusic();
       if (this.sfx && typeof this.sfx.cancel === 'function') {
         this.sfx.cancel();

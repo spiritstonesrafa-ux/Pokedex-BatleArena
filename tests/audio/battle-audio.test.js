@@ -604,3 +604,94 @@ test('Direct presentation commands share concurrency protection and cancellation
   assert.equal(result.status, 'CANCELLED');
   assert.deepEqual(entered, ['BATTLE_INTRO']);
 });
+
+
+test('Dialogue score — three families and three moments use MUSIC, obey mute and clean up', async () => {
+  const manager = new AudioContextManager({ autoUnlock: false });
+  const mixer = new AudioMixer(manager);
+  const audio = new BattleAudioController({ contextManager: manager, mixer });
+  assert.equal(audio.startDialogueMusic({ challengeKind: 'MASTER', moment: 'INTRO' }), false);
+  await audio.unlock();
+  try {
+    for (const [challengeKind, family] of [['MASTER', 'master'], ['SUPER', 'super'], ['SHADOW', 'shadow']]) {
+      for (const moment of ['INTRO', 'VICTORY', 'DEFEAT']) {
+        await audio.startBattleMusic();
+        assert.equal(audio.startDialogueMusic({ challengeKind, moment }), true);
+        assert.equal(audio._isMusicPlaying, false);
+        assert.equal(audio._musicIntervalId, null);
+        assert.deepEqual(audio._dialogueTheme, { family, moment });
+        assert.equal(audio._dialogueNodes.size, 2);
+        assert.ok(audio._dialogueIntervalId);
+        mixer.setMute(true);
+        assert.equal(mixer.isMuted(), true);
+        mixer.setMute(false);
+        const oldVoices = audio._dialogueNodes;
+        audio.stopDialogueMusic();
+        assert.equal(audio._dialogueIntervalId, null);
+        assert.equal(audio._dialogueTheme, null);
+        assert.equal(audio._dialogueCleanupTimers.size, 1);
+        audio.cancel();
+        assert.equal(oldVoices.size, 0);
+        assert.equal(audio._dialogueCleanupTimers.size, 0);
+      }
+    }
+    await audio.startShadowBossTheme();
+    audio.startDialogueMusic({ challengeKind: 'SHADOW', moment: 'VICTORY' });
+    assert.equal(audio._shadowThemeActive, false);
+    assert.equal(audio._shadowThemeIntervalId, null);
+    const previousVoices = audio._dialogueNodes;
+    audio.startDialogueMusic({ challengeKind: 'SUPER', moment: 'INTRO' });
+    assert.equal(previousVoices.size, 0);
+    assert.equal(audio._dialogueNodes.size, 2);
+  } finally { audio.cancel(); }
+});
+
+test('Dialogue UI — close and replacement invalidate pending audio unlocks', async () => {
+  const { CinematicDialogue } = require('../../assets/js/campaign/cinematic-dialogue.js');
+  const dialogue = new CinematicDialogue();
+  let unlock;
+  const calls = [];
+  const audio = {
+    unlock: () => new Promise(resolve => { unlock = resolve; }),
+    startDialogueMusic: scene => calls.push(scene.challengeKind),
+    stopDialogueMusic: options => calls.push(options.fadeDuration)
+  };
+  dialogue.isPlaying = true;
+  dialogue.startSceneMusic({ challengeKind: 'MASTER' }, audio);
+  dialogue.close(false);
+  unlock(); await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(calls, [0]);
+  calls.length = 0;
+  dialogue.isPlaying = true;
+  dialogue.startSceneMusic({ challengeKind: 'SUPER' }, audio);
+  const firstUnlock = unlock;
+  dialogue.close(false);
+  dialogue.isPlaying = true;
+  dialogue.startSceneMusic({ challengeKind: 'SHADOW' }, audio);
+  firstUnlock(); unlock(); await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(calls, [0, 'SHADOW']);
+  dialogue.close(true);
+  assert.equal(calls.at(-1), 0.3);
+});
+
+
+test('Dialogue play — mounted scene starts its score and skip stops it before resolving', async () => {
+  const { CinematicDialogue } = require('../../assets/js/campaign/cinematic-dialogue.js');
+  const calls = [];
+  const dialogue = new CinematicDialogue();
+  dialogue.mount = () => { calls.push('mounted'); };
+  const audio = {
+    unlock: async () => { calls.push('unlocked'); },
+    startDialogueMusic: scene => calls.push(scene.challengeKind + ':' + scene.moment),
+    stopDialogueMusic: () => calls.push('stopped')
+  };
+  const playback = dialogue.play('master-fire', 'INTRO', { audioController: audio });
+  await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(calls, ['mounted', 'unlocked', 'MASTER:INTRO']);
+  dialogue.close(false);
+  assert.equal(await playback, false);
+  assert.equal(calls.at(-1), 'stopped');
+  calls.length = 0;
+  assert.equal(await dialogue.play('WILD', 'INTRO', { audioController: audio }), false);
+  assert.deepEqual(calls, []);
+});
