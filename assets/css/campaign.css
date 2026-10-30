@@ -1211,3 +1211,15 @@
   }
 }
 
+
+/* Confirmação de recrutamento integrada à campanha. */
+.recruit-confirmation { max-width: 760px; margin-inline: auto; }
+.recruit-confirmation__pokemon { display: grid; justify-items: center; gap: 16px; padding: 28px 20px; border: 1px solid rgba(250,204,21,.3); border-radius: 24px; background: radial-gradient(ellipse at center,rgba(250,204,21,.1),rgba(15,23,42,.6)); }
+.recruit-confirmation__pokemon img { width: 160px; height: 160px; object-fit: contain; filter: drop-shadow(0 10px 24px rgba(250,204,21,.2)); }
+.recruit-confirmation__pokemon strong { font-size: 1.5rem; color: #f8fafc; }
+.recruit-confirmation__pokemon .type-chip { display: inline-block; margin: 0 4px; }
+.recruit-confirmation__actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.recruit-confirmation__actions button { min-height: 48px; min-width: 180px; }
+.recruit-confirmation [role="status"] { color: #fca5a5; text-align: center; }
+.recruit-confirmation h2:focus-visible { outline: 2px solid #facc15; outline-offset: 6px; }
+@media (max-width: 480px) { .recruit-confirmation__actions { flex-direction: column-reverse; } .recruit-confirmation__actions button { width: 100%; } }
