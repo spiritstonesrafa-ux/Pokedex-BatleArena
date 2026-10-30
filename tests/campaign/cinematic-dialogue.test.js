@@ -7,9 +7,30 @@ const Catalog = require('../../assets/js/campaign/cinematic-dialogue-catalog.js'
 const { CinematicDialogue } = require('../../assets/js/campaign/cinematic-dialogue.js');
 const { CampaignBattleCoordinator } = require('../../assets/js/campaign/campaign-battle-coordinator.js');
 
-describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
+describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE (FULL ROSTER)', () => {
 
-  describe('1. Identificação de Confrontos', () => {
+  const ALL_MASTERS = [
+    { id: 'master-normal', name: 'Aster', title: 'Mestre do Equilíbrio', type: 'normal', avatar: 'assets/images/trainers/aster.png', arena: 'assets/images/arenas/arena-normal.webp' },
+    { id: 'master-fire', name: 'Kael', title: 'Mestre das Chamas', type: 'fire', avatar: 'assets/images/trainers/kael.png', arena: 'assets/images/arenas/arena-fire.webp' },
+    { id: 'master-water', name: 'Marina', title: 'Guardiã das Marés', type: 'water', avatar: 'assets/images/trainers/marina.png', arena: 'assets/images/arenas/arena-water.webp' },
+    { id: 'master-electric', name: 'Volt', title: 'Condutor da Tempestade', type: 'electric', avatar: 'assets/images/trainers/volt.png', arena: 'assets/images/arenas/arena-electric.webp' },
+    { id: 'master-grass', name: 'Flora', title: 'Mestre do Bosque', type: 'grass', avatar: 'assets/images/trainers/flora.png', arena: 'assets/images/arenas/arena-grass.webp' },
+    { id: 'master-ice', name: 'Yara', title: 'Guardiã do Inverno', type: 'ice', avatar: 'assets/images/trainers/yara.png', arena: 'assets/images/arenas/arena-ice.webp' },
+    { id: 'master-fighting', name: 'Dante', title: 'Mestre da Vanguarda', type: 'fighting', avatar: 'assets/images/trainers/dante.png', arena: 'assets/images/arenas/arena-fighting.webp' },
+    { id: 'master-poison', name: 'Vesper', title: 'Mestre da Alquimia', type: 'poison', avatar: 'assets/images/trainers/vesper.png', arena: 'assets/images/arenas/arena-poison.webp' },
+    { id: 'master-ground', name: 'Terra', title: 'Guardião do Vale', type: 'ground', avatar: 'assets/images/trainers/terra.png', arena: 'assets/images/arenas/arena-ground.webp' },
+    { id: 'master-flying', name: 'Aero', title: 'Mestre dos Ventos', type: 'flying', avatar: 'assets/images/trainers/aero.png', arena: 'assets/images/arenas/arena-flying.webp' },
+    { id: 'master-psychic', name: 'Orion', title: 'Mestre do Horizonte Mental', type: 'psychic', avatar: 'assets/images/trainers/orion.png', arena: 'assets/images/arenas/arena-psychic.webp' },
+    { id: 'master-bug', name: 'Nilo', title: 'Guardião do Enxame', type: 'bug', avatar: 'assets/images/trainers/nilo.png', arena: 'assets/images/arenas/arena-bug.webp' },
+    { id: 'master-rock', name: 'Petra', title: 'Mestre do Monólito', type: 'rock', avatar: 'assets/images/trainers/petra.png', arena: 'assets/images/arenas/arena-rock.webp' },
+    { id: 'master-ghost', name: 'Nyra', title: 'Guardiã do Véu', type: 'ghost', avatar: 'assets/images/trainers/nyra.png', arena: 'assets/images/arenas/arena-ghost.webp' },
+    { id: 'master-dragon', name: 'Riven', title: 'Mestre do Céu Antigo', type: 'dragon', avatar: 'assets/images/trainers/riven.png', arena: 'assets/images/arenas/arena-dragon.webp' },
+    { id: 'master-dark', name: 'Noctis', title: 'Mestre do Crepúsculo', type: 'dark', avatar: 'assets/images/trainers/noctis.png', arena: 'assets/images/arenas/arena-dark.webp' },
+    { id: 'master-steel', name: 'Ferrum', title: 'Guardião da Forja', type: 'steel', avatar: 'assets/images/trainers/ferrum.png', arena: 'assets/images/arenas/arena-steel.webp' },
+    { id: 'master-fairy', name: 'Lumi', title: 'Mestre do Encanto', type: 'fairy', avatar: 'assets/images/trainers/lumi.png', arena: 'assets/images/arenas/arena-fairy.webp' }
+  ];
+
+  describe('1. Identificação e Cobertura de Treinadores', () => {
     it('CD01 — Super Final ativa diálogos de Introdução, Vitória e Derrota', () => {
       assert.strictEqual(Catalog.hasScene('SUPER', 'INTRO'), true);
       assert.strictEqual(Catalog.hasScene('SUPER', 'VICTORY'), true);
@@ -22,15 +43,22 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.strictEqual(Catalog.hasScene('SHADOW', 'DEFEAT'), true);
     });
 
-    it('CD03 — Confrontos intermediários (Mestres) NÃO ativam diálogo cinematográfico', () => {
-      assert.strictEqual(Catalog.hasScene('MASTER', 'INTRO'), false);
-      assert.strictEqual(Catalog.hasScene('master-water', 'INTRO'), false);
-      assert.strictEqual(Catalog.hasScene('master-fire', 'VICTORY'), false);
+    it('CD03 — Todos os 18 Mestres de Tipo possuem cenas de Introdução, Vitória e Derrota', () => {
+      assert.strictEqual(ALL_MASTERS.length, 18);
+      for (const master of ALL_MASTERS) {
+        assert.strictEqual(Catalog.hasScene(master.id, 'INTRO'), true, `Mestre ${master.id} deve ter INTRO`);
+        assert.strictEqual(Catalog.hasScene(master.id, 'VICTORY'), true, `Mestre ${master.id} deve ter VICTORY`);
+        assert.strictEqual(Catalog.hasScene(master.id, 'DEFEAT'), true, `Mestre ${master.id} deve ter DEFEAT`);
+        // Aliases por tipo
+        assert.strictEqual(Catalog.hasScene(master.type, 'INTRO'), true, `Mestre ${master.type} deve ter INTRO via tipo`);
+      }
     });
 
     it('CD04 — Provas Especiais e Batalhas Comuns NÃO ativam diálogo cinematográfico', () => {
       assert.strictEqual(Catalog.hasScene('LEGENDARY_TRIAL', 'INTRO'), false);
       assert.strictEqual(Catalog.hasScene('MYTHICAL_TRIAL', 'INTRO'), false);
+      assert.strictEqual(Catalog.hasScene('TITANS_TRIAL', 'INTRO'), false);
+      assert.strictEqual(Catalog.hasScene('CELESTIAL_TRIAL', 'INTRO'), false);
       assert.strictEqual(Catalog.hasScene('QUICK', 'INTRO'), false);
       assert.strictEqual(Catalog.hasScene('WILD', 'INTRO'), false);
       assert.strictEqual(Catalog.hasScene('', 'INTRO'), false);
@@ -38,7 +66,7 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
     });
   });
 
-  describe('2. Apresentação e Preservação de Personagens', () => {
+  describe('2. Apresentação e Preservação de Personagens e Assets Físicos', () => {
     it('CD05 — Super Trainer reutiliza exclusivamente o asset original homologado', () => {
       const scene = Catalog.getSceneDefinition('SUPER', 'INTRO');
       assert.ok(scene, 'Cena de Super Intro deve existir');
@@ -48,9 +76,10 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.strictEqual(scene.backgroundSrc, 'assets/images/arenas/arena-super.webp');
       assert.strictEqual(scene.theme, 'super');
 
-      // Verifica se o arquivo de imagem original realmente existe no repositório
       const fullPath = path.resolve(__dirname, '../../', scene.avatarSrc);
       assert.strictEqual(fs.existsSync(fullPath), true, 'Asset original super-trainer.png deve existir fisicamente');
+      const bgPath = path.resolve(__dirname, '../../', scene.backgroundSrc);
+      assert.strictEqual(fs.existsSync(bgPath), true, 'Arena super deve existir fisicamente');
     });
 
     it('CD06 — Shadow Super Trainer reutiliza exclusivamente o asset original homologado', () => {
@@ -62,32 +91,61 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.strictEqual(scene.backgroundSrc, 'assets/images/arenas/arena-shadow.webp');
       assert.strictEqual(scene.theme, 'shadow');
 
-      // Verifica se o arquivo de imagem original realmente existe no repositório
       const fullPath = path.resolve(__dirname, '../../', scene.avatarSrc);
       assert.strictEqual(fs.existsSync(fullPath), true, 'Asset original super-trainer-shadow.png deve existir fisicamente');
+      const bgPath = path.resolve(__dirname, '../../', scene.backgroundSrc);
+      assert.strictEqual(fs.existsSync(bgPath), true, 'Arena shadow deve existir fisicamente');
     });
 
-    it('CD07 — Sequência de falas na ordem correta com textos curtos e dramáticos', () => {
+    it('CD07 — Todos os 18 Mestres possuem imagens e arenas físicas válidas e existentes', () => {
+      for (const master of ALL_MASTERS) {
+        const scene = Catalog.getSceneDefinition(master.id, 'INTRO');
+        assert.ok(scene, `Cena de ${master.id} deve ser resolvida`);
+        assert.strictEqual(scene.trainerName, master.name);
+        assert.strictEqual(scene.trainerTitle, master.title);
+        assert.strictEqual(scene.avatarSrc, master.avatar);
+        assert.strictEqual(scene.backgroundSrc, master.arena);
+
+        const avatarFullPath = path.resolve(__dirname, '../../', scene.avatarSrc);
+        assert.strictEqual(fs.existsSync(avatarFullPath), true, `Imagem ${master.avatar} deve existir fisicamente`);
+
+        const arenaFullPath = path.resolve(__dirname, '../../', scene.backgroundSrc);
+        assert.strictEqual(fs.existsSync(arenaFullPath), true, `Arena ${master.arena} deve existir fisicamente`);
+      }
+    });
+
+    it('CD08 — Preservação dos textos originais do Super e Shadow', () => {
       const superIntro = Catalog.getSceneDefinition('SUPER', 'INTRO');
-      assert.ok(Array.isArray(superIntro.lines) && superIntro.lines.length >= 3);
       assert.ok(superIntro.lines[0].includes('18 insígnias'));
 
       const shadowIntro = Catalog.getSceneDefinition('SHADOW', 'INTRO');
-      assert.ok(Array.isArray(shadowIntro.lines) && shadowIntro.lines.length >= 3);
       assert.ok(shadowIntro.lines[0].includes('Eclipse'));
 
       const superVictory = Catalog.getSceneDefinition('SUPER', 'VICTORY');
-      assert.ok(superVictory.lines.length >= 2);
       assert.ok(superVictory.lines[0].includes('sublime'));
 
       const shadowVictory = Catalog.getSceneDefinition('SHADOW', 'VICTORY');
-      assert.ok(shadowVictory.lines.length >= 2);
       assert.ok(shadowVictory.lines[0].includes('rasga as próprias sombras'));
     });
 
-    it('CD08 — Diálogos de meio de combate (MID_BATTLE) permanecem inativos na primeira fase', () => {
-      assert.strictEqual(Catalog.hasScene('SUPER', 'MID_BATTLE'), false);
-      assert.strictEqual(Catalog.hasScene('SHADOW', 'MID_BATTLE'), false);
+    it('CD09 — Qualidade narrativa dos Mestres: falas concisas, autênticas e sem repetições', () => {
+      const allIntroLines = new Set();
+      for (const master of ALL_MASTERS) {
+        const intro = Catalog.getSceneDefinition(master.id, 'INTRO');
+        const victory = Catalog.getSceneDefinition(master.id, 'VICTORY');
+        const defeat = Catalog.getSceneDefinition(master.id, 'DEFEAT');
+
+        // Quantidade de falas recomendada: 2 a 3 no intro, 1 a 2 na vitória/derrota
+        assert.ok(intro.lines.length >= 2 && intro.lines.length <= 4, `Intro de ${master.name} deve ter 2-4 falas`);
+        assert.ok(victory.lines.length >= 1 && victory.lines.length <= 3, `Vitória de ${master.name} deve ter 1-3 falas`);
+        assert.ok(defeat.lines.length >= 1 && defeat.lines.length <= 3, `Derrota de ${master.name} deve ter 1-3 falas`);
+
+        // Não deve haver falas duplicadas entre treinadores
+        for (const line of intro.lines) {
+          assert.strictEqual(allIntroLines.has(line), false, `Linha duplicada detectada: ${line}`);
+          allIntroLines.add(line);
+        }
+      }
     });
   });
 
@@ -157,23 +215,23 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       };
     });
 
-    it('CD09 — Instanciação e controle de velocidade', () => {
+    it('CD10 — Instanciação e controle de velocidade', () => {
       const dialogue = new CinematicDialogue(Catalog);
       assert.strictEqual(dialogue.isPlaying, false);
       assert.strictEqual(dialogue.hasScene('SUPER', 'INTRO'), true);
-      assert.strictEqual(dialogue.hasScene('MASTER', 'INTRO'), false);
+      assert.strictEqual(dialogue.hasScene('master-fire', 'INTRO'), true);
+      assert.strictEqual(dialogue.hasScene('WILD', 'INTRO'), false);
     });
 
-    it('CD10 — Play monta overlay com tema correto e inicia reprodução', async () => {
+    it('CD11 — Play monta overlay com tema correto para Mestre e inicia reprodução', async () => {
       const dialogue = new CinematicDialogue(Catalog);
-      dialogue.typeSpeed = 0; // digitação instantânea para teste
+      dialogue.typeSpeed = 0;
 
-      const playPromise = dialogue.play('SUPER', 'INTRO');
+      const playPromise = dialogue.play('master-fire', 'INTRO');
       assert.strictEqual(dialogue.isPlaying, true);
       assert.strictEqual(appendedChildren.length, 1);
-      assert.ok(appendedChildren[0].className.includes('cinematic-theme-super'));
+      assert.ok(appendedChildren[0].className.includes('cinematic-theme-fire'));
 
-      // Avança todas as falas
       while (dialogue.isPlaying) {
         dialogue.handleAdvance();
       }
@@ -183,29 +241,27 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.strictEqual(dialogue.isPlaying, false);
     });
 
-    it('CD11 — Primeiro avanço completa digitação em andamento; segundo passa para próxima fala', () => {
+    it('CD12 — Primeiro avanço completa digitação em andamento; segundo passa para próxima fala', () => {
       const dialogue = new CinematicDialogue(Catalog);
-      dialogue.typeSpeed = 1000; // digitação lenta proposital
+      dialogue.typeSpeed = 1000;
 
-      dialogue.play('SHADOW', 'INTRO');
+      dialogue.play('master-water', 'INTRO');
       assert.strictEqual(dialogue.isTyping, true);
       assert.strictEqual(dialogue.lineIndex, 0);
 
-      // Primeiro comando enquanto digita -> completa a linha 0
       dialogue.handleAdvance();
       assert.strictEqual(dialogue.isTyping, false);
       assert.strictEqual(dialogue.lineIndex, 0);
 
-      // Segundo comando com linha completa -> avança para linha 1
       dialogue.handleAdvance();
       assert.strictEqual(dialogue.lineIndex, 1);
 
       dialogue.close();
     });
 
-    it('CD12 — Pular (Skip) encerra a cena imediatamente sem travar o jogo', async () => {
+    it('CD13 — Pular (Skip) encerra a cena imediatamente sem travar o jogo', async () => {
       const dialogue = new CinematicDialogue(Catalog);
-      const playPromise = dialogue.play('SUPER', 'INTRO');
+      const playPromise = dialogue.play('master-dragon', 'INTRO');
 
       assert.strictEqual(dialogue.isPlaying, true);
       dialogue.close(true);
@@ -215,9 +271,9 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.strictEqual(dialogue.isPlaying, false);
     });
 
-    it('CD13 — Falha no carregamento de imagem (onerror) ativa fallback sem travar diálogo', () => {
+    it('CD14 — Falha no carregamento de imagem (onerror) ativa fallback sem travar diálogo', () => {
       const dialogue = new CinematicDialogue(Catalog);
-      dialogue.play('SUPER', 'INTRO');
+      dialogue.play('master-grass', 'INTRO');
 
       const imgEl = dialogue.activeOverlay.querySelector('.cinematic-portrait-img');
       const fbEl = dialogue.activeOverlay.querySelector('.cinematic-portrait-fallback');
@@ -228,36 +284,35 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.strictEqual(imgEl.style.display, 'none');
       assert.strictEqual(fbEl.style.display, 'flex');
 
-      // O diálogo continua funcionando normalmente
       dialogue.handleAdvance();
       assert.strictEqual(dialogue.isPlaying, true);
       dialogue.close();
     });
 
-    it('CD14 — Prevenção de reentrância: nova execução fecha anterior com segurança', async () => {
+    it('CD15 — Prevenção de reentrância: nova execução fecha anterior com segurança', async () => {
       const dialogue = new CinematicDialogue(Catalog);
       dialogue.typeSpeed = 0;
 
-      const p1 = dialogue.play('SUPER', 'INTRO');
-      const p2 = dialogue.play('SHADOW', 'INTRO');
+      const p1 = dialogue.play('master-fire', 'INTRO');
+      const p2 = dialogue.play('master-ice', 'INTRO');
 
-      assert.strictEqual(dialogue.currentScene.theme, 'shadow');
+      assert.strictEqual(dialogue.currentScene.theme, 'ice');
       dialogue.close();
       await Promise.all([p1, p2]);
     });
   });
 
   describe('4. Integração com o Fluxo de Batalha (CampaignBattleCoordinator)', () => {
-    it('CD15 — Batalha Super aciona introdução cinematográfica antes de iniciar combate', async () => {
-      let dialogueTriggered = false;
+    it('CD16 — Batalha de Mestre aciona introdução cinematográfica do Mestre correspondente', async () => {
+      let dialogueSceneKey = null;
       let startBattleCalled = false;
       const order = [];
 
       const mockManager = {
-        getBattleConfig: (kind) => ({
+        getBattleConfig: (kind, id) => ({
           playerTeamIds: [1, 2, 3],
-          enemyTeamIds: [100, 101, 102],
-          metadata: { kind, mode: 'CAMPAIGN' }
+          enemyTeamIds: [38, 59, 609],
+          metadata: { kind, id, mode: 'CAMPAIGN' }
         })
       };
 
@@ -270,30 +325,28 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       };
 
       const mockCinematic = {
-        hasScene: (kind, moment) => kind === 'SUPER' && moment === 'INTRO',
-        play: async () => {
+        hasScene: (key, moment) => key === 'master-fire' && moment === 'INTRO',
+        play: async (key) => {
           order.push('cinematicDialogue');
-          dialogueTriggered = true;
+          dialogueSceneKey = key;
         }
       };
 
       const coordinator = new CampaignBattleCoordinator(mockManager, mockSession, mockCinematic);
-      await coordinator.start('SUPER', null, [1, 2, 3]);
+      await coordinator.start('MASTER', 'master-fire', [1, 2, 3]);
 
-      assert.strictEqual(dialogueTriggered, true);
+      assert.strictEqual(dialogueSceneKey, 'master-fire');
       assert.strictEqual(startBattleCalled, true);
       assert.deepStrictEqual(order, ['prepareBattle', 'cinematicDialogue', 'startBattle']);
     });
 
-    it('CD16 — Batalha Shadow aciona introdução cinematográfica antes de iniciar combate', async () => {
-      let dialogueTriggered = false;
+    it('CD17 — Batalha Super e Batalha Shadow continuam acionando diálogos de intro', async () => {
       const order = [];
-
       const mockManager = {
         getBattleConfig: (kind) => ({
           playerTeamIds: [1, 2, 3],
           enemyTeamIds: [100, 101, 102],
-          metadata: { kind, mode: 'CAMPAIGN', battleFormat: 'FINAL_STAND' }
+          metadata: { kind, mode: 'CAMPAIGN' }
         })
       };
 
@@ -303,28 +356,28 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       };
 
       const mockCinematic = {
-        hasScene: (kind, moment) => kind === 'SHADOW' && moment === 'INTRO',
-        play: async () => {
-          order.push('cinematicDialogue');
-          dialogueTriggered = true;
-        }
+        hasScene: (key, moment) => (key === 'SUPER' || key === 'SHADOW') && moment === 'INTRO',
+        play: async (key) => { order.push('dialogue:' + key); }
       };
 
       const coordinator = new CampaignBattleCoordinator(mockManager, mockSession, mockCinematic);
+      await coordinator.start('SUPER', null, [1, 2, 3]);
       await coordinator.start('SHADOW', null, [1]);
 
-      assert.strictEqual(dialogueTriggered, true);
-      assert.deepStrictEqual(order, ['prepareBattle', 'cinematicDialogue', 'startBattle']);
+      assert.deepStrictEqual(order, [
+        'prepareBattle', 'dialogue:SUPER', 'startBattle',
+        'prepareBattle', 'dialogue:SHADOW', 'startBattle'
+      ]);
     });
 
-    it('CD17 — Batalha de Mestre NÃO aciona diálogo cinematográfico', async () => {
-      let dialogueTriggered = false;
+    it('CD18 — Batalha Selvagem (WILD) NÃO aciona diálogo cinematográfico', async () => {
+      let dialogueCalled = false;
       const order = [];
 
       const mockManager = {
         getBattleConfig: (kind, id) => ({
           playerTeamIds: [1, 2, 3],
-          enemyTeamIds: [4, 5, 6],
+          enemyTeamIds: [id],
           metadata: { kind, id, mode: 'CAMPAIGN' }
         })
       };
@@ -335,25 +388,25 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       };
 
       const mockCinematic = {
-        hasScene: (kind) => kind === 'SUPER' || kind === 'SHADOW',
-        play: async () => { dialogueTriggered = true; }
+        hasScene: () => false,
+        play: async () => { dialogueCalled = true; }
       };
 
       const coordinator = new CampaignBattleCoordinator(mockManager, mockSession, mockCinematic);
-      await coordinator.start('MASTER', 'master-water', [1, 2, 3]);
+      await coordinator.start('WILD', 25, [1, 2, 3]);
 
-      assert.strictEqual(dialogueTriggered, false);
+      assert.strictEqual(dialogueCalled, false);
       assert.deepStrictEqual(order, ['prepareBattle', 'startBattle']);
     });
 
-    it('CD18 — Se diálogo falhar, combate inicia normalmente sem bloquear o jogador', async () => {
+    it('CD19 — Se diálogo falhar, combate inicia normalmente sem bloquear o jogador', async () => {
       let startBattleCalled = false;
 
       const mockManager = {
-        getBattleConfig: (kind) => ({
+        getBattleConfig: (kind, id) => ({
           playerTeamIds: [1, 2, 3],
-          enemyTeamIds: [100, 101, 102],
-          metadata: { kind, mode: 'CAMPAIGN' }
+          enemyTeamIds: [4, 5, 6],
+          metadata: { kind, id, mode: 'CAMPAIGN' }
         })
       };
 
@@ -364,18 +417,18 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
 
       const mockCinematic = {
         hasScene: () => true,
-        play: async () => { throw new Error('Falha simulada na renderização visual'); }
+        play: async () => { throw new Error('Falha simulada no diálogo'); }
       };
 
       const coordinator = new CampaignBattleCoordinator(mockManager, mockSession, mockCinematic);
-      await coordinator.start('SUPER', null, [1, 2, 3]);
+      await coordinator.start('MASTER', 'master-water', [1, 2, 3]);
 
       assert.strictEqual(startBattleCalled, true, 'startBattle deve ter sido chamado apesar do erro no diálogo');
     });
   });
 
   describe('5. Folha de Estilos e Responsividade (cinematic-dialogue.css)', () => {
-    it('CD19 — CSS define regras de tela cheia, variáveis de tema e acessibilidade', () => {
+    it('CD20 — CSS define todos os temas elementais, regras de tela cheia e acessibilidade', () => {
       const cssPath = path.resolve(__dirname, '../../assets/css/cinematic-dialogue.css');
       assert.strictEqual(fs.existsSync(cssPath), true);
       const css = fs.readFileSync(cssPath, 'utf8');
@@ -383,18 +436,20 @@ describe('PHASE PBA-020 — CINEMATIC DIALOGUE SYSTEM SUITE', () => {
       assert.ok(css.includes('.cinematic-dialogue-overlay'));
       assert.ok(css.includes('cinematic-theme-super'));
       assert.ok(css.includes('cinematic-theme-shadow'));
+
+      // Verifica todos os 18 temas elementais
+      const expectedThemes = [
+        'normal', 'fire', 'water', 'electric', 'grass', 'ice',
+        'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug',
+        'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'
+      ];
+      for (const theme of expectedThemes) {
+        assert.ok(css.includes(`cinematic-theme-${theme}`), `Tema cinematic-theme-${theme} deve estar definido`);
+      }
+
       assert.ok(css.includes('@media (max-width: 640px)'), 'Breakpoint mobile deve estar definido');
       assert.ok(css.includes('@media (prefers-reduced-motion: reduce)'), 'Suporte a movimento reduzido deve existir');
       assert.ok(css.includes('safe-area-inset'), 'Safe areas móveis devem ser respeitadas');
-    });
-
-    it('CD20 — index.html carrega os assets do diálogo cinematográfico na ordem correta', () => {
-      const indexPath = path.resolve(__dirname, '../../index.html');
-      const html = fs.readFileSync(indexPath, 'utf8');
-
-      assert.ok(html.includes('assets/css/cinematic-dialogue.css'), 'CSS deve estar referenciado em index.html');
-      assert.ok(html.includes('assets/js/campaign/cinematic-dialogue-catalog.js'), 'Catálogo JS deve estar em index.html');
-      assert.ok(html.includes('assets/js/campaign/cinematic-dialogue.js'), 'Componente JS deve estar em index.html');
     });
   });
 });

@@ -24,12 +24,14 @@
         (typeof window !== 'undefined' && window.cinematicDialogue) ||
         (Cinematic && Cinematic.cinematicDialogue) || null;
 
-      if (cinematic && typeof cinematic.hasScene === 'function' && cinematic.hasScene(kind, 'INTRO')) {
+      const sceneKey = id || kind;
+
+      if (cinematic && typeof cinematic.hasScene === 'function' && cinematic.hasScene(sceneKey, 'INTRO')) {
         if (typeof window !== 'undefined' && typeof window.switchAppTab === 'function') {
           window.switchAppTab('battle');
         }
         try {
-          await cinematic.play(kind, 'INTRO');
+          await cinematic.play(sceneKey, 'INTRO');
         } catch (err) {
           console.warn('Cinematic intro dialogue failed to play:', err);
         }

@@ -390,6 +390,185 @@ body.cinematic-dialogue-active {
   color: #c084fc;
 }
 
+
+/* ==========================================================================
+   TEMAS ELEMENTAIS DOS 18 MESTRES DE TIPO
+   ========================================================================== */
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-dialogue-box {
+  border: 2px solid var(--theme-border, #64748b);
+  box-shadow: 0 0 24px var(--theme-glow, rgba(100, 116, 139, 0.35)), inset 0 0 16px rgba(0, 0, 0, 0.4);
+}
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-ornament {
+  color: var(--theme-ornament, var(--theme-border, #94a3b8));
+}
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-nameplate {
+  border: 1px solid var(--theme-border, #64748b);
+}
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-speaker-name {
+  color: var(--theme-name, #ffffff);
+  text-shadow: 0 0 10px var(--theme-glow, rgba(255, 255, 255, 0.5));
+}
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-speaker-title {
+  color: var(--theme-title, #cbd5e1);
+}
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-portrait-glow {
+  background: radial-gradient(circle, var(--theme-glow, rgba(255, 255, 255, 0.2)) 0%, transparent 75%);
+}
+
+[class*="cinematic-theme-"]:not(.cinematic-theme-super):not(.cinematic-theme-shadow) .cinematic-advance-indicator {
+  color: var(--theme-ornament, var(--theme-border, #94a3b8));
+}
+
+.cinematic-theme-normal {
+  --theme-border: #a8a77a;
+  --theme-glow: rgba(168, 167, 122, 0.45);
+  --theme-ornament: #d4d4aa;
+  --theme-name: #f5f5dc;
+  --theme-title: #e2e8f0;
+}
+
+.cinematic-theme-fire {
+  --theme-border: #f97316;
+  --theme-glow: rgba(249, 115, 22, 0.5);
+  --theme-ornament: #fb923c;
+  --theme-name: #ffedd5;
+  --theme-title: #fdba74;
+}
+
+.cinematic-theme-water {
+  --theme-border: #38bdf8;
+  --theme-glow: rgba(56, 189, 248, 0.5);
+  --theme-ornament: #7dd3fc;
+  --theme-name: #e0f2fe;
+  --theme-title: #a5f3fc;
+}
+
+.cinematic-theme-electric {
+  --theme-border: #facc15;
+  --theme-glow: rgba(250, 204, 21, 0.5);
+  --theme-ornament: #fde047;
+  --theme-name: #fef9c3;
+  --theme-title: #fed7aa;
+}
+
+.cinematic-theme-grass {
+  --theme-border: #4ade80;
+  --theme-glow: rgba(74, 222, 128, 0.5);
+  --theme-ornament: #86efac;
+  --theme-name: #f0fdf4;
+  --theme-title: #bbf7d0;
+}
+
+.cinematic-theme-ice {
+  --theme-border: #67e8f9;
+  --theme-glow: rgba(103, 232, 249, 0.5);
+  --theme-ornament: #a5f3fc;
+  --theme-name: #ecfeff;
+  --theme-title: #bae6fd;
+}
+
+.cinematic-theme-fighting {
+  --theme-border: #f87171;
+  --theme-glow: rgba(248, 113, 113, 0.5);
+  --theme-ornament: #fca5a5;
+  --theme-name: #fef2f2;
+  --theme-title: #fed7aa;
+}
+
+.cinematic-theme-poison {
+  --theme-border: #c084fc;
+  --theme-glow: rgba(192, 132, 252, 0.5);
+  --theme-ornament: #d8b4fe;
+  --theme-name: #faf5ff;
+  --theme-title: #e9d5ff;
+}
+
+.cinematic-theme-ground {
+  --theme-border: #e2bf65;
+  --theme-glow: rgba(226, 191, 101, 0.5);
+  --theme-ornament: #fcd34d;
+  --theme-name: #fef3c7;
+  --theme-title: #fed7aa;
+}
+
+.cinematic-theme-flying {
+  --theme-border: #818cf8;
+  --theme-glow: rgba(129, 140, 248, 0.5);
+  --theme-ornament: #a5b4fc;
+  --theme-name: #eef2ff;
+  --theme-title: #c7d2fe;
+}
+
+.cinematic-theme-psychic {
+  --theme-border: #f472b6;
+  --theme-glow: rgba(244, 114, 182, 0.5);
+  --theme-ornament: #f9a8d4;
+  --theme-name: #fdf2f8;
+  --theme-title: #fbcfe8;
+}
+
+.cinematic-theme-bug {
+  --theme-border: #a3e635;
+  --theme-glow: rgba(163, 230, 53, 0.5);
+  --theme-ornament: #bef264;
+  --theme-name: #f7fee7;
+  --theme-title: #d9f99d;
+}
+
+.cinematic-theme-rock {
+  --theme-border: #b6a136;
+  --theme-glow: rgba(182, 161, 54, 0.5);
+  --theme-ornament: #d4be48;
+  --theme-name: #fefce8;
+  --theme-title: #e2e8f0;
+}
+
+.cinematic-theme-ghost {
+  --theme-border: #9333ea;
+  --theme-glow: rgba(147, 51, 234, 0.5);
+  --theme-ornament: #a855f7;
+  --theme-name: #f3e8ff;
+  --theme-title: #d8b4fe;
+}
+
+.cinematic-theme-dragon {
+  --theme-border: #6366f1;
+  --theme-glow: rgba(99, 102, 241, 0.5);
+  --theme-ornament: #818cf8;
+  --theme-name: #e0e7ff;
+  --theme-title: #c7d2fe;
+}
+
+.cinematic-theme-dark {
+  --theme-border: #64748b;
+  --theme-glow: rgba(100, 116, 139, 0.5);
+  --theme-ornament: #94a3b8;
+  --theme-name: #f1f5f9;
+  --theme-title: #cbd5e1;
+}
+
+.cinematic-theme-steel {
+  --theme-border: #94a3b8;
+  --theme-glow: rgba(148, 163, 184, 0.5);
+  --theme-ornament: #cbd5e1;
+  --theme-name: #f8fafc;
+  --theme-title: #e2e8f0;
+}
+
+.cinematic-theme-fairy {
+  --theme-border: #f43f5e;
+  --theme-glow: rgba(244, 63, 94, 0.5);
+  --theme-ornament: #fb7185;
+  --theme-name: #fff1f2;
+  --theme-title: #fecdd3;
+}
+
 /* ==========================================================================
    ANIMAÇÕES
    ========================================================================== */

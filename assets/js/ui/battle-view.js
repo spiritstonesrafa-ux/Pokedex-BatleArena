@@ -907,15 +907,16 @@
         </div>
       `;
 
-      // PBA — Diálogo Cinematográfico Pós-Combate (Super e Shadow)
-      if (campaignBattle && (campaignMeta.kind === 'SUPER' || campaignMeta.kind === 'SHADOW')) {
+      // PBA — Diálogo Cinematográfico Pós-Combate (Mestres, Super e Shadow)
+      if (campaignBattle && campaignMeta) {
+        const sceneKey = campaignMeta.id || campaignMeta.kind;
         const moment = isVictory ? 'VICTORY' : 'DEFEAT';
         const battleId = this.sessionController?.currentBattleId || ('btl_' + Date.now());
         if (this._lastCinematicResultBattleId !== battleId) {
-          this._lastCinematicResultBattleId = battleId;
           const cinematic = (typeof window !== 'undefined' && window.cinematicDialogue) || null;
-          if (cinematic && typeof cinematic.hasScene === 'function' && cinematic.hasScene(campaignMeta.kind, moment)) {
-            cinematic.play(campaignMeta.kind, moment).catch(err => {
+          if (cinematic && typeof cinematic.hasScene === 'function' && cinematic.hasScene(sceneKey, moment)) {
+            this._lastCinematicResultBattleId = battleId;
+            cinematic.play(sceneKey, moment).catch(err => {
               console.warn('Cinematic result dialogue failed to play:', err);
             });
           }

@@ -29,35 +29,36 @@
 
     /**
      * Verifica se o confronto e momento possuem cena cinematográfica.
-     * @param {string} kind - 'SUPER' ou 'SHADOW'
+     * @param {string} keyOrKind - 'SUPER', 'SHADOW', 'master-fire', etc.
      * @param {string} moment - 'INTRO', 'VICTORY' ou 'DEFEAT'
      * @returns {boolean}
      */
-    hasScene(kind, moment) {
+    hasScene(keyOrKind, moment) {
       if (!this.catalog || typeof this.catalog.hasScene !== 'function') return false;
-      return this.catalog.hasScene(kind, moment);
+      return this.catalog.hasScene(keyOrKind, moment);
     }
 
     /**
      * Obtém a definição da cena declarativa.
-     * @param {string} kind
+     * @param {string} keyOrKind
      * @param {string} moment
      * @returns {Object|null}
      */
-    getScene(kind, moment) {
+    getScene(keyOrKind, moment) {
       if (!this.catalog || typeof this.catalog.getSceneDefinition !== 'function') return null;
-      return this.catalog.getSceneDefinition(kind, moment);
+      return this.catalog.getSceneDefinition(keyOrKind, moment);
     }
 
     /**
      * Executa a cena cinematográfica e retorna uma Promise que resolve ao término ou skip.
-     * @param {string} kind - 'SUPER' ou 'SHADOW'
+     * @param {string} keyOrKind - 'SUPER', 'SHADOW', 'master-fire', etc.
      * @param {string} moment - 'INTRO', 'VICTORY' ou 'DEFEAT'
      * @param {Object} [options]
      * @returns {Promise<boolean>}
      */
-    play(kind, moment, options = {}) {
-      const scene = this.getScene(kind, moment);
+    play(keyOrKind, moment, options = {}) {
+      const sceneKey = options.id || keyOrKind;
+      const scene = this.getScene(sceneKey, moment);
       if (!scene || !Array.isArray(scene.lines) || scene.lines.length === 0) {
         return Promise.resolve(false);
       }
@@ -92,8 +93,10 @@
         window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+      const themeClass = scene.theme ? `cinematic-theme-${scene.theme}` : 'cinematic-theme-super';
+      const typeClass = scene.type ? ` type-${scene.type}` : '';
       const overlay = document.createElement('div');
-      overlay.className = `cinematic-dialogue-overlay cinematic-theme-${scene.theme || 'super'}${isReducedMotion ? ' is-reduced-motion' : ''}`;
+      overlay.className = `cinematic-dialogue-overlay ${themeClass}${typeClass}${isReducedMotion ? ' is-reduced-motion' : ''}`;
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
       overlay.setAttribute('aria-label', `Cena cinematográfica com ${scene.trainerName}`);
