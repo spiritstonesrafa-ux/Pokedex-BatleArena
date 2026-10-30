@@ -1,0 +1,553 @@
+/**
+ * PBA — Estilos dos Diálogos Cinematográficos
+ * Inspirado na estética clássica de RPGs e Castlevania.
+ * Responsivo, mobile-first, sem rolagem desnecessária.
+ */
+
+:root {
+  --cinematic-z-index: 10000;
+  --cinematic-bg-dark: rgba(10, 12, 20, 0.94);
+  --cinematic-font-title: 'Cinzel', 'Trajan Pro', 'Georgia', serif;
+  --cinematic-font-body: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Tema Super (Dourado / Azul Heróico) */
+  --super-gold: #f59e0b;
+  --super-gold-glow: rgba(245, 158, 11, 0.35);
+  --super-blue: #38bdf8;
+  --super-border: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #38bdf8 100%);
+
+  /* Tema Shadow (Púrpura / Carmesim Sombrio) */
+  --shadow-purple: #c084fc;
+  --shadow-purple-glow: rgba(168, 85, 247, 0.45);
+  --shadow-crimson: #ef4444;
+  --shadow-border: linear-gradient(135deg, #a855f7 0%, #7e22ce 50%, #ef4444 100%);
+}
+
+/* Bloqueio de rolagem do body enquanto diálogo estiver ativo */
+body.cinematic-dialogue-active {
+  overflow: hidden !important;
+  touch-action: none;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Container Overlay Fullscreen */
+.cinematic-dialogue-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: var(--cinematic-z-index);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  contain: paint;
+  background-color: #030712;
+  color: #f8fafc;
+  font-family: var(--cinematic-font-body);
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 1;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+.cinematic-dialogue-overlay.is-closing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Cenário de Fundo (Backdrop) */
+.cinematic-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  filter: brightness(0.38) saturate(1.15) blur(1px);
+  transform: scale(1.04);
+  transition: transform 12s ease-out;
+  pointer-events: none;
+}
+
+.cinematic-backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 20%, rgba(3, 7, 18, 0.85) 90%);
+}
+
+.cinematic-ambient-particles {
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Botão Pular (Skip) */
+.cinematic-skip-btn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top) + 12px);
+  right: max(16px, env(safe-area-inset-right) + 12px);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.cinematic-skip-btn:hover,
+.cinematic-skip-btn:focus-visible {
+  color: #ffffff;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.cinematic-skip-btn:active {
+  transform: translateY(1px);
+}
+
+/* Layout da Cena */
+.cinematic-scene-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Retrato do Treinador */
+.cinematic-portrait-wrap {
+  position: absolute;
+  left: 6%;
+  bottom: 180px;
+  height: min(65vh, 620px);
+  width: auto;
+  aspect-ratio: 4 / 5;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  animation: cinematicPortraitSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  z-index: 2;
+}
+
+.cinematic-portrait-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.cinematic-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.85));
+}
+
+.cinematic-portrait-glow {
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Fallback de Imagem */
+.cinematic-portrait-fallback {
+  width: 220px;
+  height: 280px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.fallback-initials {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #f1f5f9;
+}
+
+.fallback-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* Caixa de Diálogo (Castlevania Style) */
+.cinematic-dialogue-box {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  min-height: 150px;
+  padding: 24px 32px 28px 32px;
+  background: var(--cinematic-bg-dark);
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 5;
+  box-sizing: border-box;
+  cursor: pointer;
+  animation: cinematicBoxSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Molduras e Ornamentos Góticos */
+.cinematic-ornament {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.cinematic-ornament--top-left {
+  top: 4px;
+  left: 4px;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+}
+
+.cinematic-ornament--top-right {
+  top: 4px;
+  right: 4px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.cinematic-ornament--bottom-left {
+  bottom: 4px;
+  left: 4px;
+  border-bottom: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+}
+
+.cinematic-ornament--bottom-right {
+  bottom: 4px;
+  right: 4px;
+  border-bottom: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+/* Placa com Nome do Personagem */
+.cinematic-nameplate {
+  position: absolute;
+  top: -20px;
+  left: 28px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 20px;
+  background: #090b14;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+}
+
+.cinematic-speaker-name {
+  font-family: var(--cinematic-font-title);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cinematic-speaker-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+/* Área de Texto */
+.cinematic-text-wrap {
+  position: relative;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cinematic-text {
+  margin: 8px 0 0 0;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: #f1f5f9;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* Indicador de Avanço (Pulsante) */
+.cinematic-advance-indicator {
+  align-self: flex-end;
+  opacity: 0;
+  transform: translateY(0);
+  transition: opacity 0.25s ease;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.cinematic-advance-indicator.is-visible {
+  opacity: 1;
+  animation: cinematicBounce 1.2s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   TEMAS ARTÍSTICOS: SUPER E SHADOW
+   ========================================================================== */
+
+/* Tema SUPER */
+.cinematic-theme-super .cinematic-dialogue-box {
+  border: 2px solid #eab308;
+  border-image: var(--super-border) 1;
+  box-shadow: 0 0 24px var(--super-gold-glow), inset 0 0 18px rgba(245, 158, 11, 0.08);
+}
+
+.cinematic-theme-super .cinematic-ornament {
+  color: #fbbf24;
+}
+
+.cinematic-theme-super .cinematic-nameplate {
+  border: 1px solid #fbbf24;
+}
+
+.cinematic-theme-super .cinematic-speaker-name {
+  color: #fef08a;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+}
+
+.cinematic-theme-super .cinematic-speaker-title {
+  color: #7dd3fc;
+}
+
+.cinematic-theme-super .cinematic-portrait-glow {
+  background: radial-gradient(circle, var(--super-gold-glow) 0%, rgba(56, 189, 248, 0.15) 60%, transparent 80%);
+}
+
+.cinematic-theme-super .cinematic-advance-indicator {
+  color: #fbbf24;
+}
+
+/* Tema SHADOW */
+.cinematic-theme-shadow .cinematic-dialogue-box {
+  border: 2px solid #a855f7;
+  border-image: var(--shadow-border) 1;
+  box-shadow: 0 0 28px var(--shadow-purple-glow), inset 0 0 20px rgba(168, 85, 247, 0.12);
+}
+
+.cinematic-theme-shadow .cinematic-ornament {
+  color: #c084fc;
+}
+
+.cinematic-theme-shadow .cinematic-nameplate {
+  border: 1px solid #a855f7;
+}
+
+.cinematic-theme-shadow .cinematic-speaker-name {
+  color: #e9d5ff;
+  text-shadow: 0 0 12px rgba(192, 132, 252, 0.7);
+}
+
+.cinematic-theme-shadow .cinematic-speaker-title {
+  color: #fca5a5;
+}
+
+.cinematic-theme-shadow .cinematic-portrait-glow {
+  background: radial-gradient(circle, var(--shadow-purple-glow) 0%, rgba(239, 68, 68, 0.2) 60%, transparent 80%);
+}
+
+.cinematic-theme-shadow .cinematic-advance-indicator {
+  color: #c084fc;
+}
+
+/* ==========================================================================
+   ANIMAÇÕES
+   ========================================================================== */
+
+@keyframes cinematicPortraitSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cinematicBoxSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cinematicBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE E MOBILE
+   ========================================================================== */
+
+/* Telas médias (Tablets / Telas pequenas) */
+@media (max-width: 900px) {
+  .cinematic-portrait-wrap {
+    left: 4%;
+    bottom: 170px;
+    height: min(52vh, 480px);
+  }
+
+  .cinematic-dialogue-box {
+    padding: 20px 24px 22px 24px;
+  }
+
+  .cinematic-text {
+    font-size: 1.05rem;
+  }
+}
+
+/* Telas Mobile (max-width: 640px) */
+@media (max-width: 640px) {
+  .cinematic-scene-container {
+    padding: 12px;
+    justify-content: flex-end;
+  }
+
+  /* Retrato centralizado acima da caixa de diálogo */
+  .cinematic-portrait-wrap {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    margin-bottom: 14px;
+    height: min(40vh, 340px);
+    max-width: 82%;
+    animation: cinematicPortraitMobileIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .cinematic-portrait-img {
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.9));
+  }
+
+  /* Caixa de diálogo na base com altura contida sem rolagem */
+  .cinematic-dialogue-box {
+    width: 100%;
+    min-height: 125px;
+    padding: 18px 16px 14px 16px;
+    border-radius: 6px;
+  }
+
+  .cinematic-nameplate {
+    top: -16px;
+    left: 14px;
+    padding: 4px 14px;
+    gap: 8px;
+  }
+
+  .cinematic-speaker-name {
+    font-size: 0.92rem;
+  }
+
+  .cinematic-speaker-title {
+    font-size: 0.7rem;
+    display: none; /* Oculta subtítulo em telas muito estreitas para legibilidade do nome */
+  }
+
+  .cinematic-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .cinematic-skip-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Telas muito baixas (Landscape mobile ou aparelhos curtos) */
+@media (max-height: 520px) {
+  .cinematic-portrait-wrap {
+    height: min(32vh, 180px);
+    margin-bottom: 6px;
+  }
+
+  .cinematic-dialogue-box {
+    min-height: 95px;
+    padding: 12px 14px 10px 14px;
+  }
+
+  .cinematic-text {
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+}
+
+@keyframes cinematicPortraitMobileIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   ACESSIBILIDADE: PREFERS-REDUCED-MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-dialogue-overlay,
+  .cinematic-portrait-wrap,
+  .cinematic-dialogue-box,
+  .cinematic-skip-btn,
+  .cinematic-backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .cinematic-advance-indicator.is-visible {
+    animation: none !important;
+  }
+}
+

@@ -66,6 +66,7 @@
       this.activeModalCanClose = true;
       this.savedScrollY = 0;
       this.modalTrigger = null;
+      this._lastCinematicResultBattleId = null;
       this.keydownHandler = (event) => {
         if (!this.activeModal) return;
         if (event.key === 'Escape' && this.activeModalCanClose) { this.closeModal(); return; }
@@ -905,6 +906,21 @@
           </div>
         </div>
       `;
+
+      // PBA — Diálogo Cinematográfico Pós-Combate (Super e Shadow)
+      if (campaignBattle && (campaignMeta.kind === 'SUPER' || campaignMeta.kind === 'SHADOW')) {
+        const moment = isVictory ? 'VICTORY' : 'DEFEAT';
+        const battleId = this.sessionController?.currentBattleId || ('btl_' + Date.now());
+        if (this._lastCinematicResultBattleId !== battleId) {
+          this._lastCinematicResultBattleId = battleId;
+          const cinematic = (typeof window !== 'undefined' && window.cinematicDialogue) || null;
+          if (cinematic && typeof cinematic.hasScene === 'function' && cinematic.hasScene(campaignMeta.kind, moment)) {
+            cinematic.play(campaignMeta.kind, moment).catch(err => {
+              console.warn('Cinematic result dialogue failed to play:', err);
+            });
+          }
+        }
+      }
     }
 
     /**
