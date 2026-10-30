@@ -10,7 +10,7 @@
 
 (function () {
   const battleConstants = typeof module !== 'undefined' && module.exports
-    ? require('../battle/battle-constants.js') : (typeof window !== 'undefined' ? window.PBABattle : {});
+    ? require('../battle/battle-constants.js') : (typeof window !== 'undefined' ? (window.PBABattle?.BattleConstants || window.PBABattle || {}) : {});
   const BATTLE_UI_STATES = Object.freeze({
     NO_TEAM: 'NO_TEAM',
     READY: 'READY',
@@ -378,7 +378,10 @@
     applyStatStageChange: battleConstants.applyStatStageChange,
     resetStatStages: battleConstants.resetStatStages,
     validateMoveData,
-    isMechanicallySupportedMove
+    isMechanicallySupportedMove,
+    getSecondaryEffect: battleConstants.getSecondaryEffect,
+    isStatusConditionImmune: battleConstants.isStatusConditionImmune,
+    isEligibleForStatusCondition: battleConstants.isEligibleForStatusCondition
   };
 
   if (typeof module !== 'undefined' && module.exports) {

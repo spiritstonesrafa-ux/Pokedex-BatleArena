@@ -330,6 +330,7 @@
           maxPp: Number(move.pp), currentPp: Number(move.pp),
           damageClass: String(move.damageClass),
           ...(move.statusEffect ? { statusEffect: String(move.statusEffect) } : {}),
+          ...((move.secondaryEffect || (battleConstants?.getSecondaryEffect && battleConstants.getSecondaryEffect(move))) ? { secondaryEffect: { ...(move.secondaryEffect || battleConstants.getSecondaryEffect(move)) } } : {}),
           ...(move.statBoosts || (battleConstants?.getStatBoosts && battleConstants.getStatBoosts(move))
             ? { statBoosts: { ...(move.statBoosts || battleConstants.getStatBoosts(move)) } } : {}),
           ...(move.selfStatDrops || (battleConstants?.getSelfStatDrops && battleConstants.getSelfStatDrops(move))
@@ -483,7 +484,8 @@
             pp,
             maxPp: pp,
             currentPp: pp,
-            damageClass: dmgClass
+            damageClass: dmgClass,
+            ...(battleConstants?.getSecondaryEffect && battleConstants.getSecondaryEffect({ id: moveId, name: moveName }) ? { secondaryEffect: { ...battleConstants.getSecondaryEffect({ id: moveId, name: moveName }) } } : {})
           });
         }
 

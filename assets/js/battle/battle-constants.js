@@ -168,6 +168,78 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const SECONDARY_EFFECT_MOVES = Object.freeze({
+    'thunderbolt': Object.freeze({
+      id: 85,
+      name: 'thunderbolt',
+      statusCondition: 'paralysis',
+      chance: 10,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'flamethrower': Object.freeze({
+      id: 53,
+      name: 'flamethrower',
+      statusCondition: 'burn',
+      chance: 10,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'sludge-bomb': Object.freeze({
+      id: 188,
+      name: 'sludge-bomb',
+      statusCondition: 'poison',
+      chance: 30,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'poison-jab': Object.freeze({
+      id: 398,
+      name: 'poison-jab',
+      statusCondition: 'poison',
+      chance: 30,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'scald': Object.freeze({
+      id: 503,
+      name: 'scald',
+      statusCondition: 'burn',
+      chance: 30,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
+    })
+  });
+
+  const SECONDARY_EFFECT_MOVES_BY_ID = Object.freeze(
+    Object.fromEntries(Object.values(SECONDARY_EFFECT_MOVES).map(m => [m.id, m]))
+  );
+
+  function getSecondaryEffect(move) {
+    if (!move) return null;
+    const rawId = move.id !== undefined && move.id !== null ? Number(move.id) : null;
+    const rawName = move.name ? String(move.name).trim().toLowerCase() : (typeof move === 'string' ? move.trim().toLowerCase() : null);
+    const normalizedName = rawName ? (MOVE_ALIASES[rawName] || rawName) : null;
+
+    if (rawId && SECONDARY_EFFECT_MOVES_BY_ID[rawId]) {
+      return SECONDARY_EFFECT_MOVES_BY_ID[rawId];
+    }
+    if (normalizedName && SECONDARY_EFFECT_MOVES[normalizedName]) {
+      return SECONDARY_EFFECT_MOVES[normalizedName];
+    }
+    return null;
+  }
+
   function createDefaultStatStages() {
     return {
       attack: 0,
@@ -267,20 +339,23 @@
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     // --- FULL SUPPORT (Efeitos integralmente implementados e testados) ---
     14: Object.freeze({ id: 14, name: 'swords-dance', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ attack: 2 }) }),
+    53: Object.freeze({ id: 53, name: 'flamethrower', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['flamethrower'] }),
     71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
+    85: Object.freeze({ id: 85, name: 'thunderbolt', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['thunderbolt'] }),
     86: Object.freeze({ id: 86, name: 'thunder-wave', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     98: Object.freeze({ id: 98, name: 'quick-attack', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     141: Object.freeze({ id: 141, name: 'leech-life', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     183: Object.freeze({ id: 183, name: 'mach-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
+    188: Object.freeze({ id: 188, name: 'sludge-bomb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['sludge-bomb'] }),
     202: Object.freeze({ id: 202, name: 'giga-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     245: Object.freeze({ id: 245, name: 'extreme-speed', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 2 }),
     261: Object.freeze({ id: 261, name: 'will-o-wisp', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     315: Object.freeze({ id: 315, name: 'overheat', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
     347: Object.freeze({ id: 347, name: 'calm-mind', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 }) }),
     370: Object.freeze({ id: 370, name: 'close-combat', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ defense: -1, specialDefense: -1 }) }),
-    398: Object.freeze({ id: 398, name: 'poison-jab', supportLevel: 'PARTIAL', requiredMechanics: ['PHYSICAL_DAMAGE'], knownPending: ['SECONDARY_EFFECTS_PHASE_P4'], blockedReason: null, priority: 0 }),
+    398: Object.freeze({ id: 398, name: 'poison-jab', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['poison-jab'] }),
     409: Object.freeze({ id: 409, name: 'drain-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     410: Object.freeze({ id: 410, name: 'vacuum-wave', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     418: Object.freeze({ id: 418, name: 'bullet-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
@@ -289,6 +364,7 @@
     434: Object.freeze({ id: 434, name: 'draco-meteor', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
     453: Object.freeze({ id: 453, name: 'aqua-jet', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     473: Object.freeze({ id: 473, name: 'psyshock', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'PHYSICAL_DEFENSE_TARGET'], knownPending: [], blockedReason: null, priority: 0, targetsDefenseWithSpAtk: true }),
+    503: Object.freeze({ id: 503, name: 'scald', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: ['FREEZE_THAW_INTERACTION_PHASE_P4'], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['scald'] }),
     509: Object.freeze({ id: 509, name: 'circle-throw', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'NEGATIVE_PRIORITY', 'FORCED_SWITCH'], knownPending: [], blockedReason: null, priority: -6, isForcedSwitch: true }),
     525: Object.freeze({ id: 525, name: 'dragon-tail', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'NEGATIVE_PRIORITY', 'FORCED_SWITCH'], knownPending: [], blockedReason: null, priority: -6, isForcedSwitch: true }),
     532: Object.freeze({ id: 532, name: 'horn-leech', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
@@ -699,7 +775,8 @@
         recoilRatio: def.recoilRatio || 0,
         isForcedSwitch: Boolean(def.isForcedSwitch),
         statBoosts: def.statBoosts ? { ...def.statBoosts } : null,
-        selfStatDrops: def.selfStatDrops ? { ...def.selfStatDrops } : null
+        selfStatDrops: def.selfStatDrops ? { ...def.selfStatDrops } : null,
+        secondaryEffect: def.secondaryEffect ? { ...def.secondaryEffect } : (getSecondaryEffect(def) ? { ...getSecondaryEffect(def) } : null)
       });
     }
 
@@ -723,7 +800,8 @@
         recoilRatio: getRecoilRatio({ name: catEntry.name }),
         isForcedSwitch: isForcedSwitchMove({ name: catEntry.name }),
         statBoosts: null,
-        selfStatDrops: getSelfStatDrops({ name: catEntry.name }) ? { ...getSelfStatDrops({ name: catEntry.name }) } : null
+        selfStatDrops: getSelfStatDrops({ name: catEntry.name }) ? { ...getSelfStatDrops({ name: catEntry.name }) } : null,
+        secondaryEffect: getSecondaryEffect(catEntry) ? { ...getSecondaryEffect(catEntry) } : null
       });
     }
 
@@ -964,17 +1042,40 @@
     return canonical;
   }
 
+  function isStatusConditionImmune(statusCondition, types) {
+    if (!Array.isArray(types) || !statusCondition) return false;
+    const normalizedStatus = String(statusCondition).trim().toLowerCase();
+    switch (normalizedStatus) {
+      case 'poison':
+        return types.includes('poison') || types.includes('steel');
+      case 'burn':
+        return types.includes('fire');
+      case 'paralysis':
+        return types.includes('electric');
+      default:
+        return false;
+    }
+  }
+
+  function isEligibleForStatusCondition(target, statusCondition) {
+    if (!target || typeof target !== 'object') return false;
+    if (Number(target.currentHp) <= 0) return false;
+    if (target.statusCondition) return false;
+    const types = Array.isArray(target.types) ? target.types : (target.type ? [target.type] : []);
+    return !isStatusConditionImmune(statusCondition, types);
+  }
+
   function isPoisonPowderImmune(types) {
-    return Array.isArray(types) && types.some(type =>
-      type === 'poison' || type === 'steel' || type === 'grass');
+    return Array.isArray(types) && (isStatusConditionImmune('poison', types) || types.includes('grass'));
   }
 
   function isStatusMoveImmune(move, types) {
-    if (!Array.isArray(types)) return false;
-    switch (move?.name) {
+    if (!Array.isArray(types) || !move) return false;
+    const name = String(move?.name || '').trim().toLowerCase();
+    switch (name) {
       case 'poison-powder': return isPoisonPowderImmune(types);
-      case 'will-o-wisp': return types.includes('fire');
-      case 'thunder-wave': return types.includes('electric') || types.includes('ground');
+      case 'will-o-wisp': return isStatusConditionImmune('burn', types);
+      case 'thunder-wave': return isStatusConditionImmune('paralysis', types) || types.includes('ground');
       default: return false;
     }
   }
@@ -1099,7 +1200,12 @@
     STAT_BOOST_MOVES,
     SELF_STAT_DROP_MOVES,
     getStatBoosts,
-    getSelfStatDrops
+    getSelfStatDrops,
+    SECONDARY_EFFECT_MOVES,
+    SECONDARY_EFFECT_MOVES_BY_ID,
+    getSecondaryEffect,
+    isStatusConditionImmune,
+    isEligibleForStatusCondition
   });
 
   // Suporte universal (Node.js & Browser)

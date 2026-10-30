@@ -40,6 +40,7 @@
       this.accuracySequence = Array.isArray(options.accuracySequence) ? [...options.accuracySequence] : null;
       this.damageSequence = Array.isArray(options.damageSequence) ? [...options.damageSequence] : null;
       this.statusSequence = Array.isArray(options.statusSequence) ? [...options.statusSequence] : null;
+      this.secondaryEffectSequence = Array.isArray(options.secondaryEffectSequence) ? [...options.secondaryEffectSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
 
@@ -89,6 +90,14 @@
      * @param {number} [count=3] - Quantidade de oponentes a selecionar.
      * @returns {number[]} Array com `count` IDs únicos.
      */
+    rollSecondaryEffect() {
+      if (this.secondaryEffectSequence && this.secondaryEffectSequence.length > 0) {
+        const next = Math.floor(Number(this.secondaryEffectSequence.shift()));
+        return Math.max(1, Math.min(100, next));
+      }
+      return Math.floor(this.rng() * 100) + 1;
+    }
+
     pickOpponents(pool, count = 3) {
       if (!Array.isArray(pool) || pool.length === 0) {
         throw new Error('Pool de oponentes inválida ou vazia.');
@@ -141,6 +150,10 @@
 
     setStatusSequence(seq) {
       this.statusSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setSecondaryEffectSequence(seq) {
+      this.secondaryEffectSequence = Array.isArray(seq) ? [...seq] : null;
     }
 
     setOpponentSequence(seq) {

@@ -91,7 +91,11 @@
           recoilRatio: 0,
           expectedRecoil: 0,
           wouldRecoilKo: false,
-          selfStatDrops: null
+          selfStatDrops: null,
+          secondaryEffect: null,
+          statusChance: 0,
+          isEligibleForSecondary: false,
+          expectedStatusBenefit: 0
         };
       }
 
@@ -182,6 +186,44 @@
       const wouldRecoilKo = recoilRatio > 0 && expectedRecoil >= (Number(attacker.currentHp) || 0);
       const priority = constants?.getMovePriority?.(move) || 0;
 
+      // 8. Avaliação de Efeito Secundário Canônico (Secondary Effects: P4)
+      const secEffect = constants?.getSecondaryEffect ? constants.getSecondaryEffect(move) : null;
+      let expectedStatusChance = 0;
+      let expectedStatusBenefit = 0;
+      let isEligibleForSecondary = false;
+
+      if (secEffect && typeMultiplier > 0) {
+        isEligibleForSecondary = Boolean(
+          constants.isEligibleForStatusCondition
+            ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
+            : (!defender.statusCondition && defenderHp > 0)
+        );
+
+        if (isEligibleForSecondary && !guaranteedKo) {
+          const rawChance = Number(secEffect.chance) || 0;
+          expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+
+          const defMaxHp = Number(defender.maxHp) || defenderHp || 1;
+          if (secEffect.statusCondition === 'poison') {
+            const tick = Math.max(1, Math.floor(defMaxHp / 8));
+            const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
+            expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining));
+          } else if (secEffect.statusCondition === 'burn') {
+            const tick = Math.max(1, Math.floor(defMaxHp / 16));
+            const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
+            const hasPhysicalThreat = Array.isArray(defender.moves) && defender.moves.some(m => (m.damageClass || m.damage_class?.name) === 'physical');
+            const disruptionBonus = hasPhysicalThreat ? 15 : 0;
+            expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining + disruptionBonus));
+          } else if (secEffect.statusCondition === 'paralysis') {
+            const defSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'speed') : defender.speed) || 1;
+            const atkSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'speed') : attacker.speed) || 1;
+            const speedAdvantage = defSpeed > atkSpeed ? 15 : 5;
+            const fullParalysisDisruption = 15;
+            expectedStatusBenefit = Math.round(expectedStatusChance * (speedAdvantage + fullParalysisDisruption));
+          }
+        }
+      }
+
       return {
         moveId: move.id,
         moveName: move.name || 'unknown',
@@ -211,7 +253,11 @@
         expectedRecoil,
         wouldRecoilKo,
         statBoosts: null,
-        selfStatDrops: move.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(move)) || null
+        selfStatDrops: move.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(move)) || null,
+        secondaryEffect: secEffect ? { ...secEffect } : null,
+        statusChance: expectedStatusChance,
+        isEligibleForSecondary,
+        expectedStatusBenefit
       };
     }
 

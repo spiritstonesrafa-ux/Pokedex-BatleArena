@@ -20,6 +20,7 @@
 
 (function () {
   let sessionConstants;
+  let battleConstants;
   let randomSourceModule;
   let hydratorModule;
   let opponentFactoryModule;
@@ -34,6 +35,7 @@
 
   if (typeof module !== 'undefined' && module.exports) {
     sessionConstants = require('./battle-session-constants.js');
+    battleConstants = require('../battle/battle-constants.js');
     randomSourceModule = require('./battle-random-source.js');
     hydratorModule = require('./battle-team-hydrator.js');
     opponentFactoryModule = require('./battle-opponent-factory.js');
@@ -51,6 +53,7 @@
     campaignMoveOptions = require('../campaign/campaign-move-options.js');
   } else if (typeof window !== 'undefined') {
     sessionConstants = window.PBABattleSession || {};
+    battleConstants = (window.PBABattle && window.PBABattle.BattleConstants) || window.PBABattle || {};
     randomSourceModule = window.PBABattleSession || {};
     hydratorModule = window.PBABattleSession || {};
     opponentFactoryModule = window.PBABattleSession || {};
@@ -400,6 +403,9 @@
         const playerDamageRoll = (typeof this.randomSource.rollDamage === 'function')
           ? this.randomSource.rollDamage()
           : 100;
+        const playerSecondaryEffectRoll = (typeof this.randomSource.rollSecondaryEffect === 'function')
+          ? this.randomSource.rollSecondaryEffect()
+          : 100;
 
         // 2. Consulta ação da SMART AI para o adversário
         const aiDecision = this.ai.chooseAction(this.battleState, 'enemy', { strategy: 'SMART' });
@@ -411,24 +417,41 @@
           const enemyDamageRoll = (typeof this.randomSource.rollDamage === 'function')
             ? this.randomSource.rollDamage()
             : 100;
+          const enemySecondaryEffectRoll = (typeof this.randomSource.rollSecondaryEffect === 'function')
+            ? this.randomSource.rollSecondaryEffect()
+            : 100;
           enemyAction = {
             ...enemyAction,
             accuracyRoll: enemyAccuracyRoll,
-            damageRoll: enemyDamageRoll
+            damageRoll: enemyDamageRoll,
+            secondaryEffectRoll: enemySecondaryEffectRoll
           };
         }
 
-        // Inclui quem pode ser paralisado antes de agir no próprio turno.
+        // Determina quem necessita de rolagem de impedimento por paralisia no turno.
+        // Cobre combatentes já paralisados ou que possam sofrer paralisia antes de agir.
         const activePlayer = this.engine.getActiveCombatant(this.battleState, 'player');
         const activeEnemy = this.engine.getActiveCombatant(this.battleState, 'enemy');
         const playerMove = activePlayer.moves.find(move => move.id === Number(moveId));
         const enemyMove = enemyAction?.type === 'MOVE'
           ? activeEnemy.moves.find(move => move.id === Number(enemyAction.moveId)) : null;
-        const playerNeedsStatusRoll = activePlayer.statusCondition === 'paralysis' ||
-          enemyMove?.statusEffect === 'paralysis';
-        const enemyNeedsStatusRoll = enemyAction?.type === 'MOVE' &&
-          (activeEnemy.statusCondition === 'paralysis' || playerMove?.statusEffect === 'paralysis');
-        if (enemyNeedsStatusRoll) enemyAction.statusRoll = this.randomSource.rollStatus();
+
+        const getSec = (battleConstants && typeof battleConstants.getSecondaryEffect === 'function')
+          ? battleConstants.getSecondaryEffect
+          : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
+
+        const playerCanParalyze = playerMove?.statusEffect === 'paralysis' ||
+          Boolean(getSec && getSec(playerMove)?.statusCondition === 'paralysis');
+        const enemyCanParalyze = enemyMove?.statusEffect === 'paralysis' ||
+          Boolean(getSec && getSec(enemyMove)?.statusCondition === 'paralysis');
+
+        const playerNeedsStatusRoll = activePlayer.statusCondition === 'paralysis' || enemyCanParalyze;
+        const enemyNeedsStatusRoll = enemyAction?.type === 'MOVE' && (activeEnemy.statusCondition === 'paralysis' || playerCanParalyze);
+
+        const playerStatusRoll = playerNeedsStatusRoll ? this.randomSource.rollStatus() : undefined;
+        if (enemyNeedsStatusRoll) {
+          enemyAction.statusRoll = this.randomSource.rollStatus();
+        }
 
         // 3. Resolve o turno de forma pura no BattleEngine
         const turnActions = {
@@ -437,7 +460,8 @@
             moveId: Number(moveId),
             accuracyRoll: playerAccuracyRoll,
             damageRoll: playerDamageRoll,
-            ...(playerNeedsStatusRoll ? { statusRoll: this.randomSource.rollStatus() } : {})
+            secondaryEffectRoll: playerSecondaryEffectRoll,
+            ...(playerStatusRoll !== undefined ? { statusRoll: playerStatusRoll } : {})
           },
           enemy: enemyAction
         };
@@ -481,10 +505,14 @@
           const enemyDamageRoll = (typeof this.randomSource.rollDamage === 'function')
             ? this.randomSource.rollDamage()
             : 100;
+          const enemySecondaryEffectRoll = (typeof this.randomSource.rollSecondaryEffect === 'function')
+            ? this.randomSource.rollSecondaryEffect()
+            : 100;
           enemyAction = {
             ...enemyAction,
             accuracyRoll: enemyAccuracyRoll,
-            damageRoll: enemyDamageRoll
+            damageRoll: enemyDamageRoll,
+            secondaryEffectRoll: enemySecondaryEffectRoll
           };
           const activeEnemy = this.engine.getActiveCombatant(this.battleState, 'enemy');
           if (activeEnemy.statusCondition === 'paralysis') {

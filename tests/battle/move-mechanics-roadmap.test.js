@@ -571,7 +571,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(poisonJab, 'Poison Jab deve ser encontrado por ID 398');
     assert.equal(poisonJab.id, 398);
     assert.equal(poisonJab.name, 'poison-jab');
-    assert.equal(poisonJab.supportLevel, MOVE_SUPPORT_LEVEL.PARTIAL, 'Poison Jab deve ser PARTIAL pois o efeito secundário de veneno está pendente');
+    assert.equal(poisonJab.supportLevel, MOVE_SUPPORT_LEVEL.FULL, 'Poison Jab é FULL pois o efeito secundário de veneno está implementado no ciclo P4');
     assert.equal(poisonJab.priority, 0);
 
     // Consulta por nome e objeto
@@ -787,8 +787,8 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(poisonJab);
     assert.equal(poisonJab.id, 398);
     assert.equal(poisonJab.name, 'poison-jab');
-    assert.equal(poisonJab.supportLevel, MOVE_SUPPORT_LEVEL.PARTIAL, 'Poison Jab com efeito de envenenamento pendente deve ser PARTIAL');
-    assert.ok(poisonJab.knownPending.includes('SECONDARY_EFFECTS_PHASE_P4'));
+    assert.equal(poisonJab.supportLevel, MOVE_SUPPORT_LEVEL.FULL, 'Poison Jab é FULL na Fase P4 com efeito secundário de veneno implementado');
+    assert.deepEqual(poisonJab.knownPending, []);
 
     // Invariante do Roadmap: nenhum golpe FULL pode conter mecânicas pendentes (knownPending deve ser vazio)
     for (const [id, def] of Object.entries(CANONICAL_MOVE_DEFINITIONS)) {

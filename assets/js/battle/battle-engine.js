@@ -218,7 +218,9 @@
           ...(normalizedMove.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(normalizedMove))
             ? { statBoosts: { ...(normalizedMove.statBoosts || constants.getStatBoosts(normalizedMove)) } } : {}),
           ...(normalizedMove.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(normalizedMove))
-            ? { selfStatDrops: { ...(normalizedMove.selfStatDrops || constants.getSelfStatDrops(normalizedMove)) } } : {})
+            ? { selfStatDrops: { ...(normalizedMove.selfStatDrops || constants.getSelfStatDrops(normalizedMove)) } } : {}),
+          ...(constants?.getSecondaryEffect && constants.getSecondaryEffect(normalizedMove)
+            ? { secondaryEffect: constants.getSecondaryEffect(normalizedMove) } : {})
         });
       }
 
@@ -233,7 +235,7 @@
         specialAttack: Math.floor(specialAttack),
         specialDefense: Math.floor(specialDefense),
         speed: Math.floor(speed),
-        statusCondition: null,
+        statusCondition: (raw.statusCondition && ['poison', 'burn', 'paralysis'].includes(raw.statusCondition)) ? raw.statusCondition : null,
         moves: normalizedMoves,
         statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
       };
@@ -666,6 +668,15 @@
         statusRoll = roll;
       }
 
+      let secondaryEffectRoll = 100; // Padrão defensivo de retrocompatibilidade: não aplica efeito secundário quando ausente
+      if (action && action.secondaryEffectRoll !== undefined) {
+        const roll = Number(action.secondaryEffectRoll);
+        if (!Number.isInteger(roll) || roll < 1 || roll > 100) {
+          throw new Error(`Roll de efeito secundário inválido: ${action.secondaryEffectRoll}. Deve ser um inteiro entre 1 e 100.`);
+        }
+        secondaryEffectRoll = roll;
+      }
+
       // Evento de início de ação
       events.push({
         type: BATTLE_EVENTS.ACTION_STARTED,
@@ -950,6 +961,28 @@
             appliedDelta: report.appliedDelta,
             finalStage: report.finalStage,
             blockedReason: report.blockedReason
+          });
+        }
+      }
+
+      // 10C. Resolução de Efeitos Secundários de Status (Secondary Status Effects: P4)
+      const secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
+      if (secEffect && effectiveMultiplier > 0 && currentHp > 0) {
+        const canApply = constants.isEligibleForStatusCondition
+          ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
+          : (!defender.statusCondition && currentHp > 0);
+        if (canApply && secondaryEffectRoll <= secEffect.chance) {
+          defender.statusCondition = secEffect.statusCondition;
+          events.push({
+            type: BATTLE_EVENTS.STATUS_APPLIED,
+            source: attackerRole,
+            target: defenderRole,
+            pokemonName: defender.name,
+            statusCondition: secEffect.statusCondition,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            secondaryEffectRoll,
+            chance: secEffect.chance
           });
         }
       }

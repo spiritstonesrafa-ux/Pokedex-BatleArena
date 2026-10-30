@@ -307,6 +307,11 @@
           score += 15 * evalData.priority;
         }
 
+        // Bônus tático para efeito secundário de status ponderado por probabilidade e contexto
+        if (evalData.expectedStatusBenefit > 0 && !evalData.guaranteedKo && evalData.typeMultiplier > 0) {
+          score += evalData.expectedStatusBenefit;
+        }
+
         // Anulação estrita de golpes imunes
         if (evalData.typeMultiplier === 0) {
           score = 0;
@@ -315,6 +320,7 @@
         return {
           ...evalData,
           statusEffect: m.statusEffect || null,
+          secondaryEffect: evalData.secondaryEffect || null,
           statBoosts: evalData.statBoosts || m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m)) || null,
           loadoutIndex: m.loadoutIndex,
           score
