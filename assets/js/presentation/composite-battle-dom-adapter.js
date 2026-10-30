@@ -113,7 +113,9 @@
             );
           }
           if (this.audioController) {
-            introTasks.push(this.audioController.startBattleMusic());
+            introTasks.push(command.shadowFinalStand
+              ? this.audioController.startShadowBossTheme()
+              : this.audioController.startBattleMusic());
           }
           await Promise.all(introTasks);
           break;
@@ -285,6 +287,9 @@
         }
 
         case PRESENTATION_COMMANDS.BATTLE_RESULT: {
+          if (this.audioController && typeof this.audioController.stopShadowBossTheme === 'function') {
+            await this.audioController.stopShadowBossTheme();
+          }
           const resultTasks = [];
           if (command.winner && (command.winner === 'player' || command.winner === 'enemy')) {
             if (this.pokemonController) {

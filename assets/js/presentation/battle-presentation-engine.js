@@ -135,21 +135,40 @@
      * @throws {Error} Se chamado concorrentemente ou se a entrada for inválida.
      */
     async play(events, context = null) {
+      if (this.status === PRESENTATION_STATUS.PLAYING) {
+        throw new Error('CONCURRENT_PLAYBACK_REJECTED: PresentationEngine já está executando uma timeline ativa.');
+      }
+      if (!Array.isArray(events)) {
+        throw new Error('INVALID_EVENT_STREAM: events deve ser um Array.');
+      }
+      let commands = [];
+      try {
+        if (events.length > 0) commands = this.mapper.mapEvents(events, context);
+      } catch (err) {
+        this.status = PRESENTATION_STATUS.ERROR;
+        this.lastError = err;
+        throw err;
+      }
+      return this.playCommands(commands, context, events.length);
+    }
+
+    /** Executa comandos já normalizados pela mesma timeline de eventos. */
+    async playCommands(commands, context = null, eventsProcessed = 0) {
       // 1. Proteção de Concorrência
       if (this.status === PRESENTATION_STATUS.PLAYING) {
         throw new Error('CONCURRENT_PLAYBACK_REJECTED: PresentationEngine já está executando uma timeline ativa. Não é permitido executar reproduções concorrentes.');
       }
 
-      if (!Array.isArray(events)) {
-        throw new Error('INVALID_EVENT_STREAM: events deve ser um Array.');
+      if (!Array.isArray(commands)) {
+        throw new Error('INVALID_COMMAND_STREAM: commands deve ser um Array.');
       }
 
       // Se não há eventos, conclui imediatamente
-      if (events.length === 0) {
+      if (commands.length === 0) {
         this.status = PRESENTATION_STATUS.COMPLETED;
         return {
           status: PRESENTATION_STATUS.COMPLETED,
-          eventsProcessed: 0,
+          eventsProcessed,
           commandsExecuted: 0
         };
       }
@@ -160,18 +179,8 @@
       this.maxConcurrentCommands = 0;
       this.lastError = null;
 
-      // 2. Mapeamento de Eventos -> Comandos
-      let commands;
-      try {
-        commands = this.mapper.mapEvents(events, context);
-      } catch (err) {
-        this.status = PRESENTATION_STATUS.ERROR;
-        this.lastError = err;
-        throw err;
-      }
-
       let commandsExecuted = 0;
-      let eventsProcessed = events.length;
+
 
       // 3. Execução Sequencial dos Comandos
       try {

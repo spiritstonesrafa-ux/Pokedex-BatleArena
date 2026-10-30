@@ -547,3 +547,60 @@ test('PBA-015J audio adapter isolates Shadow theme from normal Battle intros', a
   await adapter.execute({type:'BATTLE_INTRO',shadowFinalStand:false}); await adapter.execute({type:'BATTLE_INTRO',shadowFinalStand:true}); await adapter.execute({type:'BATTLE_RESULT',winner:'player'});
   assert.deepEqual(calls,['normal','shadow','stop']);
 });
+
+test('Session music — real session and composite start normal and Shadow music and stop at the result', async t => {
+  const { BattleSessionController } = require('../../assets/js/battle-session/battle-session-controller.js');
+  for (const shadowFinalStand of [false, true]) {
+    await t.test(shadowFinalStand ? 'Shadow Final Stand' : 'normal battle', async () => {
+      const manager = new AudioContextManager({ autoUnlock: false });
+      const audio = new BattleAudioController({ contextManager: manager, mixer: new AudioMixer(manager) });
+      const composite = new CompositeBattleDomAdapter({ audioController: audio, pokemonController: null, vfxController: null, cameraController: null });
+      const presentation = new BattlePresentationEngine({ adapter: composite, skipAnimations: true });
+      const session = new BattleSessionController({ compositeAdapter: composite, presentationEngine: presentation });
+      session.battleState = BattleEngine.createTeamBattle(JSON.parse(JSON.stringify([PikachuFixture, CharmanderFixture, SquirtleFixture])), JSON.parse(JSON.stringify([BulbasaurFixture, CharmanderFixture, SquirtleFixture])));
+      session.sessionOptions = { metadata: { battleFormat: shadowFinalStand ? 'FINAL_STAND' : 'STANDARD' } };
+      try {
+        assert.equal(audio.isUnlocked(), false);
+        await session.startBattle();
+        assert.equal(audio.isUnlocked(), true);
+        assert.equal(session.uiState, 'AWAITING_PLAYER_ACTION');
+        assert.equal(presentation.getStatus(), 'COMPLETED');
+        assert.equal(composite.executedCommands.filter(c => c.type === 'BATTLE_INTRO').length, 1);
+        assert.equal(Boolean(audio._shadowThemeActive), shadowFinalStand);
+        assert.equal(audio._isMusicPlaying, !shadowFinalStand);
+        assert.ok(shadowFinalStand ? audio._shadowThemeIntervalId : audio._musicIntervalId);
+        await presentation.playCommands([{ type: 'BATTLE_RESULT', winner: shadowFinalStand ? 'enemy' : 'player' }]);
+        assert.equal(audio._isMusicPlaying, false);
+        assert.equal(Boolean(audio._shadowThemeActive), false);
+        assert.equal(audio._musicIntervalId, null);
+        assert.ok(!audio._shadowThemeIntervalId);
+        // Reiniciar e sair também deve limpar os loops, sem depender de um resultado.
+        await session.startBattle();
+        session.leaveBattle();
+        assert.equal(audio._isMusicPlaying, false);
+        assert.equal(Boolean(audio._shadowThemeActive), false);
+        assert.equal(audio._musicIntervalId, null);
+        assert.ok(!audio._shadowThemeIntervalId);
+      } finally {
+        audio.cancel();
+      }
+    });
+  }
+});
+
+test('Direct presentation commands share concurrency protection and cancellation with event playback', async () => {
+  let release;
+  const entered = [];
+  const presentation = new BattlePresentationEngine({
+    skipAnimations: true,
+    adapter: { execute: async command => { entered.push(command.type); await new Promise(resolve => { release = resolve; }); } }
+  });
+  const playback = presentation.playCommands([{ type: 'BATTLE_INTRO' }, { type: 'BATTLE_RESULT' }]);
+  await assert.rejects(presentation.play([]), /CONCURRENT_PLAYBACK_REJECTED/);
+  await assert.rejects(presentation.playCommands([]), /CONCURRENT_PLAYBACK_REJECTED/);
+  presentation.cancel();
+  release();
+  const result = await playback;
+  assert.equal(result.status, 'CANCELLED');
+  assert.deepEqual(entered, ['BATTLE_INTRO']);
+});

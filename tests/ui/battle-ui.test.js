@@ -587,13 +587,14 @@ describe('PHASE PBA-013 — GATES UI01–UI50 (BATTLE UI & EXPERIENCE)', () => {
     assert.ok(mockContainer.innerHTML.includes('DERROTA!'));
   });
 
-  it('UI45 — Rematch Creates Fresh HP/PP: Rematch restores full HP and PP', async () => {
+  it('UI45 — Rematch Creates Fresh HP/PP: Rematch restores full HP and PP', async t => {
     const controller = new BattleSessionController({
       teamStore: { load: () => [25, 4, 1] },
       hydrator,
       randomSource,
       opponentFactory
     });
+    t.after(() => controller.leaveBattle());
     await controller.prepareBattle();
     controller.battleState.player.team[0].currentHp = 10;
     await controller.rematch();
@@ -639,7 +640,7 @@ describe('PHASE PBA-013 — GATES UI01–UI50 (BATTLE UI & EXPERIENCE)', () => {
     assert.ok(cssContent.includes('.battle-view-container'));
   });
 
-  it('UI50 — Full Real Playable Battle: Full battle lifecycle simulated through the session controller', async () => {
+  it('UI50 — Full Real Playable Battle: Full battle lifecycle simulated through the session controller', async t => {
     const controller = new BattleSessionController({
       teamStore: { load: () => [25, 4, 1] },
       hydrator,
@@ -648,6 +649,8 @@ describe('PHASE PBA-013 — GATES UI01–UI50 (BATTLE UI & EXPERIENCE)', () => {
       }),
       opponentFactory
     });
+
+    t.after(() => controller.leaveBattle());
 
     // 1. Inicia sessão
     assert.strictEqual(controller.checkTeamAndInit(), true);
@@ -781,7 +784,7 @@ describe('PHASE PBA-013-SPRITE-FIX — GATES SPR01–SPR20 (SPRITE RENDERING & B
     assert.ok(html.includes('showdown/7.gif') || html.includes('official-artwork/7.png'));
   });
 
-  it('SPR15 — Rematch Sprites: Rematch preserves valid visual metadata on fresh state', async () => {
+  it('SPR15 — Rematch Sprites: Rematch preserves valid visual metadata on fresh state', async t => {
     const mockApi = createMockPokeApi();
     const hydrator = new BattleTeamHydrator({ api: mockApi });
     const opponentFactory = new BattleOpponentFactory({ hydrator, pool: [7, 4, 143] });
@@ -791,6 +794,7 @@ describe('PHASE PBA-013-SPRITE-FIX — GATES SPR01–SPR20 (SPRITE RENDERING & B
       opponentFactory
     });
 
+    t.after(() => controller.leaveBattle());
     await controller.prepareBattle();
     const p0 = controller.battleState.player.team[0];
     const e0 = controller.battleState.enemy.team[0];
