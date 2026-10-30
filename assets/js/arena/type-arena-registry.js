@@ -484,6 +484,19 @@
     })
   });
 
+  // Os pontos usam os mesmos cenários e efeitos das arenas existentes.
+  // A região mantém um cenário coerente para encontros de saves antigos sem pointId.
+  const WILD_ARENAS_BY_REGION = Object.freeze({
+    'region-1': Object.freeze({ fallback: 'grass', points: Object.freeze({
+      'r1-meadow': 'grass', 'r1-forest': 'bug', 'r1-coast': 'water'
+    }) }),
+    'region-2': Object.freeze({ fallback: 'ground', points: Object.freeze({
+      'r2-canyon': 'ground', 'r2-volcano': 'fire', 'r2-glacier': 'ice'
+    }) }),
+    'region-3': Object.freeze({ fallback: 'dark', points: Object.freeze({
+      'r3-grove': 'fairy', 'r3-ruins': 'dark', 'r3-shrine': 'dragon'
+    }) })
+  });
   class TypeArenaRegistry {
     /**
      * Retorna o catálogo imutável de todas as arenas cadastradas.
@@ -544,6 +557,14 @@
           return DEFAULT_ARENA_THEME;
         }
 
+        // Encontros selvagens seguem o local do mapa, independentemente da espécie.
+        if (context.kind === 'WILD') {
+          const region = WILD_ARENAS_BY_REGION[context.regionId];
+          if (!region) return DEFAULT_ARENA_THEME;
+          const key = Object.prototype.hasOwnProperty.call(region.points, context.pointId)
+            ? region.points[context.pointId] : region.fallback;
+          return ARENA_CATALOG[key] || DEFAULT_ARENA_THEME;
+        }
         // 1. Boss Arena: Shadow Super Trainer / Final Stand
         if (context.isShadowFinalStand || context.kind === 'SHADOW' || context.battleFormat === 'FINAL_STAND') {
           return ARENA_CATALOG[ARENA_THEME_KEYS.SHADOW] || DEFAULT_ARENA_THEME;

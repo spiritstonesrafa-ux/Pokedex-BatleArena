@@ -832,3 +832,39 @@ test('Wild Phase 3 — mobile and reduced-motion styles cover encounter and capt
     '@media (prefers-reduced-motion: reduce)'
   ]) assert.ok(css.includes(marker), marker);
 });
+
+test('Wild arenas — all nine map points resolve their actual battle metadata to a landscape', () => {
+  const { resolveArenaTheme } = require('../../assets/js/arena/type-arena-registry.js');
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const expected = {
+    'r1-meadow': 'grass', 'r1-forest': 'bug', 'r1-coast': 'water',
+    'r2-canyon': 'ground', 'r2-volcano': 'fire', 'r2-glacier': 'ice',
+    'r3-grove': 'fairy', 'r3-ruins': 'dark', 'r3-shrine': 'dragon'
+  };
+  for (const [regionId, region] of Object.entries(Wild.REGIONS)) {
+    for (const point of region.points) {
+      const manager = fresh();
+      const encounter = manager.beginWildEncounter(regionId, 0.8, point.id);
+      assert.equal(encounter.ok, true, point.id);
+      const config = manager.getBattleConfig('WILD', encounter.pokemonId, manager.getRosterIds().slice(0, 3));
+      const theme = resolveArenaTheme(config.metadata);
+      assert.equal(theme.key, expected[point.id], point.id);
+      assert.ok(fs.existsSync(path.resolve(__dirname, '../..', theme.backgroundSrc)));
+      // A espécie e as heurísticas das provas não devem trocar a paisagem do local.
+      assert.equal(resolveArenaTheme({ ...config.metadata, opponentName: 'Pokémon selvagem — mythical', masterType: 'electric' }).key, theme.key);
+    }
+  }
+});
+
+test('Wild arenas — legacy encounters use their region and unknown regions remain safe', () => {
+  const { resolveArenaTheme } = require('../../assets/js/arena/type-arena-registry.js');
+  for (const [regionId, expected] of [['region-1', 'grass'], ['region-2', 'ground'], ['region-3', 'dark']]) {
+    for (const pointId of [undefined, 'unknown', 'r2-volcano']) {
+      assert.equal(resolveArenaTheme({ mode: 'CAMPAIGN', kind: 'WILD', regionId, pointId }).key,
+        regionId === 'region-2' && pointId === 'r2-volcano' ? 'fire' : expected);
+    }
+  }
+  assert.equal(resolveArenaTheme({ mode: 'CAMPAIGN', kind: 'WILD', regionId: 'unknown', pointId: 'r2-volcano' }).key, 'default');
+  assert.equal(resolveArenaTheme({ mode: 'QUICK', kind: 'WILD', regionId: 'region-2', pointId: 'r2-volcano' }).key, 'default');
+});
