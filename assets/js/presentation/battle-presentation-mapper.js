@@ -177,6 +177,18 @@
             throw new Error(`INVALID_EVENT_PAYLOAD: BATTLE_ENDED requer especificação do campo "winner".`);
           }
           break;
+
+        case BATTLE_EVENTS.STAT_STAGE_CHANGED:
+          if (
+            !event.combatant ||
+            !event.statKey ||
+            event.previousStage === undefined ||
+            event.appliedDelta === undefined ||
+            event.finalStage === undefined
+          ) {
+            throw new Error(`INVALID_EVENT_PAYLOAD: STAT_STAGE_CHANGED requer "combatant", "statKey", "previousStage", "appliedDelta" e "finalStage".`);
+          }
+          break;
       }
     }
 
@@ -428,6 +440,21 @@
               type: PRESENTATION_COMMANDS.BATTLE_RESULT,
               winner: event.winner,
               reason: event.reason
+            }
+          ];
+
+        case BATTLE_EVENTS.STAT_STAGE_CHANGED:
+          return [
+            {
+              type: PRESENTATION_COMMANDS.STAT_STAGE_FEEDBACK,
+              side: event.combatant,
+              pokemonName: event.pokemonName,
+              statKey: event.statKey,
+              previousStage: Number(event.previousStage),
+              requestedDelta: Number(event.requestedDelta),
+              appliedDelta: Number(event.appliedDelta),
+              finalStage: Number(event.finalStage),
+              blockedReason: event.blockedReason || null
             }
           ];
 

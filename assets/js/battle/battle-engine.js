@@ -210,10 +210,15 @@
           type: normalizedMove.type,
           power: normalizedMove.power,
           accuracy: normalizedMove.accuracy,
+          pp: normalizedMove.pp,
           maxPp: normalizedMove.pp,
           currentPp: m.currentPp !== undefined ? Number(m.currentPp) : normalizedMove.pp,
           damageClass: normalizedMove.damageClass,
-          ...(normalizedMove.statusEffect ? { statusEffect: normalizedMove.statusEffect } : {})
+          ...(normalizedMove.statusEffect ? { statusEffect: normalizedMove.statusEffect } : {}),
+          ...(normalizedMove.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(normalizedMove))
+            ? { statBoosts: { ...(normalizedMove.statBoosts || constants.getStatBoosts(normalizedMove)) } } : {}),
+          ...(normalizedMove.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(normalizedMove))
+            ? { selfStatDrops: { ...(normalizedMove.selfStatDrops || constants.getSelfStatDrops(normalizedMove)) } } : {})
         });
       }
 
@@ -229,7 +234,8 @@
         specialDefense: Math.floor(specialDefense),
         speed: Math.floor(speed),
         statusCondition: null,
-        moves: normalizedMoves
+        moves: normalizedMoves,
+        statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
       };
 
       if (raw.baseStats && typeof raw.baseStats === 'object') {
@@ -414,6 +420,10 @@
         targetPokemonId: targetPokemon.id
       });
 
+      if (constants.resetStatStages) {
+        constants.resetStatStages(previousActive);
+      }
+
       side.activeIndex = targetIndex;
 
       events.push({
@@ -429,6 +439,9 @@
       const roles = [...new Set(faintedRoles)];
       for (const role of roles) {
         const pokemon = getActiveCombatant(state, role);
+        if (constants.resetStatStages) {
+          constants.resetStatStages(pokemon);
+        }
         events.push({ type: BATTLE_EVENTS.POKEMON_FAINTED, target: role, pokemonName: pokemon.name });
       }
       const defeated = roles.filter(role => state.version === 1 ||
@@ -728,18 +741,39 @@
         return;
       }
 
-      if (selectedMove.statusEffect && selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
-        const blocked = constants.isStatusMoveImmune(selectedMove, defender.types)
-          ? 'IMMUNE' : defender.statusCondition ? 'ALREADY_STATUS' : null;
-        if (blocked) {
-          events.push({ type: BATTLE_EVENTS.STATUS_BLOCKED, target: defenderRole,
-            pokemonName: defender.name, statusCondition: selectedMove.statusEffect, reason: blocked });
-        } else {
-          defender.statusCondition = selectedMove.statusEffect;
-          events.push({ type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole,
-            target: defenderRole, pokemonName: defender.name, statusCondition: selectedMove.statusEffect });
+      if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
+        if (selectedMove.statusEffect) {
+          const blocked = constants.isStatusMoveImmune(selectedMove, defender.types)
+            ? 'IMMUNE' : defender.statusCondition ? 'ALREADY_STATUS' : null;
+          if (blocked) {
+            events.push({ type: BATTLE_EVENTS.STATUS_BLOCKED, target: defenderRole,
+              pokemonName: defender.name, statusCondition: selectedMove.statusEffect, reason: blocked });
+          } else {
+            defender.statusCondition = selectedMove.statusEffect;
+            events.push({ type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole,
+              target: defenderRole, pokemonName: defender.name, statusCondition: selectedMove.statusEffect });
+          }
+          return;
         }
-        return;
+
+        const statBoosts = selectedMove.statBoosts || (constants.getStatBoosts && constants.getStatBoosts(selectedMove));
+        if (statBoosts && typeof statBoosts === 'object') {
+          for (const [statKey, delta] of Object.entries(statBoosts)) {
+            const report = constants.applyStatStageChange(attacker, statKey, delta);
+            events.push({
+              type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+              combatant: attackerRole,
+              pokemonName: attacker.name,
+              statKey: report.statKey,
+              previousStage: report.previousStage,
+              requestedDelta: report.requestedDelta,
+              appliedDelta: report.appliedDelta,
+              finalStage: report.finalStage,
+              blockedReason: report.blockedReason
+            });
+          }
+          return;
+        }
       }
 
       // 3. Resolução de STAB (Same-Type Attack Bonus)
@@ -802,11 +836,15 @@
       let attackStat;
       let defenseStat;
       if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.PHYSICAL) {
-        attackStat = constants.usesDefenseAsAttack?.(selectedMove) ? attacker.defense : attacker.attack;
-        defenseStat = defender.defense;
+        attackStat = constants.usesDefenseAsAttack?.(selectedMove)
+          ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense') : attacker.defense)
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack') : attacker.attack);
+        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense;
       } else {
-        attackStat = attacker.specialAttack;
-        defenseStat = constants.targetsDefenseWithSpAtk?.(selectedMove) ? defender.defense : defender.specialDefense;
+        attackStat = constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack') : attacker.specialAttack;
+        defenseStat = constants.targetsDefenseWithSpAtk?.(selectedMove)
+          ? (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense)
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense') : defender.specialDefense);
       }
 
       // Validação do roll de dano determinístico (85..100)
@@ -897,6 +935,25 @@
         }
       }
 
+      // 10B. Auto-penalidades de Atributo (Self Stat Drops: Close Combat, Overheat, Draco Meteor)
+      const selfDrops = selectedMove.selfStatDrops || (constants.getSelfStatDrops && constants.getSelfStatDrops(selectedMove));
+      if (effectiveMultiplier > 0 && attacker.currentHp > 0 && selfDrops && typeof selfDrops === 'object') {
+        for (const [statKey, delta] of Object.entries(selfDrops)) {
+          const report = constants.applyStatStageChange(attacker, statKey, delta);
+          events.push({
+            type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+            combatant: attackerRole,
+            pokemonName: attacker.name,
+            statKey: report.statKey,
+            previousStage: report.previousStage,
+            requestedDelta: report.requestedDelta,
+            appliedDelta: report.appliedDelta,
+            finalStage: report.finalStage,
+            blockedReason: report.blockedReason
+          });
+        }
+      }
+
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)
       if (currentHp > 0 && finalDamage > 0 && state.version === 2 && constants.isForcedSwitchMove?.(selectedMove)) {
         const defenderSide = state[defenderRole];
@@ -915,6 +972,9 @@
           }
 
           const previousActive = defender;
+          if (constants.resetStatStages) {
+            constants.resetStatStages(previousActive);
+          }
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
 

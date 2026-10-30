@@ -40,7 +40,8 @@
     POKEMON_SWITCHED: 'POKEMON_SWITCHED',
     REPLACEMENT_REQUIRED: 'REPLACEMENT_REQUIRED',
     TEAM_DEFEATED: 'TEAM_DEFEATED',
-    BATTLE_ENDED: 'BATTLE_ENDED'
+    BATTLE_ENDED: 'BATTLE_ENDED',
+    STAT_STAGE_CHANGED: 'STAT_STAGE_CHANGED'
   });
 
   const BATTLE_ACTIONS = Object.freeze({
@@ -142,6 +143,122 @@
     return name === 'dragon-tail' || name === 'circle-throw';
   }
 
+  const STAT_STAGE_KEYS = Object.freeze(['attack', 'defense', 'specialAttack', 'specialDefense', 'speed']);
+
+  const STAT_BOOST_MOVES = Object.freeze({
+    'swords-dance': Object.freeze({ attack: 2 }),
+    'calm-mind': Object.freeze({ specialAttack: 1, specialDefense: 1 })
+  });
+
+  const SELF_STAT_DROP_MOVES = Object.freeze({
+    'close-combat': Object.freeze({ defense: -1, specialDefense: -1 }),
+    'overheat': Object.freeze({ specialAttack: -2 }),
+    'draco-meteor': Object.freeze({ specialAttack: -2 })
+  });
+
+  function getStatBoosts(move) {
+    if (!move) return null;
+    const name = String(move.name || '').trim().toLowerCase();
+    return STAT_BOOST_MOVES[name] || move.statBoosts || null;
+  }
+
+  function getSelfStatDrops(move) {
+    if (!move) return null;
+    const name = String(move.name || '').trim().toLowerCase();
+    return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
+  }
+
+  function createDefaultStatStages() {
+    return {
+      attack: 0,
+      defense: 0,
+      specialAttack: 0,
+      specialDefense: 0,
+      speed: 0
+    };
+  }
+
+  function sanitizeStatStages(stages) {
+    const clean = createDefaultStatStages();
+    if (!stages || typeof stages !== 'object') return clean;
+    for (const key of STAT_STAGE_KEYS) {
+      if (stages[key] !== undefined && stages[key] !== null) {
+        const val = Math.trunc(Number(stages[key]) || 0);
+        clean[key] = Math.max(-6, Math.min(6, val));
+      }
+    }
+    return clean;
+  }
+
+  function getStatStageMultiplier(stage) {
+    const s = Math.max(-6, Math.min(6, Math.trunc(Number(stage) || 0)));
+    return s >= 0 ? (2 + s) / 2 : 2 / (2 - s);
+  }
+
+  function getEffectiveStat(combatant, statKey) {
+    if (!combatant || typeof combatant !== 'object') return 1;
+    const base = Number(combatant[statKey]);
+    if (!Number.isFinite(base) || base <= 0) return 1;
+    if (!STAT_STAGE_KEYS.includes(statKey)) return Math.max(1, Math.floor(base));
+
+    const stage = combatant.statStages ? Number(combatant.statStages[statKey]) || 0 : 0;
+    const clampedStage = Math.max(-6, Math.min(6, Math.trunc(stage)));
+
+    if (clampedStage === 0) {
+      return Math.max(1, Math.floor(base));
+    }
+    if (clampedStage > 0) {
+      return Math.max(1, Math.floor((base * (2 + clampedStage)) / 2));
+    }
+    return Math.max(1, Math.floor((base * 2) / (2 - clampedStage)));
+  }
+
+  function applyStatStageChange(combatant, statKey, delta) {
+    if (!combatant || typeof combatant !== 'object') {
+      throw new Error('Combatente inválido para alteração de estágio de atributo.');
+    }
+    if (!STAT_STAGE_KEYS.includes(statKey)) {
+      throw new Error(`Atributo inválido para alteração de estágio: "${statKey}".`);
+    }
+    if (!combatant.statStages || typeof combatant.statStages !== 'object') {
+      combatant.statStages = createDefaultStatStages();
+    }
+    const previousStage = Number(combatant.statStages[statKey]) || 0;
+    const requestedDelta = Math.trunc(Number(delta) || 0);
+
+    let targetStage = previousStage + requestedDelta;
+    let blockedReason = null;
+
+    if (requestedDelta > 0 && previousStage >= 6) {
+      targetStage = 6;
+      blockedReason = 'AT_MAX';
+    } else if (requestedDelta < 0 && previousStage <= -6) {
+      targetStage = -6;
+      blockedReason = 'AT_MIN';
+    } else {
+      targetStage = Math.max(-6, Math.min(6, targetStage));
+    }
+
+    const appliedDelta = targetStage - previousStage;
+    combatant.statStages[statKey] = targetStage;
+
+    return {
+      combatant,
+      statKey,
+      previousStage,
+      requestedDelta,
+      appliedDelta,
+      finalStage: targetStage,
+      blockedReason
+    };
+  }
+
+  function resetStatStages(combatant) {
+    if (!combatant || typeof combatant !== 'object') return;
+    combatant.statStages = createDefaultStatStages();
+    return combatant.statStages;
+  }
+
   const MOVE_ALIASES = Object.freeze({
     'nature-s-madness': 'natures-madness',
     'natures-madness': 'natures-madness'
@@ -149,6 +266,7 @@
 
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     // --- FULL SUPPORT (Efeitos integralmente implementados e testados) ---
+    14: Object.freeze({ id: 14, name: 'swords-dance', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ attack: 2 }) }),
     71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -159,12 +277,16 @@
     202: Object.freeze({ id: 202, name: 'giga-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     245: Object.freeze({ id: 245, name: 'extreme-speed', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 2 }),
     261: Object.freeze({ id: 261, name: 'will-o-wisp', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
+    315: Object.freeze({ id: 315, name: 'overheat', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
+    347: Object.freeze({ id: 347, name: 'calm-mind', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 }) }),
+    370: Object.freeze({ id: 370, name: 'close-combat', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ defense: -1, specialDefense: -1 }) }),
     398: Object.freeze({ id: 398, name: 'poison-jab', supportLevel: 'PARTIAL', requiredMechanics: ['PHYSICAL_DAMAGE'], knownPending: ['SECONDARY_EFFECTS_PHASE_P4'], blockedReason: null, priority: 0 }),
     409: Object.freeze({ id: 409, name: 'drain-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     410: Object.freeze({ id: 410, name: 'vacuum-wave', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     418: Object.freeze({ id: 418, name: 'bullet-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     420: Object.freeze({ id: 420, name: 'ice-shard', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     425: Object.freeze({ id: 425, name: 'shadow-sneak', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
+    434: Object.freeze({ id: 434, name: 'draco-meteor', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
     453: Object.freeze({ id: 453, name: 'aqua-jet', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     473: Object.freeze({ id: 473, name: 'psyshock', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'PHYSICAL_DEFENSE_TARGET'], knownPending: [], blockedReason: null, priority: 0, targetsDefenseWithSpAtk: true }),
     509: Object.freeze({ id: 509, name: 'circle-throw', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'NEGATIVE_PRIORITY', 'FORCED_SWITCH'], knownPending: [], blockedReason: null, priority: -6, isForcedSwitch: true }),
@@ -214,15 +336,12 @@
     175: Object.freeze({ id: 175, name: 'flail', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
     179: Object.freeze({ id: 179, name: 'reversal', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
     276: Object.freeze({ id: 276, name: 'superpower', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
-    315: Object.freeze({ id: 315, name: 'overheat', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
     329: Object.freeze({ id: 329, name: 'sheer-cold', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
     354: Object.freeze({ id: 354, name: 'psycho-boost', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
     360: Object.freeze({ id: 360, name: 'gyro-ball', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_SPEED'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_RELATIVE_SPEED', priority: 0 }),
-    370: Object.freeze({ id: 370, name: 'close-combat', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
     371: Object.freeze({ id: 371, name: 'payback', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_USER_MOVES_SECOND', priority: 0 }),
     372: Object.freeze({ id: 372, name: 'assurance', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_TARGET_DAMAGED_THIS_TURN', priority: 0 }),
     389: Object.freeze({ id: 389, name: 'sucker-punch', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_PRIORITY'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'REQUIRES_TARGET_DAMAGING_MOVE_AND_PRIORITY', priority: 1 }),
-    434: Object.freeze({ id: 434, name: 'draco-meteor', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
     437: Object.freeze({ id: 437, name: 'leaf-storm', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
     447: Object.freeze({ id: 447, name: 'grass-knot', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_TARGET_WEIGHT'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_TARGET_WEIGHT', priority: 0 }),
     449: Object.freeze({ id: 449, name: 'judgment', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
@@ -341,6 +460,7 @@
     309: Object.freeze({ id: 309, name: 'meteor-mash', type: 'steel', power: 90, accuracy: 90, pp: 10, damageClass: 'physical' }),
     310: Object.freeze({ id: 310, name: 'astonish', type: 'ghost', power: 30, accuracy: 100, pp: 15, damageClass: 'physical' }),
     314: Object.freeze({ id: 314, name: 'air-cutter', type: 'flying', power: 60, accuracy: 95, pp: 25, damageClass: 'special' }),
+    315: Object.freeze({ id: 315, name: 'overheat', type: 'fire', power: 130, accuracy: 90, pp: 5, damageClass: 'special' }),
     317: Object.freeze({ id: 317, name: 'rock-tomb', type: 'rock', power: 60, accuracy: 95, pp: 15, damageClass: 'physical' }),
     324: Object.freeze({ id: 324, name: 'signal-beam', type: 'bug', power: 75, accuracy: 100, pp: 15, damageClass: 'special' }),
     325: Object.freeze({ id: 325, name: 'shadow-punch', type: 'ghost', power: 60, accuracy: null, pp: 20, damageClass: 'physical' }),
@@ -355,6 +475,7 @@
     348: Object.freeze({ id: 348, name: 'leaf-blade', type: 'grass', power: 90, accuracy: 100, pp: 15, damageClass: 'physical' }),
     351: Object.freeze({ id: 351, name: 'shock-wave', type: 'electric', power: 60, accuracy: null, pp: 20, damageClass: 'special' }),
     369: Object.freeze({ id: 369, name: 'u-turn', type: 'bug', power: 70, accuracy: 100, pp: 20, damageClass: 'physical' }),
+    370: Object.freeze({ id: 370, name: 'close-combat', type: 'fighting', power: 120, accuracy: 100, pp: 5, damageClass: 'physical' }),
     394: Object.freeze({ id: 394, name: 'flare-blitz', type: 'fire', power: 120, accuracy: 100, pp: 15, damageClass: 'physical' }),
     396: Object.freeze({ id: 396, name: 'aura-sphere', type: 'fighting', power: 80, accuracy: null, pp: 20, damageClass: 'special' }),
     398: Object.freeze({ id: 398, name: 'poison-jab', type: 'poison', power: 80, accuracy: 100, pp: 20, damageClass: 'physical' }),
@@ -382,6 +503,7 @@
     428: Object.freeze({ id: 428, name: 'zen-headbutt', type: 'psychic', power: 80, accuracy: 90, pp: 15, damageClass: 'physical' }),
     430: Object.freeze({ id: 430, name: 'flash-cannon', type: 'steel', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
     431: Object.freeze({ id: 431, name: 'rock-climb', type: 'normal', power: 90, accuracy: 85, pp: 20, damageClass: 'physical' }),
+    434: Object.freeze({ id: 434, name: 'draco-meteor', type: 'dragon', power: 130, accuracy: 90, pp: 5, damageClass: 'special' }),
     438: Object.freeze({ id: 438, name: 'power-whip', type: 'grass', power: 120, accuracy: 85, pp: 10, damageClass: 'physical' }),
     441: Object.freeze({ id: 441, name: 'gunk-shot', type: 'poison', power: 120, accuracy: 80, pp: 5, damageClass: 'physical' }),
     442: Object.freeze({ id: 442, name: 'iron-head', type: 'steel', power: 80, accuracy: 100, pp: 15, damageClass: 'physical' }),
@@ -575,7 +697,9 @@
         isDualTypeEffectiveness: Boolean(def.isDualTypeEffectiveness),
         drainRatio: def.drainRatio || 0,
         recoilRatio: def.recoilRatio || 0,
-        isForcedSwitch: Boolean(def.isForcedSwitch)
+        isForcedSwitch: Boolean(def.isForcedSwitch),
+        statBoosts: def.statBoosts ? { ...def.statBoosts } : null,
+        selfStatDrops: def.selfStatDrops ? { ...def.selfStatDrops } : null
       });
     }
 
@@ -597,7 +721,9 @@
         isDualTypeEffectiveness: isDualTypeEffectiveness({ name: catEntry.name }),
         drainRatio: getDrainRatio({ name: catEntry.name }),
         recoilRatio: getRecoilRatio({ name: catEntry.name }),
-        isForcedSwitch: isForcedSwitchMove({ name: catEntry.name })
+        isForcedSwitch: isForcedSwitchMove({ name: catEntry.name }),
+        statBoosts: null,
+        selfStatDrops: getSelfStatDrops({ name: catEntry.name }) ? { ...getSelfStatDrops({ name: catEntry.name }) } : null
       });
     }
 
@@ -746,9 +872,13 @@
       if (move.power !== null && move.power !== 0 && Number(move.power) !== 0) return false;
 
       // Accuracy em status move: obrigatória e deve coincidir exatamente com a canônica
-      if (move.accuracy === undefined || move.accuracy === null) return false;
-      const statAcc = Number(move.accuracy);
-      if (!Number.isInteger(statAcc) || statAcc !== canonicalStatus.accuracy) return false;
+      if (canonicalStatus.accuracy === null) {
+        if (move.accuracy !== null) return false;
+      } else {
+        if (move.accuracy === undefined || move.accuracy === null) return false;
+        const statAcc = Number(move.accuracy);
+        if (!Number.isInteger(statAcc) || statAcc !== canonicalStatus.accuracy) return false;
+      }
 
       // PP de status move deve bater com canônico
       if (maxPp !== canonicalStatus.pp) return false;
@@ -810,6 +940,10 @@
 
   // Apenas golpes de status curados com efeito integral suportado.
   const SUPPORTED_STATUS_MOVES = Object.freeze({
+    'swords-dance': Object.freeze({ id: 14, name: 'swords-dance', type: 'normal',
+      power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ attack: 2 }) }),
+    'calm-mind': Object.freeze({ id: 347, name: 'calm-mind', type: 'psychic',
+      power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 }) }),
     'poison-powder': Object.freeze({ id: 77, name: 'poison-powder', type: 'poison',
       power: 0, accuracy: 75, pp: 35, damageClass: 'status', statusEffect: 'poison' }),
     'will-o-wisp': Object.freeze({ id: 261, name: 'will-o-wisp', type: 'fire',
@@ -825,7 +959,8 @@
         String(move.type?.name || move.type || '').toLowerCase() !== canonical.type ||
         String(move.damageClass || move.damage_class?.name || '').toLowerCase() !== 'status' ||
         !(move.power === null || Number(move.power) === 0) ||
-        Number(move.accuracy) !== canonical.accuracy || Number(move.pp) !== canonical.pp) return null;
+        (canonical.accuracy === null ? move.accuracy !== null : Number(move.accuracy) !== canonical.accuracy) ||
+        Number(move.pp !== undefined ? move.pp : move.maxPp) !== canonical.pp) return null;
     return canonical;
   }
 
@@ -953,7 +1088,18 @@
     BATTLE_CONFIG,
     AI_STRATEGY,
     AI_DECISION_REASON,
-    AI_CONFIG
+    AI_CONFIG,
+    STAT_STAGE_KEYS,
+    createDefaultStatStages,
+    sanitizeStatStages,
+    getStatStageMultiplier,
+    getEffectiveStat,
+    applyStatStageChange,
+    resetStatStages,
+    STAT_BOOST_MOVES,
+    SELF_STAT_DROP_MOVES,
+    getStatBoosts,
+    getSelfStatDrops
   });
 
   // Suporte universal (Node.js & Browser)

@@ -61,6 +61,7 @@
 
       // Golpes de status não causam dano na arquitetura atual
       if (damageClass === 'status' || power <= 0) {
+        const statBoosts = move.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(move)) || null;
         return {
           moveId: move.id,
           moveName: move.name || 'unknown',
@@ -69,6 +70,7 @@
           power: 0,
           accuracy,
           currentPp,
+          statBoosts,
           attackStat: 0,
           defenseStat: 0,
           baseDamage: 0,
@@ -82,7 +84,14 @@
           expectedDamage: 0,
           guaranteedKo: false,
           possibleKo: false,
-          wouldKo: false
+          wouldKo: false,
+          priority: constants?.getMovePriority?.(move) || 0,
+          drainRatio: 0,
+          expectedHeal: 0,
+          recoilRatio: 0,
+          expectedRecoil: 0,
+          wouldRecoilKo: false,
+          selfStatDrops: null
         };
       }
 
@@ -90,11 +99,15 @@
       let attackStat;
       let defenseStat;
       if (damageClass === 'special') {
-        attackStat = Number(attacker.specialAttack) || 1;
-        defenseStat = Number(constants?.targetsDefenseWithSpAtk?.(move) ? defender.defense : defender.specialDefense) || 1;
+        attackStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack') : attacker.specialAttack) || 1;
+        defenseStat = Number(constants?.targetsDefenseWithSpAtk?.(move)
+          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense)
+          : (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense') : defender.specialDefense)) || 1;
       } else {
-        attackStat = Number(constants?.usesDefenseAsAttack?.(move) ? attacker.defense : attacker.attack) || 1;
-        defenseStat = Number(defender.defense) || 1;
+        attackStat = Number(constants?.usesDefenseAsAttack?.(move)
+          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense') : attacker.defense)
+          : (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack') : attacker.attack)) || 1;
+        defenseStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense) || 1;
       }
 
       // 2. STAB (Same-Type Attack Bonus)
@@ -196,7 +209,9 @@
         expectedHeal,
         recoilRatio,
         expectedRecoil,
-        wouldRecoilKo
+        wouldRecoilKo,
+        statBoosts: null,
+        selfStatDrops: move.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(move)) || null
       };
     }
 

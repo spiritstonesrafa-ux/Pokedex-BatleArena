@@ -167,6 +167,14 @@
           if (typeof this.view.handleSwitchIn === 'function') {
             this.view.handleSwitchIn(command.side, command.pokemonId, command.pokemonName);
           }
+          if (typeof this.view.updateStatStages === 'function' && context && context.battleState) {
+            const sideCombatant = context.battleState[command.side]?.team
+              ? context.battleState[command.side].team[context.battleState[command.side].activeIndex]
+              : context.battleState[command.side];
+            if (sideCombatant) {
+              this.view.updateStatStages(command.side, sideCombatant.statStages);
+            }
+          }
           if (typeof this.view.displayMessage === 'function') {
             this.view.displayMessage(`${command.pokemonName} entrou em campo!`);
           }
@@ -191,6 +199,40 @@
         case PRESENTATION_COMMANDS.BATTLE_RESULT: {
           if (typeof this.view.showBattleResult === 'function') {
             this.view.showBattleResult(command.winner, command.reason);
+          }
+          break;
+        }
+
+        case PRESENTATION_COMMANDS.STAT_STAGE_FEEDBACK: {
+          if (typeof this.view.updateStatStages === 'function' && context && context.battleState) {
+            const sideCombatant = context.battleState[command.side]?.team
+              ? context.battleState[command.side].team[context.battleState[command.side].activeIndex]
+              : context.battleState[command.side];
+            if (sideCombatant) {
+              this.view.updateStatStages(command.side, sideCombatant.statStages);
+            }
+          }
+          if (typeof this.view.displayMessage === 'function') {
+            const name = command.pokemonName || (command.side === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
+            const statNamesPt = {
+              attack: 'Ataque',
+              defense: 'Defesa',
+              specialAttack: 'Ataque Especial',
+              specialDefense: 'Defesa Especial',
+              speed: 'Velocidade'
+            };
+            const statName = statNamesPt[command.statKey] || command.statKey;
+            if (command.blockedReason === 'AT_MAX') {
+              this.view.displayMessage(`${name}: ${statName} não pode subir mais!`);
+            } else if (command.blockedReason === 'AT_MIN') {
+              this.view.displayMessage(`${name}: ${statName} não pode cair mais!`);
+            } else if (command.appliedDelta > 0) {
+              const boostWord = command.appliedDelta === 1 ? 'subiu!' : command.appliedDelta === 2 ? 'subiu muito!' : 'subiu drasticamente!';
+              this.view.displayMessage(`${name}: ${statName} ${boostWord}`);
+            } else if (command.appliedDelta < 0) {
+              const dropWord = command.appliedDelta === -1 ? 'caiu!' : command.appliedDelta === -2 ? 'caiu muito!' : 'caiu drasticamente!';
+              this.view.displayMessage(`${name}: ${statName} ${dropWord}`);
+            }
           }
           break;
         }

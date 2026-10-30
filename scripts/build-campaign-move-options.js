@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-/* Offline-only curator. Generates extra moves from cached PokéAPI learnsets. */
+/* Offline-only curator. Generates extra moves from cached PokéAPI learnsets and canonical pilot mechanics. */
 const fs = require('node:fs');
 const path = require('node:path');
 const Fixed = require('../assets/js/campaign/campaign-fixed-battle-catalog.js');
 const { isMechanicallySupportedMove } = require('../assets/js/battle-session/battle-session-constants.js');
+const BattleConstants = require('../assets/js/battle/battle-constants.js');
 
-// Explicit allowlist: no priority, conditional power, switch, recoil, critical-rate,
-// item, screen, weather or stat side effects are introduced by customization.
+// Explicit allowlist: safe moves with no unsupported complex side-effects
 const SIMPLE_MOVES = new Set([
   'aerial-ace', 'aqua-tail', 'aura-sphere', 'body-press', 'boomburst',
   'branch-poke', 'brutal-swing', 'cut', 'dazzling-gleam', 'disarming-voice',
@@ -20,53 +20,198 @@ const SIMPLE_MOVES = new Set([
   'water-gun', 'wing-attack', 'x-scissor'
 ]);
 
+// Phase P3 pilot moves: explicitly supported stat stage boosts and self-debuffs
+const PILOT_P3_MOVES = new Set([
+  'swords-dance',
+  'calm-mind',
+  'close-combat',
+  'overheat',
+  'draco-meteor'
+]);
+
+const CANONICAL_PILOT_MOVES = Object.freeze({
+  'swords-dance': Object.freeze({
+    id: 14,
+    name: 'swords-dance',
+    type: 'normal',
+    power: 0,
+    accuracy: null,
+    pp: 20,
+    damageClass: 'status',
+    statBoosts: Object.freeze({ attack: 2 })
+  }),
+  'calm-mind': Object.freeze({
+    id: 347,
+    name: 'calm-mind',
+    type: 'psychic',
+    power: 0,
+    accuracy: null,
+    pp: 20,
+    damageClass: 'status',
+    statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 })
+  }),
+  'close-combat': Object.freeze({
+    id: 370,
+    name: 'close-combat',
+    type: 'fighting',
+    power: 120,
+    accuracy: 100,
+    pp: 5,
+    damageClass: 'physical',
+    selfStatDrops: Object.freeze({ defense: -1, specialDefense: -1 })
+  }),
+  'overheat': Object.freeze({
+    id: 315,
+    name: 'overheat',
+    type: 'fire',
+    power: 130,
+    accuracy: 90,
+    pp: 5,
+    damageClass: 'special',
+    selfStatDrops: Object.freeze({ specialAttack: -2 })
+  }),
+  'draco-meteor': Object.freeze({
+    id: 434,
+    name: 'draco-meteor',
+    type: 'dragon',
+    power: 130,
+    accuracy: 90,
+    pp: 5,
+    damageClass: 'special',
+    selfStatDrops: Object.freeze({ specialAttack: -2 })
+  })
+});
+
+// Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
+const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  6: ['overheat', 'swords-dance'],       // Charizard (Starter)
+  65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
+  149: ['draco-meteor', 'dragon-pulse'], // Dragonite (Draft Gen 1)
+  157: ['overheat', 'aerial-ace'],       // Typhlosion (Draft Gen 2)
+  212: ['swords-dance', 'wing-attack'],  // Scizor (Draft Gen 2)
+  214: ['close-combat', 'swords-dance'], // Heracross (Draft Gen 2)
+  282: ['calm-mind', 'dazzling-gleam'],  // Gardevoir (Draft Gen 3)
+  445: ['swords-dance', 'draco-meteor'], // Garchomp (Draft Gen 4)
+  448: ['close-combat', 'swords-dance']  // Lucario (Draft Gen 4)
+});
+
 const cache = path.join(__dirname, '..', '.cache_pokeapi');
 const output = path.join(__dirname, '..', 'assets/js/campaign/campaign-move-options-catalog.js');
 const read = name => {
   const file = path.join(cache, name);
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
 };
+
 const cachedMoves = new Map();
-for (const file of fs.readdirSync(cache).filter(name => /_move_\d+_\.json$/.test(name))) {
-  const raw = read(file);
-  if (!raw || !SIMPLE_MOVES.has(raw.name) || !isMechanicallySupportedMove(raw) || raw.damage_class?.name === 'status' ||
-      raw.meta?.category?.name !== 'damage' || raw.priority !== 0 ||
-      (raw.meta?.drain || 0) !== 0 || (raw.meta?.healing || 0) !== 0 ||
-      (raw.meta?.ailment_chance || 0) !== 0 || (raw.meta?.stat_chance || 0) !== 0 ||
-      (raw.meta?.flinch_chance || 0) !== 0 || (raw.meta?.crit_rate || 0) !== 0 ||
-      raw.meta?.min_hits || raw.meta?.min_turns ||
-      (raw.accuracy !== null && (!Number.isInteger(raw.accuracy) || raw.accuracy < 1 || raw.accuracy > 100)) ||
-      !Number.isInteger(raw.pp) || raw.pp <= 0) continue;
-  cachedMoves.set(raw.name, Object.freeze({ id: raw.id, name: raw.name, type: raw.type.name,
-    power: raw.power, accuracy: raw.accuracy, pp: raw.pp,
-    damageClass: raw.damage_class.name }));
+
+// Seed canonical pilot moves first
+for (const [name, moveDef] of Object.entries(CANONICAL_PILOT_MOVES)) {
+  cachedMoves.set(name, moveDef);
+}
+
+// If cache folder exists, populate safe simple moves from cache
+if (fs.existsSync(cache)) {
+  for (const file of fs.readdirSync(cache).filter(name => /_move_\d+_\.json$/.test(name))) {
+    const raw = read(file);
+    if (!raw) continue;
+    const isPilot = PILOT_P3_MOVES.has(raw.name);
+    if (!SIMPLE_MOVES.has(raw.name) && !isPilot) continue;
+    if (!isMechanicallySupportedMove(raw)) continue;
+
+    // Filters for non-pilot simple moves
+    if (!isPilot) {
+      if (raw.damage_class?.name === 'status' || raw.meta?.category?.name !== 'damage' || raw.priority !== 0 ||
+          (raw.meta?.drain || 0) !== 0 || (raw.meta?.healing || 0) !== 0 ||
+          (raw.meta?.ailment_chance || 0) !== 0 || (raw.meta?.stat_chance || 0) !== 0 ||
+          (raw.meta?.flinch_chance || 0) !== 0 || (raw.meta?.crit_rate || 0) !== 0 ||
+          raw.meta?.min_hits || raw.meta?.min_turns ||
+          (raw.accuracy !== null && (!Number.isInteger(raw.accuracy) || raw.accuracy < 1 || raw.accuracy > 100)) ||
+          !Number.isInteger(raw.pp) || raw.pp <= 0) continue;
+    }
+
+    if (!cachedMoves.has(raw.name)) {
+      cachedMoves.set(raw.name, Object.freeze({
+        id: raw.id,
+        name: raw.name,
+        type: raw.type?.name || raw.type,
+        power: raw.power || 0,
+        accuracy: raw.accuracy,
+        pp: raw.pp,
+        damageClass: raw.damage_class?.name || raw.damageClass
+      }));
+    }
+  }
+}
+
+// Load baseline existing options catalog if available
+let existingExtras = {};
+if (fs.existsSync(output)) {
+  try {
+    existingExtras = require(output).byId || {};
+  } catch (_) {
+    existingExtras = {};
+  }
 }
 
 const extrasById = {};
-for (const [id, species] of Object.entries(Fixed.byId)) {
-  const pokemon = read(`https___pokeapi_co_api_v2_pokemon_${id}.json`);
-  if (!pokemon) continue; // Nine legacy reward species have no full cached learnset.
-  const selected = new Set(species.moves.map(move => move.name));
-  const currentTypes = new Set(species.moves.map(move => move.type));
-  const candidates = [...new Map(pokemon.moves.map(entry => {
-    const move = cachedMoves.get(entry.move.name);
-    return [entry.move.name, move];
-  }).filter(([, move]) => move && !selected.has(move.name))).values()];
-  const score = move => move.power * (move.accuracy === null ? 1 : move.accuracy / 100) +
-    (species.types.includes(move.type) ? 35 : 0) + (currentTypes.has(move.type) ? 0 : 20);
-  candidates.sort((a, b) => score(b) - score(a) || a.id - b.id);
-  const chosen = [];
-  for (const move of candidates) {
-    if (chosen.length >= 2) break;
-    if (chosen.length === 0 || move.type !== chosen[0].type || candidates.length < 2) chosen.push(move);
-  }
-  if (chosen.length < 2) {
-    for (const move of candidates) {
-      if (chosen.length >= 2) break;
-      if (!chosen.some(item => item.id === move.id)) chosen.push(move);
+
+// Process candidate moves for all fixed species
+for (const [idStr, species] of Object.entries(Fixed.byId)) {
+  const id = Number(idStr);
+
+  // If this species has dedicated curated pilot moves, assign them directly
+  if (CANONICAL_PILOT_SPECIES_EXTRAS[id]) {
+    const chosenPilotNames = CANONICAL_PILOT_SPECIES_EXTRAS[id];
+    const moves = chosenPilotNames.map(name => {
+      if (cachedMoves.has(name)) return cachedMoves.get(name);
+      // Fallback from existing catalog or definitions
+      const fromExisting = (existingExtras[id] || []).find(m => m.name === name);
+      if (fromExisting) return fromExisting;
+      if (CANONICAL_PILOT_MOVES[name]) return CANONICAL_PILOT_MOVES[name];
+      const fromKnown = BattleConstants.KNOWN_CATALOG_MOVES?.[name] || BattleConstants.CANONICAL_MOVE_DEFINITIONS?.[name];
+      if (fromKnown) return fromKnown;
+      return null;
+    }).filter(Boolean);
+
+    if (moves.length) {
+      extrasById[id] = moves;
+      continue;
     }
   }
-  if (chosen.length) extrasById[id] = chosen;
+
+  // If cache exists, compute from learnset
+  const pokemon = read(`https___pokeapi_co_api_v2_pokemon_${id}.json`);
+  if (pokemon) {
+    const selected = new Set(species.moves.map(move => move.name));
+    const currentTypes = new Set(species.moves.map(move => move.type));
+    const candidates = [...new Map(pokemon.moves.map(entry => {
+      const move = cachedMoves.get(entry.move.name);
+      return [entry.move.name, move];
+    }).filter(([, move]) => move && !selected.has(move.name))).values()];
+    const score = move => (move.power || 0) * (move.accuracy === null ? 1 : move.accuracy / 100) +
+      (species.types.includes(move.type) ? 35 : 0) + (currentTypes.has(move.type) ? 0 : 20);
+    candidates.sort((a, b) => score(b) - score(a) || a.id - b.id);
+    const chosen = [];
+    for (const move of candidates) {
+      if (chosen.length >= 2) break;
+      if (chosen.length === 0 || move.type !== chosen[0].type || candidates.length < 2) chosen.push(move);
+    }
+    if (chosen.length < 2) {
+      for (const move of candidates) {
+        if (chosen.length >= 2) break;
+        if (!chosen.some(item => item.id === move.id)) chosen.push(move);
+      }
+    }
+    if (chosen.length) {
+      extrasById[id] = chosen;
+      continue;
+    }
+  }
+
+  // If not resolved from cache, retain existing curated extras from catalog
+  if (existingExtras[id]) {
+    extrasById[id] = existingExtras[id];
+  }
 }
 
 const header = `/* Generated offline by scripts/build-campaign-move-options.js. Do not edit manually. */\n`;

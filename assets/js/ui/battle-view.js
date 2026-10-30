@@ -24,6 +24,26 @@
     paralysis: { short: 'PARALISIA', aria: 'Paralisado', move: 'causa paralisia' }
   });
   const statusBadge = status => STATUS_LABELS[status] || null;
+  const STAT_STAGE_SHORT_LABELS = Object.freeze({
+    attack: 'ATK',
+    defense: 'DEF',
+    specialAttack: 'SP.ATK',
+    specialDefense: 'SP.DEF',
+    speed: 'SPE'
+  });
+
+  function renderStatStagePills(statStages) {
+    if (!statStages || typeof statStages !== 'object') return '';
+    return Object.entries(statStages)
+      .filter(([_, stage]) => stage !== 0 && Number.isInteger(stage))
+      .map(([stat, stage]) => {
+        const sign = stage > 0 ? `+${stage}` : `${stage}`;
+        const className = stage > 0 ? 'stat-stage-boost' : 'stat-stage-drop';
+        const label = STAT_STAGE_SHORT_LABELS[stat] || stat.toUpperCase();
+        return `<span class="stat-stage-badge ${className}" data-stat="${stat}" data-stage="${stage}">${label} ${sign}</span>`;
+      }).join('');
+  }
+
   let arenaRegistryModule;
   let arenaControllerModule;
   if (typeof module !== 'undefined' && module.exports) {
@@ -548,6 +568,7 @@
                   ${(enemyActive.types || []).map(t => `<span class="hud-type-badge" style="background: var(--type-${t}, #64748b);">${t}</span>`).join('')}
                 </div>
               </div>
+              <div id="enemyStatStages" class="hud-stat-stages">${renderStatStagePills(enemyActive.statStages)}</div>
               <div class="hp-track">
                 <div
                   id="enemyHpFill"
@@ -616,6 +637,7 @@
                   ${(playerActive.types || []).map(t => `<span class="hud-type-badge" style="background: var(--type-${t}, #64748b);">${t}</span>`).join('')}
                 </div>
               </div>
+              <div id="playerStatStages" class="hud-stat-stages">${renderStatStagePills(playerActive.statStages)}</div>
               <div class="hp-track">
                 <div
                   id="playerHpFill"
@@ -972,6 +994,14 @@
         badge.textContent = label?.short || '';
         badge.setAttribute('aria-label', label?.aria || '');
         badge.dataset.status = statusCondition || '';
+      }
+    }
+
+    updateStatStages(target, statStages) {
+      if (typeof document === 'undefined') return;
+      const container = document.getElementById(`${target}StatStages`);
+      if (container) {
+        container.innerHTML = renderStatStagePills(statStages);
       }
     }
 

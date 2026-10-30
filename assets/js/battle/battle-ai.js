@@ -103,11 +103,17 @@
       }
 
       // 1. Golpes utilizáveis do ativo (somente status curados)
+      const isUsableStatusMove = (m) => {
+        if (m.damageClass !== 'status') return true;
+        if (['poison', 'burn', 'paralysis'].includes(m.statusEffect)) return true;
+        if (m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m))) return true;
+        return false;
+      };
+
       const activeMoves = Array.isArray(myActive.moves) ? myActive.moves : [];
       const usableMoves = activeMoves
         .map((m, idx) => ({ ...m, loadoutIndex: idx }))
-        .filter(m => (m.currentPp === undefined || m.currentPp > 0) &&
-          (m.damageClass !== 'status' || ['poison', 'burn', 'paralysis'].includes(m.statusEffect)));
+        .filter(m => (m.currentPp === undefined || m.currentPp > 0) && isUsableStatusMove(m));
 
       // 2. Candidatos do banco vivos
       const livingBench = myTeam
@@ -117,8 +123,7 @@
       // Candidatos do banco vivos que possuem pelo menos 1 golpe utilizável com PP
       const livingBenchWithMoves = livingBench.filter(item => {
         const mvs = Array.isArray(item.pokemon.moves) ? item.pokemon.moves : [];
-        return mvs.some(m => (m.currentPp === undefined || m.currentPp > 0) &&
-          (m.damageClass !== 'status' || ['poison', 'burn', 'paralysis'].includes(m.statusEffect)));
+        return mvs.some(m => (m.currentPp === undefined || m.currentPp > 0) && isUsableStatusMove(m));
       });
 
       // ================================================================
@@ -213,22 +218,60 @@
         const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { attackerSide: side, modifiers: state.modifiers || {} });
         let score = evalData.expectedDamage;
 
-        if (m.statusEffect && m.damageClass === 'status') {
-          const immune = constants.isStatusMoveImmune(m, oppActive.types);
-          const canApply = !immune && !oppActive.statusCondition;
-          const tick = Math.max(1, Math.floor(oppActive.maxHp /
-            (m.statusEffect === 'poison' ? 8 : 16)));
-          const physicalThreat = Math.max(0, ...oppActive.moves.filter(move => move.damageClass === 'physical')
-            .map(move => BattleEvaluator.evaluateMove(oppActive, myActive, move,
-              { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
-          const totalThreat = Math.max(physicalThreat, ...oppActive.moves.filter(move =>
-            move.damageClass !== 'status').map(move => BattleEvaluator.evaluateMove(oppActive, myActive,
-            move, { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
-          const disruption = m.statusEffect === 'burn' ? Math.floor(physicalThreat / 2) * 2 :
-            m.statusEffect === 'paralysis' ? Math.floor(totalThreat / 4) * 2 + 12 : 0;
-          score = canApply && oppActive.currentHp > tick * 2
-            ? (m.statusEffect === 'paralysis' ? disruption : tick * 4 + disruption) *
-              (m.accuracy === null ? 1 : m.accuracy / 100) : 0;
+        if (m.damageClass === 'status') {
+          if (m.statusEffect) {
+            const immune = constants.isStatusMoveImmune(m, oppActive.types);
+            const canApply = !immune && !oppActive.statusCondition;
+            const tick = Math.max(1, Math.floor(oppActive.maxHp /
+              (m.statusEffect === 'poison' ? 8 : 16)));
+            const physicalThreat = Math.max(0, ...oppActive.moves.filter(move => move.damageClass === 'physical')
+              .map(move => BattleEvaluator.evaluateMove(oppActive, myActive, move,
+                { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
+            const totalThreat = Math.max(physicalThreat, ...oppActive.moves.filter(move =>
+              move.damageClass !== 'status').map(move => BattleEvaluator.evaluateMove(oppActive, myActive,
+              move, { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
+            const disruption = m.statusEffect === 'burn' ? Math.floor(physicalThreat / 2) * 2 :
+              m.statusEffect === 'paralysis' ? Math.floor(totalThreat / 4) * 2 + 12 : 0;
+            score = canApply && oppActive.currentHp > tick * 2
+              ? (m.statusEffect === 'paralysis' ? disruption : tick * 4 + disruption) *
+                (m.accuracy === null ? 1 : m.accuracy / 100) : 0;
+          } else {
+            const statBoosts = evalData.statBoosts || m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m));
+            if (statBoosts && typeof statBoosts === 'object') {
+              let canBoostAny = false;
+              let totalPossibleBoost = 0;
+              for (const [sKey, delta] of Object.entries(statBoosts)) {
+                const curStage = (myActive.statStages && myActive.statStages[sKey]) || 0;
+                if (curStage < 6) {
+                  canBoostAny = true;
+                  totalPossibleBoost += Math.min(delta, 6 - curStage);
+                }
+              }
+
+              const hasPhysicalAttack = myActive.moves.some(mv => mv.damageClass === 'physical' && (mv.currentPp === undefined || mv.currentPp > 0));
+              const hasSpecialAttack = myActive.moves.some(mv => mv.damageClass === 'special' && (mv.currentPp === undefined || mv.currentPp > 0));
+
+              let offensiveBenefit = false;
+              if (statBoosts.attack && hasPhysicalAttack) offensiveBenefit = true;
+              if (statBoosts.specialAttack && hasSpecialAttack) offensiveBenefit = true;
+              if (statBoosts.defense || statBoosts.specialDefense || statBoosts.speed) offensiveBenefit = true;
+
+              const hpRatio = myActive.currentHp / myActive.maxHp;
+
+              if (!canBoostAny || !offensiveBenefit || hpRatio < 0.25) {
+                score = 0;
+              } else {
+                const oppThreat = activeMatchup ? (activeMatchup.opponentBestExpectedDamage || 0) : 0;
+                if (oppThreat >= myActive.currentHp) {
+                  score = 0;
+                } else {
+                  score = totalPossibleBoost * 30 + Math.floor(hpRatio * 20);
+                }
+              }
+            } else {
+              score = 0;
+            }
+          }
         }
 
         // Bônus decisivo para KO garantido vs possível (PBA-014B)
@@ -249,6 +292,16 @@
           score = Math.max(0, score - Math.floor(CONFIG.KO_BONUS / 2));
         }
 
+        // Penalidade para auto-debuff quando o golpe não garante KO
+        const selfDrops = evalData.selfStatDrops || m.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(m));
+        if (selfDrops && typeof selfDrops === 'object' && !evalData.guaranteedKo) {
+          let dropCount = 0;
+          for (const delta of Object.values(selfDrops)) {
+            dropCount += Math.abs(delta);
+          }
+          score = Math.max(1, score - dropCount * 15);
+        }
+
         // Bônus para prioridade positiva em ataques não-imunes
         if (evalData.priority > 0 && evalData.typeMultiplier > 0) {
           score += 15 * evalData.priority;
@@ -262,6 +315,7 @@
         return {
           ...evalData,
           statusEffect: m.statusEffect || null,
+          statBoosts: evalData.statBoosts || m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m)) || null,
           loadoutIndex: m.loadoutIndex,
           score
         };
@@ -358,8 +412,10 @@
       // 5. Seleção de Golpe (Move Selection)
       // Se existem golpes que causam dano, filtra e descarta golpes com imunidade absoluta (0x)
       let candidates = evaluatedMoves;
-      const nonImmuneMoves = evaluatedMoves.filter(m => (m.statusEffect && m.score > 0) ||
-        (m.typeMultiplier > 0 && m.damageIfHit > 0));
+      const nonImmuneMoves = evaluatedMoves.filter(m =>
+        ((m.statusEffect || m.statBoosts) && m.score > 0) ||
+        (m.typeMultiplier > 0 && m.damageIfHit > 0)
+      );
       if (nonImmuneMoves.length > 0) {
         candidates = nonImmuneMoves;
       }
@@ -377,7 +433,7 @@
       });
 
       const selected = candidates[0];
-      const reasonCode = selected.statusEffect ? REASON.STATUS_PRESSURE :
+      const reasonCode = (selected.statusEffect || selected.statBoosts) ? REASON.STATUS_PRESSURE :
         selected.wouldKo ? REASON.GUARANTEED_KO : REASON.BEST_EXPECTED_DAMAGE;
 
       const action = {

@@ -273,13 +273,10 @@
     'synchronoise': Object.freeze({ name: 'synchronoise', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'REQUIRES_MATCHING_TYPE' }),
 
     // --- AUTO-DEBUFF / PENALIDADE DE ATRIBUTO NÃO IMPLEMENTADA (Poder desbalanceado sem a penalidade) ---
-    'draco-meteor': Object.freeze({ name: 'draco-meteor', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
-    'overheat': Object.freeze({ name: 'overheat', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'leaf-storm': Object.freeze({ name: 'leaf-storm', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'fleur-cannon': Object.freeze({ name: 'fleur-cannon', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'psycho-boost': Object.freeze({ name: 'psycho-boost', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'superpower': Object.freeze({ name: 'superpower', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
-    'close-combat': Object.freeze({ name: 'close-combat', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'headlong-rush': Object.freeze({ name: 'headlong-rush', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'armor-cannon': Object.freeze({ name: 'armor-cannon', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'v-create': Object.freeze({ name: 'v-create', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
@@ -376,6 +373,10 @@
     MOVESET_LOADOUT_SOURCE,
     MOVESET_LIMIT_REASON,
     UNSUPPORTED_COMPLEX_MOVES,
+    STAT_STAGE_KEYS: battleConstants.STAT_STAGE_KEYS,
+    getEffectiveStat: battleConstants.getEffectiveStat,
+    applyStatStageChange: battleConstants.applyStatStageChange,
+    resetStatStages: battleConstants.resetStatStages,
     validateMoveData,
     isMechanicallySupportedMove
   };

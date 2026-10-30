@@ -26,7 +26,9 @@
 
   const TurnManager = (() => {
     function effectiveSpeed(combatant) {
-      const speed = Number(combatant.speed);
+      const speed = constants.getEffectiveStat
+        ? constants.getEffectiveStat(combatant, 'speed')
+        : Number(combatant.speed);
       return combatant.statusCondition === 'paralysis' && speed > 0
         ? Math.max(1, Math.floor(speed / 2)) : speed;
     }

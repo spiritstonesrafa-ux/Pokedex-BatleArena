@@ -329,7 +329,11 @@
           power: Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
           maxPp: Number(move.pp), currentPp: Number(move.pp),
           damageClass: String(move.damageClass),
-          ...(move.statusEffect ? { statusEffect: String(move.statusEffect) } : {})
+          ...(move.statusEffect ? { statusEffect: String(move.statusEffect) } : {}),
+          ...(move.statBoosts || (battleConstants?.getStatBoosts && battleConstants.getStatBoosts(move))
+            ? { statBoosts: { ...(move.statBoosts || battleConstants.getStatBoosts(move)) } } : {}),
+          ...(move.selfStatDrops || (battleConstants?.getSelfStatDrops && battleConstants.getSelfStatDrops(move))
+            ? { selfStatDrops: { ...(move.selfStatDrops || battleConstants.getSelfStatDrops(move)) } } : {})
         }))
       };
     }
