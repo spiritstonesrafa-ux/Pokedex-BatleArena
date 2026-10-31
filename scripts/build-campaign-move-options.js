@@ -44,6 +44,8 @@ const PILOT_P3_MOVES = new Set([
   'water-pulse',
   'toxic',
   'fake-out',
+  'seismic-toss',
+  'night-shade',
   'rest','sleep-talk','yawn','snore','dream-eater'
 ]);
 
@@ -184,6 +186,24 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     accuracy: 100,
     pp: 20,
     damageClass: 'special'
+  }),
+  'seismic-toss': Object.freeze({
+    id: 69,
+    name: 'seismic-toss',
+    type: 'fighting',
+    power: null,
+    accuracy: 100,
+    pp: 20,
+    damageClass: 'physical'
+  }),
+  'night-shade': Object.freeze({
+    id: 101,
+    name: 'night-shade',
+    type: 'ghost',
+    power: null,
+    accuracy: 100,
+    pp: 15,
+    damageClass: 'special'
   })
 });
 
@@ -196,6 +216,9 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   80: ['yawn','snore'], // Slowbro: delayed sleep and sleep-usable attack.
 
   297: ['fake-out', 'arm-thrust'], // Hariyama, first-entry pilot.
+
+  68: ['seismic-toss', 'high-horsepower'], // Machamp: iconic Seismic Toss user
+  356: ['night-shade', 'shadow-punch'], // Dusclops: iconic Night Shade user
 
   89: ['toxic', 'shock-wave'], // Muk: Toxic via modern TM; keep six campaign options.
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)

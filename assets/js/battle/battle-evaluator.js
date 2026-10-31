@@ -58,9 +58,10 @@
       const power = Number(move.power) || 0;
       const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
+      const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(move));
 
       // Golpes de status não causam dano na arquitetura atual
-      if (damageClass === 'status' || power <= 0) {
+      if ((damageClass === 'status' || power <= 0) && !isLevelDamage) {
         const statBoosts = move.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(move)) || null;
         let expectedStatusBenefit = 0;
         let statusChance = 0;
@@ -181,7 +182,7 @@
       // 2. STAB (Same-Type Attack Bonus)
       const attackerTypes = Array.isArray(attacker.types) ? attacker.types : [];
       const hasStab = attackerTypes.includes(moveType);
-      const stabMultiplier = hasStab ? (constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
+      const stabMultiplier = (hasStab && !isLevelDamage) ? (constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
 
       // 3. Efetividade de Tipos (Type Effectiveness)
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];
@@ -206,17 +207,43 @@
       // 4. Faixa e Média de Dano (PBA-014B: Level 50 e Variância 85..100)
       const simLevel = (constants && constants.BATTLE_CONFIG && constants.BATTLE_CONFIG.SIMULATION_LEVEL) || 50;
       const entryRestricted = (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
-      const range = entryRestricted
-        ? { baseDamage: 0, minDamage: 0, maxDamage: 0, averageDamage: 0 }
-        : DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
-
-      const baseDamage = range.baseDamage;
       const multiHit = constants.getMultiHitMove(move);
       const expectedHits = multiHit ? (multiHit.maxHits === 5 ? 3.1 : 2) : 1;
-      const minDamage = constants.applyBurnPenalty(range.minDamage, attacker, move) * (multiHit?.minHits || 1);
-      const maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move) * (multiHit?.maxHits || 1);
-      const averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move) * expectedHits;
-      const damageIfHit = averageDamage;
+      let baseDamage;
+      let minDamage;
+      let maxDamage;
+      let averageDamage;
+      let damageIfHit;
+
+      if (isLevelDamage) {
+        const attackerLevel = Number(attacker.level) || simLevel;
+        if (typeMultiplier === 0) {
+          baseDamage = 0;
+          minDamage = 0;
+          maxDamage = 0;
+          averageDamage = 0;
+          damageIfHit = 0;
+          typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.IMMUNE || 'IMMUNE';
+        } else {
+          baseDamage = attackerLevel;
+          minDamage = attackerLevel;
+          maxDamage = attackerLevel;
+          averageDamage = attackerLevel;
+          damageIfHit = attackerLevel;
+          typeMultiplier = 1;
+          typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.NEUTRAL || 'NEUTRAL';
+        }
+      } else {
+        const range = entryRestricted
+          ? { baseDamage: 0, minDamage: 0, maxDamage: 0, averageDamage: 0 }
+          : DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
+
+        baseDamage = range.baseDamage;
+        minDamage = constants.applyBurnPenalty(range.minDamage, attacker, move) * (multiHit?.minHits || 1);
+        maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move) * (multiHit?.maxHits || 1);
+        averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move) * expectedHits;
+        damageIfHit = averageDamage;
+      }
 
       // 5. Ponderação por Precisão para obter Dano Esperado (Expected Value)
       let accuracyFactor = 1.0;

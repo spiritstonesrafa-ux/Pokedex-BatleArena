@@ -86,10 +86,26 @@
       normalizedType = rawType.trim().toLowerCase();
     }
 
-    // Validação de Power (> 0)
-    const power = Number(raw.power);
-    if (!Number.isFinite(power) || !Number.isInteger(power) || power <= 0) {
-      throw new Error(`Poder do golpe "${raw.name}" inválido: ${raw.power}. Deve ser um inteiro positivo maior que zero.`);
+    // Validação de Power (> 0, exceto golpes de dano fixo por nível)
+    const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(raw) || constants?.isLevelDamageMove?.({ id, name: raw.name }));
+    let power = null;
+    if (isLevelDamage) {
+      if (raw.power !== undefined && raw.power !== null) {
+        if (typeof raw.power === 'boolean' || typeof raw.power === 'object') {
+          throw new Error(`Poder do golpe baseado em nível "${raw.name}" inválido: ${raw.power}. Golpes de dano fixo por nível devem ter power null ou 0.`);
+        }
+        const pwr = Number(raw.power);
+        if (!Number.isFinite(pwr) || pwr !== 0) {
+          throw new Error(`Poder do golpe baseado em nível "${raw.name}" inválido: ${raw.power}. Golpes de dano fixo por nível devem ter power null ou 0.`);
+        }
+      }
+      power = null;
+    } else {
+      const pwr = Number(raw.power);
+      if (!Number.isFinite(pwr) || !Number.isInteger(pwr) || pwr <= 0) {
+        throw new Error(`Poder do golpe "${raw.name}" inválido: ${raw.power}. Deve ser um inteiro positivo maior que zero.`);
+      }
+      power = pwr;
     }
 
     // Validação de Accuracy (1 a 100, ou null/'ALWAYS_HIT')

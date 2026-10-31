@@ -2,6 +2,44 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P5 — Dano Baseado no Nível (Seismic Toss e Night Shade) — Validação Completa
+
+- Implementado suporte compartilhado a dano baseado no nível do usuário: Seismic Toss (#69; Fighting, Physical, precisão 100, PP 20) e Night Shade (#101; Ghost, Special, precisão 100, PP 15), ambos com `power: null`. Suporte FULL no modelo atual de batalhas individuais.
+- Política consistente e estrita de validação de poder: corrigida a inconsistência onde `MoveModel.createMove` aceitava silenciosamente poderes adulterados (ex: `power: 999`) e os transformava em `null`. Agora, tanto `validateMoveData`, `MoveModel.createMove`, `convertPokeApiMove` quanto `BattleEngine.createCombatant` rejeitam rigorosamente poderes positivos, negativos, não-finitos ou tipos inválidos (`boolean`, `object`, etc.) sem mutar o objeto de entrada. Valores legítimos (`null` da PokéAPI, `undefined` e `0` proveniente de coerções da hidratação) são aceitos e normalizados para `power: null`.
+- Combinações conflitantes de ID e nome: `isLevelDamageMove` agora valida simultaneamente `id` e `name` caso ambos estejam presentes, impedindo que combinações conflitantes (como `{ id: 69, name: 'tackle' }` ou `{ id: 33, name: 'seismic-toss' }`) ativem indevidamente a mecânica de dano fixo por nível. Golpes com power nulo ainda não implementados (Guillotine, Fissure, Low Kick, etc.) permanecem bloqueados; golpes comuns e de status preservam seus contratos intactos.
+- Dano causado é estritamente igual ao nível efetivo do atacante (`Math.min(currentHp, attackerLevel)`). Ignora completamente atributos de ataque e defesa (físicos ou especiais), estágios de atributos (-6 a +6), STAB, acertos críticos, variância de dano (85..100) e penalidade de queimadura (burn). Fallback seguro para o nível padrão do motor (50) quando o nível não for fornecido ou for inválido.
+- Respeito a imunidades elementais: Seismic Toss causa 0 de dano a tipos Ghost; Night Shade causa 0 de dano a tipos Normal. Em alvos imunes, o evento `TYPE_EFFECTIVENESS_RESOLVED` emite multiplicador 0 e classificação `IMMUNE`, nenhum dano é aplicado e o HP do alvo permanece intacto. Efetividades não-imunes (fraqueza 2x e resistência 0.5x) causam exatamente o nível e suprimem mensagens de super efetivo / resistido (`NEUTRAL`).
+- HP Capping e Nocaute: dano limitado ao HP restante sem deixar HP negativo; nocaute encerra a batalha ou solicita substituição sem dano excedente vazando para a reserva.
+- Precisão e consumo de PP: acurácia normal (100%), consumindo 1 PP por uso mesmo se o golpe errar por evasão/precisão.
+- Cobertura completa de condições impeditivas:
+  - Sono profundo: impede a ação, reduz `sleepTurns` em 1, emite `STATUS_IMMOBILIZED` e **não consome PP**.
+  - Congelamento: impede a ação se falhar no descongelamento, emite `STATUS_IMMOBILIZED` (`FROZEN_SOLID`) e **não consome PP**.
+  - Paralisia: impede a ação quando sorteada, emite `PP_CHANGED` e `STATUS_IMMOBILIZED`, **consumindo 1 PP** conforme a regra canônica.
+  - Flinch (hesitação): impede a ação, limpa o estado de flinch, emite `FLINCH_IMMOBILIZED` e **não consome PP**.
+  - Confusão com autoagressão: decrementa `confusionTurns`, emite `CONFUSION_CHECK` e `CONFUSION_DAMAGE` físico contra si mesmo, não causa dano ao defensor e **não consome PP** do golpe pretendido.
+  - Confusão superada: decrementa `confusionTurns`, emite `CONFUSION_CHECK`, executa o golpe normalmente com dano igual ao nível e **consome 1 PP**.
+- Integração real com BattleSessionController e PresentationMapper:
+  - Adversário executando Seismic Toss e Night Shade via sessão real nos dois sentidos, respeitando níveis efetivos distintos (Jogador nível 40 vs Adversário nível 60/70).
+  - Adversário atacando o Pokémon que entra após troca voluntária do jogador, inclusive com resolução de imunidade de Ghost contra Normal (Snorlax) e dano fixo em alvo suscetível.
+  - Convocação via Sleep Talk com consumo de 1 PP de Sleep Talk e preservação estrita de PP dos golpes convocados.
+  - Eventos reais emitidos pela sessão mapeados com sucesso pelo PresentationMapper (`HP_TRANSITION`, `SWITCH_OUT_SEQUENCE`, `SWITCH_IN_SEQUENCE`, `FAINT_SEQUENCE`, `MOVE_ANNOUNCEMENT`).
+- Hidratação real com BattleTeamHydrator:
+  - Testes com fixtures no formato autêntico da PokéAPI (`power: null`, `type.name`, `damage_class.name`).
+  - Corrigido fluxo de extração de tipo de golpe no hydrator (`moveDetail.type?.name || moveDetail.type`) e preservação de nível explícito do combatente.
+  - Demonstração completa de seleção determinística, hidratação de Machamp e Dusclops, criação de combate no motor e execução de golpes sem dependência de rede ao vivo.
+- Campanha: pilotos em Machamp (#68) e Dusclops (#356), limite de 6 opções e 455 espécies com extras preservados.
+- Referências:
+  - PokéAPI: Seismic Toss (#69) e Night Shade (#101).
+  - Pokémon Showdown: `data/moves.ts` (`damage: 'level'`, `category: 'Physical'` para Seismic Toss, `category: 'Special'` para Night Shade): https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts e `sim/battle-actions.ts` (`getDamage` - dano fixo por nível).
+- Validação:
+  - 22 testes na suíte `tests/battle/level-damage.test.js`.
+  - Suíte completa do repositório: **1.431 testes aprovados, 37 suítes, 0 falhas, 0 cancelados, 0 ignorados; código de saída 0**.
+  - Auditoria P4: 268 conhecidos, 209 FULL, 59 PARTIAL por dependências explícitas, 0 pendências P4.
+  - `git diff --check` aprovado sem erros de formatação ou whitespace.
+- P5 permanece parcial: ainda pendentes danos proporcionais a HP/peso (Super Fang, Low Kick, Grass Knot, Reversal, Flail), dano fixo numérico (Sonic Boom, Dragon Rage), OHKO e histórico de dano para contra-ataques (Counter, Mirror Coat, Metal Burst). Sem commit, push ou deploy.
+
+---
+
 ## Atualização — 31/10/2026: P5 — Suporte a Water Shuriken (Múltiplos Acertos Especial com Prioridade +1)
 
 - Implementado Water Shuriken (#594): Water, Special, poder 15 por acerto, precisão 100, PP 20, prioridade +1, 2–5 acertos usando a distribuição moderna 35% / 35% / 15% / 15%. Suporte FULL no modelo atual de batalhas individuais.

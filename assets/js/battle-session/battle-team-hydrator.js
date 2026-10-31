@@ -222,17 +222,29 @@
      */
     async hydratePokemon(pokemonOrId) {
       let pokeData;
+      const explicitLevel = (typeof pokemonOrId === 'object' && pokemonOrId !== null) ? pokemonOrId.level : undefined;
 
       if (typeof pokemonOrId === 'object' && pokemonOrId !== null && pokemonOrId.stats && pokemonOrId.moves) {
         pokeData = pokemonOrId;
       } else if (this.api && typeof this.api.getPokemonDetail === 'function') {
+        const query = (typeof pokemonOrId === 'object' && pokemonOrId !== null) ? (pokemonOrId.id || pokemonOrId.number || pokemonOrId.name) : pokemonOrId;
         try {
-          pokeData = await this.api.getPokemonDetail(pokemonOrId);
+          pokeData = await this.api.getPokemonDetail(query);
+          if (explicitLevel !== undefined && pokeData) {
+            pokeData = { ...pokeData, level: explicitLevel };
+          }
         } catch (fetchErr) {
-          pokeData = getFallbackSpecies(pokemonOrId);
+          pokeData = getFallbackSpecies(query);
+          if (explicitLevel !== undefined && pokeData) {
+            pokeData = { ...pokeData, level: explicitLevel };
+          }
         }
       } else {
-        pokeData = getFallbackSpecies(pokemonOrId);
+        const query = (typeof pokemonOrId === 'object' && pokemonOrId !== null) ? (pokemonOrId.id || pokemonOrId.number || pokemonOrId.name) : pokemonOrId;
+        pokeData = getFallbackSpecies(query);
+        if (explicitLevel !== undefined && pokeData) {
+          pokeData = { ...pokeData, level: explicitLevel };
+        }
       }
 
       const id = Number(pokeData.number || pokeData.id);
@@ -289,6 +301,7 @@
       return {
         id,
         name,
+        ...(pokeData.level !== undefined ? { level: pokeData.level } : {}),
         types,
         hp,
         maxHp: hp,
@@ -326,7 +339,7 @@
         reason: MOVESET_LIMIT_REASON.NONE,
         moves: moves.map(move => ({
           id: Number(move.id), name: String(move.name), type: String(move.type),
-          power: Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
+          power: (move.power === null || move.power === undefined || (battleConstants?.isLevelDamageMove?.(move) && Number(move.power) === 0)) ? null : Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
           maxPp: Number(move.pp), currentPp: Number(move.pp),
           damageClass: String(move.damageClass),
           ...(move.statusEffect ? { statusEffect: String(move.statusEffect) } : {}),
@@ -454,7 +467,6 @@
           if (!isMechanicallySupportedMove(moveDetail)) continue;
 
           const dmgClass = String(moveDetail.damageClass || moveDetail.damage_class?.name || '').toLowerCase();
-          const power = Number(moveDetail.power);
 
           let moveId = Number(moveDetail.id);
           if (!Number.isInteger(moveId) || moveId <= 0) {
@@ -464,7 +476,7 @@
             }
           }
           if (!Number.isInteger(moveId) || moveId <= 0) {
-            const fallbackByType = FALLBACK_MOVES_BY_TYPE[String(moveDetail.type || 'normal').toLowerCase()] || FALLBACK_MOVES_BY_TYPE.normal;
+            const fallbackByType = FALLBACK_MOVES_BY_TYPE[String(moveDetail.type?.name || moveDetail.type || 'normal').toLowerCase()] || FALLBACK_MOVES_BY_TYPE.normal;
             moveId = fallbackByType.id || 33;
           }
           const moveName = String(moveDetail.name).trim().toLowerCase();
@@ -474,11 +486,14 @@
           seenMoveIds.add(moveId);
           seenMoveNames.add(moveName);
 
+          const isLvlDmg = Boolean(battleConstants?.isLevelDamageMove?.(moveDetail) || battleConstants?.isLevelDamageMove?.({ id: moveId, name: moveName }));
+          const power = isLvlDmg ? null : Number(moveDetail.power);
+
           const pp = Math.max(1, Number(moveDetail.pp || 15));
           validPool.push({
             id: moveId,
             name: moveName,
-            type: String(moveDetail.type || 'normal').toLowerCase(),
+            type: String(moveDetail.type?.name || moveDetail.type || 'normal').toLowerCase(),
             power,
             accuracy: moveDetail.accuracy !== undefined ? moveDetail.accuracy : 100,
             pp,
@@ -594,7 +609,7 @@
 
       // Calcula a pontuação individual de cada golpe candidato
       const scoredCandidates = validPool.map((move) => {
-        let score = move.power;
+        let score = (battleConstants?.isLevelDamageMove?.(move) ? 50 : (Number(move.power) || 0));
 
         // 1. Bônus de STAB (Same-Type Attack Bonus)
         const isStab = types.includes(move.type);
@@ -623,7 +638,9 @@
       // Ordenação primária determinística dos candidatos pontuados
       scoredCandidates.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
-        if (b.move.power !== a.move.power) return b.move.power - a.move.power;
+        const pwrA = battleConstants?.isLevelDamageMove?.(a.move) ? 50 : (Number(a.move.power) || 0);
+        const pwrB = battleConstants?.isLevelDamageMove?.(b.move) ? 50 : (Number(b.move.power) || 0);
+        if (pwrB !== pwrA) return pwrB - pwrA;
         const accA = a.move.accuracy !== null ? a.move.accuracy : 100;
         const accB = b.move.accuracy !== null ? b.move.accuracy : 100;
         if (accB !== accA) return accB - accA;
@@ -663,10 +680,12 @@
       selected.sort((a, b) => {
         const itemA = scoredCandidates.find((c) => c.move.name === a.name);
         const itemB = scoredCandidates.find((c) => c.move.name === b.name);
-        const scoreA = itemA ? itemA.score : a.power;
-        const scoreB = itemB ? itemB.score : b.power;
+        const scoreA = itemA ? itemA.score : (battleConstants?.isLevelDamageMove?.(a) ? 50 : (Number(a.power) || 0));
+        const scoreB = itemB ? itemB.score : (battleConstants?.isLevelDamageMove?.(b) ? 50 : (Number(b.power) || 0));
         if (scoreB !== scoreA) return scoreB - scoreA;
-        if (b.power !== a.power) return b.power - a.power;
+        const pwrA = battleConstants?.isLevelDamageMove?.(a) ? 50 : (Number(a.power) || 0);
+        const pwrB = battleConstants?.isLevelDamageMove?.(b) ? 50 : (Number(b.power) || 0);
+        if (pwrB !== pwrA) return pwrB - pwrA;
         const accA = a.accuracy !== null ? a.accuracy : 100;
         const accB = b.accuracy !== null ? b.accuracy : 100;
         if (accB !== accA) return accB - accA;
