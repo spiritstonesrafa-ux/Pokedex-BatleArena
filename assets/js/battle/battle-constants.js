@@ -26,6 +26,10 @@
     MOVE_USED: 'MOVE_USED',
     PP_CHANGED: 'PP_CHANGED',
     MOVE_MISSED: 'MOVE_MISSED',
+    MOVE_FAILED: 'MOVE_FAILED',
+    HP_HEALED: 'HP_HEALED',
+    DROWSY_APPLIED: 'DROWSY_APPLIED',
+    DROWSY_ENDED: 'DROWSY_ENDED',
     STATUS_APPLIED: 'STATUS_APPLIED',
     STATUS_BLOCKED: 'STATUS_BLOCKED',
     STATUS_IMMOBILIZED: 'STATUS_IMMOBILIZED',
@@ -71,6 +75,7 @@
   });
 
   const MOVE_PRIORITIES = Object.freeze({
+    'fake-out': 3,
     'extreme-speed': 2,
     'quick-attack': 1,
     'aqua-jet': 1,
@@ -107,6 +112,7 @@
   }
 
   const DRAIN_MOVES = Object.freeze({
+    'dream-eater': 0.5,
     'giga-drain': 0.5,
     'drain-punch': 0.5,
     'leech-life': 0.5,
@@ -176,7 +182,12 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const P4Catalog = typeof module !== 'undefined' && module.exports ? require('./p4-secondary-catalog.js') : (window.PBAP4SecondaryCatalog || {effects:{},definitions:{},moves:{},defrost:[]});
   const SECONDARY_EFFECT_MOVES = Object.freeze({
+    ...P4Catalog.effects,
+    'alluring-voice': Object.freeze({id:914,name:'alluring-voice',target:'defender',chance:100,confusion:true,requiresRaisedStats:true}),
+    'snore': Object.freeze({id:173,name:'snore',target:'defender',chance:30,flinch:true}),
+    'fake-out': Object.freeze({ id: 252, name: 'fake-out', flinch: true, chance: 100, target: 'defender', requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH', 'FIRST_ACTION_AFTER_ENTRY']), requiresDamage: true, requiresHit: true }),
     'thunderbolt': Object.freeze({
       id: 85,
       name: 'thunderbolt',
@@ -371,6 +382,13 @@
     return s >= 0 ? (2 + s) / 2 : 2 / (2 - s);
   }
 
+  function getEffectiveAccuracy(move, attacker, defender) {
+    if(move.accuracy===null||move.accuracy==='ALWAYS_HIT')return null;
+    if(move.id===92&&attacker.types?.includes('poison'))return null;
+    const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Number(defender.evasionStage)||0)));
+    return Math.min(100,Math.floor(Number(move.accuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
+  }
+
   function getEffectiveStat(combatant, statKey) {
     if (!combatant || typeof combatant !== 'object') return 1;
     const base = Number(combatant[statKey]);
@@ -390,6 +408,11 @@
   }
 
   function applyStatStageChange(combatant, statKey, delta) {
+    if (['accuracy','evasion'].includes(statKey)) {
+      const key=statKey+'Stage', previousStage=Math.max(-6,Math.min(6,Number(combatant[key])||0)), requestedDelta=Math.trunc(Number(delta)||0);
+      const finalStage=Math.max(-6,Math.min(6,previousStage+requestedDelta));combatant[key]=finalStage;if(finalStage>previousStage)combatant.statsRaisedThisTurn=true;
+      return {statKey,previousStage,requestedDelta,appliedDelta:finalStage-previousStage,finalStage,blockedReason:finalStage===previousStage?(requestedDelta<0?'AT_MIN':'AT_MAX'):null};
+    }
     if (!combatant || typeof combatant !== 'object') {
       throw new Error('Combatente inválido para alteração de estágio de atributo.');
     }
@@ -397,7 +420,8 @@
       throw new Error(`Atributo inválido para alteração de estágio: "${statKey}".`);
     }
     if (!combatant.statStages || typeof combatant.statStages !== 'object') {
-      combatant.statStages = createDefaultStatStages();
+      combatant.accuracyStage=0;combatant.evasionStage=0;
+    combatant.statStages = createDefaultStatStages();
     }
     const previousStage = Number(combatant.statStages[statKey]) || 0;
     const requestedDelta = Math.trunc(Number(delta) || 0);
@@ -416,6 +440,7 @@
     }
 
     const appliedDelta = targetStage - previousStage;
+    if(appliedDelta>0)combatant.statsRaisedThisTurn=true;
     combatant.statStages[statKey] = targetStage;
 
     return {
@@ -431,6 +456,7 @@
 
   function resetStatStages(combatant) {
     if (!combatant || typeof combatant !== 'object') return;
+    combatant.accuracyStage=0;combatant.evasionStage=0;
     combatant.statStages = createDefaultStatStages();
     return combatant.statStages;
   }
@@ -441,6 +467,21 @@
   });
 
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
+    ...P4Catalog.definitions,
+    47: Object.freeze({"id":47,"name":"sing","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
+    142: Object.freeze({"id":142,"name":"lovely-kiss","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
+    320: Object.freeze({"id":320,"name":"grass-whistle","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
+    78: Object.freeze({"id":78,"name":"stun-spore","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
+    137: Object.freeze({"id":137,"name":"glare","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
+    139: Object.freeze({"id":139,"name":"poison-gas","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
+    499: Object.freeze({id:499,name:'clear-smog',supportLevel:'FULL',requiredMechanics:['SPECIAL_DAMAGE','RESET_TARGET_STAGES'],knownPending:[],blockedReason:null,priority:0}),
+    914: Object.freeze({id:914,name:'alluring-voice',supportLevel:'FULL',requiredMechanics:['SPECIAL_DAMAGE','CONDITIONAL_CONFUSION'],knownPending:[],blockedReason:null,priority:0}),
+    156: Object.freeze({"id":156,"name":"rest","supportLevel":"FULL","requiredMechanics":["SELF_HEAL","REST_SLEEP"],"knownPending":[],"blockedReason":null,"priority":0}),
+    214: Object.freeze({"id":214,"name":"sleep-talk","supportLevel":"FULL","requiredMechanics":["SLEEP_USABLE","CALLED_MOVE"],"knownPending":[],"blockedReason":null,"priority":0}),
+    281: Object.freeze({"id":281,"name":"yawn","supportLevel":"FULL","requiredMechanics":["DELAYED_SLEEP"],"knownPending":[],"blockedReason":null,"priority":0}),
+    173: Object.freeze({"id":173,"name":"snore","supportLevel":"FULL","requiredMechanics":["SLEEP_USABLE","SECONDARY_FLINCH"],"knownPending":[],"blockedReason":null,"priority":0}),
+    138: Object.freeze({"id":138,"name":"dream-eater","supportLevel":"FULL","requiredMechanics":["SLEEP_TARGET_REQUIRED","HP_DRAIN"],"knownPending":[],"blockedReason":null,"priority":0}),
+    252: Object.freeze({ id: 252, name: 'fake-out', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY', 'SECONDARY_FLINCH', 'FIRST_ACTION_AFTER_ENTRY'], knownPending: [], blockedReason: null, priority: 3, secondaryEffect: SECONDARY_EFFECT_MOVES['fake-out'] }),
     // --- FULL SUPPORT (Efeitos integralmente implementados e testados) ---
     14: Object.freeze({ id: 14, name: 'swords-dance', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ attack: 2 }) }),
     44: Object.freeze({ id: 44, name: 'bite', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bite'] }),
@@ -565,6 +606,19 @@
 
   // Mapeamento canônico dos golpes de dano utilizados nos catálogos da campanha e Pokédex expandida
   const KNOWN_CATALOG_MOVES = Object.freeze({
+    ...P4Catalog.moves,
+    47: Object.freeze({"id":47,"name":"sing","type":"normal","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
+    142: Object.freeze({"id":142,"name":"lovely-kiss","type":"normal","accuracy":75,"pp":10,"statusEffect":"sleep","power":0,"damageClass":"status"}),
+    320: Object.freeze({"id":320,"name":"grass-whistle","type":"grass","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
+    78: Object.freeze({"id":78,"name":"stun-spore","type":"grass","accuracy":75,"pp":30,"statusEffect":"paralysis","power":0,"damageClass":"status"}),
+    137: Object.freeze({"id":137,"name":"glare","type":"normal","accuracy":100,"pp":30,"statusEffect":"paralysis","power":0,"damageClass":"status"}),
+    139: Object.freeze({"id":139,"name":"poison-gas","type":"poison","accuracy":90,"pp":40,"statusEffect":"poison","power":0,"damageClass":"status"}),
+    156: Object.freeze({"id":156,"name":"rest","type":"psychic","power":0,"accuracy":null,"pp":5,"damageClass":"status","p4Effect":"rest"}),
+    214: Object.freeze({"id":214,"name":"sleep-talk","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"sleep-talk"}),
+    281: Object.freeze({"id":281,"name":"yawn","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"yawn"}),
+    173: Object.freeze({"id":173,"name":"snore","type":"normal","power":50,"accuracy":100,"pp":15,"damageClass":"special"}),
+    138: Object.freeze({"id":138,"name":"dream-eater","type":"psychic","power":100,"accuracy":100,"pp":15,"damageClass":"special"}),
+    252: Object.freeze({ id: 252, name: 'fake-out', type: 'normal', power: 40, accuracy: 100, pp: 10, damageClass: 'physical' }),
     92: Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
     1: Object.freeze({ id: 1, name: 'pound', type: 'normal', power: 40, accuracy: 100, pp: 35, damageClass: 'physical' }),
     2: Object.freeze({ id: 2, name: 'karate-chop', type: 'fighting', power: 50, accuracy: 100, pp: 25, damageClass: 'physical' }),
@@ -1149,6 +1203,15 @@
 
   // Apenas golpes de status curados com efeito integral suportado.
   const SUPPORTED_STATUS_MOVES = Object.freeze({
+    'sing': Object.freeze({"id":47,"name":"sing","type":"normal","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
+    'lovely-kiss': Object.freeze({"id":142,"name":"lovely-kiss","type":"normal","accuracy":75,"pp":10,"statusEffect":"sleep","power":0,"damageClass":"status"}),
+    'grass-whistle': Object.freeze({"id":320,"name":"grass-whistle","type":"grass","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
+    'stun-spore': Object.freeze({"id":78,"name":"stun-spore","type":"grass","accuracy":75,"pp":30,"statusEffect":"paralysis","power":0,"damageClass":"status"}),
+    'glare': Object.freeze({"id":137,"name":"glare","type":"normal","accuracy":100,"pp":30,"statusEffect":"paralysis","power":0,"damageClass":"status"}),
+    'poison-gas': Object.freeze({"id":139,"name":"poison-gas","type":"poison","accuracy":90,"pp":40,"statusEffect":"poison","power":0,"damageClass":"status"}),
+    'rest': Object.freeze({"id":156,"name":"rest","type":"psychic","power":0,"accuracy":null,"pp":5,"damageClass":"status","p4Effect":"rest"}),
+    'sleep-talk': Object.freeze({"id":214,"name":"sleep-talk","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"sleep-talk"}),
+    'yawn': Object.freeze({"id":281,"name":"yawn","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"yawn"}),
     'toxic': Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
     'confuse-ray': Object.freeze({ id: 109, name: 'confuse-ray', type: 'ghost',
       power: 0, accuracy: 100, pp: 10, damageClass: 'status', statusEffect: 'confusion' }),
@@ -1206,7 +1269,7 @@
     if (!move) return false;
     if (move.defrost) return true;
     const name = String(move.name || '').trim().toLowerCase();
-    return name === 'scald';
+    return name === 'scald' || P4Catalog.defrost.includes(name);
   }
 
   function isDamagingFireMove(move) {
@@ -1216,9 +1279,11 @@
     return type === 'fire' && damageClass !== 'status';
   }
 
+  function isPostSecondaryThawMove(move){return (P4Catalog.postSecondaryThaw||['scald']).includes(String(move?.name||'').toLowerCase());}
+
   function isThawingMoveTarget(move) {
     if (!move) return false;
-    if (move.thawsTarget) return true;
+    if (move.thawsTarget || isPostSecondaryThawMove(move)) return true;
     const name = String(move.name || '').trim().toLowerCase();
     if (name === 'scald') return true;
     return isDamagingFireMove(move);
@@ -1250,6 +1315,12 @@
     if (!Array.isArray(types) || !move) return false;
     const name = String(move?.name || '').trim().toLowerCase();
     switch (name) {
+      case 'stun-spore':
+        return types.includes('grass')||isStatusConditionImmune('paralysis',types);
+      case 'glare':
+        return isStatusConditionImmune('paralysis',types);
+      case 'poison-gas':
+        return isStatusConditionImmune('poison',types);
       case 'toxic':
         return isStatusConditionImmune('toxic', types);
       case 'poison-powder':
@@ -1383,6 +1454,7 @@
     sanitizeStatStages,
     getStatStageMultiplier,
     getEffectiveStat,
+    getEffectiveAccuracy,
     applyStatStageChange,
     resetStatStages,
     STAT_BOOST_MOVES,
@@ -1396,6 +1468,7 @@
     isEligibleForStatusCondition,
     isSelfThawingMove,
     isThawingMoveTarget,
+    isPostSecondaryThawMove,
     isDamagingFireMove,
     DEFAULT_SLEEP_TURNS,
     DEFAULT_CONFUSION_TURNS,

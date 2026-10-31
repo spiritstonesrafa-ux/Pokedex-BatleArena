@@ -2,6 +2,33 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P4 concluída — condições e efeitos secundários
+
+- Concluída a P4 no escopo do motor atual de batalhas individuais. Relatório e matriz completa de dependências em docs/roadmap-p4.md. Os registros anteriores abaixo são históricos.
+- Integrados Tri Attack, rolagens independentes das presas elementais, precisão/evasão, expansão para 94 definições secundárias, Rest, Sleep Talk, Snore, Dream Eater, Yawn, curas de equipe, reset de atributos e confusão condicional.
+- Campanha: Rest/Sleep Talk em Snorlax; Yawn/Snore em Slowbro; Hypnosis/Dream Eater em Hypno. Opções anteriores de Fake Out, Toxic e demais pilotos preservadas.
+- Auditoria: 259 golpes conhecidos, 200 FULL e 59 PARTIAL por dependências específicas de outras fases. Nenhuma pendência genérica de P4 no catálogo conhecido ou nos 193 golpes distintos dos conjuntos fixos da campanha. Isso não significa suporte a todos os golpes existentes na PokéAPI.
+- Adicionados 195 testes de fechamento, além dos 13 de Fake Out já locais. Suíte completa: **1.341 testes aprovados, 36 suítes, 0 falhas, 0 cancelados, 0 ignorados; saída 0**. Auditoria reproduzível: node scripts/audit-p4.js. git diff --check aprovado.
+- Próximo bloco principal: P5 (múltiplos acertos, dano variável/fixo e histórico). Pendências específicas de P1/P2/P3 e P6/P7/P8 continuam descritas no relatório; Blizzard continua PARTIAL por clima na P7.
+- Todo este fechamento permanece local. Sem novo commit, push ou deploy após o lote anterior cf50ccf.
+
+---
+
+## Atualização — 31/10/2026: Publicação do lote anterior e P4 — Fake Out
+
+- Atualizações anteriores publicadas em origin/main no commit cf50ccffb7e013562f3b526ec5ef341ea4fa27e2: confusão, Toxic, cena cinematográfica Shadow, confirmação da equipe inicial e respectivos testes/documentação. Hash remoto confirmado antes de iniciar este novo ciclo.
+- Implementado Fake Out (#252): Normal, Physical, poder 40, precisão 100, PP 10, prioridade +3, 100% de hesitação em alvo sobrevivente não imune. Disponível no pool de Hariyama (#297), com limite de seis opções e geração offline preservados.
+- Rastreamento local entryMoveAttempts: a primeira oportunidade de movimento após a entrada permite o golpe; oportunidades impedidas por sono, freeze, flinch ou confusão também consomem a janela. Uma troca não conta como movimento do substituto. Saída e reentrada, troca forçada, substituição e batalha nova reiniciam a janela.
+- Fora da janela, Fake Out falha consumindo PP, sem dano ou flinch. Evento MOVE_FAILED e feedback próprio explicam a restrição em português. Avaliador/IA não atribuem dano ou bônus de prioridade a uma tentativa inválida.
+- Classificação FULL no modelo atual. Não inclui habilidades, itens ou proteção ainda ausentes no roadmap.
+- Referência de comportamento: Pokémon Showdown data/moves.ts, fakeout (onTry / activeMoveActions, prioridade +3 e flinch): https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts .
+- Adicionados 13 testes: metadados, prioridade sobre Extreme Speed, janela e PP, sono/freeze/confusão/flinch, imunidade Ghost, nocaute, trocas voluntária/forçada, reentrada e substituição, avaliador/IA e sessão real nos dois sentidos. Atualizado o teste de flinch que anteriormente exigia Fake Out não-FULL.
+- Suíte completa: **1.146 testes aprovados, 36 suítes, 0 falhas, 0 cancelados, 0 ignorados; saída 0**. git diff --check aprovado.
+- P4 permanece parcial. Próximos ciclos: efeitos compostos (Tri Attack) e expansão de famílias/pilotos. Múltiplos acertos dependem da P5; habilidades, itens e clima da P7.
+- Este ciclo de Fake Out permanece local, sem novo commit, push ou deploy após cf50ccf.
+
+---
+
 ## Atualização — 31/10/2026: Confirmação da equipe inicial dentro do jogo
 
 - Substituídas as confirmações nativas do navegador nos dois caminhos de escolha inicial por confirmDraft, seguindo o padrão visual da confirmação de recruta.

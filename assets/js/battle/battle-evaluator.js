@@ -56,7 +56,7 @@
       const damageClass = move.damageClass || 'physical';
       const moveType = (move.type || 'normal').toLowerCase();
       const power = Number(move.power) || 0;
-      const accuracy = move.accuracy;
+      const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
 
       // Golpes de status não causam dano na arquitetura atual
@@ -82,9 +82,8 @@
               let actionFactor = attacker.statusCondition === 'paralysis'
                 ? 0.75
                 : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
-              if (attacker.confusionTurns > 0) {
-                actionFactor *= 0.67;
-              }
+              if (attacker.confusionTurns > 1) actionFactor *= 0.67;
+      if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
               statusChance = accuracyFactor * actionFactor;
               expectedStatusBenefit = Math.round(statusChance * 20);
             }
@@ -103,9 +102,8 @@
               let actionFactor = attacker.statusCondition === 'paralysis'
                 ? 0.75
                 : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
-              if (attacker.confusionTurns > 0) {
-                actionFactor *= 0.67;
-              }
+              if (attacker.confusionTurns > 1) actionFactor *= 0.67;
+      if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
               statusChance = accuracyFactor * actionFactor;
               if (move.statusEffect === 'sleep') {
                 expectedStatusBenefit = Math.round(statusChance * 25);
@@ -120,6 +118,13 @@
           }
         }
 
+        if(move.id===156){isEligible=attacker.currentHp<attacker.maxHp&&attacker.statusCondition!=='sleep';expectedStatusBenefit=isEligible?attacker.maxHp-attacker.currentHp:0;}
+        if(move.id===281){isEligible=!defender.statusCondition&&!(defender.drowsyTurns>0);const canAct=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0?0:attacker.statusCondition==='freeze'?0.2:attacker.statusCondition==='paralysis'?0.75:1;expectedStatusBenefit=isEligible?Math.round(30*canAct):0;}
+        if(move.id===214){
+          isEligible=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0;
+          const candidates=(attacker.moves||[]).filter(m=>m.id!==214&&m.damageClass!=='status'&&constants.getMoveCapability(m)?.supportLevel==='FULL');
+          expectedStatusBenefit=isEligible&&candidates.length?Math.round(candidates.reduce((sum,m)=>sum+evaluateMove({...attacker,statusCondition:null,confusionTurns:0},defender,m,context).expectedDamage,0)/candidates.length):0;
+        }
         return {
           moveId: move.id,
           moveName: move.name || 'unknown',
@@ -200,7 +205,10 @@
 
       // 4. Faixa e Média de Dano (PBA-014B: Level 50 e Variância 85..100)
       const simLevel = (constants && constants.BATTLE_CONFIG && constants.BATTLE_CONFIG.SIMULATION_LEVEL) || 50;
-      const range = DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
+      const entryRestricted = (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
+      const range = entryRestricted
+        ? { baseDamage: 0, minDamage: 0, maxDamage: 0, averageDamage: 0 }
+        : DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
 
       const baseDamage = range.baseDamage;
       const minDamage = constants.applyBurnPenalty(range.minDamage, attacker, move);
@@ -221,9 +229,9 @@
       let actionFactor = attacker.statusCondition === 'paralysis'
         ? 0.75
         : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
-      if (attacker.confusionTurns > 0) {
-        actionFactor *= 0.67;
-      }
+      if (attacker.confusionTurns > 1) actionFactor *= 0.67;
+      if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
+      if (entryRestricted) actionFactor = 0;
       const expectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
 
       // 6. Semântica refinada de nocaute (KO)
@@ -257,6 +265,10 @@
       let expectedStatusBenefit = 0;
       let isEligibleForSecondary = false;
 
+      if (secEffect?.statusChoices && typeMultiplier>0 && !guaranteedKo) {
+        const eligible=secEffect.statusChoices.filter(status=>constants.isEligibleForStatusCondition(defender,status)).length;
+        isEligibleForSecondary=eligible>0;expectedStatusChance=secEffect.chance/100*accuracyFactor*actionFactor*eligible/secEffect.statusChoices.length;expectedStatusBenefit=Math.round(expectedStatusChance*25);
+      }
       if (secEffect && typeMultiplier > 0) {
         if (secEffect.statusCondition) {
           isEligibleForSecondary = Boolean(
@@ -274,6 +286,8 @@
               const tick = Math.max(1, Math.floor(defMaxHp / 8));
               const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
               expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining));
+            } else if (secEffect.statusCondition === 'toxic') {
+              expectedStatusBenefit=Math.round(expectedStatusChance*Math.min(defenderHp,Math.max(1,Math.floor(defMaxHp/16))*6));
             } else if (secEffect.statusCondition === 'burn') {
               const tick = Math.max(1, Math.floor(defMaxHp / 16));
               const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
@@ -293,7 +307,7 @@
           }
         } else if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
           isEligibleForSecondary = Object.entries(secEffect.statDrops).some(([k, delta]) => {
-            const currentStage = (defender.statStages && defender.statStages[k] !== undefined)
+            const currentStage = ['accuracy','evasion'].includes(k) ? Number(defender[k+'Stage']||0) : (defender.statStages && defender.statStages[k] !== undefined)
               ? Number(defender.statStages[k])
               : 0;
             return delta < 0 ? currentStage > -6 : currentStage < 6;
@@ -305,7 +319,7 @@
 
             let totalEffectiveDrop = 0;
             for (const [k, delta] of Object.entries(secEffect.statDrops)) {
-              const currentStage = (defender.statStages && defender.statStages[k] !== undefined)
+              const currentStage = ['accuracy','evasion'].includes(k) ? Number(defender[k+'Stage']||0) : (defender.statStages && defender.statStages[k] !== undefined)
                 ? Number(defender.statStages[k])
                 : 0;
               if (delta < 0 && currentStage > -6) {
@@ -360,7 +374,7 @@
             expectedStatusBenefit = Math.round(expectedStatusChance * 20);
           }
         } else if (secEffect.confusion) {
-          isEligibleForSecondary = !(defender.confusionTurns > 0) && !guaranteedKo && defenderHp > 0;
+          isEligibleForSecondary = !(defender.confusionTurns > 0) && !guaranteedKo && defenderHp > 0 && (!secEffect.requiresRaisedStats || context.targetRaisedStatsThisTurn===true);
           if (isEligibleForSecondary) {
             const rawChance = Number(secEffect.chance) || 0;
             expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
@@ -369,6 +383,13 @@
         }
       }
 
+      if(secEffect?.flinchChance&&typeMultiplier>0&&!guaranteedKo&&!context.targetAlreadyActed){
+        const opponentPriority=constants.getMovePriority(context.defenderMove||{});
+        const before=priority>opponentPriority||(priority===opponentPriority&&constants.getEffectiveStat(attacker,'speed')>constants.getEffectiveStat(defender,'speed'));
+        if(before)expectedStatusBenefit+=Math.round(secEffect.flinchChance/100*accuracyFactor*actionFactor*20);
+      }
+      if(move.id===499&&typeMultiplier>0&&!guaranteedKo){const net=Object.values(defender.statStages||{}).reduce((sum,n)=>sum+Number(n||0),0);expectedStatusBenefit+=Math.round(Math.max(0,net)*8*accuracyFactor*actionFactor);}
+      if(move.id===740&&typeMultiplier>0){const team=context.attackerTeam||[attacker];expectedStatusBenefit+=Math.round(team.filter(mon=>mon.statusCondition).length*15*accuracyFactor*actionFactor);}
       return {
         moveId: move.id,
         moveName: move.name || 'unknown',
@@ -387,6 +408,7 @@
         typeMultiplier,
         typeClassification,
         damageIfHit,
+        entryRestricted,
         expectedDamage,
         guaranteedKo,
         possibleKo,

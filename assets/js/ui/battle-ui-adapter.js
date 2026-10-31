@@ -79,6 +79,12 @@
           break;
         }
 
+        case PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK: {
+          const descriptions={FIRST_ACTION_AFTER_ENTRY:'Fake Out falhou! Só funciona na primeira oportunidade de agir após entrar em campo.',REST_NOT_NEEDED:'Rest falhou: não é possível descansar agora.',REQUIRES_SLEEP:'O golpe só funciona enquanto está dormindo.',TARGET_NOT_ASLEEP:'Dream Eater falhou: o alvo não está dormindo.',NO_CALLABLE_MOVE:'Sleep Talk não encontrou um golpe disponível.',ALREADY_STATUS:'O alvo já possui uma condição ou está sonolento.',DROWSY:'ficou sonolento!',HEALED:`recuperou ${command.amount} HP!`};
+          this.view.displayMessage?.(`${command.pokemonName}: ${descriptions[command.reason]||'O golpe falhou.'}`);
+          break;
+        }
+
         case PRESENTATION_COMMANDS.MOVE_ANNOUNCEMENT: {
           const moveName = command.moveName ? command.moveName.toUpperCase() : 'GOLPE';
           const msg = `${command.pokemonName} usou ${moveName}!`;
@@ -106,7 +112,7 @@
           if (command.outcome === 'APPLIED' && typeof this.view.updateStatusBadge === 'function') {
             this.view.updateStatusBadge(command.target, command.statusCondition);
           }
-          if ((command.outcome === 'CURED' || command.outcome === 'WOKE_UP' || command.outcome === 'THAWED') && typeof this.view.updateStatusBadge === 'function') {
+          if (!command.benched && (command.outcome === 'CURED' || command.outcome === 'WOKE_UP' || command.outcome === 'THAWED') && typeof this.view.updateStatusBadge === 'function') {
             this.view.updateStatusBadge(command.target, null);
           }
           if (typeof this.view.displayMessage === 'function') {
@@ -250,7 +256,7 @@
               attack: 'Ataque',
               defense: 'Defesa',
               specialAttack: 'Ataque Especial',
-              specialDefense: 'Defesa Especial',
+              specialDefense: 'Defesa Especial', accuracy: 'Precisão', evasion: 'Evasão',
               speed: 'Velocidade'
             };
             const statName = statNamesPt[command.statKey] || command.statKey;

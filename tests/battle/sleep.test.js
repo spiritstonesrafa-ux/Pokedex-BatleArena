@@ -120,15 +120,15 @@ test('P4-SL-01: Dados canônicos, catalogação e classificação de suporte dos
   assert.equal(SPORE.isPowderMove, true);
   assert.equal(validateMoveData(SPORE), true);
 
-  // Outros golpes de sono NÃO devem estar marcados como FULL
+  // A expansão P4 agora cobre estas famílias de sono integralmente no modelo atual.
   const restCap = getMoveCapability({ name: 'rest' });
-  assert.notEqual(restCap?.supportLevel, 'FULL');
+  assert.equal(restCap?.supportLevel, 'FULL');
   const singCap = getMoveCapability({ name: 'sing' });
-  assert.notEqual(singCap?.supportLevel, 'FULL');
+  assert.equal(singCap?.supportLevel, 'FULL');
   const yawnCap = getMoveCapability({ name: 'yawn' });
-  assert.notEqual(yawnCap?.supportLevel, 'FULL');
+  assert.equal(yawnCap?.supportLevel, 'FULL');
   const dreamEaterCap = getMoveCapability({ name: 'dream-eater' });
-  assert.notEqual(dreamEaterCap?.supportLevel, 'FULL');
+  assert.equal(dreamEaterCap?.supportLevel, 'FULL');
 });
 
 // 2. Precisão de Hypnosis (60%), Sleep Powder (75%) e Spore (100%)

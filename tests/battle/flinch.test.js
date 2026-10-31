@@ -98,7 +98,8 @@ test('P4-FL-01: Dados canônicos, catalogação e classificação de suporte de 
 
   // Fake Out não deve estar registrado como FULL
   const fakeOutCap = getMoveCapability({ name: 'fake-out' });
-  assert.ok(!fakeOutCap || fakeOutCap.supportLevel !== 'FULL', 'Fake Out não deve ter suporte FULL neste ciclo');
+  assert.equal(fakeOutCap.supportLevel, 'FULL');
+  assert.ok(fakeOutCap.requiredMechanics.includes('FIRST_ACTION_AFTER_ENTRY'), 'Fake Out requires its own entry restriction in addition to flinch');
 });
 
 // 2. Fronteiras de chance: 1 e 30 ativam; 31 e 100 não ativam; omissão preserva o padrão (não ativa)

@@ -105,7 +105,8 @@
       // 1. Golpes utilizáveis do ativo (somente status curados)
       const isUsableStatusMove = (m) => {
         if (m.damageClass !== 'status') return true;
-        if (['poison', 'toxic', 'burn', 'paralysis', 'sleep'].includes(m.statusEffect)) return true;
+        if ([156,214,281].includes(m.id)) return true;
+        if (['poison', 'toxic', 'burn', 'paralysis', 'sleep','confusion'].includes(m.statusEffect)) return true;
         if (m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m))) return true;
         return false;
       };
@@ -215,11 +216,11 @@
 
       // Avaliação detalhada de cada golpe utilizável do ativo
       const evaluatedMoves = usableMoves.map(m => {
-        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { attackerSide: side, modifiers: state.modifiers || {} });
+        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { attackerSide: side, attackerTeam: myTeam, modifiers: state.modifiers || {} });
         let score = evalData.expectedDamage;
 
         if (m.damageClass === 'status') {
-          if (m.statusEffect === 'toxic') {
+          if ([156,214,281].includes(m.id)||['toxic','confusion'].includes(m.statusEffect)) {
             score = evalData.expectedStatusBenefit;
           } else if (m.statusEffect) {
             const immune = constants.isStatusMoveImmune(m, oppActive.types);
@@ -315,6 +316,8 @@
           score += evalData.expectedStatusBenefit;
         }
 
+        if (evalData.entryRestricted) score = 0;
+
         // Anulação estrita de golpes imunes
         if (evalData.typeMultiplier === 0) {
           score = 0;
@@ -322,7 +325,7 @@
 
         return {
           ...evalData,
-          statusEffect: m.statusEffect || null,
+          statusEffect: m.statusEffect || ([156,214,281].includes(m.id)?'support':null),
           secondaryEffect: evalData.secondaryEffect || null,
           statBoosts: evalData.statBoosts || m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m)) || null,
           loadoutIndex: m.loadoutIndex,

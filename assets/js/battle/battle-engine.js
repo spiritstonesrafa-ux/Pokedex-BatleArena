@@ -258,6 +258,11 @@
         sleepCounter: sleepTurns,
         isFlinched: false,
         confusionTurns: 0,
+        drowsyTurns: 0,
+        drowsySleepDuration: 0,
+        accuracyStage: 0,
+        evasionStage: 0,
+        entryMoveAttempts: 0, // Battle-local opportunities, including sleep/flinch/confusion.
         moves: normalizedMoves,
         statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
       };
@@ -449,8 +454,11 @@
       }
       previousActive.isFlinched = false;
       previousActive.confusionTurns = 0;
+          previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
+          previousActive.entryMoveAttempts = 0;
       previousActive.toxicStage = 0;
       targetPokemon.isFlinched = false;
+      targetPokemon.entryMoveAttempts = 0;
       targetPokemon.toxicStage = 0;
 
       side.activeIndex = targetIndex;
@@ -534,6 +542,18 @@
       if (fainted.length) resolveFaints(state, events, fainted,
         getActiveCombatant(state, fainted[0]).statusCondition);
 
+      // Yawn resolves after residual damage; leaving the field cancels drowsiness.
+      for(const role of ['player','enemy']){
+        const mon=getActiveCombatant(state,role);
+        if(mon.currentHp<=0||!(mon.drowsyTurns>0))continue;
+        mon.drowsyTurns--;
+        if(mon.drowsyTurns===0){
+          events.push({type:BATTLE_EVENTS.DROWSY_ENDED,target:role,pokemonName:mon.name});
+          if(!mon.statusCondition){mon.statusCondition='sleep';mon.sleepTurns=mon.drowsySleepDuration||2;mon.sleepCounter=mon.sleepTurns;events.push({type:BATTLE_EVENTS.STATUS_APPLIED,target:role,pokemonName:mon.name,statusCondition:'sleep',sleepDuration:mon.sleepTurns});}
+          mon.drowsySleepDuration=0;
+        }
+      }
+
       // Limpeza de estados temporários de turno (Flinch: P4)
       for (const role of ['player', 'enemy']) {
         const mon = getActiveCombatant(state, role);
@@ -568,6 +588,7 @@
       const nextState = JSON.parse(JSON.stringify(currentState));
       const events = [];
       const currentTurn = nextState.turn;
+      for(const role of ['player','enemy']){const side=nextState[role];for(const mon of (nextState.version===2?side.team:[side]))mon.statsRaisedThisTurn=false;}
 
       // Evento de início do turno
       events.push({
@@ -663,7 +684,7 @@
      * @param {Array<Object>} events - Lista de eventos do turno.
      * @param {Object} [action] - Comando da ação { moveId, accuracyRoll }.
      */
-    function executeAction(attackerRole, defenderRole, state, events, action) {
+    function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false) {
       const attacker = getActiveCombatant(state, attackerRole);
       const defender = getActiveCombatant(state, defenderRole);
 
@@ -692,7 +713,7 @@
       }
 
       // Validação de PP
-      if (selectedMove.currentPp <= 0) {
+      if (!calledMove && selectedMove.currentPp <= 0) {
         throw new Error(`ACTION_REJECTED: PP do golpe "${selectedMove.name}" está esgotado.`);
       }
 
@@ -751,6 +772,9 @@
         confusionDamageRoll = roll;
       }
 
+      // Each scheduled move opportunity consumes the entry window, even if prevented.
+      if(!calledMove) attacker.entryMoveAttempts = Math.max(0, Number.isInteger(attacker.entryMoveAttempts) ? attacker.entryMoveAttempts : 0) + 1;
+
       // Evento de início de ação
       events.push({
         type: BATTLE_EVENTS.ACTION_STARTED,
@@ -763,10 +787,12 @@
       // Precedência: Sono é checado antes de Flinch e Paralisia.
       // Enquanto sleepTurns > 0: a ação é impedida, sleepTurns reduz em 1 e emite STATUS_IMMOBILIZED.
       // Flinch pendente é descartado sem duplo anúncio. Nenhum PP é consumido.
-      if (attacker.statusCondition === 'sleep') {
+      const sleepUsable=[173,214].includes(selectedMove.id);
+      if (!calledMove && attacker.statusCondition === 'sleep') {
         if (attacker.sleepTurns > 0) {
           attacker.sleepTurns -= 1;
           attacker.sleepCounter = attacker.sleepTurns;
+          if(!sleepUsable){
           attacker.isFlinched = false;
           events.push({
             type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
@@ -776,6 +802,7 @@
             remainingTurns: attacker.sleepTurns
           });
           return;
+          }
         } else {
           attacker.statusCondition = null;
           attacker.sleepTurns = 0;
@@ -799,7 +826,7 @@
       // 3. Se permanecer congelado: a ação é impedida, nenhum PP é consumido e flinch pendente é descartado.
       // 4. Se descongelar naturalmente: a cura ocorre imediatamente (STATUS_CURED, THAWED), permitindo que flinch
       //    pendente impeça a ação normalmente na sequência canônica.
-      if (attacker.statusCondition === 'freeze') {
+      if (!calledMove && attacker.statusCondition === 'freeze') {
         const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(selectedMove));
         if (isSelfThaw) {
           // Permissão para superar o impedimento de freeze sem rolagem natural.
@@ -833,7 +860,7 @@
       // Precedência canônica: Flinch (priority 8) é verificado após a checagem de sono e freeze.
       // Se o Pokémon hesita, ele perde a ação imediatamente sem consumir PP.
       // Se um usuário congelado de Scald hesitar, ele permanece congelado (sem STATUS_CURED e sem perda de PP).
-      if (attacker.isFlinched) {
+      if (!calledMove && attacker.isFlinched) {
         attacker.isFlinched = false;
         events.push({
           type: BATTLE_EVENTS.FLINCH_IMMOBILIZED,
@@ -857,7 +884,7 @@
       //    - Encerra a ação do combatente imediatamente (return).
       // 5. Se não houver autoagressão (roll >= 34):
       //    - A ação prossegue para as etapas seguintes (descongelamento por Scald, MOVE_SELECTED, paralisia, execução).
-      if (attacker.confusionTurns > 0) {
+      if (!calledMove && attacker.confusionTurns > 0) {
         attacker.confusionTurns -= 1;
         if (attacker.confusionTurns === 0) {
           events.push({
@@ -914,7 +941,7 @@
 
       // Descongelamento efetivo de golpe defrost (Scald: P4 / onModifyMove)
       // Sem outro impedimento prévio, Scald descongela o usuário ao atingir a etapa de execução.
-      if (attacker.statusCondition === 'freeze') {
+      if (!calledMove && attacker.statusCondition === 'freeze') {
         const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(selectedMove));
         if (isSelfThaw) {
           attacker.statusCondition = null;
@@ -940,8 +967,9 @@
         moveName: selectedMove.name
       });
 
-      const immobilized = attacker.statusCondition === 'paralysis' && statusRoll <= 25;
-      if (!immobilized) {
+      const immobilized = !calledMove && attacker.statusCondition === 'paralysis' && statusRoll <= 25;
+      const entryRestricted = selectedMove.id === 252 && selectedMove.name === 'fake-out' && attacker.entryMoveAttempts > 1;
+      if (!immobilized && !entryRestricted) {
         // Mantém a ordem histórica MOVE_USED → PP_CHANGED nos golpes executados.
         events.push({
           type: BATTLE_EVENTS.MOVE_USED,
@@ -957,6 +985,7 @@
       }
 
       // Consumo de PP (ocorre antes da resolução de dano, em hits e em misses)
+      if(!calledMove){
       const previousPp = selectedMove.currentPp;
       selectedMove.currentPp = Math.max(0, selectedMove.currentPp - 1);
 
@@ -970,16 +999,48 @@
         maxPp: selectedMove.maxPp
       });
 
+      }
+
       if (immobilized) {
         events.push({ type: BATTLE_EVENTS.STATUS_IMMOBILIZED, actor: attackerRole,
           pokemonName: attacker.name, statusCondition: 'paralysis', statusRoll });
         return;
       }
 
+      if (entryRestricted) {
+        events.push({ type: BATTLE_EVENTS.MOVE_FAILED, actor: attackerRole, target: defenderRole, pokemonName: attacker.name, moveId: selectedMove.id, moveName: selectedMove.name, reason: 'FIRST_ACTION_AFTER_ENTRY' });
+        return;
+      }
+
+      const fail = reason => events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveId:selectedMove.id,moveName:selectedMove.name,reason});
+      if(selectedMove.id===156){
+        if(attacker.currentHp===attacker.maxHp||attacker.statusCondition==='sleep'){fail('REST_NOT_NEEDED');return;}
+        const previousHp=attacker.currentHp,oldStatus=attacker.statusCondition;
+        attacker.currentHp=attacker.maxHp;attacker.statusCondition='sleep';attacker.sleepTurns=2;attacker.sleepCounter=2;attacker.toxicStage=0;
+        if(oldStatus)events.push({type:BATTLE_EVENTS.STATUS_CURED,target:attackerRole,pokemonName:attacker.name,statusCondition:oldStatus,reason:'REST'});
+        events.push({type:BATTLE_EVENTS.STATUS_APPLIED,target:attackerRole,pokemonName:attacker.name,statusCondition:'sleep',sleepDuration:2});
+        events.push({type:BATTLE_EVENTS.HP_HEALED,target:attackerRole,pokemonName:attacker.name,previousHp,currentHp:attacker.currentHp,maxHp:attacker.maxHp,healedAmount:attacker.currentHp-previousHp});return;
+      }
+      if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){fail('REQUIRES_SLEEP');return;}
+      if(selectedMove.id===214){
+        const candidates=attacker.moves.filter(m=>m.id!==214&&constants.getMoveCapability(m)?.supportLevel==='FULL');
+        if(!candidates.length){fail('NO_CALLABLE_MOVE');return;}
+        const index=action.sleepTalkChoice??0;
+        if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
+        executeAction(attackerRole,defenderRole,state,events,{...action,moveId:candidates[index].id,moveName:undefined},true);return;
+      }
+      if(selectedMove.id===138&&defender.statusCondition!=='sleep'){fail('TARGET_NOT_ASLEEP');return;}
+      if(selectedMove.id===281){
+        if(defender.statusCondition||defender.drowsyTurns>0){fail('ALREADY_STATUS');return;}
+        const duration=action.sleepDuration??2;if(!Number.isInteger(duration)||duration<1||duration>3)throw new Error('Duração de Yawn inválida.');
+        defender.drowsyTurns=2;defender.drowsySleepDuration=duration;events.push({type:BATTLE_EVENTS.DROWSY_APPLIED,target:defenderRole,pokemonName:defender.name});return;
+      }
+
       // 2. Resolução de Acurácia (Hit vs Miss)
       let isHit = true;
-      if (selectedMove.accuracy !== null && selectedMove.accuracy !== 'ALWAYS_HIT') {
-        isHit = accuracyRoll <= selectedMove.accuracy;
+      const effectiveAccuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(selectedMove,attacker,defender) : selectedMove.accuracy;
+      if (effectiveAccuracy !== null && selectedMove.accuracy !== 'ALWAYS_HIT') {
+        isHit = accuracyRoll <= effectiveAccuracy;
       }
 
       // Gen VI+: Toxic used by a Poison-type bypasses accuracy checks, not status immunity.
@@ -1301,7 +1362,12 @@
       }
 
       // 10C. Resolução de Efeitos Secundários de Status e Atributos (Secondary Effects: P4)
-      const secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
+      let secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
+      if(secEffect?.statusChoices){
+        const choice=action?.secondaryStatusChoice===undefined?1:Number(action.secondaryStatusChoice);
+        if(!Number.isInteger(choice)||choice<1||choice>secEffect.statusChoices.length)throw new Error('Escolha secundária inválida.');
+        secEffect={...secEffect,statusCondition:secEffect.statusChoices[choice-1]};
+      }
       if (secEffect && effectiveMultiplier > 0) {
         // Efeitos no defensor: exigem sobrevivência do defensor (currentHp > 0)
         if (currentHp > 0) {
@@ -1311,6 +1377,7 @@
               : (!defender.statusCondition && currentHp > 0);
             if (canApply && secondaryEffectRoll <= secEffect.chance) {
               defender.statusCondition = secEffect.statusCondition;
+              defender.toxicStage=0;
               events.push({
                 type: BATTLE_EVENTS.STATUS_APPLIED,
                 source: attackerRole,
@@ -1326,7 +1393,9 @@
           }
 
           if (secEffect.flinch) {
-            if (secondaryEffectRoll <= secEffect.chance) {
+            const flinchRoll=secEffect.flinchChance?(action?.secondaryEffectRoll2 ?? 100):secondaryEffectRoll;
+            if(!Number.isInteger(flinchRoll)||flinchRoll<1||flinchRoll>100)throw new Error('Rolagem secundária independente inválida.');
+            if (flinchRoll <= (secEffect.flinchChance || secEffect.chance)) {
               defender.isFlinched = true;
               events.push({
                 type: BATTLE_EVENTS.FLINCH_APPLIED,
@@ -1341,7 +1410,7 @@
             }
           }
 
-          if (secEffect.confusion) {
+          if (secEffect.confusion && (!secEffect.requiresRaisedStats || defender.statsRaisedThisTurn)) {
             const canApply = !(defender.confusionTurns > 0) && currentHp > 0;
             if (canApply && secondaryEffectRoll <= secEffect.chance) {
               let duration = constants.DEFAULT_CONFUSION_TURNS?.DEFAULT || 3;
@@ -1408,12 +1477,28 @@
         }
       }
 
+      if(selectedMove.id===499&&effectiveMultiplier>0&&currentHp>0){
+        const wasRaised=defender.statsRaisedThisTurn;
+        for(const key of [...constants.STAT_STAGE_KEYS,'accuracy','evasion']){
+          const previousStage=['accuracy','evasion'].includes(key)?Number(defender[key+'Stage']||0):Number(defender.statStages[key]||0);
+          if(!previousStage)continue;
+          const report=constants.applyStatStageChange(defender,key,-previousStage);events.push({type:BATTLE_EVENTS.STAT_STAGE_CHANGED,...report,combatant:defenderRole,pokemonName:defender.name});
+        }
+        defender.statsRaisedThisTurn=wasRaised;
+      }
+
+      if(selectedMove.id===740&&effectiveMultiplier>0){
+        const members=state.version===2?state[attackerRole].team:[attacker];
+        for(const member of members){if(!member.statusCondition)continue;const old=member.statusCondition;member.statusCondition=null;member.sleepTurns=0;member.sleepCounter=0;member.toxicStage=0;
+          events.push({type:BATTLE_EVENTS.STATUS_CURED,target:attackerRole,pokemonName:member.name,statusCondition:old,reason:'TEAM_CURE',...(member!==attacker?{benched:true}:{})});}
+      }
+
       // 10D. Descongelamento do alvo por Scald / thawsTarget (onAfterMoveSecondary: P4)
       // Conforme Pokémon Showdown data/conditions.ts (frz.onAfterMoveSecondary):
       // Scald descongela o alvo sobrevivente APÓS os efeitos secundários terem sido resolvidos.
       // Como a rolagem secundária (10C) é avaliada com o alvo ainda congelado, Scald NÃO queima o alvo congelado.
       const isThawsTarget = Boolean(
-        selectedMove.thawsTarget ||
+        selectedMove.thawsTarget || constants.isPostSecondaryThawMove?.(selectedMove) ||
         String(selectedMove.name || '').trim().toLowerCase() === 'scald'
       );
       if (currentHp > 0 && defender.statusCondition === 'freeze' && effectiveMultiplier > 0 && isThawsTarget) {
@@ -1452,10 +1537,13 @@
           }
           previousActive.isFlinched = false;
           previousActive.confusionTurns = 0;
+          previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
+          previousActive.entryMoveAttempts = 0;
           previousActive.toxicStage = 0;
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
           newActive.isFlinched = false;
+          newActive.entryMoveAttempts = 0;
 
           events.push({
             type: BATTLE_EVENTS.POKEMON_SWITCHED,
@@ -1533,6 +1621,8 @@
 
           const previousActive = active;
           previousActive.confusionTurns = 0;
+          previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
+          previousActive.entryMoveAttempts = 0;
           previousActive.toxicStage = 0;
           side.activeIndex = targetIndex;
           replacedAny = true;

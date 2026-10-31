@@ -331,6 +331,14 @@
             }
           ];
 
+        case BATTLE_EVENTS.HP_HEALED:
+          return [{type:PRESENTATION_COMMANDS.HP_TRANSITION,side:event.target,target:event.target,previousHp:event.previousHp,currentHp:event.currentHp,maxHp:event.maxHp,heal:event.healedAmount,cause:'recovery'}, {type:PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK,pokemonName:event.pokemonName,reason:'HEALED',amount:event.healedAmount}];
+        case BATTLE_EVENTS.DROWSY_APPLIED:
+          return [{type:PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK,pokemonName:event.pokemonName,reason:'DROWSY'}];
+        case BATTLE_EVENTS.DROWSY_ENDED: return [];
+        case BATTLE_EVENTS.MOVE_FAILED:
+          return [{ type: PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK, actor: event.actor, pokemonName: event.pokemonName, moveName: event.moveName, reason: event.reason }];
+
         case BATTLE_EVENTS.MOVE_MISSED:
           return [
             {
@@ -355,8 +363,8 @@
             pokemonName: event.pokemonName, statusCondition: event.statusCondition || 'paralysis', outcome: 'IMMOBILIZED' }];
 
         case BATTLE_EVENTS.STATUS_CURED:
-          return [{ type: PRESENTATION_COMMANDS.STATUS_FEEDBACK, target: event.target || event.actor,
-            pokemonName: event.pokemonName, statusCondition: event.statusCondition, outcome: event.reason || 'CURED' }];
+          return [{ ...(event.benched ? {benched:true} : {}), type: PRESENTATION_COMMANDS.STATUS_FEEDBACK, target: event.target || event.actor,
+            pokemonName: event.pokemonName, statusCondition: event.statusCondition, outcome: ['WOKE_UP','THAWED'].includes(event.reason) ? event.reason : 'CURED' }];
 
         case BATTLE_EVENTS.FLINCH_APPLIED:
           return [];

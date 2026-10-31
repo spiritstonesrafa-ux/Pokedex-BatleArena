@@ -35,10 +35,18 @@ const PILOT_P3_MOVES = new Set([
   'scald',
   'confuse-ray',
   'water-pulse',
-  'toxic'
+  'toxic',
+  'fake-out',
+  'rest','sleep-talk','yawn','snore','dream-eater'
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  'rest': Object.freeze({"id":156,"name":"rest","type":"psychic","power":0,"accuracy":null,"pp":5,"damageClass":"status","p4Effect":"rest"}),
+  'sleep-talk': Object.freeze({"id":214,"name":"sleep-talk","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"sleep-talk"}),
+  'yawn': Object.freeze({"id":281,"name":"yawn","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"yawn"}),
+  'snore': Object.freeze({"id":173,"name":"snore","type":"normal","power":50,"accuracy":100,"pp":15,"damageClass":"special"}),
+  'dream-eater': Object.freeze({"id":138,"name":"dream-eater","type":"psychic","power":100,"accuracy":100,"pp":15,"damageClass":"special"}),
+  'fake-out': Object.freeze({ id: 252, name: 'fake-out', type: 'normal', power: 40, accuracy: 100, pp: 10, damageClass: 'physical' }),
   'toxic': Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
   'swords-dance': Object.freeze({
     id: 14,
@@ -167,18 +175,23 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
 
 // Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  143: ['rest','sleep-talk'], // Snorlax: canonical sleep combo.
+  80: ['yawn','snore'], // Slowbro: delayed sleep and sleep-usable attack.
+
+  297: ['fake-out', 'body-press'], // Hariyama, first-entry pilot.
+
   89: ['toxic', 'shock-wave'], // Muk: Toxic via modern TM; keep six campaign options.
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)
   9: ['blizzard', 'scald'],              // Blastoise (Gen 1 Starter)
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
-  97: ['hypnosis', 'body-press'],        // Hypno (Gen 1)
+  97: ['hypnosis', 'dream-eater'],        // Hypno (Gen 1)
   55: ['water-pulse', 'hydro-pump'],     // Golduck (Gen 1)
   131: ['confuse-ray', 'blizzard'],       // Lapras (Gen 1 Draft)
   134: ['scald', 'blizzard'],            // Vaporeon (Gen 1 Draft)
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
-  97: ['hypnosis', 'body-press'],        // Hypno (Gen 1)
+  97: ['hypnosis', 'dream-eater'],        // Hypno (Gen 1)
   149: ['draco-meteor', 'dragon-pulse'], // Dragonite (Draft Gen 1)
   157: ['overheat', 'aerial-ace'],       // Typhlosion (Draft Gen 2)
   212: ['swords-dance', 'wing-attack'],  // Scizor (Draft Gen 2)

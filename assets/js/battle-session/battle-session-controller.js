@@ -125,12 +125,19 @@
 
   function canMoveApplySleep(move) {
     if (!move || typeof move !== 'object') return false;
-    if (move.statusEffect === 'sleep') return true;
+    if (move.statusEffect === 'sleep' || move.id===281) return true;
     const getSec = (battleConstants && typeof battleConstants.getSecondaryEffect === 'function')
       ? battleConstants.getSecondaryEffect
       : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
     return Boolean(getSec && getSec(move)?.statusCondition === 'sleep');
   }
+
+  function prepareCompoundSecondary(move, action, rng){
+    const effect=battleConstants?.getSecondaryEffect?.(move)||sessionConstants?.getSecondaryEffect?.(move);
+    if(effect?.statusChoices)action.secondaryStatusChoice=rng.rollSecondaryStatusChoice?.()??1;
+    if(effect?.flinchChance)action.secondaryEffectRoll2=rng.rollSecondaryEffect?.()??100;
+  }
+  function canInflict(move,status){const effect=battleConstants?.getSecondaryEffect?.(move)||sessionConstants?.getSecondaryEffect?.(move);return move?.statusEffect===status||effect?.statusCondition===status||Boolean(effect?.statusChoices?.includes(status));}
 
   function canMoveApplyConfusion(move) {
     if (!move || typeof move !== 'object') return false;
@@ -139,6 +146,19 @@
       ? battleConstants.getSecondaryEffect
       : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
     return Boolean(getSec && getSec(move)?.confusion === true);
+  }
+
+  function prepareSleepCall(active, action, targetAction, rng){
+    if(action?.moveId!==214)return;
+    const candidates=active.moves.filter(m=>m.id!==214&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
+    if(!candidates.length)return;
+    action.sleepTalkChoice=rng.rollCalledMove?.(candidates.length)??0;
+    const move=candidates[action.sleepTalkChoice];
+    if(canMoveApplySleep(move))action.sleepDuration=rng.rollSleepDuration?.()??2;
+    if(canMoveApplyConfusion(move)){action.confusionDuration=rng.rollConfusionDuration?.()??3;targetAction.confusionHitRoll??=rng.rollConfusionHit?.()??100;targetAction.confusionDamageRoll??=rng.rollConfusionDamage?.()??100;}
+    prepareCompoundSecondary(move,action,rng);
+    if(canInflict(move,'paralysis'))targetAction.statusRoll??=rng.rollStatus?.()??100;
+    if(canInflict(move,'freeze'))targetAction.thawRoll??=rng.rollThaw?.()??100;
   }
 
   class BattleSessionController {
@@ -459,9 +479,9 @@
           : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
 
         const playerCanParalyze = playerMove?.statusEffect === 'paralysis' ||
-          Boolean(getSec && getSec(playerMove)?.statusCondition === 'paralysis');
+          canInflict(playerMove,'paralysis');
         const enemyCanParalyze = enemyMove?.statusEffect === 'paralysis' ||
-          Boolean(getSec && getSec(enemyMove)?.statusCondition === 'paralysis');
+          canInflict(enemyMove,'paralysis');
 
         const playerNeedsStatusRoll = activePlayer.statusCondition === 'paralysis' || enemyCanParalyze;
         const enemyNeedsStatusRoll = enemyAction?.type === 'MOVE' && (activeEnemy.statusCondition === 'paralysis' || playerCanParalyze);
@@ -484,8 +504,8 @@
 
         // Determina quem necessita de rolagem de descongelamento no turno.
         // Cobre combatentes já congelados ou que possam sofrer congelamento antes de agir.
-        const playerCanFreeze = Boolean(getSec && getSec(playerMove)?.statusCondition === 'freeze');
-        const enemyCanFreeze = Boolean(getSec && getSec(enemyMove)?.statusCondition === 'freeze');
+        const playerCanFreeze = canInflict(playerMove,'freeze');
+        const enemyCanFreeze = canInflict(enemyMove,'freeze');
 
         const isPlayerSelfThaw = Boolean(
           (battleConstants?.isSelfThawingMove && battleConstants.isSelfThawingMove(playerMove)) ||
@@ -555,6 +575,10 @@
           enemy: enemyAction
         };
 
+        prepareSleepCall(activePlayer,turnActions.player,enemyAction,this.randomSource);
+        if(enemyAction?.type==='MOVE')prepareSleepCall(activeEnemy,enemyAction,turnActions.player,this.randomSource);
+        prepareCompoundSecondary(playerMove,turnActions.player,this.randomSource);
+        if(enemyAction?.type==='MOVE')prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
         const turnResult = this.engine.resolveTurn(this.battleState, turnActions);
         this.battleState = turnResult.state;
 
@@ -609,6 +633,8 @@
           }
 
           const enemyMove = activeEnemy?.moves?.find(move => move.id === Number(enemyAction.moveId));
+          prepareSleepCall(activeEnemy,enemyAction,{},this.randomSource);
+          prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
           if (canMoveApplySleep(enemyMove) && typeof this.randomSource.rollSleepDuration === 'function') {
             enemyAction.sleepDuration = this.randomSource.rollSleepDuration();
           }

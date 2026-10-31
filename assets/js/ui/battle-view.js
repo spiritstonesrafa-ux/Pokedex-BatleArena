@@ -20,6 +20,7 @@
 (function () {
   const STATUS_LABELS = Object.freeze({
     toxic: { short: 'VENENO GRAVE', aria: 'Gravemente envenenado', move: 'causa veneno progressivo' },
+    confusion: { short: 'CONFUSÃO', aria: 'Confuso', move: 'confunde o alvo' },
     poison: { short: 'VENENO', aria: 'Envenenado', move: 'causa veneno' },
     burn: { short: 'QUEIMADURA', aria: 'Queimado', move: 'causa queimadura' },
     paralysis: { short: 'PARALISIA', aria: 'Paralisado', move: 'causa paralisia' },
@@ -27,6 +28,7 @@
     freeze: { short: 'CONGELAMENTO', aria: 'Congelado', move: 'congela o alvo' }
   });
   const statusBadge = status => STATUS_LABELS[status] || null;
+  const SUPPORT_MOVE_LABELS = {156:{short:'RECUPERAÇÃO',move:'recupera HP e adormece o usuário'},214:{short:'DURANTE O SONO',move:'usa outro golpe enquanto dorme'},281:{short:'SONOLÊNCIA',move:'adormece o alvo ao fim do próximo turno'}};
   const STAT_STAGE_SHORT_LABELS = Object.freeze({
     attack: 'ATK',
     defense: 'DEF',
@@ -515,7 +517,7 @@
             style="--move-accent-color: ${typeColor};"
             ${isDisabled ? 'disabled' : ''}
             onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${m.id});"
-            aria-label="${m.name}, Tipo ${m.type}, ${statusBadge(m.statusEffect)?.move || `Poder ${m.power}`}, PP ${m.currentPp} de ${m.maxPp}"
+            aria-label="${m.name}, Tipo ${m.type}, ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id])?.move || `Poder ${m.power}`}, PP ${m.currentPp} de ${m.maxPp}"
           >
             <div class="move-btn-top-row">
               <span class="move-btn-name">${m.name}</span>
@@ -524,7 +526,7 @@
             <div class="move-btn-bottom-row">
               <span class="move-btn-category">
                 <i class="${m.damageClass === 'special' ? 'fa-solid fa-burst' : 'fa-solid fa-fist-raised'}"></i>
-                ${statusBadge(m.statusEffect) ? `STATUS · ${statusBadge(m.statusEffect).short}` : `${m.damageClass} (Pwr ${m.power})`}
+                ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]) ? `STATUS · ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]).short}` : `${m.damageClass} (Pwr ${m.power})`}
               </span>
               <span id="ppLabel_${m.id}" class="move-btn-pp">PP ${m.currentPp}/${m.maxPp}</span>
             </div>

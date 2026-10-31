@@ -46,6 +46,8 @@
       this.confusionDurationSequence = Array.isArray(options.confusionDurationSequence) ? [...options.confusionDurationSequence] : null;
       this.confusionHitSequence = Array.isArray(options.confusionHitSequence) ? [...options.confusionHitSequence] : null;
       this.confusionDamageSequence = Array.isArray(options.confusionDamageSequence) ? [...options.confusionDamageSequence] : null;
+      this.secondaryStatusSequence=Array.isArray(options.secondaryStatusSequence)?[...options.secondaryStatusSequence]:null;
+      this.calledMoveSequence=Array.isArray(options.calledMoveSequence)?[...options.calledMoveSequence]:null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
 
@@ -102,6 +104,15 @@
       }
       return Math.floor(this.rng() * 3) + 1;
     }
+
+    rollCalledMove(count){if(!Number.isInteger(count)||count<1)return 0;if(this.calledMoveSequence?.length){const n=Number(this.calledMoveSequence.shift());if(!Number.isInteger(n)||n<0||n>=count)throw new Error('Escolha de movimento inválida.');return n;}return Math.floor(this.rng()*count);}
+    setCalledMoveSequence(seq){this.calledMoveSequence=Array.isArray(seq)?[...seq]:null;}
+
+    rollSecondaryStatusChoice() {
+      if(this.secondaryStatusSequence?.length){const value=Number(this.secondaryStatusSequence.shift());if(!Number.isInteger(value)||value<1||value>3)throw new Error('Escolha secundária inválida.');return value;}
+      return Math.floor(this.rng()*3)+1;
+    }
+    setSecondaryStatusSequence(seq){this.secondaryStatusSequence=Array.isArray(seq)?[...seq]:null;}
 
     rollSecondaryEffect() {
       if (this.secondaryEffectSequence && this.secondaryEffectSequence.length > 0) {
