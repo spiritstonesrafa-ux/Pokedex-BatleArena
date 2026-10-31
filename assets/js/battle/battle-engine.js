@@ -224,7 +224,7 @@
         });
       }
 
-      const statusCondition = (raw.statusCondition && ['poison', 'burn', 'paralysis', 'sleep'].includes(raw.statusCondition)) ? raw.statusCondition : null;
+      const statusCondition = (raw.statusCondition && ['poison', 'burn', 'paralysis', 'sleep', 'freeze'].includes(raw.statusCondition)) ? raw.statusCondition : null;
       let sleepTurns = 0;
       if (statusCondition === 'sleep') {
         const rawTurns = raw.sleepTurns ?? raw.sleepCounter;
@@ -704,6 +704,15 @@
         secondaryEffectRoll = roll;
       }
 
+      let thawRoll = 100; // Padrão determinístico documentado: sem descongelamento quando ausente
+      if (action && action.thawRoll !== undefined) {
+        const roll = Number(action.thawRoll);
+        if (!Number.isInteger(roll) || roll < 1 || roll > 100) {
+          throw new Error(`Roll de descongelamento inválido: ${action.thawRoll}. Deve ser um inteiro entre 1 e 100.`);
+        }
+        thawRoll = roll;
+      }
+
       // Evento de início de ação
       events.push({
         type: BATTLE_EVENTS.ACTION_STARTED,
@@ -744,9 +753,48 @@
         }
       }
 
+      // Verificação canônica de congelamento (Freeze: P4)
+      // Precedência canônica moderna (Pokémon Showdown data/conditions.ts frz.onBeforeMovePriority: 10 vs flinch: 8):
+      // 1. Movimentos com flag defrost (Scald) superam o impedimento de freeze sem depender da rolagem natural,
+      //    mas NÃO removem o congelamento aqui: a cura ocorre apenas na etapa de execução correspondente (onModifyMove).
+      // 2. Rolagem natural (20% de chance, 1..20 descongela; 21..100 permanece congelado).
+      // 3. Se permanecer congelado: a ação é impedida, nenhum PP é consumido e flinch pendente é descartado.
+      // 4. Se descongelar naturalmente: a cura ocorre imediatamente (STATUS_CURED, THAWED), permitindo que flinch
+      //    pendente impeça a ação normalmente na sequência canônica.
+      if (attacker.statusCondition === 'freeze') {
+        const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(selectedMove));
+        if (isSelfThaw) {
+          // Permissão para superar o impedimento de freeze sem rolagem natural.
+          // O status 'freeze' é mantido até a execução do golpe.
+        } else if (thawRoll <= 20) {
+          attacker.statusCondition = null;
+          events.push({
+            type: BATTLE_EVENTS.STATUS_CURED,
+            actor: attackerRole,
+            target: attackerRole,
+            pokemonName: attacker.name,
+            statusCondition: 'freeze',
+            reason: 'THAWED',
+            thawRoll
+          });
+        } else {
+          attacker.isFlinched = false;
+          events.push({
+            type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
+            actor: attackerRole,
+            pokemonName: attacker.name,
+            statusCondition: 'freeze',
+            reason: 'FROZEN_SOLID',
+            thawRoll
+          });
+          return;
+        }
+      }
+
       // Verificação canônica de hesitação (Flinch: P4)
-      // Precedência canônica: Flinch é verificado antes de paralisia.
-      // Se o Pokémon hesita, ele perde a ação imediatamente sem consumir PP e sem acionar rolagem/anúncio de paralisia.
+      // Precedência canônica: Flinch (priority 8) é verificado após a checagem de sono e freeze.
+      // Se o Pokémon hesita, ele perde a ação imediatamente sem consumir PP.
+      // Se um usuário congelado de Scald hesitar, ele permanece congelado (sem STATUS_CURED e sem perda de PP).
       if (attacker.isFlinched) {
         attacker.isFlinched = false;
         events.push({
@@ -755,6 +803,24 @@
           pokemonName: attacker.name
         });
         return;
+      }
+
+      // Descongelamento efetivo de golpe defrost (Scald: P4 / onModifyMove)
+      // Sem outro impedimento prévio, Scald descongela o usuário ao atingir a etapa de execução.
+      if (attacker.statusCondition === 'freeze') {
+        const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(selectedMove));
+        if (isSelfThaw) {
+          attacker.statusCondition = null;
+          events.push({
+            type: BATTLE_EVENTS.STATUS_CURED,
+            actor: attackerRole,
+            target: attackerRole,
+            pokemonName: attacker.name,
+            statusCondition: 'freeze',
+            reason: 'THAWED',
+            moveName: selectedMove.name
+          });
+        }
       }
 
       // Evento de seleção do golpe
@@ -1000,6 +1066,26 @@
         currentHp
       });
 
+      // 8B. Descongelamento do alvo por golpe de dano Fire (onDamagingHit: P4)
+      // Conforme Pokémon Showdown data/conditions.ts (frz.onDamagingHit): golpes de dano Fire
+      // descongelam o alvo sobrevivente imediatamente ao aplicar o dano.
+      const isDamagingFire = constants.isDamagingFireMove
+        ? constants.isDamagingFireMove(selectedMove)
+        : (String(selectedMove.type?.name || selectedMove.type || '').toLowerCase() === 'fire' &&
+           String(selectedMove.damageClass || selectedMove.damage_class?.name || selectedMove.damage_class || '').toLowerCase() !== 'status');
+      if (currentHp > 0 && defender.statusCondition === 'freeze' && effectiveMultiplier > 0 && isDamagingFire) {
+        defender.statusCondition = null;
+        events.push({
+          type: BATTLE_EVENTS.STATUS_CURED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: defender.name,
+          statusCondition: 'freeze',
+          reason: 'THAWED',
+          moveName: selectedMove.name
+        });
+      }
+
       // 9. Efeitos de Drenagem de HP (Drain Moves: cura proporcional ao HP efetivamente removido)
       if (actualDamageDealt > 0 && constants.getDrainRatio?.(selectedMove) > 0) {
         const drainRatio = constants.getDrainRatio(selectedMove);
@@ -1145,6 +1231,27 @@
             }
           }
         }
+      }
+
+      // 10D. Descongelamento do alvo por Scald / thawsTarget (onAfterMoveSecondary: P4)
+      // Conforme Pokémon Showdown data/conditions.ts (frz.onAfterMoveSecondary):
+      // Scald descongela o alvo sobrevivente APÓS os efeitos secundários terem sido resolvidos.
+      // Como a rolagem secundária (10C) é avaliada com o alvo ainda congelado, Scald NÃO queima o alvo congelado.
+      const isThawsTarget = Boolean(
+        selectedMove.thawsTarget ||
+        String(selectedMove.name || '').trim().toLowerCase() === 'scald'
+      );
+      if (currentHp > 0 && defender.statusCondition === 'freeze' && effectiveMultiplier > 0 && isThawsTarget) {
+        defender.statusCondition = null;
+        events.push({
+          type: BATTLE_EVENTS.STATUS_CURED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: defender.name,
+          statusCondition: 'freeze',
+          reason: 'THAWED',
+          moveName: selectedMove.name
+        });
       }
 
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)

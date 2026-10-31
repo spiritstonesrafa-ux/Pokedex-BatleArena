@@ -42,6 +42,7 @@
       this.statusSequence = Array.isArray(options.statusSequence) ? [...options.statusSequence] : null;
       this.secondaryEffectSequence = Array.isArray(options.secondaryEffectSequence) ? [...options.secondaryEffectSequence] : null;
       this.sleepDurationSequence = Array.isArray(options.sleepDurationSequence) ? [...options.sleepDurationSequence] : null;
+      this.thawSequence = Array.isArray(options.thawSequence) ? [...options.thawSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
 
@@ -107,6 +108,14 @@
       return Math.floor(this.rng() * 100) + 1;
     }
 
+    rollThaw() {
+      if (this.thawSequence && this.thawSequence.length > 0) {
+        const next = Math.floor(Number(this.thawSequence.shift()));
+        return Math.max(1, Math.min(100, next));
+      }
+      return Math.floor(this.rng() * 100) + 1;
+    }
+
     pickOpponents(pool, count = 3) {
       if (!Array.isArray(pool) || pool.length === 0) {
         throw new Error('Pool de oponentes inválida ou vazia.');
@@ -167,6 +176,10 @@
 
     setSecondaryEffectSequence(seq) {
       this.secondaryEffectSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setThawSequence(seq) {
+      this.thawSequence = Array.isArray(seq) ? [...seq] : null;
     }
 
     setOpponentSequence(seq) {

@@ -473,6 +473,31 @@
           enemyAction.sleepDuration = this.randomSource.rollSleepDuration();
         }
 
+        // Determina quem necessita de rolagem de descongelamento no turno.
+        // Cobre combatentes já congelados ou que possam sofrer congelamento antes de agir.
+        const playerCanFreeze = Boolean(getSec && getSec(playerMove)?.statusCondition === 'freeze');
+        const enemyCanFreeze = Boolean(getSec && getSec(enemyMove)?.statusCondition === 'freeze');
+
+        const isPlayerSelfThaw = Boolean(
+          (battleConstants?.isSelfThawingMove && battleConstants.isSelfThawingMove(playerMove)) ||
+          (sessionConstants?.isSelfThawingMove && sessionConstants.isSelfThawingMove(playerMove))
+        );
+        const isEnemySelfThaw = Boolean(
+          (battleConstants?.isSelfThawingMove && battleConstants.isSelfThawingMove(enemyMove)) ||
+          (sessionConstants?.isSelfThawingMove && sessionConstants.isSelfThawingMove(enemyMove))
+        );
+
+        const playerNeedsThawRoll = (activePlayer.statusCondition === 'freeze' || enemyCanFreeze) &&
+          !isPlayerSelfThaw && typeof this.randomSource.rollThaw === 'function';
+        const enemyNeedsThawRoll = enemyAction?.type === 'MOVE' &&
+          (activeEnemy.statusCondition === 'freeze' || playerCanFreeze) &&
+          !isEnemySelfThaw && typeof this.randomSource.rollThaw === 'function';
+
+        const playerThawRoll = playerNeedsThawRoll ? this.randomSource.rollThaw() : undefined;
+        if (enemyNeedsThawRoll) {
+          enemyAction.thawRoll = this.randomSource.rollThaw();
+        }
+
         // 3. Resolve o turno de forma pura no BattleEngine
         const turnActions = {
           player: {
@@ -482,7 +507,8 @@
             damageRoll: playerDamageRoll,
             secondaryEffectRoll: playerSecondaryEffectRoll,
             ...(playerStatusRoll !== undefined ? { statusRoll: playerStatusRoll } : {}),
-            ...(playerSleepDuration !== undefined ? { sleepDuration: playerSleepDuration } : {})
+            ...(playerSleepDuration !== undefined ? { sleepDuration: playerSleepDuration } : {}),
+            ...(playerThawRoll !== undefined ? { thawRoll: playerThawRoll } : {})
           },
           enemy: enemyAction
         };
@@ -543,6 +569,16 @@
           const enemyMove = activeEnemy?.moves?.find(move => move.id === Number(enemyAction.moveId));
           if (canMoveApplySleep(enemyMove) && typeof this.randomSource.rollSleepDuration === 'function') {
             enemyAction.sleepDuration = this.randomSource.rollSleepDuration();
+          }
+
+          if (activeEnemy.statusCondition === 'freeze' && typeof this.randomSource.rollThaw === 'function') {
+            const isEnemySelfThaw = Boolean(
+              (battleConstants?.isSelfThawingMove && battleConstants.isSelfThawingMove(enemyMove)) ||
+              (sessionConstants?.isSelfThawingMove && sessionConstants.isSelfThawingMove(enemyMove))
+            );
+            if (!isEnemySelfThaw) {
+              enemyAction.thawRoll = this.randomSource.rollThaw();
+            }
           }
         }
 

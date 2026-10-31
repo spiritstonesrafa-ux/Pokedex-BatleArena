@@ -145,8 +145,8 @@ test('P4-01: Definições canônicas explícitas e metadados dos cinco pilotos',
   assert.ok(capPj.requiredMechanics.includes('SECONDARY_STATUS_CHANCE'));
 
   const capSc = getMoveCapability(503);
-  assert.equal(capSc.supportLevel, 'PARTIAL'); // Descongelamento não implementado no ciclo
-  assert.ok(capSc.knownPending.includes('FREEZE_THAW_INTERACTION_PHASE_P4'));
+  assert.equal(capSc.supportLevel, 'FULL'); // Descongelamento implementado no ciclo de congelamento da P4
+  assert.deepEqual(capSc.knownPending, []);
 
   // validateMoveData aceita todos os cinco pilotos
   for (const move of Object.values(PILOT_MOVES)) {

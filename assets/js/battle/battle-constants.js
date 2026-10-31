@@ -287,6 +287,26 @@
       requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH']),
       requiresDamage: true,
       requiresHit: true
+    }),
+    'ice-beam': Object.freeze({
+      id: 58,
+      name: 'ice-beam',
+      statusCondition: 'freeze',
+      chance: 10,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'blizzard': Object.freeze({
+      id: 59,
+      name: 'blizzard',
+      statusCondition: 'freeze',
+      chance: 10,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
     })
   });
 
@@ -410,6 +430,8 @@
     14: Object.freeze({ id: 14, name: 'swords-dance', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ attack: 2 }) }),
     44: Object.freeze({ id: 44, name: 'bite', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bite'] }),
     53: Object.freeze({ id: 53, name: 'flamethrower', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['flamethrower'] }),
+    58: Object.freeze({ id: 58, name: 'ice-beam', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['ice-beam'] }),
+    59: Object.freeze({ id: 59, name: 'blizzard', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: ['WEATHER_ACCURACY_PHASE_P5'], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['blizzard'] }),
     71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -442,7 +464,7 @@
     434: Object.freeze({ id: 434, name: 'draco-meteor', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
     453: Object.freeze({ id: 453, name: 'aqua-jet', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     473: Object.freeze({ id: 473, name: 'psyshock', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'PHYSICAL_DEFENSE_TARGET'], knownPending: [], blockedReason: null, priority: 0, targetsDefenseWithSpAtk: true }),
-    503: Object.freeze({ id: 503, name: 'scald', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: ['FREEZE_THAW_INTERACTION_PHASE_P4'], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['scald'] }),
+    503: Object.freeze({ id: 503, name: 'scald', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['scald'], defrost: true, thawsTarget: true }),
     509: Object.freeze({ id: 509, name: 'circle-throw', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'NEGATIVE_PRIORITY', 'FORCED_SWITCH'], knownPending: [], blockedReason: null, priority: -6, isForcedSwitch: true }),
     525: Object.freeze({ id: 525, name: 'dragon-tail', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'NEGATIVE_PRIORITY', 'FORCED_SWITCH'], knownPending: [], blockedReason: null, priority: -6, isForcedSwitch: true }),
     532: Object.freeze({ id: 532, name: 'horn-leech', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
@@ -1143,9 +1165,33 @@
         return types.includes('electric');
       case 'sleep':
         return false;
+      case 'freeze':
+        return types.includes('ice');
       default:
         return false;
     }
+  }
+
+  function isSelfThawingMove(move) {
+    if (!move) return false;
+    if (move.defrost) return true;
+    const name = String(move.name || '').trim().toLowerCase();
+    return name === 'scald';
+  }
+
+  function isDamagingFireMove(move) {
+    if (!move) return false;
+    const damageClass = String(move.damageClass || move.damage_class?.name || move.damage_class || '').toLowerCase();
+    const type = String(move.type?.name || move.type || '').toLowerCase();
+    return type === 'fire' && damageClass !== 'status';
+  }
+
+  function isThawingMoveTarget(move) {
+    if (!move) return false;
+    if (move.thawsTarget) return true;
+    const name = String(move.name || '').trim().toLowerCase();
+    if (name === 'scald') return true;
+    return isDamagingFireMove(move);
   }
 
   function isEligibleForStatusCondition(target, statusCondition) {
@@ -1306,6 +1352,9 @@
     getSecondaryEffect,
     isStatusConditionImmune,
     isEligibleForStatusCondition,
+    isSelfThawingMove,
+    isThawingMoveTarget,
+    isDamagingFireMove,
     DEFAULT_SLEEP_TURNS
   });
 

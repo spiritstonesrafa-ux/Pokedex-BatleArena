@@ -21,7 +21,9 @@
   const STATUS_LABELS = Object.freeze({
     poison: { short: 'VENENO', aria: 'Envenenado', move: 'causa veneno' },
     burn: { short: 'QUEIMADURA', aria: 'Queimado', move: 'causa queimadura' },
-    paralysis: { short: 'PARALISIA', aria: 'Paralisado', move: 'causa paralisia' }
+    paralysis: { short: 'PARALISIA', aria: 'Paralisado', move: 'causa paralisia' },
+    sleep: { short: 'SONO', aria: 'Dormindo', move: 'adormece o alvo' },
+    freeze: { short: 'CONGELAMENTO', aria: 'Congelado', move: 'congela o alvo' }
   });
   const statusBadge = status => STATUS_LABELS[status] || null;
   const STAT_STAGE_SHORT_LABELS = Object.freeze({

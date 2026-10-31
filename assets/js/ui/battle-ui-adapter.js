@@ -106,19 +106,21 @@
           if (command.outcome === 'APPLIED' && typeof this.view.updateStatusBadge === 'function') {
             this.view.updateStatusBadge(command.target, command.statusCondition);
           }
-          if ((command.outcome === 'CURED' || command.outcome === 'WOKE_UP') && typeof this.view.updateStatusBadge === 'function') {
+          if ((command.outcome === 'CURED' || command.outcome === 'WOKE_UP' || command.outcome === 'THAWED') && typeof this.view.updateStatusBadge === 'function') {
             this.view.updateStatusBadge(command.target, null);
           }
           if (typeof this.view.displayMessage === 'function') {
             const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
             const status = command.statusCondition;
-            const label = status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : 'veneno';
+            const label = status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : status === 'freeze' ? 'congelamento' : 'veneno';
             const message = command.outcome === 'APPLIED'
-              ? (status === 'poison' ? `${name} foi envenenado!` : status === 'sleep' ? `${name} adormeceu!` : `${name} sofreu ${label}!`) :
+              ? (status === 'poison' ? `${name} foi envenenado!` : status === 'sleep' ? `${name} adormeceu!` : status === 'freeze' ? `${name} foi congelado!` : `${name} sofreu ${label}!`) :
               command.outcome === 'DAMAGE' ? `${name} perdeu ${command.damage} HP por ${label}!` :
               command.outcome === 'IMMUNE' ? `${name} é imune a ${label}!` :
-              command.outcome === 'IMMOBILIZED' ? (status === 'sleep' ? `${name} está dormindo profundamente!` : `${name} não conseguiu agir por paralisia!`) :
-              (command.outcome === 'WOKE_UP' || command.outcome === 'CURED') ? `${name} acordou!` :
+              command.outcome === 'IMMOBILIZED' ? (status === 'sleep' ? `${name} está dormindo profundamente!` : status === 'freeze' ? `${name} está congelado e não pôde se mover!` : `${name} não conseguiu agir por paralisia!`) :
+              command.outcome === 'THAWED' ? `${name} descongelou!` :
+              command.outcome === 'WOKE_UP' ? `${name} acordou!` :
+              command.outcome === 'CURED' ? (status === 'freeze' ? `${name} descongelou!` : `${name} foi curado de ${label}!`) :
               command.outcome === 'FLINCHED' ? `${name} hesitou e não pôde se mover!` :
                 `${name} já possui uma condição de status.`;
             this.view.displayMessage(message);

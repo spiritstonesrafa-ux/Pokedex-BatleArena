@@ -122,7 +122,7 @@
 
         case BATTLE_EVENTS.STATUS_APPLIED:
         case BATTLE_EVENTS.STATUS_BLOCKED:
-          if (!event.target || !['poison', 'burn', 'paralysis', 'sleep'].includes(event.statusCondition) || !event.pokemonName) {
+          if (!event.target || !['poison', 'burn', 'paralysis', 'sleep', 'freeze'].includes(event.statusCondition) || !event.pokemonName) {
             throw new Error('INVALID_EVENT_PAYLOAD: status requer alvo, nome e condição suportada.');
           }
           break;
@@ -143,8 +143,8 @@
             if (!Number.isInteger(event.statusRoll) || event.statusRoll < 1 || event.statusRoll > 25) {
               throw new Error('INVALID_EVENT_PAYLOAD: ação impedida por paralisia inválida.');
             }
-          } else if (event.statusCondition === 'sleep') {
-            // Válido para sono
+          } else if (event.statusCondition === 'sleep' || event.statusCondition === 'freeze') {
+            // Válido para sono e congelamento
           } else {
             throw new Error('INVALID_EVENT_PAYLOAD: condição de status inválida para impedimento.');
           }

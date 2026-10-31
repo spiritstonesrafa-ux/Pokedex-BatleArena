@@ -29,7 +29,10 @@ const PILOT_P3_MOVES = new Set([
   'draco-meteor',
   'hypnosis',
   'sleep-powder',
-  'spore'
+  'spore',
+  'ice-beam',
+  'blizzard',
+  'scald'
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
@@ -109,12 +112,45 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     accuracy: 100,
     pp: 15,
     damageClass: 'status'
+  }),
+  'ice-beam': Object.freeze({
+    id: 58,
+    name: 'ice-beam',
+    type: 'ice',
+    power: 90,
+    accuracy: 100,
+    pp: 10,
+    damageClass: 'special'
+  }),
+  'blizzard': Object.freeze({
+    id: 59,
+    name: 'blizzard',
+    type: 'ice',
+    power: 110,
+    accuracy: 70,
+    pp: 5,
+    damageClass: 'special'
+  }),
+  'scald': Object.freeze({
+    id: 503,
+    name: 'scald',
+    type: 'water',
+    power: 80,
+    accuracy: 100,
+    pp: 15,
+    damageClass: 'special'
   })
 });
 
 // Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)
+  9: ['blizzard', 'scald'],              // Blastoise (Gen 1 Starter)
+  45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
+  65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
+  97: ['hypnosis', 'body-press'],        // Hypno (Gen 1)
+  131: ['blizzard', 'body-press'],       // Lapras (Gen 1 Draft)
+  134: ['scald', 'blizzard'],            // Vaporeon (Gen 1 Draft)
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
   97: ['hypnosis', 'body-press'],        // Hypno (Gen 1)

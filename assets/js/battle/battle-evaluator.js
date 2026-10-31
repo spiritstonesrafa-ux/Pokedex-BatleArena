@@ -77,7 +77,10 @@
                 accuracyFactor = Math.max(0, Math.min(100, accNum)) / 100;
               }
             }
-            const actionFactor = attacker.statusCondition === 'paralysis' ? 0.75 : 1;
+            const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(move));
+            const actionFactor = attacker.statusCondition === 'paralysis'
+              ? 0.75
+              : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
             statusChance = accuracyFactor * actionFactor;
             if (move.statusEffect === 'sleep') {
               expectedStatusBenefit = Math.round(statusChance * 25);
@@ -182,7 +185,10 @@
         }
       }
 
-      const actionFactor = attacker.statusCondition === 'paralysis' ? 0.75 : 1;
+      const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(move));
+      const actionFactor = attacker.statusCondition === 'paralysis'
+        ? 0.75
+        : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
       const expectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
 
       // 6. Semântica refinada de nocaute (KO)
@@ -245,6 +251,9 @@
               const speedAdvantage = defSpeed > atkSpeed ? 15 : 5;
               const fullParalysisDisruption = 15;
               expectedStatusBenefit = Math.round(expectedStatusChance * (speedAdvantage + fullParalysisDisruption));
+            } else if (secEffect.statusCondition === 'freeze') {
+              const freezeDisruption = 25;
+              expectedStatusBenefit = Math.round(expectedStatusChance * freezeDisruption);
             }
           }
         } else if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
