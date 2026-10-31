@@ -22,6 +22,13 @@ const SIMPLE_MOVES = new Set([
 
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
+  'bullet-seed',
+  'icicle-spear',
+  'rock-blast',
+  'arm-thrust',
+  'double-kick',
+  'twineedle',
+  'water-shuriken',
   'swords-dance',
   'calm-mind',
   'close-combat',
@@ -41,6 +48,13 @@ const PILOT_P3_MOVES = new Set([
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  'bullet-seed': Object.freeze({"id":331,"name":"bullet-seed","type":"grass","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
+  'icicle-spear': Object.freeze({"id":333,"name":"icicle-spear","type":"ice","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
+  'rock-blast': Object.freeze({"id":350,"name":"rock-blast","type":"rock","power":25,"accuracy":90,"pp":10,"damageClass":"physical"}),
+  'arm-thrust': Object.freeze({"id":292,"name":"arm-thrust","type":"fighting","power":15,"accuracy":100,"pp":20,"damageClass":"physical"}),
+  'double-kick': Object.freeze({"id":24,"name":"double-kick","type":"fighting","power":30,"accuracy":100,"pp":30,"damageClass":"physical"}),
+  'twineedle': Object.freeze({"id":41,"name":"twineedle","type":"bug","power":25,"accuracy":100,"pp":20,"damageClass":"physical"}),
+  'water-shuriken': Object.freeze({"id":594,"name":"water-shuriken","type":"water","power":15,"accuracy":100,"pp":20,"damageClass":"special"}),
   'rest': Object.freeze({"id":156,"name":"rest","type":"psychic","power":0,"accuracy":null,"pp":5,"damageClass":"status","p4Effect":"rest"}),
   'sleep-talk': Object.freeze({"id":214,"name":"sleep-talk","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"sleep-talk"}),
   'yawn': Object.freeze({"id":281,"name":"yawn","type":"normal","power":0,"accuracy":null,"pp":10,"damageClass":"status","p4Effect":"yawn"}),
@@ -175,10 +189,13 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
 
 // Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  91: ['icicle-spear', 'rock-blast'],
+  34: ['double-kick', 'poison-jab'],
+  15: ['twineedle', 'aerial-ace'],
   143: ['rest','sleep-talk'], // Snorlax: canonical sleep combo.
   80: ['yawn','snore'], // Slowbro: delayed sleep and sleep-usable attack.
 
-  297: ['fake-out', 'body-press'], // Hariyama, first-entry pilot.
+  297: ['fake-out', 'arm-thrust'], // Hariyama, first-entry pilot.
 
   89: ['toxic', 'shock-wave'], // Muk: Toxic via modern TM; keep six campaign options.
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)
@@ -197,9 +214,10 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   212: ['swords-dance', 'wing-attack'],  // Scizor (Draft Gen 2)
   214: ['close-combat', 'swords-dance'], // Heracross (Draft Gen 2)
   282: ['calm-mind', 'dazzling-gleam'],  // Gardevoir (Draft Gen 3)
-  286: ['spore', 'magical-leaf'],        // Breloom (Gen 3)
+  286: ['spore', 'bullet-seed'],        // Breloom (Gen 3)
   445: ['swords-dance', 'draco-meteor'], // Garchomp (Draft Gen 4)
-  448: ['close-combat', 'swords-dance']  // Lucario (Draft Gen 4)
+  448: ['close-combat', 'swords-dance'], // Lucario (Draft Gen 4)
+  658: ['water-shuriken', 'hydro-pump']  // Greninja (Gen 6 Starter)
 });
 
 const cache = path.join(__dirname, '..', '.cache_pokeapi');

@@ -47,6 +47,7 @@
       this.confusionHitSequence = Array.isArray(options.confusionHitSequence) ? [...options.confusionHitSequence] : null;
       this.confusionDamageSequence = Array.isArray(options.confusionDamageSequence) ? [...options.confusionDamageSequence] : null;
       this.secondaryStatusSequence=Array.isArray(options.secondaryStatusSequence)?[...options.secondaryStatusSequence]:null;
+      this.hitCountSequence=Array.isArray(options.hitCountSequence)?[...options.hitCountSequence]:null;
       this.calledMoveSequence=Array.isArray(options.calledMoveSequence)?[...options.calledMoveSequence]:null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
@@ -104,6 +105,13 @@
       }
       return Math.floor(this.rng() * 3) + 1;
     }
+
+    rollHitCount() {
+      const value = this.hitCountSequence?.length ? Number(this.hitCountSequence.shift()) : Math.floor(this.rng() * 100) + 1;
+      if (!Number.isInteger(value) || value < 1 || value > 100) throw new Error('Rolagem de quantidade de acertos inválida.');
+      return value;
+    }
+    setHitCountSequence(sequence) { this.hitCountSequence = Array.isArray(sequence) ? [...sequence] : null; }
 
     rollCalledMove(count){if(!Number.isInteger(count)||count<1)return 0;if(this.calledMoveSequence?.length){const n=Number(this.calledMoveSequence.shift());if(!Number.isInteger(n)||n<0||n>=count)throw new Error('Escolha de movimento inválida.');return n;}return Math.floor(this.rng()*count);}
     setCalledMoveSequence(seq){this.calledMoveSequence=Array.isArray(seq)?[...seq]:null;}

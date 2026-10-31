@@ -1246,6 +1246,45 @@
 
       // 6. Pipeline de cálculo de dano v2 (PBA-014B: com variância 85..100)
       const baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, selectedMove.power);
+      // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
+      const multiHit = constants.getMultiHitMove(selectedMove);
+      if (multiHit) {
+        const plannedHits = constants.getMultiHitCount(selectedMove, action?.hitCountRoll ?? 1);
+        function hitRolls(key, fallback, min, max) {
+          const supplied = action?.[key];
+          if (supplied !== undefined && (!Array.isArray(supplied) || supplied.length !== plannedHits)) throw new Error('Quantidade de rolagens por acerto inválida.');
+          const rolls = supplied || Array(plannedHits).fill(fallback);
+          if (rolls.some(n => !Number.isInteger(n) || n < min || n > max)) throw new Error('Rolagem por acerto inválida.');
+          return rolls;
+        }
+        const damageRolls = hitRolls('hitDamageRolls', damageRoll, 85, 100);
+        const poisonRolls = selectedMove.id === 41 ? hitRolls('hitSecondaryEffectRolls', secondaryEffectRoll, 1, 100) : null;
+        let hitCount = 0;
+        let totalDamage = 0;
+        for (let index = 0; index < plannedHits && defender.currentHp > 0 && effectiveMultiplier > 0; index++) {
+          const hitDamage = constants.applyBurnPenalty(DamageCalculator.applyModifier(baseDamage, effectiveMultiplier, stabMultiplier, damageRolls[index]), attacker, selectedMove);
+          const previousHp = defender.currentHp;
+          defender.currentHp = Math.max(0, previousHp - hitDamage);
+          totalDamage += previousHp - defender.currentHp;
+          hitCount++;
+          events.push({ type: BATTLE_EVENTS.DAMAGE_APPLIED, source: attackerRole, target: defenderRole,
+            attackType: selectedMove.type, damageClass: selectedMove.damageClass, defenderTypes: defenderTypesList,
+            moveName: selectedMove.name, power: selectedMove.power, baseDamage, damageRoll: damageRolls[index],
+            stabMultiplier, typeMultiplier: effectiveMultiplier, multiplier: effectiveMultiplier,
+            damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
+          if (poisonRolls && poisonRolls[index] <= 20 && constants.isEligibleForStatusCondition(defender, 'poison')) {
+            defender.statusCondition = 'poison';
+            defender.toxicStage = 0;
+            events.push({type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole, target: defenderRole,
+              pokemonName: defender.name, statusCondition: 'poison', moveId: selectedMove.id,
+              moveName: selectedMove.name, secondaryEffectRoll: poisonRolls[index], chance: 20, hitIndex: hitCount});
+          }
+        }
+        if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
+          moveName: selectedMove.name, hitCount, plannedHits, totalDamage});
+        if (defender.currentHp === 0) resolveFaints(state, events, [defenderRole]);
+        return;
+      }
       const finalDamage = constants.applyBurnPenalty(
         DamageCalculator.applyModifier(baseDamage, effectiveMultiplier, stabMultiplier, damageRoll),
         attacker, selectedMove);

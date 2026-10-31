@@ -336,6 +336,8 @@
         case BATTLE_EVENTS.DROWSY_APPLIED:
           return [{type:PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK,pokemonName:event.pokemonName,reason:'DROWSY'}];
         case BATTLE_EVENTS.DROWSY_ENDED: return [];
+        case BATTLE_EVENTS.MULTI_HIT_COMPLETE:
+          return [{type:PRESENTATION_COMMANDS.MULTI_HIT_FEEDBACK,hitCount:event.hitCount,moveName:event.moveName}];
         case BATTLE_EVENTS.MOVE_FAILED:
           return [{ type: PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK, actor: event.actor, pokemonName: event.pokemonName, moveName: event.moveName, reason: event.reason }];
 

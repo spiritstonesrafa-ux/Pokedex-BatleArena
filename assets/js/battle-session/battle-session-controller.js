@@ -148,6 +148,21 @@
     return Boolean(getSec && getSec(move)?.confusion === true);
   }
 
+  function prepareMultiHit(active, action, rng) {
+    let move = active.moves.find(m => m.id === action.moveId);
+    if (move?.id === 214) {
+      const candidates = active.moves.filter(m => m.id !== 214 && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
+      move = candidates[action.sleepTalkChoice ?? 0];
+    }
+    const config = battleConstants.getMultiHitMove(move);
+    if (!config) return;
+    if (config.minHits !== config.maxHits) action.hitCountRoll = rng.rollHitCount?.() ?? 1;
+    const count = battleConstants.getMultiHitCount(move, action.hitCountRoll);
+    // Prepared externally even when an action later misses or is interrupted; only engine events count applied hits.
+    action.hitDamageRolls = Array.from({length:count}, (_, i) => i ? (rng.rollDamage?.() ?? 100) : (action.damageRoll ?? 100));
+    if (move.id === 41) action.hitSecondaryEffectRolls = Array.from({length:count}, (_, i) => i ? (rng.rollSecondaryEffect?.() ?? 100) : (action.secondaryEffectRoll ?? 100));
+  }
+
   function prepareSleepCall(active, action, targetAction, rng){
     if(action?.moveId!==214)return;
     const candidates=active.moves.filter(m=>m.id!==214&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
@@ -579,6 +594,8 @@
         if(enemyAction?.type==='MOVE')prepareSleepCall(activeEnemy,enemyAction,turnActions.player,this.randomSource);
         prepareCompoundSecondary(playerMove,turnActions.player,this.randomSource);
         if(enemyAction?.type==='MOVE')prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
+        prepareMultiHit(activePlayer,turnActions.player,this.randomSource);
+        if(enemyAction?.type==='MOVE')prepareMultiHit(activeEnemy,enemyAction,this.randomSource);
         const turnResult = this.engine.resolveTurn(this.battleState, turnActions);
         this.battleState = turnResult.state;
 
@@ -635,6 +652,7 @@
           const enemyMove = activeEnemy?.moves?.find(move => move.id === Number(enemyAction.moveId));
           prepareSleepCall(activeEnemy,enemyAction,{},this.randomSource);
           prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
+          prepareMultiHit(activeEnemy,enemyAction,this.randomSource);
           if (canMoveApplySleep(enemyMove) && typeof this.randomSource.rollSleepDuration === 'function') {
             enemyAction.sleepDuration = this.randomSource.rollSleepDuration();
           }

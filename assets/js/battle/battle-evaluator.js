@@ -211,9 +211,11 @@
         : DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
 
       const baseDamage = range.baseDamage;
-      const minDamage = constants.applyBurnPenalty(range.minDamage, attacker, move);
-      const maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move);
-      const averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move);
+      const multiHit = constants.getMultiHitMove(move);
+      const expectedHits = multiHit ? (multiHit.maxHits === 5 ? 3.1 : 2) : 1;
+      const minDamage = constants.applyBurnPenalty(range.minDamage, attacker, move) * (multiHit?.minHits || 1);
+      const maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move) * (multiHit?.maxHits || 1);
+      const averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move) * expectedHits;
       const damageIfHit = averageDamage;
 
       // 5. Ponderação por Precisão para obter Dano Esperado (Expected Value)
@@ -279,7 +281,7 @@
 
           if (isEligibleForSecondary && !guaranteedKo) {
             const rawChance = Number(secEffect.chance) || 0;
-            expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+            expectedStatusChance = (1 - Math.pow(1 - rawChance / 100, multiHit ? expectedHits : 1)) * accuracyFactor * actionFactor;
 
             const defMaxHp = Number(defender.maxHp) || defenderHp || 1;
             if (secEffect.statusCondition === 'poison') {

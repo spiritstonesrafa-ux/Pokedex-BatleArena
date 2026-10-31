@@ -718,7 +718,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(waterShuriken);
     assert.equal(waterShuriken.id, 594);
     assert.equal(waterShuriken.name, 'water-shuriken');
-    assert.equal(waterShuriken.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(waterShuriken.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
     assert.equal(waterShuriken.priority, 1);
 
     // 2. Venom Drench (599) deslocado

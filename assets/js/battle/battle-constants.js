@@ -27,6 +27,7 @@
     PP_CHANGED: 'PP_CHANGED',
     MOVE_MISSED: 'MOVE_MISSED',
     MOVE_FAILED: 'MOVE_FAILED',
+    MULTI_HIT_COMPLETE: 'MULTI_HIT_COMPLETE',
     HP_HEALED: 'HP_HEALED',
     DROWSY_APPLIED: 'DROWSY_APPLIED',
     DROWSY_ENDED: 'DROWSY_ENDED',
@@ -184,6 +185,7 @@
 
   const P4Catalog = typeof module !== 'undefined' && module.exports ? require('./p4-secondary-catalog.js') : (window.PBAP4SecondaryCatalog || {effects:{},definitions:{},moves:{},defrost:[]});
   const SECONDARY_EFFECT_MOVES = Object.freeze({
+    'twineedle': Object.freeze({id:41,name:'twineedle',chance:20,statusCondition:'poison'}),
     ...P4Catalog.effects,
     'alluring-voice': Object.freeze({id:914,name:'alluring-voice',target:'defender',chance:100,confusion:true,requiresRaisedStats:true}),
     'snore': Object.freeze({id:173,name:'snore',target:'defender',chance:30,flinch:true}),
@@ -466,7 +468,27 @@
     'natures-madness': 'natures-madness'
   });
 
+  const MULTI_HIT_MOVES = Object.freeze(Object.fromEntries(Object.entries({"24":{"id":24,"name":"double-kick","minHits":2,"maxHits":2},"41":{"id":41,"name":"twineedle","minHits":2,"maxHits":2},"292":{"id":292,"name":"arm-thrust","minHits":2,"maxHits":5},"331":{"id":331,"name":"bullet-seed","minHits":2,"maxHits":5},"333":{"id":333,"name":"icicle-spear","minHits":2,"maxHits":5},"350":{"id":350,"name":"rock-blast","minHits":2,"maxHits":5},"594":{"id":594,"name":"water-shuriken","minHits":2,"maxHits":5}}).map(([id, move]) => [id, Object.freeze(move)])));
+  function getMultiHitMove(move) {
+    if (!move) return null;
+    return MULTI_HIT_MOVES[Number(move.id)] || Object.values(MULTI_HIT_MOVES).find(m => m.name === move.name) || null;
+  }
+  function getMultiHitCount(move, roll = 1) {
+    const config = getMultiHitMove(move);
+    if (!config) return 1;
+    if (config.minHits === config.maxHits) return config.minHits;
+    if (!Number.isInteger(roll) || roll < 1 || roll > 100) throw new Error('Rolagem de quantidade de acertos inválida.');
+    return roll <= 35 ? 2 : roll <= 70 ? 3 : roll <= 85 ? 4 : 5;
+  }
+
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
+    331: Object.freeze({"id":331,"name":"bullet-seed","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":0}),
+    333: Object.freeze({"id":333,"name":"icicle-spear","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":0}),
+    350: Object.freeze({"id":350,"name":"rock-blast","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":0}),
+    292: Object.freeze({"id":292,"name":"arm-thrust","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":0}),
+    24: Object.freeze({"id":24,"name":"double-kick","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":0}),
+    41: Object.freeze({"id":41,"name":"twineedle","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT","SECONDARY_STATUS_CHANCE"],"knownPending":[],"blockedReason":null,"priority":0}),
+    594: Object.freeze({"id":594,"name":"water-shuriken","supportLevel":"FULL","requiredMechanics":["SPECIAL_DAMAGE","POSITIVE_PRIORITY","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":1}),
     ...P4Catalog.definitions,
     47: Object.freeze({"id":47,"name":"sing","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
     142: Object.freeze({"id":142,"name":"lovely-kiss","supportLevel":"FULL","requiredMechanics":["STATUS_APPLICATION"],"knownPending":[],"blockedReason":null,"priority":0}),
@@ -550,7 +572,6 @@
     284: Object.freeze({ id: 284, name: 'eruption', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
     323: Object.freeze({ id: 323, name: 'water-spout', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
     368: Object.freeze({ id: 368, name: 'metal-burst', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_LAST_DAMAGE'], knownPending: ['COUNTER_PHASE_P5'], blockedReason: 'REFLECTS_LAST_DAMAGE', priority: 0 }),
-    594: Object.freeze({ id: 594, name: 'water-shuriken', supportLevel: 'BLOCKED', requiredMechanics: ['MULTI_HIT'], knownPending: ['MULTI_HIT_PHASE_P5'], blockedReason: 'HITS_2_TO_5_TIMES', priority: 1 }),
     599: Object.freeze({ id: 599, name: 'venom-drench', supportLevel: 'BLOCKED', requiredMechanics: ['STATUS_APPLICATION'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_STAT_DROP', priority: 0 }),
     690: Object.freeze({ id: 690, name: 'beak-blast', supportLevel: 'BLOCKED', requiredMechanics: ['CONTACT_BURN_PREPARATION', 'PREPARATION_PHASE'], knownPending: ['CONTACT_BURN_PREPARATION_PHASE_P5'], blockedReason: 'PREPARATION_AND_CONTACT_BURN_REQUIRED', priority: -3 }),
     704: Object.freeze({ id: 704, name: 'shell-trap', supportLevel: 'BLOCKED', requiredMechanics: ['PHYSICAL_HIT_TRIGGER', 'PREPARATION_PHASE'], knownPending: ['COUNTER_PREPARATION_PHASE_P5'], blockedReason: 'PREPARATION_AND_PHYSICAL_TRIGGER_REQUIRED', priority: -3 }),
@@ -606,6 +627,13 @@
 
   // Mapeamento canônico dos golpes de dano utilizados nos catálogos da campanha e Pokédex expandida
   const KNOWN_CATALOG_MOVES = Object.freeze({
+    331: Object.freeze({"id":331,"name":"bullet-seed","type":"grass","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
+    333: Object.freeze({"id":333,"name":"icicle-spear","type":"ice","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
+    350: Object.freeze({"id":350,"name":"rock-blast","type":"rock","power":25,"accuracy":90,"pp":10,"damageClass":"physical"}),
+    292: Object.freeze({"id":292,"name":"arm-thrust","type":"fighting","power":15,"accuracy":100,"pp":20,"damageClass":"physical"}),
+    24: Object.freeze({"id":24,"name":"double-kick","type":"fighting","power":30,"accuracy":100,"pp":30,"damageClass":"physical"}),
+    41: Object.freeze({"id":41,"name":"twineedle","type":"bug","power":25,"accuracy":100,"pp":20,"damageClass":"physical"}),
+    594: Object.freeze({"id":594,"name":"water-shuriken","type":"water","power":15,"accuracy":100,"pp":20,"damageClass":"special"}),
     ...P4Catalog.moves,
     47: Object.freeze({"id":47,"name":"sing","type":"normal","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
     142: Object.freeze({"id":142,"name":"lovely-kiss","type":"normal","accuracy":75,"pp":10,"statusEffect":"sleep","power":0,"damageClass":"status"}),
@@ -1436,6 +1464,9 @@
     RECOIL_MOVES,
     getRecoilRatio,
     isForcedSwitchMove,
+    MULTI_HIT_MOVES,
+    getMultiHitMove,
+    getMultiHitCount,
     CANONICAL_MOVE_DEFINITIONS,
     CANONICAL_MOVE_DEFINITIONS_BY_NAME,
     MOVE_ALIASES,

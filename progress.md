@@ -2,6 +2,37 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P5 — Suporte a Water Shuriken (Múltiplos Acertos Especial com Prioridade +1)
+
+- Implementado Water Shuriken (#594): Water, Special, poder 15 por acerto, precisão 100, PP 20, prioridade +1, 2–5 acertos usando a distribuição moderna 35% / 35% / 15% / 15%. Suporte FULL no modelo atual de batalhas individuais.
+- Consideradas explicitamente as diferenças históricas de categoria (Special desde a Gen 7+, Physical na Gen 6) e as variantes de Ash-Greninja / Battle Bond (3 acertos fixos de poder 20 no Gen 7). Não foram implementadas formas, habilidades (Battle Bond, Skill Link) ou itens (Loaded Dice), mantendo-se dependências explícitas e sem misturar versões.
+- Reutilizada a infraestrutura compartilhada de múltiplos acertos: dano calculado com Special Attack e Special Defense efetivos, aplicando modificadores de estágio correspondentes (`specialAttack` e `specialDefense`, enquanto estágios físicos não têm efeito). Dano especial não sofre penalidade de queimadura (burn). STAB, efetividade de tipo e variância 85..100 resolvidos por acerto.
+- Prioridade +1 integrada a TurnManager: age antes de golpes de prioridade 0 (como Tackle), desempata por velocidade efetiva contra outros golpes de prioridade +1 (como Quick Attack / Aqua Jet) e desempata deterministamente a favor do jogador em empates de velocidade.
+- Resolução de precisão e PP: verificação de acurácia única por uso e consumo de 1 PP (20 -> 19). Se errar por precisão/evasão, zero acertos são aplicados, nenhum evento MULTI_HIT_COMPLETE é emitido e 1 PP é consumido. Nocaute interrompe imediatamente a sequência de acertos; danos excedentes não vazam para o banco em batalhas 3x3.
+- Sessão determinística e desacoplada: rolagens de quantidade de acertos e dano por acerto integradas nos fluxos do jogador e inimigo, inclusive durante troca voluntária do jogador e quando acionado via Sleep Talk (neste caso, consome PP de Sleep Talk e preserva PP de Water Shuriken).
+- Avaliador e IA: consideram dano total (média de 3,1 acertos), intervalo de dano e o bônus de prioridade positiva (+15 * prioridade) sem consumir RNG interno.
+- Apresentação: mapeia cada acerto como HP_TRANSITION contíguo e emite MULTI_HIT_FEEDBACK com mensagem "Atingiu X vezes!" no DOM adapter.
+- Campanha: Water Shuriken disponibilizado nas opções curadas de Greninja (#658), substituindo `strength` e mantendo `hydro-pump`, dentro do teto estrito de seis opções (4 fixos + 2 extras). Gerador offline reproduzível: 455 espécies com extras / 1.343 espécies, 27 definições curadas seguras. Nenhum save adulterado.
+- Referências conferidas: PokéAPI (dados modernos de Water Shuriken #594), Pokémon Showdown data/moves.ts (watershuriken: category, power, priority, multihit 2-5): https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts e sim/battle-actions.ts .
+- Validação: 68 testes em tests/battle/multi-hit.test.js (17 novos testes cobrindo metadados, categoria especial, SpAtk/SpDef com estágios, imunidade a burn, prioridade +1 e desempates por velocidade, distribuição 2-5, precisão/evasão, interrupção por KO e reservas intactas, sessão nos dois sentidos/troca/Sleep Talk, IA/avaliador, apresentação e catálogo). Suíte completa do repositório: **1.409 testes aprovados, 36 suítes, 0 falhas, 0 cancelados, 0 ignorados; código de saída 0**. Auditoria P4: 266 conhecidos, 207 FULL, 59 PARTIAL, 0 pendências P4. git diff --check aprovado.
+- P5 permanece parcial: faltam outras famílias de múltiplos acertos, dano fixo/nível (Seismic Toss, Night Shade), dano baseado em HP/peso (Super Fang, Low Kick, Grass Knot, Reversal, Flail) e histórico de dano para contra-ataques (Counter, Mirror Coat, Metal Burst). Não há suporte completo às variantes de Battle Bond / Ash-Greninja. Sem commit, push ou deploy.
+
+---
+
+## Atualização — 31/10/2026: P4 publicada e P5 — primeiros múltiplos acertos
+
+- Fechamento da P4 publicado em origin/main no commit 099680edf7094d59b66bd08724d1482f67ee6f2f. Hash remoto confirmado e checkout limpo antes deste ciclo. O registro anterior de fechamento local abaixo passa a ser histórico.
+- Implementados seis pilotos P5: Bullet Seed (#331), Icicle Spear (#333), Rock Blast (#350), Arm Thrust (#292), Double Kick (#24) e Twineedle (#41). FULL no escopo do motor atual, sem habilidades, itens, Substitute ou regras de batalhas em dupla.
+- Quatro pilotos de 2–5 acertos usam a distribuição moderna 35% / 35% / 15% / 15%. Double Kick e Twineedle têm dois acertos fixos. Precisão, oportunidade de agir e PP são resolvidos uma vez; dano, variância, arredondamento e veneno de Twineedle são resolvidos por acerto. O nocaute interrompe imediatamente a sequência sem atingir a reserva.
+- Fonte externa prepara rolagens determinísticas independentes de quantidade, dano e efeito por acerto, inclusive para Sleep Talk e ataques inimigos durante troca do jogador. Rolagens preparadas não significam acertos aplicados; apenas os eventos emitidos contam. Engine e IA continuam sem sorteio interno.
+- Avaliador/IA consideram o dano total, intervalo de acertos e média de 3,1 acertos nos golpes variáveis. Twineedle tem chance acumulada estimada de 36% de veneno quando ambos os acertos podem ocorrer em um alvo elegível. Apresentação mantém transição de HP por acerto e informa a quantidade realmente executada.
+- Campanha: Bullet Seed em Breloom, Icicle Spear/Rock Blast em Cloyster, Arm Thrust em Hariyama, Double Kick em Nidoking e Twineedle em Beedrill. Spore e Fake Out preservados; extras Magical Leaf de Breloom e Body Press de Hariyama foram substituídos dentro do limite de seis opções. Os quatro golpes fixos por espécie permanecem preservados. Gerador offline reproduzível: 455 espécies com extras / 1.343 espécies, 26 definições curadas. Nenhum save foi editado diretamente.
+- Referências conferidas: Pokémon Showdown data/moves.ts (metadados e secundário de Twineedle), data/learnsets.ts (espécies dos pilotos), sim/battle-actions.ts (distribuição, precisão única, dano por acerto e interrupção no nocaute): https://github.com/smogon/pokemon-showdown/blob/master/sim/battle-actions.ts .
+- Validação: 51 testes novos em tests/battle/multi-hit.test.js, incluindo limites da distribuição, PP, erros, imunidade, veneno independente, variância, nocaute/reservas, condições, STAB/estágios, avaliador/IA, apresentação, sessões nos dois sentidos, Sleep Talk e troca. Suíte completa: **1.392 testes aprovados, 36 suítes, 0 falhas, 0 cancelados, 0 ignorados; saída 0**. Auditoria P4: 265 conhecidos, 206 FULL, 59 PARTIAL por dependências explícitas, 0 pendências P4. git diff --check aprovado.
+- P5 permanece parcial: faltam outras famílias de múltiplos acertos (por exemplo, Water Shuriken), dano fixo/variável e histórico de dano para Counter/Mirror Coat/Metal Burst. P6/P7/P8 continuam futuras. Este novo ciclo P5 permanece local, sem novo commit, push ou deploy após 099680e.
+
+---
+
 ## Atualização — 31/10/2026: P4 concluída — condições e efeitos secundários
 
 - Concluída a P4 no escopo do motor atual de batalhas individuais. Relatório e matriz completa de dependências em docs/roadmap-p4.md. Os registros anteriores abaixo são históricos.
