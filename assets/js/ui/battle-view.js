@@ -507,7 +507,7 @@
       const getHpClass = (pct) => pct > 50 ? 'status-healthy' : (pct > 20 ? 'status-warning' : 'status-danger');
 
       // Botões de golpes do Pokémon ativo do jogador
-      const movesHtml = playerActive.moves.map(m => {
+      const movesHtml = playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.moves.map(m => {
         const isZeroPp = m.currentPp === 0 && !(playerActive.bideState && m.id===117);
         const isDisabled = isResolving || isZeroPp || Boolean(playerActive.bideState && m.id!==117);
         const displayType=PowerRules?.P5?.type?.(m,playerActive)||m.type;
@@ -675,7 +675,7 @@
                 <button
                   id="btnOpenSwitch"
                   class="btn-switch-action"
-                  ${isResolving ? 'disabled' : ''}
+                  ${isResolving || playerActive.rechargeMoveId ? 'disabled' : ''}
                   onclick="if(window.battleView) window.battleView.openSwitchModal();"
                 >
                   <i class="fa-solid fa-repeat"></i> TROCAR POKÉMON
@@ -760,6 +760,7 @@
 
       const player = battleState.player;
       const activeIdx = player.activeIndex;
+      if(player.team[activeIdx].rechargeMoveId)return;
 
       const itemsHtml = player.team.map((p, idx) => {
         const visual = this.resolveCombatantVisual(p, 'player');

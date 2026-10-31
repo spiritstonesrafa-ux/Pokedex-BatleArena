@@ -508,7 +508,7 @@
       const h=a.lastDirectHit;
       if(!h || h.sourceId!==d.id || (context.turn!=null&&h.turn!==context.turn) || h.damage<=0 || (id===68&&h.damageClass!=='physical') || (id===243&&h.damageClass!=='special')) return 'NO_COUNTER_DAMAGE';
     }
-    if (id===389 && (d.actedThisTurn || context.targetAction?.type==='SWITCH' || context.targetMove?.damageClass==='status' || !context.targetMove)) return 'SUCKER_PUNCH';
+    if (id===389 && (d.actedThisTurn || ['SWITCH','RECHARGE'].includes(context.targetAction?.type) || context.targetMove?.damageClass==='status' || !context.targetMove)) return 'SUCKER_PUNCH';
     if (id===660 && Number(a.entryMoveAttempts||0)>(context.executing?1:0)) return 'FIRST_ACTION_AFTER_ENTRY';
     return null;
   }

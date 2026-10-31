@@ -23,6 +23,7 @@ const SIMPLE_MOVES = new Set([
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
   ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
+  ...Object.values(BattleConstants.RECHARGE_MOVES).map(m=>m.name),
   'super-fang',
   'natures-madness',
   'ruination',
@@ -57,6 +58,7 @@ const PILOT_P3_MOVES = new Set([
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
   ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
+  ...Object.fromEntries(Object.values(BattleConstants.RECHARGE_MOVES).map(m=>[m.name,m])),
   'super-fang': Object.freeze({"id":162,"name":"super-fang","type":"normal","damageClass":"physical","power":null,"accuracy":90,"pp":10}),
   'natures-madness': Object.freeze({"id":717,"name":"natures-madness","type":"fairy","damageClass":"special","power":null,"accuracy":90,"pp":10}),
   'ruination': Object.freeze({"id":877,"name":"ruination","type":"dark","damageClass":"special","power":1,"accuracy":90,"pp":10}),
@@ -291,8 +293,8 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   130: ['dragon-rage', 'surf'], // Gyarados: iconic Dragon Rage user
 
   89: ['toxic', 'shock-wave'], // Muk: Toxic via modern TM; keep six campaign options.
-  6: ['overheat', 'swords-dance'],       // Charizard (Starter)
-  9: ['blizzard', 'scald'],              // Blastoise (Gen 1 Starter)
+  6: ["overheat","swords-dance"],
+  9: ["hydro-cannon","scald"],
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
   97: ['hypnosis', 'dream-eater'],        // Hypno (Gen 1)
@@ -302,7 +304,7 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
   97: ['hypnosis', 'dream-eater'],        // Hypno (Gen 1)
-  149: ['draco-meteor', 'dragon-pulse'], // Dragonite (Draft Gen 1)
+  149: ["hyper-beam","draco-meteor"],
   157: ['overheat', 'aerial-ace'],       // Typhlosion (Draft Gen 2)
   212: ['swords-dance', 'wing-attack'],  // Scizor (Draft Gen 2)
   214: ['close-combat', 'swords-dance'], // Heracross (Draft Gen 2)
@@ -310,7 +312,15 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   286: ['spore', 'bullet-seed'],        // Breloom (Gen 3)
   445: ['swords-dance', 'draco-meteor'], // Garchomp (Draft Gen 4)
   448: ['close-combat', 'swords-dance'], // Lucario (Draft Gen 4)
-  658: ['water-shuriken', 'hydro-pump']  // Greninja (Gen 6 Starter)
+  658: ['water-shuriken', 'hydro-pump'], // Greninja (Gen 6 Starter)
+  10034: ["blast-burn"], // Charizard Mega X inherits the Charizard learnset.
+  3: ["frenzy-plant","power-whip"],
+  128: ["giga-impact","strength"],
+  464: ["rock-wrecker","high-horsepower"],
+  483: ["roar-of-time"],
+  800: ["prismatic-laser"],
+  865: ["meteor-assault","slam"],
+  890: ["eternabeam","brutal-swing"],
 });
 
 const cache = path.join(__dirname, '..', '.cache_pokeapi');

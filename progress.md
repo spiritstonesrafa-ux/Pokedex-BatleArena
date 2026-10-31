@@ -2,6 +2,17 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P6 iniciada — recarga obrigatória
+
+- P5 publicada em origin/main: 4f38809125e84b7f88a692af208850e7a844cfbb. Os registros abaixo sobre fechamento local são históricos e foram corrigidos no relatório P5.
+- Implementados dez golpes de recarga: Hyper Beam, Blast Burn, Hydro Cannon, Frenzy Plant, Giga Impact, Rock Wrecker, Roar of Time, Prismatic Laser, Meteor Assault e Eternabeam. Um turno de descanso após dano bem-sucedido, inclusive após KO; erro/imunidade não agendam recarga. Sem gasto adicional de PP, bloqueio de troca voluntária, precedência sobre impedimentos e limpeza ao sair/desmaiar.
+- IA, avaliador, Sucker Punch, Sleep Talk, sessão real e interface integrados. Botão Recarregar energia funciona com PP zero e indica descanso obrigatório. Sem RNG interno ou mutação de comandos/estado de entrada.
+- Todos os dez pilotos disponíveis nos extras da campanha; quatro golpes fixos e 450 selecionáveis iniciais preservados. Catálogo offline: 488 espécies com extras / 90 definições. Seis extras substituídos e possível retorno ao padrão de preferências antigas documentados em docs/roadmap-p6.md. Swords Dance/Overheat de Charizard e Scald de Blastoise preservados; Blast Burn disponível no Mega X estático já existente.
+- Validação: 42 testes novos; suíte completa **1.837 aprovados, 38 suítes, zero falhas/cancelados/ignorados, saída 0**. Auditorias P4/P5/draft aprovadas; regeneração offline idêntica e git diff --check aprovados.
+- **P6 permanece em andamento**: proteção, carga genérica/semi-invulnerabilidade, aprisionamento/persistência, armadilhas, barreiras e trocas especiais continuam pendentes. Próximo ciclo: Protect/Detect. Relatório em docs/roadmap-p6.md. Publicação deste ciclo autorizada em 31/10/2026; consultar o histórico Git para o hash do commit. Nenhum deploy manual solicitado.
+
+---
+
 ## Atualização — 31/10/2026: P5 concluída no motor de batalhas individuais
 
 - Fechadas as famílias de P5: dano por HP/peso/velocidade, Endeavor, Psywave, OHKO, histórico/Counter/Mirror Coat/Metal Burst/Comeuppance, Bide, Beak Blast/Shell Trap, golpes condicionais, tipos/categoria dinâmicos, quedas de atributos e múltiplos acertos avançados. Relatório e limites completos em docs/roadmap-p5.md; os registros anteriores abaixo são históricos.
@@ -13,7 +24,7 @@ Arquivo de governança técnica para alinhamento e continuidade entre diferentes
 - Dependências externas explícitas: Heavy Slam/Heat Crash (Minimize/Dynamax), Photon Geyser (habilidades). Peso ausente de Eternatus Eternamax (#10190) produz falha controlada para golpes de peso. P6/P7/P8 e demais pendências anteriores de P1/P2/P3 não foram declaradas concluídas.
 - Adicionados 284 testes de fechamento em tests/battle/p5-completion.test.js e 65 testes fracionários no lote local. Suíte completa: **1.795 testes aprovados, 38 suítes, zero falhas/cancelados/ignorados; saída 0**. Auditorias P4/P5/draft aprovadas; P4: 316 conhecidos, 257 FULL, 59 PARTIAL, zero pendências P4. Regeneração offline idêntica e git diff --check aprovados.
 - Fontes primárias: Pokémon Showdown data/moves.ts, data/learnsets.ts, sim/battle-actions.ts e sim/pokemon.ts; PokéAPI moves.csv/pokemon.csv. O gerador completo do catálogo expandido foi atualizado, mas não foi reexecutado integralmente pela rede.
-- Próximo bloco: P6, especialmente proteção, recarga/carga genérica, aprisionamento e trocas especiais. Fechamento P5 permanece local, sem novo commit, push ou deploy após 34a0fae299d4604e1349e32ea8d9fc3c9f00eedf.
+- Próximo bloco: P6, especialmente proteção, recarga/carga genérica, aprisionamento e trocas especiais. Fechamento P5 publicado posteriormente em origin/main no commit 4f38809125e84b7f88a692af208850e7a844cfbb.
 
 ---
 

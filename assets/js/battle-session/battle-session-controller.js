@@ -149,6 +149,7 @@
   }
 
   function prepareMultiHit(active, action, rng) {
+    if(active.rechargeMoveId)return;
     let move = active.moves.find(m => m.id === action.moveId);
     if (move?.id === 214) {
       const candidates = active.moves.filter(m => m.id !== 214 && ![117,690,704].includes(m.id) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
@@ -166,7 +167,7 @@
   }
 
   function prepareSleepCall(active, action, targetAction, rng){
-    if(action?.moveId!==214)return;
+    if(active.rechargeMoveId || action?.moveId!==214)return;
     const candidates=active.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
     if(!candidates.length)return;
     action.sleepTalkChoice=rng.rollCalledMove?.(candidates.length)??0;
@@ -621,6 +622,7 @@
      * @param {number} targetPokemonId - ID do Pokémon da reserva a entrar em campo.
      */
     async submitPlayerSwitch(targetPokemonId) {
+      if(this.battleState && this.engine.getActiveCombatant(this.battleState,'player').rechargeMoveId)return;
       if (this.isResolving) return;
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
 

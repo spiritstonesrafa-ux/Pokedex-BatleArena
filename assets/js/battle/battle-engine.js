@@ -273,7 +273,7 @@
         ivs: Object.fromEntries(['hp','attack','defense','specialAttack','specialDefense','speed'].map(k=>{
           const v=raw.ivs?.[k]??31;if(!Number.isInteger(v)||v<0||v>31)throw new Error('IV inválido.');return [k,v];
         })),
-        bideState:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
+        rechargeMoveId:null,bideState:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
         types: normalizedTypes,
         maxHp: Math.floor(hp),
@@ -487,7 +487,7 @@
       previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
-          previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
       previousActive.toxicStage = 0;
       targetPokemon.isFlinched = false;
       targetPokemon.entryMoveAttempts = 0;
@@ -511,7 +511,7 @@
         if (constants.resetStatStages) {
           constants.resetStatStages(pokemon);
         }
-        pokemon.bideState=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
+        pokemon.rechargeMoveId=null;pokemon.bideState=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
         pokemon.isFlinched = false;
         pokemon.confusionTurns = 0;
         pokemon.toxicStage = 0;
@@ -628,6 +628,7 @@
       const currentTurn = nextState.turn;
       actions={...actions};
       for(const role of ['player','enemy']){
+        if(getActiveCombatant(nextState,role).rechargeMoveId)actions[role]={type:BATTLE_ACTIONS.RECHARGE};
         if(getActiveCombatant(nextState,role).bideState && actions[role]?.type!=='SWITCH')actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:117,moveName:undefined};
       }
       nextState.turnActions = actions;
@@ -645,7 +646,7 @@
       for(const role of ['player','enemy']){
         const mon=getActiveCombatant(nextState,role),a=actions[role];
         const chosen=plannedMove(mon,a);
-        if(a?.type!=='SWITCH' && [690,704].includes(chosen?.id)){
+        if(!mon.rechargeMoveId && a?.type!=='SWITCH' && [690,704].includes(chosen?.id)){
           mon.beakBlastReady=chosen.id===690;mon.shellTrapReady=chosen.id===704;
           events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:role,pokemonName:mon.name,moveName:chosen.name,reason:chosen.id===690?'BEAK_BLAST_READY':'SHELL_TRAP_READY'});
         }
@@ -750,8 +751,13 @@
     function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false) {
       const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
       executeActionCore(attackerRole,defenderRole,state,events,action,calledMove);
-      if(calledMove)return;
       const batch=events.slice(start);
+      const used=batch.find(e=>e.type===BATTLE_EVENTS.MOVE_USED && constants.isRechargeMove({id:e.moveId,name:e.moveName}));
+      if(used && attacker.currentHp>0 && batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED && e.source===attackerRole && e.moveName===used.moveName && e.damage>0)){
+        attacker.rechargeMoveId=used.moveId;
+        if(!batch.some(e=>e.type===BATTLE_EVENTS.MOVE_PREPARED && e.reason==='RECHARGE_REQUIRED'))events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveId:used.moveId,moveName:used.moveName,reason:'RECHARGE_REQUIRED'});
+      }
+      if(calledMove)return;
       // Record each direct hit in order; Counter reflects the final hit of a multi-hit move.
       for(const event of batch){
         if(event.type===BATTLE_EVENTS.DAMAGE_APPLIED && event.previousHp>event.currentHp){
@@ -772,6 +778,13 @@
       const attacker = getActiveCombatant(state, attackerRole);
       const defender = getActiveCombatant(state, defenderRole);
 
+      // Recharge precedes PP, sleep, freeze, flinch and confusion checks. It is an action, not a move failure.
+      if(attacker.rechargeMoveId){
+        const moveId=attacker.rechargeMoveId;attacker.rechargeMoveId=null;
+        events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveId,moveName:constants.RECHARGE_MOVES[moveId]?.name,reason:'RECHARGING'});
+        return;
+      }
+      if(action?.type===BATTLE_ACTIONS.RECHARGE)throw new Error('ACTION_REJECTED: nenhuma recarga pendente.');
       if(attacker.bideState)action={...action,moveId:117,moveName:undefined};
       // B3-06: Validação de que apenas o Pokémon ativo pode realizar ações de combate
       if (action && action.pokemonId !== undefined && Number(action.pokemonId) !== attacker.id) {
@@ -1731,7 +1744,7 @@
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
-          previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.toxicStage = 0;
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
@@ -1816,7 +1829,7 @@
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
-          previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.toxicStage = 0;
           side.activeIndex = targetIndex;
           replacedAny = true;

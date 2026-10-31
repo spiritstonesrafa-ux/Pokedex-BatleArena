@@ -53,6 +53,7 @@
         throw new Error('Golpe inválido fornecido para evaluateMove.');
       }
 
+      if(attacker.rechargeMoveId)return {moveId:move.id,moveName:move.name,currentPp:move.currentPp,expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,averageDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:0,statusChance:0,isEligibleForSecondary:false,priority:0,recharging:true,requiresRecharge:false};
       const planning = Boolean(context.planningTurn);
       if (planning) {
         attacker={...attacker,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
@@ -327,13 +328,13 @@
         : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
       if (attacker.confusionTurns > 1) actionFactor *= 0.67;
       if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
-      if (entryRestricted) actionFactor = 0;
+      if (entryRestricted || attacker.rechargeMoveId) actionFactor = 0;
       const expectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const guaranteedKo = !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
-      const possibleKo = maxDamage >= defenderHp && maxDamage > 0;
+      const guaranteedKo = !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
+      const possibleKo = !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 
       // 7. Avaliação de Efeitos Especiais (Drenagem, Recuo e Prioridade proporcionais ao dano real do alvo)
@@ -505,6 +506,7 @@
         typeClassification,
         damageIfHit,
         entryRestricted,
+        requiresRecharge:constants.isRechargeMove(move),
         expectedDamage,
         guaranteedKo,
         possibleKo,

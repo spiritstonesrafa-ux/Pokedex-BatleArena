@@ -73,13 +73,13 @@ O peso oficial de Eternatus Eternamax (#10190) está ausente/zero no snapshot da
 
 ## Validação
 
-- 284 testes novos no fechamento, além dos 65 do ciclo fracionário ainda local: metadados, limites matemáticos, histórico, prioridades, estados, falhas, múltiplos acertos, sessão real nos dois lados para todas as 46 definições expandidas, hidratação, apresentação, interface e espécies limitadas.
+- 284 testes novos no fechamento, além dos 65 do ciclo fracionário: metadados, limites matemáticos, histórico, prioridades, estados, falhas, múltiplos acertos, sessão real nos dois lados para todas as 46 definições expandidas, hidratação, apresentação, interface e espécies limitadas.
 - Suíte completa: **1.795 testes aprovados, 38 suítes, zero falhas, cancelamentos ou testes ignorados; saída 0**.
 - node scripts/audit-p5.js: 60 pilotos, 57 FULL, 3 PARTIAL com dependências externas, zero pendências P5, todos disponíveis na campanha.
 - node scripts/audit-p4.js: 316 golpes conhecidos, 257 FULL, 59 PARTIAL com dependências explícitas, zero pendências P4.
 - node scripts/audit-campaign-draft.js: 450 selecionáveis, 50 por geração, sem duplicatas/lendários/míticos, hidratação aprovada.
 - Regeneração offline do catálogo de opções idêntica; git diff --check aprovado.
-- Fechamento local, sem novo commit, push ou deploy após 34a0fae.
+- Fechamento publicado em origin/main no commit 4f38809125e84b7f88a692af208850e7a844cfbb, com hash remoto confirmado. Próximo ciclo documentado em docs/roadmap-p6.md.
 
 ## Fontes
 

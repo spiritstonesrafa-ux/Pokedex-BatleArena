@@ -1,0 +1,50 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const E=require('../../assets/js/battle/battle-engine'),C=require('../../assets/js/battle/battle-constants'),AI=require('../../assets/js/battle/battle-ai'),V=require('../../assets/js/battle/battle-evaluator'),M=require('../../assets/js/battle/move-model'),T=require('../../assets/js/battle/turn-manager'),Mapper=require('../../assets/js/presentation/battle-presentation-mapper');
+const {BattleSessionController}=require('../../assets/js/battle-session/battle-session-controller');
+const {DeterministicRandomSource}=require('../../assets/js/battle-session/battle-random-source');
+const move=id=>C.KNOWN_CATALOG_MOVES[id]||C.SUPPORTED_STATUS_MOVES['swords-dance'];
+const mon=(id,ids=[14],types=['normal'])=>({id,name:'recharge-'+id,types,hp:2000,attack:100,defense:100,specialAttack:100,specialDefense:100,speed:id===1?200:100,moves:ids.map(move)});
+const action=id=>({type:'MOVE',moveId:id,accuracyRoll:1,damageRoll:100});
+const hits=(r,side)=>r.events.filter(e=>e.type==='DAMAGE_APPLIED'&&e.source===side);
+for(const m of Object.values(C.RECHARGE_MOVES)){
+ test(`P6 recharge ${m.name}: metadata, two turns, last PP and immutable commands`,()=>{
+  assert.equal(C.getMoveCapability(m).supportLevel,'FULL');assert.equal(C.validateMoveData(m),true);assert.equal(M.createMove(m).power,m.power);
+  const s=E.createBattle(mon(1,[m.id]),mon(2));s.player.moves[0].currentPp=1;const before=JSON.stringify(s),commands={player:action(m.id),enemy:action(14)},input=JSON.stringify(commands);
+  let r=E.resolveTurn(s,commands);assert.equal(JSON.stringify(s),before);assert.equal(JSON.stringify(commands),input);assert.equal(r.state.player.rechargeMoveId,m.id);assert.equal(r.state.player.moves[0].currentPp,0);assert.equal(hits(r,'player').length,1);
+  r=E.resolveTurn(r.state,{player:action(999999),enemy:action(14)});assert.equal(r.state.player.rechargeMoveId,null);assert.equal(r.state.player.moves[0].currentPp,0);assert.equal(hits(r,'player').length,0);assert.equal(r.events.some(e=>e.reason==='RECHARGING'),true);assert.equal(r.events.some(e=>e.type==='MOVE_USED'&&e.actor==='player'),false);assert.equal(r.events.some(e=>e.type==='PP_CHANGED'&&e.actor==='player'),false);assert.doesNotThrow(()=>Mapper.mapEvents(r.events));
+ });
+ test(`P6 recharge ${m.name}: no recharge on a missed attack`,()=>{
+  const s=E.createBattle(mon(1,[m.id]),mon(2));s.player.accuracyStage=-6;const r=E.resolveTurn(s,{player:{...action(m.id),accuracyRoll:100},enemy:action(14)});assert.equal(r.state.player.rechargeMoveId,null);assert.equal(hits(r,'player').length,0);assert.equal(r.state.player.moves[0].currentPp,m.pp-1);
+ });
+}
+for(const [id,type] of [[63,'ghost'],[416,'ghost'],[794,'ghost'],[795,'fairy'],[459,'fairy']])test(`P6 recharge ${id}: immunity ${type} prevents recharge`,()=>{const r=E.resolveTurn(E.createBattle(mon(1,[id]),mon(2,[14],[type])),{player:action(id),enemy:action(14)});assert.equal(r.state.player.rechargeMoveId,null);assert.equal(hits(r,'player')[0].damage,0);});
+test('P6 recharge survives enemy KO and mandatory replacement; voluntary switch becomes recharge',()=>{
+ const s=E.createTeamBattle([mon(1,[63]),mon(3),mon(5)],[mon(2),mon(4),mon(6)]);s.enemy.team[0].currentHp=1;
+ let r=E.resolveTurn(s,{player:action(63),enemy:action(14)});assert.equal(r.state.status,'AWAITING_REPLACEMENT');assert.equal(r.state.player.team[0].rechargeMoveId,63);
+ r=E.resolveReplacement(r.state,{enemy:{targetPokemonId:4}});r=E.resolveTurn(r.state,{player:{type:'SWITCH',targetPokemonId:3},enemy:action(14)});assert.equal(r.state.player.activeIndex,0);assert.equal(r.state.player.team[0].rechargeMoveId,null);assert.ok(r.events.some(e=>e.reason==='RECHARGING'));
+});
+for(const status of ['sleep','freeze','paralysis'])test(`P6 recharge precedes ${status}, preserving condition and its counters`,()=>{
+ const s=E.createBattle(mon(1,[63]),mon(2));s.player.rechargeMoveId=63;s.player.statusCondition=status;s.player.sleepTurns=2;s.player.confusionTurns=3;s.player.lastMoveFailed=false;
+ const r=E.resolveTurn(s,{player:{...action(63),statusRoll:1,thawRoll:1,confusionHitRoll:1},enemy:action(14)});assert.equal(r.state.player.rechargeMoveId,null);assert.equal(r.state.player.statusCondition,status);assert.equal(r.state.player.sleepTurns,2);assert.equal(r.state.player.confusionTurns,3);assert.equal(r.state.player.lastMoveFailed,false);assert.equal(r.events.filter(e=>e.type==='PP_CHANGED'&&e.actor==='player').length,0);
+});
+test('P6 recharge on enemy is enforced by the engine and AI even with zero PP',()=>{
+ const s=E.createBattle(mon(1),mon(2,[416]));s.enemy.rechargeMoveId=416;s.enemy.moves[0].currentPp=0;const decision=AI.chooseAction(s,'enemy');assert.equal(decision.action.type,'RECHARGE');const r=E.resolveTurn(s,{player:action(14),enemy:decision.action});assert.equal(hits(r,'enemy').length,0);assert.equal(r.state.enemy.rechargeMoveId,null);
+});
+test('P6 recharge permits enemy switching while user rests',()=>{const s=E.createTeamBattle([mon(1,[63]),mon(3),mon(5)],[mon(2),mon(4),mon(6)]);s.player.team[0].rechargeMoveId=63;const r=E.resolveTurn(s,{player:action(63),enemy:{type:'SWITCH',targetPokemonId:4}});assert.equal(r.state.enemy.activeIndex,1);assert.equal(r.state.player.team[0].rechargeMoveId,null);});
+test('P6 recharge is cleared by faint, with replacement free to act',()=>{
+ const s=E.createTeamBattle([mon(1,[63]),mon(3),mon(5)],[mon(2,[33]),mon(4),mon(6)]);s.player.team[0].rechargeMoveId=63;s.player.team[0].currentHp=1;s.enemy.team[0].speed=500;
+ const r=E.resolveTurn(s,{player:action(63),enemy:action(33)});assert.equal(r.state.player.team[0].rechargeMoveId,null);assert.equal(r.state.player.team[1].rechargeMoveId,null);
+});
+test('P6 recharge has ordinary priority and cannot inherit move or switch priority',()=>{const a=E.createCombatant(mon(1,[98]));a.rechargeMoveId=63;assert.equal(T.resolveActionPriority(a,{type:'SWITCH',priority:1000}),0);assert.equal(T.resolveActionPriority(a,action(98)),0);});
+test('P6 recharge forecasts no damage or status and no KO',()=>{const a=E.createCombatant(mon(1,[63,14])),d=E.createCombatant(mon(2));a.rechargeMoveId=63;d.currentHp=1;for(const m of a.moves){const r=V.evaluateMove(a,d,m);assert.equal(r.expectedDamage,0);assert.equal(r.expectedStatusBenefit,0);assert.equal(r.wouldKo,false);assert.equal(r.maxDamage,0);}a.rechargeMoveId=null;assert.equal(V.evaluateMove(a,d,a.moves[0]).requiresRecharge,true);});
+test('P6 Sucker Punch fails against recharge rather than reading its previous move',()=>{const s=E.createBattle(mon(1,[389]),mon(2,[63]));s.enemy.rechargeMoveId=63;const r=E.resolveTurn(s,{player:action(389),enemy:action(63)});assert.equal(hits(r,'player').length,0);assert.ok(r.events.some(e=>e.reason==='SUCKER_PUNCH'));});
+test('P6 rejects fake recharge command when there is no pending recharge',()=>{assert.throws(()=>E.resolveTurn(E.createBattle(mon(1),mon(2)),{player:{type:'RECHARGE'},enemy:action(14)}),/nenhuma recarga/);});
+test('P6 recharge caused by Sleep Talk: only Sleep Talk PP consumed, next turn rests',()=>{const s=E.createBattle(mon(1,[214,63]),mon(2));s.player.statusCondition='sleep';s.player.sleepTurns=3;const r=E.resolveTurn(s,{player:{...action(214),sleepTalkChoice:0},enemy:action(14)});assert.equal(r.state.player.rechargeMoveId,63);assert.equal(r.state.player.moves[1].currentPp,5);const n=E.resolveTurn(r.state,{player:action(214),enemy:action(14)});assert.equal(n.state.player.moves[0].currentPp,9);assert.equal(n.state.player.sleepTurns,2);assert.equal(n.events.filter(e=>e.reason==='RECHARGING').length,1);});
+for(const side of ['player','enemy'])test(`P6 real session: ${side} recharges with exhausted PP`,async()=>{
+ const p=[mon(1,[63]),mon(3),mon(5)],e=[mon(2,[63]),mon(4),mon(6)];const session=new BattleSessionController({teamStore:{load:()=>[1,3,5]},hydrator:{hydrateTeam:async()=>p},opponentFactory:{createOpponentTeam:async()=>e},randomSource:new DeterministicRandomSource({accuracySequence:[1,1,1,1]}),presentationEngine:{play:async()=>{},playCommands:async()=>{}}});
+ await session.prepareBattle({playerTeamIds:[1,3,5]});await session.startBattle();const active=session.battleState[side].team[0];active.rechargeMoveId=63;active.moves[0].currentPp=0;await session.submitPlayerMove(63);assert.equal(session.battleState[side].team[0].rechargeMoveId,null);assert.equal(session.battleState[side].team[0].moves[0].currentPp,0);
+});
+
+test('P6 campaign: all ten recharge pilots are selectable without changing four fixed moves',()=>{const O=require('../../assets/js/campaign/campaign-move-options-catalog').byId,F=require('../../assets/js/campaign/campaign-fixed-battle-catalog').byId;for(const [id,mid]of [[3,338],[10034,307],[9,308],[128,416],[149,63],[464,439],[483,459],[800,711],[865,794],[890,795]]){assert.ok(O[id].some(m=>m.id===mid),`${id}/${mid}`);assert.ok(F[id].moves.length+O[id].length<=6);assert.equal(F[id].moves.length,4);}});
+test('P6 UI: rest button remains usable at zero PP, moves hidden and switch disabled',()=>{const {BattleView}=require('../../assets/js/ui/battle-view');const container={innerHTML:'',querySelector:()=>null,querySelectorAll:()=>[]},view=new BattleView({container});const s=E.createTeamBattle([mon(1,[63]),mon(3),mon(5)],[mon(2),mon(4),mon(6)]);s.player.team[0].rechargeMoveId=63;s.player.team[0].moves[0].currentPp=0;view.renderActiveBattleView(s,'AWAITING_PLAYER_ACTION');assert.match(container.innerHTML,/id="btnRecharge"/);assert.doesNotMatch(container.innerHTML,/id="moveBtn_63"/);assert.match(container.innerHTML,/id="btnOpenSwitch"[^>]*disabled/);assert.match(container.innerHTML,/submitPlayerMove\(63\)/);});
+test('P6 feedback: rest is explained without a move attack animation',async()=>{const {BattleUiDomAdapter}=require('../../assets/js/ui/battle-ui-adapter');let message='';const adapter=new BattleUiDomAdapter({view:{displayMessage:m=>message=m}});await adapter.execute({type:'MOVE_FAIL_FEEDBACK',reason:'RECHARGING',pokemonName:'Dragonite'});assert.match(message,/recarregando/);});

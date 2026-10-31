@@ -60,6 +60,7 @@
 
   const BATTLE_ACTIONS = Object.freeze({
     MOVE: 'MOVE',
+    RECHARGE: 'RECHARGE',
     SWITCH: 'SWITCH',
     BASIC_ATTACK: 'BASIC_ATTACK' // Mantido para compatibilidade
   });
@@ -612,6 +613,21 @@
     return roll <= 35 ? 2 : roll <= 70 ? 3 : roll <= 85 ? 4 : 5;
   }
 
+  // Modern recharge family. Official PokéAPI metadata; only successful hits lock the following turn.
+  const RECHARGE_MOVES = Object.freeze({
+    63:Object.freeze({"id":63,"name":"hyper-beam","type":"normal","power":150,"pp":5,"accuracy":90,"damageClass":"special"}),
+    307:Object.freeze({"id":307,"name":"blast-burn","type":"fire","power":150,"pp":5,"accuracy":90,"damageClass":"special"}),
+    308:Object.freeze({"id":308,"name":"hydro-cannon","type":"water","power":150,"pp":5,"accuracy":90,"damageClass":"special"}),
+    338:Object.freeze({"id":338,"name":"frenzy-plant","type":"grass","power":150,"pp":5,"accuracy":90,"damageClass":"special"}),
+    416:Object.freeze({"id":416,"name":"giga-impact","type":"normal","power":150,"pp":5,"accuracy":90,"damageClass":"physical"}),
+    439:Object.freeze({"id":439,"name":"rock-wrecker","type":"rock","power":150,"pp":5,"accuracy":90,"damageClass":"physical"}),
+    459:Object.freeze({"id":459,"name":"roar-of-time","type":"dragon","power":150,"pp":5,"accuracy":90,"damageClass":"special"}),
+    711:Object.freeze({"id":711,"name":"prismatic-laser","type":"psychic","power":160,"pp":10,"accuracy":100,"damageClass":"special"}),
+    794:Object.freeze({"id":794,"name":"meteor-assault","type":"fighting","power":150,"pp":5,"accuracy":100,"damageClass":"physical"}),
+    795:Object.freeze({"id":795,"name":"eternabeam","type":"dragon","power":160,"pp":5,"accuracy":90,"damageClass":"special"})
+  });
+  const isRechargeMove = move => Boolean(RECHARGE_MOVES[Number(move?.id)] && (!move.name || move.name===RECHARGE_MOVES[Number(move.id)].name));
+
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     49: Object.freeze({ id: 49, name: 'sonic-boom', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     82: Object.freeze({ id: 82, name: 'dragon-rage', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -706,7 +722,8 @@
     546: Object.freeze({ id: 546, name: 'techno-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['ITEM_TYPE_PHASE_P7'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
     718: Object.freeze({ id: 718, name: 'multi-attack', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['ITEM_TYPE_PHASE_P7'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
     851: Object.freeze({ id: 851, name: 'tera-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_TERA'], knownPending: ['TERASTALLIZATION_PHASE_P8'], blockedReason: 'DYNAMIC_TYPE_FROM_TERA', priority: 0 }),
-    ...P5.definitions
+    ...P5.definitions,
+    ...Object.fromEntries(Object.values(RECHARGE_MOVES).map(m=>[m.id,Object.freeze({id:m.id,name:m.name,supportLevel:'FULL',requiredMechanics:[m.damageClass==='special'?'SPECIAL_DAMAGE':'PHYSICAL_DAMAGE','RECHARGE'],knownPending:[],blockedReason:null,priority:0})]))
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -988,7 +1005,8 @@
     906: Object.freeze({ id: 906, name: 'tera-starstorm', type: 'normal', power: 120, accuracy: 100, pp: 5, damageClass: 'special' }),
     914: Object.freeze({ id: 914, name: 'alluring-voice', type: 'fairy', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
     919: Object.freeze({ id: 919, name: 'malignant-chain', type: 'poison', power: 100, accuracy: 100, pp: 5, damageClass: 'special' }),
-    ...P5.moves
+    ...P5.moves,
+    ...RECHARGE_MOVES
   });
 
   const KNOWN_CATALOG_MOVES_BY_NAME = Object.freeze(
@@ -1605,6 +1623,8 @@
     isValidFractionalDamagePower,
     getFractionalDamageAmount,
     P5,
+    RECHARGE_MOVES,
+    isRechargeMove,
     describeMovePower,
     CONSTANT_DAMAGE_MOVES,
     isConstantDamageMove,
