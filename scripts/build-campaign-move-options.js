@@ -53,6 +53,8 @@ const PILOT_P3_MOVES = new Set([
   'night-shade',
   'sonic-boom',
   'dragon-rage',
+  'protect',
+  'detect',
   'rest','sleep-talk','yawn','snore','dream-eater'
 ]);
 
@@ -234,11 +236,34 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     accuracy: 100,
     pp: 10,
     damageClass: 'special'
+  }),
+  'protect': Object.freeze({
+    id: 182,
+    name: 'protect',
+    type: 'normal',
+    power: null,
+    accuracy: null,
+    pp: 10,
+    damageClass: 'status',
+    priority: 4
+  }),
+  'detect': Object.freeze({
+    id: 197,
+    name: 'detect',
+    type: 'fighting',
+    power: null,
+    accuracy: null,
+    pp: 5,
+    damageClass: 'status',
+    priority: 4
   })
 });
 
 // Curated canonical learnsets (supported generations, including historical moves) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  107: ["detect"],
+  197: ["hyper-voice", "protect"],
+  257: ["aura-sphere", "detect"],
   7: ["hydro-pump","mega-kick"],
   25: ["mega-kick","shock-wave"],
   237: ["triple-kick","aerial-ace"],

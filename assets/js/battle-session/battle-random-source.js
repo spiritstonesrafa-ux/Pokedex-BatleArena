@@ -50,6 +50,7 @@
       this.psywaveSequence=Array.isArray(options.psywaveSequence)?[...options.psywaveSequence]:null;
       this.hitCountSequence=Array.isArray(options.hitCountSequence)?[...options.hitCountSequence]:null;
       this.calledMoveSequence=Array.isArray(options.calledMoveSequence)?[...options.calledMoveSequence]:null;
+      this.protectSequence = Array.isArray(options.protectSequence) ? [...options.protectSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
 
@@ -168,6 +169,15 @@
       return Math.floor(this.rng() * 16) + 85;
     }
 
+    rollProtect(denominator = 3) {
+      if (this.protectSequence && this.protectSequence.length > 0) {
+        const next = Number(this.protectSequence.shift());
+        return next;
+      }
+      const d = Math.max(1, Math.floor(Number(denominator) || 1));
+      return Math.floor(this.rng() * d) + 1;
+    }
+
     pickOpponents(pool, count = 3) {
       if (!Array.isArray(pool) || pool.length === 0) {
         throw new Error('Pool de oponentes inválida ou vazia.');
@@ -244,6 +254,10 @@
 
     setConfusionDamageSequence(seq) {
       this.confusionDamageSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setProtectSequence(seq) {
+      this.protectSequence = Array.isArray(seq) ? [...seq] : null;
     }
 
     setOpponentSequence(seq) {

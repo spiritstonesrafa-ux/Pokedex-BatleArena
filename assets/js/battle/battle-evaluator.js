@@ -54,6 +54,58 @@
       }
 
       if(attacker.rechargeMoveId)return {moveId:move.id,moveName:move.name,currentPp:move.currentPp,expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,averageDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:0,statusChance:0,isEligibleForSecondary:false,priority:0,recharging:true,requiresRecharge:false};
+
+      if (constants.isProtectMove(move)) {
+        const consecutive = Math.max(0, Number.isInteger(attacker.stallCount) ? attacker.stallCount : 0);
+        const denominator = Math.min(729, Math.pow(3, consecutive));
+        const successChance = 1 / denominator;
+        let expectedStatusBenefit = 0;
+        if (defender.currentHp > 0 && !defender.rechargeMoveId) {
+          const oppMoves = Array.isArray(defender.moves) ? defender.moves.filter(m => (m.currentPp === undefined || m.currentPp > 0) && m.damageClass !== 'status') : [];
+          let maxThreat = 0;
+          for (const om of oppMoves) {
+            const pwr = om.power || 50;
+            if (pwr > maxThreat) maxThreat = pwr;
+          }
+          expectedStatusBenefit = Math.round(maxThreat * successChance);
+        }
+        return {
+          moveId: move.id,
+          moveName: move.name || 'protect',
+          damageClass: 'status',
+          moveType: move.type || 'normal',
+          power: null,
+          accuracy: null,
+          currentPp: move.currentPp,
+          attackStat: 0,
+          defenseStat: 0,
+          baseDamage: 0,
+          minDamage: 0,
+          maxDamage: 0,
+          averageDamage: 0,
+          stabMultiplier: 1,
+          typeMultiplier: 1,
+          typeClassification: 'NEUTRAL',
+          damageIfHit: 0,
+          entryRestricted: false,
+          requiresRecharge: false,
+          expectedDamage: 0,
+          guaranteedKo: false,
+          possibleKo: false,
+          wouldKo: false,
+          priority: 4,
+          drainRatio: 0,
+          expectedHeal: 0,
+          recoilRatio: 0,
+          expectedRecoil: 0,
+          wouldRecoilKo: false,
+          statBoosts: null,
+          expectedStatusBenefit,
+          statusChance: successChance,
+          successChance,
+          isEligibleForSecondary: false
+        };
+      }
       const planning = Boolean(context.planningTurn);
       if (planning) {
         attacker={...attacker,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
@@ -329,6 +381,10 @@
       if (attacker.confusionTurns > 1) actionFactor *= 0.67;
       if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
       if (entryRestricted || attacker.rechargeMoveId) actionFactor = 0;
+      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !constants.isProtectBypassingMove?.(move)) {
+        actionFactor = 0;
+        baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
+      }
       const expectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
 
       // 6. Semântica refinada de nocaute (KO)

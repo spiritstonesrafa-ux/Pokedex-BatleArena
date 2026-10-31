@@ -312,6 +312,7 @@
               power: event.power,
               isMiss: Boolean(event.isMiss),
               isImmune: Boolean(event.isImmune),
+              isBlocked: Boolean(event.isBlocked),
               multiplier: event.multiplier !== undefined ? Number(event.multiplier) : 1,
               classification: event.classification || 'NEUTRAL'
             }
@@ -625,6 +626,9 @@
             }
             if (next.type === BATTLE_EVENTS.MOVE_MISSED) {
               enrichedEvent.isMiss = true;
+            }
+            if (next.type === BATTLE_EVENTS.MOVE_FAILED && next.reason === 'BLOCKED_BY_PROTECT') {
+              enrichedEvent.isBlocked = true;
             }
             if (next.type === BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED) {
               enrichedEvent.multiplier = Number(next.multiplier);

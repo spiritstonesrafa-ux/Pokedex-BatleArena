@@ -4359,13 +4359,12 @@
     "887": {
       "id": 887,
       "name": "hyper-drill",
-      "supportLevel": "PARTIAL",
+      "supportLevel": "FULL",
       "requiredMechanics": [
-        "PHYSICAL_DAMAGE"
+        "PHYSICAL_DAMAGE",
+        "PROTECT_BYPASS"
       ],
-      "knownPending": [
-        "PROTECT_BYPASS_PHASE_P6"
-      ],
+      "knownPending": [],
       "blockedReason": null,
       "priority": 0
     },

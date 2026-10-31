@@ -78,6 +78,8 @@
   });
 
   const MOVE_PRIORITIES = Object.freeze({
+    'protect': 4,
+    'detect': 4,
     'fake-out': 3,
     'extreme-speed': 2,
     'quick-attack': 1,
@@ -100,6 +102,9 @@
 
   function getMovePriority(move) {
     if (!move) return 0;
+    if (typeof move.priority === 'number') return move.priority;
+    const id = Number(move.id);
+    if (id === 182 || id === 197) return 4;
     const name = String(move.name || '').trim().toLowerCase();
     return P5.get(move)?.priority ?? MOVE_PRIORITIES[name] ?? 0;
   }
@@ -628,7 +633,26 @@
   });
   const isRechargeMove = move => Boolean(RECHARGE_MOVES[Number(move?.id)] && (!move.name || move.name===RECHARGE_MOVES[Number(move.id)].name));
 
+  // Modern Protect / Detect family (Gen VI+ consecutive failure mechanics).
+  const PROTECT_MOVES = Object.freeze({
+    182: Object.freeze({ id: 182, name: 'protect', type: 'normal', power: null, accuracy: null, pp: 10, damageClass: 'status', priority: 4, target: 'self' }),
+    197: Object.freeze({ id: 197, name: 'detect', type: 'fighting', power: null, accuracy: null, pp: 5, damageClass: 'status', priority: 4, target: 'self' })
+  });
+  const isProtectMove = move => Boolean(PROTECT_MOVES[Number(move?.id)] && (!move.name || move.name === PROTECT_MOVES[Number(move.id)].name)) || (typeof move?.name === 'string' && ['protect', 'detect'].includes(move.name.trim().toLowerCase()));
+
+  // Moves that bypass protection without breaking it (Hyper Drill #887)
+  const PROTECT_BYPASSING_MOVES = Object.freeze([887]);
+  const isProtectBypassingMove = move => {
+    if (!move) return false;
+    const id = Number(move.id);
+    if (PROTECT_BYPASSING_MOVES.includes(id)) return true;
+    const name = String(move.name || '').trim().toLowerCase();
+    return name === 'hyper-drill' || name === 'hyperdrill';
+  };
+
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
+    182: Object.freeze({ id: 182, name: 'protect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
+    197: Object.freeze({ id: 197, name: 'detect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
     49: Object.freeze({ id: 49, name: 'sonic-boom', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     82: Object.freeze({ id: 82, name: 'dragon-rage', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     69: Object.freeze({ id: 69, name: 'seismic-toss', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'FIXED_DAMAGE_LEVEL'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -1006,7 +1030,8 @@
     914: Object.freeze({ id: 914, name: 'alluring-voice', type: 'fairy', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
     919: Object.freeze({ id: 919, name: 'malignant-chain', type: 'poison', power: 100, accuracy: 100, pp: 5, damageClass: 'special' }),
     ...P5.moves,
-    ...RECHARGE_MOVES
+    ...RECHARGE_MOVES,
+    ...PROTECT_MOVES
   });
 
   const KNOWN_CATALOG_MOVES_BY_NAME = Object.freeze(
@@ -1270,9 +1295,13 @@
       if (rawId !== canonicalStatus.id || normalizedName !== canonicalStatus.name) return false;
       if (rawType !== canonicalStatus.type) return false;
 
-      // Power em status move: deve estar presente e ser 0 ou null
-      if (move.power === undefined) return false;
-      if (move.power !== null && move.power !== 0 && Number(move.power) !== 0) return false;
+      // Power em status move: deve estar presente e ser 0 ou null (Protect/Detect aceita undefined, null ou 0)
+      if (isProtectMove(move)) {
+        if (move.power !== undefined && move.power !== null && move.power !== 0 && Number(move.power) !== 0) return false;
+      } else {
+        if (move.power === undefined) return false;
+        if (move.power !== null && move.power !== 0 && Number(move.power) !== 0) return false;
+      }
 
       // Accuracy em status move: obrigatória e deve coincidir exatamente com a canônica
       if (canonicalStatus.accuracy === null) {
@@ -1396,7 +1425,9 @@
     'will-o-wisp': Object.freeze({ id: 261, name: 'will-o-wisp', type: 'fire',
       power: 0, accuracy: 85, pp: 15, damageClass: 'status', statusEffect: 'burn' }),
     'thunder-wave': Object.freeze({ id: 86, name: 'thunder-wave', type: 'electric',
-      power: 0, accuracy: 90, pp: 20, damageClass: 'status', statusEffect: 'paralysis' })
+      power: 0, accuracy: 90, pp: 20, damageClass: 'status', statusEffect: 'paralysis' }),
+    'protect': PROTECT_MOVES[182],
+    'detect': PROTECT_MOVES[197]
   });
 
   function getSupportedStatusMove(move) {
@@ -1405,8 +1436,8 @@
     if (!canonical || Number(move.id) !== canonical.id ||
         String(move.type?.name || move.type || '').toLowerCase() !== canonical.type ||
         String(move.damageClass || move.damage_class?.name || '').toLowerCase() !== 'status' ||
-        !(move.power === null || Number(move.power) === 0) ||
-        (canonical.accuracy === null ? move.accuracy !== null : Number(move.accuracy) !== canonical.accuracy) ||
+        !(move.power === null || move.power === undefined || Number(move.power) === 0) ||
+        (canonical.accuracy === null ? (move.accuracy !== null && move.accuracy !== undefined) : Number(move.accuracy) !== canonical.accuracy) ||
         Number(move.pp !== undefined ? move.pp : move.maxPp) !== canonical.pp) return null;
     return canonical;
   }
@@ -1625,6 +1656,10 @@
     P5,
     RECHARGE_MOVES,
     isRechargeMove,
+    PROTECT_MOVES,
+    isProtectMove,
+    PROTECT_BYPASSING_MOVES,
+    isProtectBypassingMove,
     describeMovePower,
     CONSTANT_DAMAGE_MOVES,
     isConstantDamageMove,

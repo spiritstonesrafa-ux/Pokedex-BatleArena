@@ -138,6 +138,7 @@
         defenderSide = 'enemy',
         isMiss = false,
         isImmune = false,
+        isBlocked = false,
         multiplier = 1,
         reducedMotion = false
       } = options;
@@ -153,7 +154,7 @@
       return new Promise((resolve) => {
         if (reducedMotion) {
           // Em reduced motion, transição instantânea sem partículas
-          if (!isMiss && !isImmune) {
+          if (!isMiss && !isImmune && !isBlocked) {
             this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion: true });
           }
           resolve();
@@ -180,7 +181,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(beam);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -206,7 +207,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(stream);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -230,7 +231,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(slash);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -253,7 +254,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(burst);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -277,7 +278,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(impact);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -303,7 +304,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(wave);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -326,7 +327,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(aura);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -354,7 +355,7 @@
 
             this.scheduleTimer(() => {
               this.destroyElement(proj);
-              if (!isMiss && !isImmune) {
+              if (!isMiss && !isImmune && !isBlocked) {
                 this.renderImpact(descriptor, coords, { multiplier, isMiss, isImmune, reducedMotion });
               } else if (isMiss) {
                 this.renderMissDissipate(coords);
@@ -379,7 +380,7 @@
      */
     renderImpact(descriptor, coords, options = {}) {
       const { multiplier = 1, reducedMotion = false } = options;
-      if (reducedMotion) return;
+      if (reducedMotion || options.isBlocked) return;
 
       const impactScale = multiplier >= 4 ? 1.8 : (multiplier >= 2 ? 1.4 : (multiplier <= 0.5 ? 0.75 : 1.0));
       const impactDuration = VFX_DURATIONS.HIT_IMPACT || 250;

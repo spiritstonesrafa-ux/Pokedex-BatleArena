@@ -30,7 +30,13 @@
     freeze: { short: 'CONGELAMENTO', aria: 'Congelado', move: 'congela o alvo' }
   });
   const statusBadge = status => STATUS_LABELS[status] || null;
-  const SUPPORT_MOVE_LABELS = {156:{short:'RECUPERAÇÃO',move:'recupera HP e adormece o usuário'},214:{short:'DURANTE O SONO',move:'usa outro golpe enquanto dorme'},281:{short:'SONOLÊNCIA',move:'adormece o alvo ao fim do próximo turno'}};
+  const SUPPORT_MOVE_LABELS = {
+    156: { short: 'RECUPERAÇÃO', move: 'recupera HP e adormece o usuário' },
+    214: { short: 'DURANTE O SONO', move: 'usa outro golpe enquanto dorme' },
+    281: { short: 'SONOLÊNCIA', move: 'adormece o alvo ao fim do próximo turno' },
+    182: { short: 'PROTEÇÃO', move: 'bloqueia ataques recebidos neste turno' },
+    197: { short: 'PROTEÇÃO', move: 'bloqueia ataques recebidos neste turno' }
+  };
   const STAT_STAGE_SHORT_LABELS = Object.freeze({
     attack: 'ATK',
     defense: 'DEF',

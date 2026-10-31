@@ -100,6 +100,7 @@
         defenderSide: options.defenderSide || (options.attackerSide === 'enemy' ? 'player' : 'enemy'),
         isMiss: Boolean(options.isMiss),
         isImmune: Boolean(options.isImmune || options.multiplier === 0),
+        isBlocked: Boolean(options.isBlocked),
         multiplier: options.multiplier !== undefined ? Number(options.multiplier) : 1,
         reducedMotion: options.reducedMotion !== undefined ? Boolean(options.reducedMotion) : this.reducedMotion
       };

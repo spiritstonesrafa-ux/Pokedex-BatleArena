@@ -57,11 +57,12 @@
 
       const isMiss = Boolean(metadata.isMiss);
       const isImmune = Boolean(metadata.isImmune);
+      const isBlocked = Boolean(metadata.isBlocked);
       const damage = metadata.damage !== undefined ? Number(metadata.damage) : 0;
       const multiplier = metadata.multiplier !== undefined ? Number(metadata.multiplier) : 1;
 
       // 1. Condições de ausência de impacto de dano (Miss, Imunidade, Dano Zero ou Multiplicador Zero)
-      if (isMiss || isImmune || damage <= 0 || multiplier === 0) {
+      if (isMiss || isImmune || isBlocked || damage <= 0 || multiplier === 0) {
         return IMPACT_LEVELS.NONE;
       }
 

@@ -17,11 +17,13 @@ const Editor = require('../../assets/js/campaign/campaign-move-customization.js'
 const starters = [3, 6, 9, 25, 38, 94];
 function memoryStore() {
   let persisted = null;
-  return { getDefaultState: Store.getDefaultState, sanitize: Store.sanitize,
+  return {
+    getDefaultState: Store.getDefaultState, sanitize: Store.sanitize,
     load: () => Store.sanitize(persisted),
     save: data => { persisted = JSON.parse(JSON.stringify(Store.sanitize(data))); return persisted; },
     reset: () => { persisted = null; return Store.getDefaultState(); },
-    raw: () => persisted };
+    raw: () => persisted
+  };
 }
 function startedManager(store = memoryStore()) {
   const manager = new CampaignManager(store);
@@ -31,7 +33,7 @@ function startedManager(store = memoryStore()) {
 
 test('offline candidate pool is species-specific, canonical and bounded', () => {
   assert.equal(Object.keys(Fixed.byId).length, 1347);
-  assert.equal(Object.keys(Extras.byId).length, 488);
+  assert.equal(Object.keys(Extras.byId).length, 489);
   for (const [key, species] of Object.entries(Fixed.byId)) {
     const pool = Options.getPool(Number(key));
     assert.ok(pool.length >= 1 && pool.length <= 6, key);
@@ -87,8 +89,10 @@ test('legacy and corrupted saves fall back safely, drop unowned species and keep
   const cleanLegacy = Store.sanitize(legacy);
   assert.deepEqual(cleanLegacy.movePreferences, {});
   assert.deepEqual(cleanLegacy.startingRosterIds, starters);
-  legacy.movePreferences = { 25: [99999], 94: [Options.getPool(94)[0].id],
-    405: [Options.getPool(405)[0].id], '__proto__': [33] };
+  legacy.movePreferences = {
+    25: [99999], 94: [Options.getPool(94)[0].id],
+    405: [Options.getPool(405)[0].id], '__proto__': [33]
+  };
   const cleaned = Store.sanitize(legacy);
   assert.deepEqual(cleaned.movePreferences[25], undefined);
   assert.deepEqual(cleaned.movePreferences[94], [Options.getPool(94)[0].id]);
@@ -103,7 +107,7 @@ test('coordinator and real session pass chosen moves only to player, with canoni
   assert.equal(manager.setMovePreference(25, selected).ok, true);
   let config;
   const coordinator = new CampaignBattleCoordinator(manager, {
-    prepareBattle: async value => { config = value; }, startBattle: async () => {}
+    prepareBattle: async value => { config = value; }, startBattle: async () => { }
   });
   const master = Catalog.MASTERS.find(item => item.type === 'electric');
   await coordinator.start('MASTER', master.challengeId, [25, 3, 6]);
@@ -111,7 +115,7 @@ test('coordinator and real session pass chosen moves only to player, with canoni
   assert.equal(config.playerMovePreferences[3], undefined);
   const session = new BattleSessionController({
     hydrator: new BattleTeamHydrator({ api: { getPokemonDetail: async () => { throw Error('offline'); } } }),
-    view: { renderState() {} }
+    view: { renderState() { } }
   });
   await session.prepareBattle(config);
   assert.deepEqual(session.battleState.player.team[0].moves.map(move => move.id), selected);
@@ -132,14 +136,18 @@ test('coordinator and real session pass chosen moves only to player, with canoni
 test('Quick Battle never applies campaign move preferences', async () => {
   const hydratedInputs = [];
   const session = new BattleSessionController({
-    hydrator: { hydrateTeam: async ids => {
-      hydratedInputs.push(ids);
-      return ids.map(id => Fixed.byId[id]);
-    } }, view: { renderState() {} }
+    hydrator: {
+      hydrateTeam: async ids => {
+        hydratedInputs.push(ids);
+        return ids.map(id => Fixed.byId[id]);
+      }
+    }, view: { renderState() { } }
   });
-  await session.prepareBattle({ playerTeamIds: [25, 3, 6], enemyTeamIds: [38, 94, 9],
+  await session.prepareBattle({
+    playerTeamIds: [25, 3, 6], enemyTeamIds: [38, 94, 9],
     playerMovePreferences: { 25: [Options.getPool(25)[4].id] },
-    metadata: { mode: 'QUICK' } });
+    metadata: { mode: 'QUICK' }
+  });
   assert.ok(hydratedInputs.every(team => team.every(id => typeof id === 'number')));
   assert.deepEqual(session.battleState.player.team[0].moves.map(move => move.id),
     Fixed.byId[25].moves.map(move => move.id));
@@ -152,11 +160,15 @@ test('installed tactical guide and picker editor use the same saved selection', 
   manager.setMovePreference(25, custom);
   const inserted = [];
   const anchor = { insertAdjacentHTML: (_, html) => inserted.push(html) };
-  const nodes = { '#pickerActionBar': anchor, '#saveCampaignMoves': {},
-    '#resetCampaignMoves': {}, '#cancelCampaignMoves': {} };
-  const container = { querySelector: selector => nodes[selector] || null,
-    querySelectorAll: () => [] };
-  class FakeView { renderPicker() {} }
+  const nodes = {
+    '#pickerActionBar': anchor, '#saveCampaignMoves': {},
+    '#resetCampaignMoves': {}, '#cancelCampaignMoves': {}
+  };
+  const container = {
+    querySelector: selector => nodes[selector] || null,
+    querySelectorAll: () => []
+  };
+  class FakeView { renderPicker() { } }
   Guide.install(FakeView, Catalog, Fixed.byId);
   Editor.install(FakeView);
   const view = new FakeView();
@@ -182,23 +194,29 @@ test('picker controls save a changed selection and restore the original four mov
   const manager = startedManager();
   const pool = Options.getPool(25);
   const inserted = [];
-  const nodes = { '#pickerActionBar': { insertAdjacentHTML: (_, html) => inserted.push(html) },
+  const nodes = {
+    '#pickerActionBar': { insertAdjacentHTML: (_, html) => inserted.push(html) },
     '#moveChoiceCount': { textContent: '' }, '#moveChoiceError': { textContent: '' },
     '#saveCampaignMoves': { disabled: false }, '#resetCampaignMoves': {},
-    '#cancelCampaignMoves': {} };
+    '#cancelCampaignMoves': {}
+  };
   let view;
   let inputs = [];
-  const container = { querySelector: selector => nodes[selector] || null,
+  const container = {
+    querySelector: selector => nodes[selector] || null,
     querySelectorAll: selector => {
       if (selector === '[data-edit-moves]') return [{ dataset: { editMoves: '25' } }];
       if (selector === '[data-move-id]') {
-        inputs = pool.map(move => ({ dataset: { moveId: String(move.id) },
-          checked: (view.moveDraft || []).includes(move.id) }));
+        inputs = pool.map(move => ({
+          dataset: { moveId: String(move.id) },
+          checked: (view.moveDraft || []).includes(move.id)
+        }));
         return inputs;
       }
       return [];
-    } };
-  class FakeView { renderPicker() {} render() { this.renderPicker(); } }
+    }
+  };
+  class FakeView { renderPicker() { } render() { this.renderPicker(); } }
   Guide.install(FakeView, Catalog, Fixed.byId);
   Editor.install(FakeView);
   view = new FakeView();

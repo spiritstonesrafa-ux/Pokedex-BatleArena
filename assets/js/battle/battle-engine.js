@@ -274,6 +274,7 @@
           const v=raw.ivs?.[k]??31;if(!Number.isInteger(v)||v<0||v>31)throw new Error('IV inválido.');return [k,v];
         })),
         rechargeMoveId:null,bideState:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
+        isProtected: false, stallCount: 0,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
         types: normalizedTypes,
         maxHp: Math.floor(hp),
@@ -488,8 +489,12 @@
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
           previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.isProtected = false;
+          previousActive.stallCount = 0;
       previousActive.toxicStage = 0;
       targetPokemon.isFlinched = false;
+      targetPokemon.isProtected = false;
+      targetPokemon.stallCount = 0;
       targetPokemon.entryMoveAttempts = 0;
       targetPokemon.toxicStage = 0;
 
@@ -512,6 +517,8 @@
           constants.resetStatStages(pokemon);
         }
         pokemon.rechargeMoveId=null;pokemon.bideState=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
+        pokemon.isProtected = false;
+        pokemon.stallCount = 0;
         pokemon.isFlinched = false;
         pokemon.confusionTurns = 0;
         pokemon.toxicStage = 0;
@@ -592,11 +599,12 @@
         }
       }
 
-      // Limpeza de estados temporários de turno (Flinch: P4)
+      // Limpeza de estados temporários de turno (Flinch: P4 & Protect: P6)
       for (const role of ['player', 'enemy']) {
         const mon = getActiveCombatant(state, role);
         if (mon) {
           mon.isFlinched = false;
+          mon.isProtected = false;
         }
       }
 
@@ -780,6 +788,7 @@
 
       // Recharge precedes PP, sleep, freeze, flinch and confusion checks. It is an action, not a move failure.
       if(attacker.rechargeMoveId){
+        attacker.stallCount = 0;
         const moveId=attacker.rechargeMoveId;attacker.rechargeMoveId=null;
         events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveId,moveName:constants.RECHARGE_MOVES[moveId]?.name,reason:'RECHARGING'});
         return;
@@ -874,6 +883,34 @@
         confusionDamageRoll = roll;
       }
 
+      const isProtecting = constants.isProtectMove(selectedMove);
+      const currentStallCount = Math.max(0, Number.isInteger(attacker.stallCount) ? attacker.stallCount : 0);
+      const protectDenominator = Math.min(729, Math.pow(3, currentStallCount));
+      let protectRoll = 1;
+      let protectSuccess = true;
+      if (isProtecting && currentStallCount > 0) {
+        if (action && action.protectRoll !== undefined) {
+          const roll = Number(action.protectRoll);
+          if (!Number.isFinite(roll) || roll < 0) {
+            throw new Error(`Roll de proteção inválido: ${action.protectRoll}.`);
+          }
+          if (Number.isInteger(roll)) {
+            if (roll < 1 || roll > protectDenominator) {
+              throw new Error(`Roll de proteção inteiro inválido: ${roll}. Deve estar entre 1 e ${protectDenominator}.`);
+            }
+            protectSuccess = (roll === 1);
+          } else {
+            if (roll < 0 || roll >= 1) {
+              throw new Error(`Roll de proteção float inválido: ${roll}. Deve estar entre 0 e 1.`);
+            }
+            protectSuccess = (roll < (1 / protectDenominator));
+          }
+          protectRoll = roll;
+        } else {
+          protectSuccess = true;
+        }
+      }
+
       // Each scheduled move opportunity consumes the entry window, even if prevented.
       if(!calledMove) attacker.entryMoveAttempts = Math.max(0, Number.isInteger(attacker.entryMoveAttempts) ? attacker.entryMoveAttempts : 0) + 1;
 
@@ -896,6 +933,7 @@
           attacker.sleepCounter = attacker.sleepTurns;
           if(!sleepUsable){
           attacker.isFlinched = false;
+          attacker.stallCount = 0;
           events.push({
             type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
             actor: attackerRole,
@@ -946,6 +984,7 @@
           });
         } else {
           attacker.isFlinched = false;
+          attacker.stallCount = 0;
           events.push({
             type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
             actor: attackerRole,
@@ -964,6 +1003,7 @@
       // Se um usuário congelado de Scald hesitar, ele permanece congelado (sem STATUS_CURED e sem perda de PP).
       if (!calledMove && attacker.isFlinched) {
         attacker.isFlinched = false;
+        attacker.stallCount = 0;
         events.push({
           type: BATTLE_EVENTS.FLINCH_IMMOBILIZED,
           actor: attackerRole,
@@ -1005,6 +1045,7 @@
           });
 
           if (confusionHitRoll <= 33) {
+            attacker.stallCount = 0;
             const attackStat = constants.getEffectiveStat
               ? constants.getEffectiveStat(attacker, 'attack')
               : attacker.attack;
@@ -1104,6 +1145,7 @@
       }
 
       if (immobilized) {
+        attacker.stallCount = 0;
         events.push({ type: BATTLE_EVENTS.STATUS_IMMOBILIZED, actor: attackerRole,
           pokemonName: attacker.name, statusCondition: 'paralysis', statusRoll });
         return;
@@ -1114,11 +1156,64 @@
         return;
       }
 
+      if (isProtecting) {
+        if (!protectSuccess) {
+          attacker.stallCount = 0;
+          attacker.isProtected = false;
+          attacker.lastMoveFailed = true;
+          events.push({
+            type: BATTLE_EVENTS.MOVE_FAILED,
+            actor: attackerRole,
+            target: defenderRole,
+            pokemonName: attacker.name,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            reason: 'PROTECT_FAILED',
+            protectRoll
+          });
+          return;
+        }
+
+        attacker.isProtected = true;
+        attacker.stallCount = Math.min(6, currentStallCount + 1);
+        events.push({
+          type: BATTLE_EVENTS.MOVE_PREPARED,
+          actor: attackerRole,
+          pokemonName: attacker.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'PROTECTED_SELF'
+        });
+        return;
+      }
+
+      if (selectedMove.id !== 214) {
+        attacker.stallCount = 0;
+      }
+
       if(selectedMove.id===117){
         if(!attacker.bideState){attacker.bideState={turnsLeft:2,damage:0};events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'BIDE_STORE'});return;}
         if(attacker.bideState.turnsLeft>1){attacker.bideState.turnsLeft--;events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'BIDE_STORE'});return;}
         action={...action,bideDamage:attacker.bideState.damage*2};attacker.bideState=null;
         if(!action.bideDamage){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'NO_BIDE_DAMAGE'});return;}
+      }
+
+      const isSelfTarget = selectedMove.target === 'self' || selectedMove.damageClass === 'status_self' || [14, 156, 214, 347, 182, 197].includes(selectedMove.id);
+      const bypassesProtect = constants.isProtectBypassingMove?.(selectedMove);
+      if (defender.isProtected && !isSelfTarget && !bypassesProtect) {
+        attacker.lastMoveFailed = true;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_FAILED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: defender.name,
+          attackerName: attacker.name,
+          defenderName: defender.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'BLOCKED_BY_PROTECT'
+        });
+        return;
       }
       const targetAction=state.turnActions?.[defenderRole];
       const targetMove=plannedMove(defender,targetAction);
@@ -1134,10 +1229,10 @@
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,target:attackerRole,pokemonName:attacker.name,statusCondition:'sleep',sleepDuration:2});
         events.push({type:BATTLE_EVENTS.HP_HEALED,target:attackerRole,pokemonName:attacker.name,previousHp,currentHp:attacker.currentHp,maxHp:attacker.maxHp,healedAmount:attacker.currentHp-previousHp});return;
       }
-      if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){fail('REQUIRES_SLEEP');return;}
+      if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){attacker.stallCount=0;fail('REQUIRES_SLEEP');return;}
       if(selectedMove.id===214){
         const candidates=attacker.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
-        if(!candidates.length){fail('NO_CALLABLE_MOVE');return;}
+        if(!candidates.length){attacker.stallCount=0;fail('NO_CALLABLE_MOVE');return;}
         const index=action.sleepTalkChoice??0;
         if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
         executeAction(attackerRole,defenderRole,state,events,{...action,moveId:candidates[index].id,moveName:undefined},true);return;
@@ -1830,7 +1925,11 @@
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
           previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.isProtected = false;
+          previousActive.stallCount = 0;
           previousActive.toxicStage = 0;
+          target.isProtected = false;
+          target.stallCount = 0;
           side.activeIndex = targetIndex;
           replacedAny = true;
 

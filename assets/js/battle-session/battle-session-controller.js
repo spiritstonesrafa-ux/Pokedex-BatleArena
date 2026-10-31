@@ -170,10 +170,19 @@
     if(active.rechargeMoveId || action?.moveId!==214)return;
     const candidates=active.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
     if(!candidates.length)return;
-    action.sleepTalkChoice=rng.rollCalledMove?.(candidates.length)??0;
+    if (action.sleepTalkChoice === undefined) {
+      action.sleepTalkChoice = rng.rollCalledMove?.(candidates.length) ?? 0;
+    }
     const move=candidates[action.sleepTalkChoice];
     if(canMoveApplySleep(move))action.sleepDuration=rng.rollSleepDuration?.()??2;
     if(canMoveApplyConfusion(move)){action.confusionDuration=rng.rollConfusionDuration?.()??3;targetAction.confusionHitRoll??=rng.rollConfusionHit?.()??100;targetAction.confusionDamageRoll??=rng.rollConfusionDamage?.()??100;}
+    if(battleConstants.isProtectMove(move)){
+      const stall = Number(active.stallCount || 0);
+      const denom = Math.min(729, Math.pow(3, stall));
+      if (action.protectRoll === undefined) {
+        action.protectRoll = rng.rollProtect ? rng.rollProtect(denom) : 1;
+      }
+    }
     prepareCompoundSecondary(move,action,rng);
     if(canInflict(move,'paralysis'))targetAction.statusRoll??=rng.rollStatus?.()??100;
     if(canInflict(move,'freeze'))targetAction.thawRoll??=rng.rollThaw?.()??100;
@@ -597,6 +606,24 @@
         if(enemyAction?.type==='MOVE')prepareSleepCall(activeEnemy,enemyAction,turnActions.player,this.randomSource);
         prepareCompoundSecondary(playerMove,turnActions.player,this.randomSource);
         if(enemyAction?.type==='MOVE')prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
+        if (battleConstants.isProtectMove(playerMove)) {
+          const stall = Number(activePlayer.stallCount || 0);
+          const denom = Math.min(729, Math.pow(3, stall));
+          if (turnActions.player.protectRoll === undefined) {
+            turnActions.player.protectRoll = (typeof this.randomSource.rollProtect === 'function')
+              ? this.randomSource.rollProtect(denom)
+              : 1;
+          }
+        }
+        if (enemyAction?.type === 'MOVE' && battleConstants.isProtectMove(enemyMove)) {
+          const stall = Number(activeEnemy.stallCount || 0);
+          const denom = Math.min(729, Math.pow(3, stall));
+          if (enemyAction.protectRoll === undefined) {
+            enemyAction.protectRoll = (typeof this.randomSource.rollProtect === 'function')
+              ? this.randomSource.rollProtect(denom)
+              : 1;
+          }
+        }
         prepareMultiHit(activePlayer,turnActions.player,this.randomSource);
         if(enemyAction?.type==='MOVE')prepareMultiHit(activeEnemy,enemyAction,this.randomSource);
         const turnResult = this.engine.resolveTurn(this.battleState, turnActions);
@@ -654,6 +681,15 @@
           }
 
           const enemyMove = activeEnemy?.moves?.find(move => move.id === Number(enemyAction.moveId));
+          if (battleConstants.isProtectMove(enemyMove)) {
+            const stall = Number(activeEnemy.stallCount || 0);
+            const denom = Math.min(729, Math.pow(3, stall));
+            if (enemyAction.protectRoll === undefined) {
+              enemyAction.protectRoll = (typeof this.randomSource.rollProtect === 'function')
+                ? this.randomSource.rollProtect(denom)
+                : 1;
+            }
+          }
           prepareSleepCall(activeEnemy,enemyAction,{},this.randomSource);
           prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
           prepareMultiHit(activeEnemy,enemyAction,this.randomSource);

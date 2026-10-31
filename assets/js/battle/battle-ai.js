@@ -224,7 +224,16 @@
         if(evalData.requiresRecharge && !evalData.guaranteedKo)score=Math.floor(score/2);
 
         if (m.damageClass === 'status') {
-          if ([156,214,281].includes(m.id)||['toxic','confusion'].includes(m.statusEffect)) {
+          if (constants.isProtectMove(m)) {
+            const consecutive = Math.max(0, Number.isInteger(myActive.stallCount) ? myActive.stallCount : 0);
+            if (oppActive.currentHp <= 0 || oppActive.rechargeMoveId) {
+              score = 0;
+            } else if (consecutive >= 1) {
+              score = Math.floor(evalData.expectedStatusBenefit / (consecutive * 10));
+            } else {
+              score = evalData.expectedStatusBenefit;
+            }
+          } else if ([156,214,281].includes(m.id)||['toxic','confusion'].includes(m.statusEffect)) {
             score = evalData.expectedStatusBenefit;
           } else if (m.statusEffect) {
             const immune = constants.isStatusMoveImmune(m, oppActive.types);
@@ -311,7 +320,7 @@
         }
 
         // Bônus para prioridade positiva em ataques não-imunes
-        if (evalData.priority > 0 && evalData.typeMultiplier > 0) {
+        if (evalData.priority > 0 && evalData.typeMultiplier > 0 && !constants.isProtectMove(m)) {
           score += 15 * evalData.priority;
         }
 

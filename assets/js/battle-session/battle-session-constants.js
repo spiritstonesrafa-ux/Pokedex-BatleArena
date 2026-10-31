@@ -305,6 +305,7 @@
     // Fallback defensivo estrito caso battle-constants não esteja carregado
     const name = String(moveDetail.name || '').trim().toLowerCase();
     if (UNSUPPORTED_COMPLEX_MOVES[name]) return false;
+    if (bc?.isProtectMove?.(moveDetail)) return true;
     if (bc?.getSupportedStatusMove?.(moveDetail)) return true;
     if (bc?.isLevelDamageMove?.(moveDetail)) return true;
     if (bc?.isConstantDamageMove?.(moveDetail)) return true;
@@ -346,6 +347,10 @@
     isLevelDamageMove: battleConstants.isLevelDamageMove,
     isConstantDamageMove: battleConstants.isConstantDamageMove,
     isFractionalDamageMove: battleConstants.isFractionalDamageMove,
+    PROTECT_MOVES: battleConstants.PROTECT_MOVES,
+    isProtectMove: battleConstants.isProtectMove,
+    PROTECT_BYPASSING_MOVES: battleConstants.PROTECT_BYPASSING_MOVES,
+    isProtectBypassingMove: battleConstants.isProtectBypassingMove,
     getSecondaryEffect: battleConstants.getSecondaryEffect,
     isStatusConditionImmune: battleConstants.isStatusConditionImmune,
     isEligibleForStatusCondition: battleConstants.isEligibleForStatusCondition
