@@ -307,8 +307,8 @@
           score += 15 * evalData.priority;
         }
 
-        // Bônus tático para efeito secundário de status ponderado por probabilidade e contexto
-        if (evalData.expectedStatusBenefit > 0 && !evalData.guaranteedKo && evalData.typeMultiplier > 0) {
+        // Bônus tático para efeito secundário de status/atributos ponderado por probabilidade e contexto
+        if (evalData.expectedStatusBenefit > 0 && (!evalData.guaranteedKo || evalData.secondaryEffect?.target === 'attacker') && evalData.typeMultiplier > 0) {
           score += evalData.expectedStatusBenefit;
         }
 

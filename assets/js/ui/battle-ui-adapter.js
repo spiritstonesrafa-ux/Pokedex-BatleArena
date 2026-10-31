@@ -107,7 +107,7 @@
             this.view.updateStatusBadge(command.target, command.statusCondition);
           }
           if (typeof this.view.displayMessage === 'function') {
-            const name = command.pokemonName || 'O Pokémon';
+            const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
             const status = command.statusCondition;
             const label = status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : 'veneno';
             const message = command.outcome === 'APPLIED'
@@ -115,8 +115,17 @@
               command.outcome === 'DAMAGE' ? `${name} perdeu ${command.damage} HP por ${label}!` :
               command.outcome === 'IMMUNE' ? `${name} é imune a ${label}!` :
               command.outcome === 'IMMOBILIZED' ? `${name} não conseguiu agir por paralisia!` :
+              command.outcome === 'FLINCHED' ? `${name} hesitou e não pôde se mover!` :
                 `${name} já possui uma condição de status.`;
             this.view.displayMessage(message);
+          }
+          break;
+        }
+
+        case PRESENTATION_COMMANDS.FLINCH_FEEDBACK: {
+          if (typeof this.view.displayMessage === 'function') {
+            const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
+            this.view.displayMessage(`${name} hesitou e não pôde se mover!`);
           }
           break;
         }

@@ -236,6 +236,7 @@
         specialDefense: Math.floor(specialDefense),
         speed: Math.floor(speed),
         statusCondition: (raw.statusCondition && ['poison', 'burn', 'paralysis'].includes(raw.statusCondition)) ? raw.statusCondition : null,
+        isFlinched: false,
         moves: normalizedMoves,
         statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
       };
@@ -425,6 +426,8 @@
       if (constants.resetStatStages) {
         constants.resetStatStages(previousActive);
       }
+      previousActive.isFlinched = false;
+      targetPokemon.isFlinched = false;
 
       side.activeIndex = targetIndex;
 
@@ -444,6 +447,7 @@
         if (constants.resetStatStages) {
           constants.resetStatStages(pokemon);
         }
+        pokemon.isFlinched = false;
         events.push({ type: BATTLE_EVENTS.POKEMON_FAINTED, target: role, pokemonName: pokemon.name });
       }
       const defeated = roles.filter(role => state.version === 1 ||
@@ -495,6 +499,15 @@
       }
       if (fainted.length) resolveFaints(state, events, fainted,
         getActiveCombatant(state, fainted[0]).statusCondition);
+
+      // Limpeza de estados temporários de turno (Flinch: P4)
+      for (const role of ['player', 'enemy']) {
+        const mon = getActiveCombatant(state, role);
+        if (mon) {
+          mon.isFlinched = false;
+        }
+      }
+
       if (state.status === BATTLE_STATUS.IN_PROGRESS) state.turn += 1;
     }
 
@@ -684,6 +697,19 @@
         pokemonName: attacker.name,
         action: BATTLE_ACTIONS.MOVE
       });
+
+      // Verificação canônica de hesitação (Flinch: P4)
+      // Precedência canônica: Flinch é verificado antes de paralisia.
+      // Se o Pokémon hesita, ele perde a ação imediatamente sem consumir PP e sem acionar rolagem/anúncio de paralisia.
+      if (attacker.isFlinched) {
+        attacker.isFlinched = false;
+        events.push({
+          type: BATTLE_EVENTS.FLINCH_IMMOBILIZED,
+          actor: attackerRole,
+          pokemonName: attacker.name
+        });
+        return;
+      }
 
       // Evento de seleção do golpe
       events.push({
@@ -967,35 +993,74 @@
 
       // 10C. Resolução de Efeitos Secundários de Status e Atributos (Secondary Effects: P4)
       const secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
-      if (secEffect && effectiveMultiplier > 0 && currentHp > 0) {
-        if (secEffect.statusCondition) {
-          const canApply = constants.isEligibleForStatusCondition
-            ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
-            : (!defender.statusCondition && currentHp > 0);
-          if (canApply && secondaryEffectRoll <= secEffect.chance) {
-            defender.statusCondition = secEffect.statusCondition;
-            events.push({
-              type: BATTLE_EVENTS.STATUS_APPLIED,
-              source: attackerRole,
-              target: defenderRole,
-              pokemonName: defender.name,
-              statusCondition: secEffect.statusCondition,
-              moveId: selectedMove.id,
-              moveName: selectedMove.name,
-              secondaryEffectRoll,
-              chance: secEffect.chance
-            });
+      if (secEffect && effectiveMultiplier > 0) {
+        // Efeitos no defensor: exigem sobrevivência do defensor (currentHp > 0)
+        if (currentHp > 0) {
+          if (secEffect.statusCondition) {
+            const canApply = constants.isEligibleForStatusCondition
+              ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
+              : (!defender.statusCondition && currentHp > 0);
+            if (canApply && secondaryEffectRoll <= secEffect.chance) {
+              defender.statusCondition = secEffect.statusCondition;
+              events.push({
+                type: BATTLE_EVENTS.STATUS_APPLIED,
+                source: attackerRole,
+                target: defenderRole,
+                pokemonName: defender.name,
+                statusCondition: secEffect.statusCondition,
+                moveId: selectedMove.id,
+                moveName: selectedMove.name,
+                secondaryEffectRoll,
+                chance: secEffect.chance
+              });
+            }
+          }
+
+          if (secEffect.flinch) {
+            if (secondaryEffectRoll <= secEffect.chance) {
+              defender.isFlinched = true;
+              events.push({
+                type: BATTLE_EVENTS.FLINCH_APPLIED,
+                source: attackerRole,
+                target: defenderRole,
+                pokemonName: defender.name,
+                moveId: selectedMove.id,
+                moveName: selectedMove.name,
+                secondaryEffectRoll,
+                chance: secEffect.chance
+              });
+            }
+          }
+
+          if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
+            if (secondaryEffectRoll <= secEffect.chance) {
+              for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
+                const report = constants.applyStatStageChange(defender, statKey, delta);
+                events.push({
+                  type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                  combatant: defenderRole,
+                  pokemonName: defender.name,
+                  statKey: report.statKey,
+                  previousStage: report.previousStage,
+                  requestedDelta: report.requestedDelta,
+                  appliedDelta: report.appliedDelta,
+                  finalStage: report.finalStage,
+                  blockedReason: report.blockedReason
+                });
+              }
+            }
           }
         }
 
-        if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
+        // Efeitos no atacante (ex: Ancient Power): exigem sobrevivência do atacante (attacker.currentHp > 0)
+        if (attacker.currentHp > 0 && secEffect.target === 'attacker' && secEffect.statBoosts && typeof secEffect.statBoosts === 'object') {
           if (secondaryEffectRoll <= secEffect.chance) {
-            for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
-              const report = constants.applyStatStageChange(defender, statKey, delta);
+            for (const [statKey, delta] of Object.entries(secEffect.statBoosts)) {
+              const report = constants.applyStatStageChange(attacker, statKey, delta);
               events.push({
                 type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
-                combatant: defenderRole,
-                pokemonName: defender.name,
+                combatant: attackerRole,
+                pokemonName: attacker.name,
                 statKey: report.statKey,
                 previousStage: report.previousStage,
                 requestedDelta: report.requestedDelta,
@@ -1029,8 +1094,10 @@
           if (constants.resetStatStages) {
             constants.resetStatStages(previousActive);
           }
+          previousActive.isFlinched = false;
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
+          newActive.isFlinched = false;
 
           events.push({
             type: BATTLE_EVENTS.POKEMON_SWITCHED,

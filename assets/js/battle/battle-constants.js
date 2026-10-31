@@ -41,7 +41,9 @@
     REPLACEMENT_REQUIRED: 'REPLACEMENT_REQUIRED',
     TEAM_DEFEATED: 'TEAM_DEFEATED',
     BATTLE_ENDED: 'BATTLE_ENDED',
-    STAT_STAGE_CHANGED: 'STAT_STAGE_CHANGED'
+    STAT_STAGE_CHANGED: 'STAT_STAGE_CHANGED',
+    FLINCH_APPLIED: 'FLINCH_APPLIED',
+    FLINCH_IMMOBILIZED: 'FLINCH_IMMOBILIZED'
   });
 
   const BATTLE_ACTIONS = Object.freeze({
@@ -248,6 +250,42 @@
       requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_STAT_DROP']),
       requiresDamage: true,
       requiresHit: true
+    }),
+    'ancient-power': Object.freeze({
+      id: 246,
+      name: 'ancient-power',
+      statBoosts: Object.freeze({
+        attack: 1,
+        defense: 1,
+        specialAttack: 1,
+        specialDefense: 1,
+        speed: 1
+      }),
+      chance: 10,
+      target: 'attacker',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STAT_BOOST']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'bite': Object.freeze({
+      id: 44,
+      name: 'bite',
+      flinch: true,
+      chance: 30,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'rock-slide': Object.freeze({
+      id: 157,
+      name: 'rock-slide',
+      flinch: true,
+      chance: 30,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH']),
+      requiresDamage: true,
+      requiresHit: true
     })
   });
 
@@ -369,6 +407,7 @@
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     // --- FULL SUPPORT (Efeitos integralmente implementados e testados) ---
     14: Object.freeze({ id: 14, name: 'swords-dance', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ attack: 2 }) }),
+    44: Object.freeze({ id: 44, name: 'bite', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bite'] }),
     53: Object.freeze({ id: 53, name: 'flamethrower', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['flamethrower'] }),
     71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
@@ -378,11 +417,13 @@
     94: Object.freeze({ id: 94, name: 'psychic', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['psychic'] }),
     98: Object.freeze({ id: 98, name: 'quick-attack', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     141: Object.freeze({ id: 141, name: 'leech-life', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
+    157: Object.freeze({ id: 157, name: 'rock-slide', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['rock-slide'] }),
     183: Object.freeze({ id: 183, name: 'mach-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     188: Object.freeze({ id: 188, name: 'sludge-bomb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['sludge-bomb'] }),
     202: Object.freeze({ id: 202, name: 'giga-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     242: Object.freeze({ id: 242, name: 'crunch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['crunch'] }),
     245: Object.freeze({ id: 245, name: 'extreme-speed', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 2 }),
+    246: Object.freeze({ id: 246, name: 'ancient-power', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_BOOST'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['ancient-power'] }),
     247: Object.freeze({ id: 247, name: 'shadow-ball', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['shadow-ball'] }),
     261: Object.freeze({ id: 261, name: 'will-o-wisp', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     315: Object.freeze({ id: 315, name: 'overheat', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),

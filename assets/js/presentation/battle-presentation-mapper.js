@@ -142,6 +142,15 @@
           }
           break;
 
+        case BATTLE_EVENTS.FLINCH_IMMOBILIZED:
+          if (!event.actor || !event.pokemonName) {
+            throw new Error('INVALID_EVENT_PAYLOAD: FLINCH_IMMOBILIZED requer "actor" e "pokemonName".');
+          }
+          break;
+
+        case BATTLE_EVENTS.FLINCH_APPLIED:
+          break;
+
         case BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED:
           if (event.multiplier === undefined || !event.classification) {
             throw new Error(`INVALID_EVENT_PAYLOAD: TYPE_EFFECTIVENESS_RESOLVED requer "multiplier" e "classification".`);
@@ -298,6 +307,17 @@
         case BATTLE_EVENTS.STATUS_IMMOBILIZED:
           return [{ type: PRESENTATION_COMMANDS.STATUS_FEEDBACK, target: event.actor,
             pokemonName: event.pokemonName, statusCondition: 'paralysis', outcome: 'IMMOBILIZED' }];
+
+        case BATTLE_EVENTS.FLINCH_APPLIED:
+          return [];
+
+        case BATTLE_EVENTS.FLINCH_IMMOBILIZED:
+          return [{
+            type: PRESENTATION_COMMANDS.FLINCH_FEEDBACK || 'FLINCH_FEEDBACK',
+            target: event.actor,
+            pokemonName: event.pokemonName,
+            outcome: 'FLINCHED'
+          }];
 
         case BATTLE_EVENTS.STATUS_DAMAGE:
           return [

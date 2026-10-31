@@ -246,6 +246,51 @@
             }
             expectedStatusBenefit = Math.round(expectedStatusChance * totalEffectiveDrop * 15);
           }
+        } else if (secEffect.target === 'attacker' && secEffect.statBoosts && typeof secEffect.statBoosts === 'object') {
+          isEligibleForSecondary = Object.entries(secEffect.statBoosts).some(([k, delta]) => {
+            const currentStage = (attacker.statStages && attacker.statStages[k] !== undefined)
+              ? Number(attacker.statStages[k])
+              : 0;
+            return delta > 0 ? currentStage < 6 : currentStage > -6;
+          });
+
+          if (isEligibleForSecondary) {
+            const rawChance = Number(secEffect.chance) || 0;
+            expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+
+            let totalEffectiveBoost = 0;
+            for (const [k, delta] of Object.entries(secEffect.statBoosts)) {
+              const currentStage = (attacker.statStages && attacker.statStages[k] !== undefined)
+                ? Number(attacker.statStages[k])
+                : 0;
+              if (delta > 0 && currentStage < 6) {
+                totalEffectiveBoost += Math.min(delta, 6 - currentStage);
+              }
+            }
+            expectedStatusBenefit = Math.round(expectedStatusChance * totalEffectiveBoost * 8);
+          }
+        } else if (secEffect.flinch) {
+          // Flinch só traz benefício se o atacante puder agir antes do defensor,
+          // o alvo ainda não tiver agido neste turno, não for imune e não sofrer nocaute garantido.
+          const targetAlreadyActed = Boolean(context.targetAlreadyActed);
+          const defPriority = context.defenderMove ? (constants?.getMovePriority?.(context.defenderMove) || 0) : 0;
+          const atkSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'speed') : attacker.speed) || 1;
+          const defSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'speed') : defender.speed) || 1;
+
+          let actsBeforeDefender = false;
+          if (priority > defPriority) {
+            actsBeforeDefender = true;
+          } else if (priority === defPriority) {
+            actsBeforeDefender = atkSpeed > defSpeed;
+          }
+
+          isEligibleForSecondary = !targetAlreadyActed && actsBeforeDefender && !guaranteedKo && defenderHp > 0;
+
+          if (isEligibleForSecondary) {
+            const rawChance = Number(secEffect.chance) || 0;
+            expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+            expectedStatusBenefit = Math.round(expectedStatusChance * 20);
+          }
         }
       }
 
