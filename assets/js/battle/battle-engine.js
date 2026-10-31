@@ -214,7 +214,7 @@
           maxPp: normalizedMove.pp,
           currentPp: m.currentPp !== undefined ? Number(m.currentPp) : normalizedMove.pp,
           damageClass: normalizedMove.damageClass,
-          ...(normalizedMove.statusEffect ? { statusEffect: normalizedMove.statusEffect } : {}),
+          ...((normalizedMove.statusEffect || m.statusEffect || constants?.getSupportedStatusMove?.(m)?.statusEffect) ? { statusEffect: normalizedMove.statusEffect || m.statusEffect || constants.getSupportedStatusMove(m).statusEffect } : {}),
           ...(normalizedMove.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(normalizedMove))
             ? { statBoosts: { ...(normalizedMove.statBoosts || constants.getStatBoosts(normalizedMove)) } } : {}),
           ...(normalizedMove.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(normalizedMove))
@@ -222,6 +222,18 @@
           ...(constants?.getSecondaryEffect && constants.getSecondaryEffect(normalizedMove)
             ? { secondaryEffect: constants.getSecondaryEffect(normalizedMove) } : {})
         });
+      }
+
+      const statusCondition = (raw.statusCondition && ['poison', 'burn', 'paralysis', 'sleep'].includes(raw.statusCondition)) ? raw.statusCondition : null;
+      let sleepTurns = 0;
+      if (statusCondition === 'sleep') {
+        const rawTurns = raw.sleepTurns ?? raw.sleepCounter;
+        const parsedTurns = Number(rawTurns);
+        if (Number.isInteger(parsedTurns) && parsedTurns >= 1 && parsedTurns <= 3) {
+          sleepTurns = parsedTurns;
+        } else {
+          sleepTurns = constants.DEFAULT_SLEEP_TURNS || 2;
+        }
       }
 
       const combatant = {
@@ -235,7 +247,9 @@
         specialAttack: Math.floor(specialAttack),
         specialDefense: Math.floor(specialDefense),
         speed: Math.floor(speed),
-        statusCondition: (raw.statusCondition && ['poison', 'burn', 'paralysis'].includes(raw.statusCondition)) ? raw.statusCondition : null,
+        statusCondition,
+        sleepTurns,
+        sleepCounter: sleepTurns,
         isFlinched: false,
         moves: normalizedMoves,
         statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
@@ -698,6 +712,38 @@
         action: BATTLE_ACTIONS.MOVE
       });
 
+      // Verificação canônica de sono (Sleep: P4)
+      // Precedência: Sono é checado antes de Flinch e Paralisia.
+      // Enquanto sleepTurns > 0: a ação é impedida, sleepTurns reduz em 1 e emite STATUS_IMMOBILIZED.
+      // Flinch pendente é descartado sem duplo anúncio. Nenhum PP é consumido.
+      if (attacker.statusCondition === 'sleep') {
+        if (attacker.sleepTurns > 0) {
+          attacker.sleepTurns -= 1;
+          attacker.sleepCounter = attacker.sleepTurns;
+          attacker.isFlinched = false;
+          events.push({
+            type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
+            actor: attackerRole,
+            pokemonName: attacker.name,
+            statusCondition: 'sleep',
+            remainingTurns: attacker.sleepTurns
+          });
+          return;
+        } else {
+          attacker.statusCondition = null;
+          attacker.sleepTurns = 0;
+          attacker.sleepCounter = 0;
+          events.push({
+            type: BATTLE_EVENTS.STATUS_CURED,
+            actor: attackerRole,
+            target: attackerRole,
+            pokemonName: attacker.name,
+            statusCondition: 'sleep',
+            reason: 'WOKE_UP'
+          });
+        }
+      }
+
       // Verificação canônica de hesitação (Flinch: P4)
       // Precedência canônica: Flinch é verificado antes de paralisia.
       // Se o Pokémon hesita, ele perde a ação imediatamente sem consumir PP e sem acionar rolagem/anúncio de paralisia.
@@ -780,15 +826,43 @@
 
       if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
         if (selectedMove.statusEffect) {
-          const blocked = constants.isStatusMoveImmune(selectedMove, defender.types)
-            ? 'IMMUNE' : defender.statusCondition ? 'ALREADY_STATUS' : null;
+          const isImmune = constants.isStatusMoveImmune(selectedMove, defender.types);
+          const blocked = isImmune
+            ? 'IMMUNE'
+            : defender.statusCondition
+              ? 'ALREADY_STATUS'
+              : defender.currentHp <= 0
+                ? 'FAINTED'
+                : null;
           if (blocked) {
-            events.push({ type: BATTLE_EVENTS.STATUS_BLOCKED, target: defenderRole,
-              pokemonName: defender.name, statusCondition: selectedMove.statusEffect, reason: blocked });
+            events.push({
+              type: BATTLE_EVENTS.STATUS_BLOCKED,
+              target: defenderRole,
+              pokemonName: defender.name,
+              statusCondition: selectedMove.statusEffect,
+              reason: blocked
+            });
           } else {
             defender.statusCondition = selectedMove.statusEffect;
-            events.push({ type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole,
-              target: defenderRole, pokemonName: defender.name, statusCondition: selectedMove.statusEffect });
+            if (selectedMove.statusEffect === 'sleep') {
+              let sleepDuration = constants.DEFAULT_SLEEP_TURNS || 2;
+              if (action && action.sleepDuration !== undefined) {
+                const parsed = Number(action.sleepDuration);
+                if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 3) {
+                  sleepDuration = parsed;
+                }
+              }
+              defender.sleepTurns = sleepDuration;
+              defender.sleepCounter = sleepDuration;
+            }
+            events.push({
+              type: BATTLE_EVENTS.STATUS_APPLIED,
+              source: attackerRole,
+              target: defenderRole,
+              pokemonName: defender.name,
+              statusCondition: selectedMove.statusEffect,
+              ...(selectedMove.statusEffect === 'sleep' ? { sleepDuration: defender.sleepTurns } : {})
+            });
           }
           return;
         }

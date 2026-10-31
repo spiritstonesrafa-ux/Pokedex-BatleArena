@@ -123,6 +123,15 @@
     return 'btl_headless_' + Date.now();
   }
 
+  function canMoveApplySleep(move) {
+    if (!move || typeof move !== 'object') return false;
+    if (move.statusEffect === 'sleep') return true;
+    const getSec = (battleConstants && typeof battleConstants.getSecondaryEffect === 'function')
+      ? battleConstants.getSecondaryEffect
+      : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
+    return Boolean(getSec && getSec(move)?.statusCondition === 'sleep');
+  }
+
   class BattleSessionController {
     /**
      * @param {Object} [options]
@@ -453,6 +462,17 @@
           enemyAction.statusRoll = this.randomSource.rollStatus();
         }
 
+        // Determina geração de duração de sono quando o golpe puder aplicar sono
+        const playerCanSleep = canMoveApplySleep(playerMove);
+        const enemyCanSleep = canMoveApplySleep(enemyMove);
+
+        const playerSleepDuration = (playerCanSleep && typeof this.randomSource.rollSleepDuration === 'function')
+          ? this.randomSource.rollSleepDuration()
+          : undefined;
+        if (enemyCanSleep && typeof this.randomSource.rollSleepDuration === 'function') {
+          enemyAction.sleepDuration = this.randomSource.rollSleepDuration();
+        }
+
         // 3. Resolve o turno de forma pura no BattleEngine
         const turnActions = {
           player: {
@@ -461,7 +481,8 @@
             accuracyRoll: playerAccuracyRoll,
             damageRoll: playerDamageRoll,
             secondaryEffectRoll: playerSecondaryEffectRoll,
-            ...(playerStatusRoll !== undefined ? { statusRoll: playerStatusRoll } : {})
+            ...(playerStatusRoll !== undefined ? { statusRoll: playerStatusRoll } : {}),
+            ...(playerSleepDuration !== undefined ? { sleepDuration: playerSleepDuration } : {})
           },
           enemy: enemyAction
         };
@@ -517,6 +538,11 @@
           const activeEnemy = this.engine.getActiveCombatant(this.battleState, 'enemy');
           if (activeEnemy.statusCondition === 'paralysis') {
             enemyAction.statusRoll = this.randomSource.rollStatus();
+          }
+
+          const enemyMove = activeEnemy?.moves?.find(move => move.id === Number(enemyAction.moveId));
+          if (canMoveApplySleep(enemyMove) && typeof this.randomSource.rollSleepDuration === 'function') {
+            enemyAction.sleepDuration = this.randomSource.rollSleepDuration();
           }
         }
 

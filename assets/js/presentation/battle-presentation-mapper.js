@@ -122,7 +122,7 @@
 
         case BATTLE_EVENTS.STATUS_APPLIED:
         case BATTLE_EVENTS.STATUS_BLOCKED:
-          if (!event.target || !['poison', 'burn', 'paralysis'].includes(event.statusCondition) || !event.pokemonName) {
+          if (!event.target || !['poison', 'burn', 'paralysis', 'sleep'].includes(event.statusCondition) || !event.pokemonName) {
             throw new Error('INVALID_EVENT_PAYLOAD: status requer alvo, nome e condição suportada.');
           }
           break;
@@ -136,9 +136,23 @@
           break;
 
         case BATTLE_EVENTS.STATUS_IMMOBILIZED:
-          if (!event.actor || !event.pokemonName || event.statusCondition !== 'paralysis' ||
-              !Number.isInteger(event.statusRoll) || event.statusRoll < 1 || event.statusRoll > 25) {
-            throw new Error('INVALID_EVENT_PAYLOAD: ação impedida por paralisia inválida.');
+          if (!event.actor || !event.pokemonName) {
+            throw new Error('INVALID_EVENT_PAYLOAD: STATUS_IMMOBILIZED requer actor e pokemonName.');
+          }
+          if (event.statusCondition === 'paralysis') {
+            if (!Number.isInteger(event.statusRoll) || event.statusRoll < 1 || event.statusRoll > 25) {
+              throw new Error('INVALID_EVENT_PAYLOAD: ação impedida por paralisia inválida.');
+            }
+          } else if (event.statusCondition === 'sleep') {
+            // Válido para sono
+          } else {
+            throw new Error('INVALID_EVENT_PAYLOAD: condição de status inválida para impedimento.');
+          }
+          break;
+
+        case BATTLE_EVENTS.STATUS_CURED:
+          if (!event.actor && !event.target) {
+            throw new Error('INVALID_EVENT_PAYLOAD: STATUS_CURED requer actor ou target.');
           }
           break;
 
@@ -306,7 +320,11 @@
 
         case BATTLE_EVENTS.STATUS_IMMOBILIZED:
           return [{ type: PRESENTATION_COMMANDS.STATUS_FEEDBACK, target: event.actor,
-            pokemonName: event.pokemonName, statusCondition: 'paralysis', outcome: 'IMMOBILIZED' }];
+            pokemonName: event.pokemonName, statusCondition: event.statusCondition || 'paralysis', outcome: 'IMMOBILIZED' }];
+
+        case BATTLE_EVENTS.STATUS_CURED:
+          return [{ type: PRESENTATION_COMMANDS.STATUS_FEEDBACK, target: event.target || event.actor,
+            pokemonName: event.pokemonName, statusCondition: event.statusCondition, outcome: event.reason || 'CURED' }];
 
         case BATTLE_EVENTS.FLINCH_APPLIED:
           return [];

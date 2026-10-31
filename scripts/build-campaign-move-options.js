@@ -20,13 +20,16 @@ const SIMPLE_MOVES = new Set([
   'water-gun', 'wing-attack', 'x-scissor'
 ]);
 
-// Phase P3 pilot moves: explicitly supported stat stage boosts and self-debuffs
+// Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
   'swords-dance',
   'calm-mind',
   'close-combat',
   'overheat',
-  'draco-meteor'
+  'draco-meteor',
+  'hypnosis',
+  'sleep-powder',
+  'spore'
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
@@ -79,18 +82,48 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     pp: 5,
     damageClass: 'special',
     selfStatDrops: Object.freeze({ specialAttack: -2 })
+  }),
+  'hypnosis': Object.freeze({
+    id: 95,
+    name: 'hypnosis',
+    type: 'psychic',
+    power: 0,
+    accuracy: 60,
+    pp: 20,
+    damageClass: 'status'
+  }),
+  'sleep-powder': Object.freeze({
+    id: 79,
+    name: 'sleep-powder',
+    type: 'grass',
+    power: 0,
+    accuracy: 75,
+    pp: 15,
+    damageClass: 'status'
+  }),
+  'spore': Object.freeze({
+    id: 147,
+    name: 'spore',
+    type: 'grass',
+    power: 0,
+    accuracy: 100,
+    pp: 15,
+    damageClass: 'status'
   })
 });
 
 // Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)
+  45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
+  97: ['hypnosis', 'body-press'],        // Hypno (Gen 1)
   149: ['draco-meteor', 'dragon-pulse'], // Dragonite (Draft Gen 1)
   157: ['overheat', 'aerial-ace'],       // Typhlosion (Draft Gen 2)
   212: ['swords-dance', 'wing-attack'],  // Scizor (Draft Gen 2)
   214: ['close-combat', 'swords-dance'], // Heracross (Draft Gen 2)
   282: ['calm-mind', 'dazzling-gleam'],  // Gardevoir (Draft Gen 3)
+  286: ['spore', 'magical-leaf'],        // Breloom (Gen 3)
   445: ['swords-dance', 'draco-meteor'], // Garchomp (Draft Gen 4)
   448: ['close-combat', 'swords-dance']  // Lucario (Draft Gen 4)
 });

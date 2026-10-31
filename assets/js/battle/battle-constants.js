@@ -43,7 +43,8 @@
     BATTLE_ENDED: 'BATTLE_ENDED',
     STAT_STAGE_CHANGED: 'STAT_STAGE_CHANGED',
     FLINCH_APPLIED: 'FLINCH_APPLIED',
-    FLINCH_IMMOBILIZED: 'FLINCH_IMMOBILIZED'
+    FLINCH_IMMOBILIZED: 'FLINCH_IMMOBILIZED',
+    STATUS_CURED: 'STATUS_CURED'
   });
 
   const BATTLE_ACTIONS = Object.freeze({
@@ -412,11 +413,14 @@
     71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
+    79: Object.freeze({ id: 79, name: 'sleep-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     85: Object.freeze({ id: 85, name: 'thunderbolt', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['thunderbolt'] }),
     86: Object.freeze({ id: 86, name: 'thunder-wave', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     94: Object.freeze({ id: 94, name: 'psychic', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['psychic'] }),
+    95: Object.freeze({ id: 95, name: 'hypnosis', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     98: Object.freeze({ id: 98, name: 'quick-attack', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     141: Object.freeze({ id: 141, name: 'leech-life', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
+    147: Object.freeze({ id: 147, name: 'spore', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     157: Object.freeze({ id: 157, name: 'rock-slide', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['rock-slide'] }),
     183: Object.freeze({ id: 183, name: 'mach-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     188: Object.freeze({ id: 188, name: 'sludge-bomb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['sludge-bomb'] }),
@@ -559,6 +563,7 @@
     71: Object.freeze({ id: 71, name: 'absorb', type: 'grass', power: 20, accuracy: 100, pp: 25, damageClass: 'special' }),
     72: Object.freeze({ id: 72, name: 'mega-drain', type: 'grass', power: 40, accuracy: 100, pp: 15, damageClass: 'special' }),
     76: Object.freeze({ id: 76, name: 'solar-beam', type: 'grass', power: 120, accuracy: 100, pp: 10, damageClass: 'special' }),
+    79: Object.freeze({ id: 79, name: 'sleep-powder', type: 'grass', power: 0, accuracy: 75, pp: 15, damageClass: 'status', statusEffect: 'sleep', isPowderMove: true }),
     84: Object.freeze({ id: 84, name: 'thunder-shock', type: 'electric', power: 40, accuracy: 100, pp: 30, damageClass: 'special' }),
     85: Object.freeze({ id: 85, name: 'thunderbolt', type: 'electric', power: 90, accuracy: 100, pp: 15, damageClass: 'special' }),
     87: Object.freeze({ id: 87, name: 'thunder', type: 'electric', power: 110, accuracy: 70, pp: 10, damageClass: 'special' }),
@@ -566,12 +571,14 @@
     89: Object.freeze({ id: 89, name: 'earthquake', type: 'ground', power: 100, accuracy: 100, pp: 10, damageClass: 'physical' }),
     93: Object.freeze({ id: 93, name: 'confusion', type: 'psychic', power: 50, accuracy: 100, pp: 25, damageClass: 'special' }),
     94: Object.freeze({ id: 94, name: 'psychic', type: 'psychic', power: 90, accuracy: 100, pp: 10, damageClass: 'special' }),
+    95: Object.freeze({ id: 95, name: 'hypnosis', type: 'psychic', power: 0, accuracy: 60, pp: 20, damageClass: 'status', statusEffect: 'sleep' }),
     98: Object.freeze({ id: 98, name: 'quick-attack', type: 'normal', power: 40, accuracy: 100, pp: 30, damageClass: 'physical' }),
     121: Object.freeze({ id: 121, name: 'egg-bomb', type: 'normal', power: 100, accuracy: 75, pp: 10, damageClass: 'physical' }),
     122: Object.freeze({ id: 122, name: 'lick', type: 'ghost', power: 30, accuracy: 100, pp: 30, damageClass: 'physical' }),
     126: Object.freeze({ id: 126, name: 'fire-blast', type: 'fire', power: 110, accuracy: 85, pp: 5, damageClass: 'special' }),
     129: Object.freeze({ id: 129, name: 'swift', type: 'normal', power: 60, accuracy: null, pp: 20, damageClass: 'special' }),
     141: Object.freeze({ id: 141, name: 'leech-life', type: 'bug', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
+    147: Object.freeze({ id: 147, name: 'spore', type: 'grass', power: 0, accuracy: 100, pp: 15, damageClass: 'status', statusEffect: 'sleep', isPowderMove: true }),
     152: Object.freeze({ id: 152, name: 'crabhammer', type: 'water', power: 100, accuracy: 90, pp: 10, damageClass: 'physical' }),
     157: Object.freeze({ id: 157, name: 'rock-slide', type: 'rock', power: 75, accuracy: 90, pp: 10, damageClass: 'physical' }),
     158: Object.freeze({ id: 158, name: 'hyper-fang', type: 'normal', power: 80, accuracy: 90, pp: 15, damageClass: 'physical' }),
@@ -1090,6 +1097,8 @@
     STATUS: 'status'
   });
 
+  const DEFAULT_SLEEP_TURNS = 2;
+
   // Apenas golpes de status curados com efeito integral suportado.
   const SUPPORTED_STATUS_MOVES = Object.freeze({
     'swords-dance': Object.freeze({ id: 14, name: 'swords-dance', type: 'normal',
@@ -1098,6 +1107,12 @@
       power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 }) }),
     'poison-powder': Object.freeze({ id: 77, name: 'poison-powder', type: 'poison',
       power: 0, accuracy: 75, pp: 35, damageClass: 'status', statusEffect: 'poison' }),
+    'sleep-powder': Object.freeze({ id: 79, name: 'sleep-powder', type: 'grass',
+      power: 0, accuracy: 75, pp: 15, damageClass: 'status', statusEffect: 'sleep' }),
+    'hypnosis': Object.freeze({ id: 95, name: 'hypnosis', type: 'psychic',
+      power: 0, accuracy: 60, pp: 20, damageClass: 'status', statusEffect: 'sleep' }),
+    'spore': Object.freeze({ id: 147, name: 'spore', type: 'grass',
+      power: 0, accuracy: 100, pp: 15, damageClass: 'status', statusEffect: 'sleep' }),
     'will-o-wisp': Object.freeze({ id: 261, name: 'will-o-wisp', type: 'fire',
       power: 0, accuracy: 85, pp: 15, damageClass: 'status', statusEffect: 'burn' }),
     'thunder-wave': Object.freeze({ id: 86, name: 'thunder-wave', type: 'electric',
@@ -1126,6 +1141,8 @@
         return types.includes('fire');
       case 'paralysis':
         return types.includes('electric');
+      case 'sleep':
+        return false;
       default:
         return false;
     }
@@ -1147,10 +1164,19 @@
     if (!Array.isArray(types) || !move) return false;
     const name = String(move?.name || '').trim().toLowerCase();
     switch (name) {
-      case 'poison-powder': return isPoisonPowderImmune(types);
-      case 'will-o-wisp': return isStatusConditionImmune('burn', types);
-      case 'thunder-wave': return isStatusConditionImmune('paralysis', types) || types.includes('ground');
-      default: return false;
+      case 'poison-powder':
+        return isPoisonPowderImmune(types);
+      case 'sleep-powder':
+      case 'spore':
+        return isStatusConditionImmune('sleep', types) || types.includes('grass');
+      case 'hypnosis':
+        return isStatusConditionImmune('sleep', types);
+      case 'will-o-wisp':
+        return isStatusConditionImmune('burn', types);
+      case 'thunder-wave':
+        return isStatusConditionImmune('paralysis', types) || types.includes('ground');
+      default:
+        return false;
     }
   }
 
@@ -1279,7 +1305,8 @@
     SECONDARY_EFFECT_MOVES_BY_ID,
     getSecondaryEffect,
     isStatusConditionImmune,
-    isEligibleForStatusCondition
+    isEligibleForStatusCondition,
+    DEFAULT_SLEEP_TURNS
   });
 
   // Suporte universal (Node.js & Browser)

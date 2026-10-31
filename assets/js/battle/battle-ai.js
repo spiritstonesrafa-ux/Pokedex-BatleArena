@@ -105,7 +105,7 @@
       // 1. Golpes utilizáveis do ativo (somente status curados)
       const isUsableStatusMove = (m) => {
         if (m.damageClass !== 'status') return true;
-        if (['poison', 'burn', 'paralysis'].includes(m.statusEffect)) return true;
+        if (['poison', 'burn', 'paralysis', 'sleep'].includes(m.statusEffect)) return true;
         if (m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m))) return true;
         return false;
       };
@@ -231,9 +231,10 @@
               move.damageClass !== 'status').map(move => BattleEvaluator.evaluateMove(oppActive, myActive,
               move, { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
             const disruption = m.statusEffect === 'burn' ? Math.floor(physicalThreat / 2) * 2 :
-              m.statusEffect === 'paralysis' ? Math.floor(totalThreat / 4) * 2 + 12 : 0;
-            score = canApply && oppActive.currentHp > tick * 2
-              ? (m.statusEffect === 'paralysis' ? disruption : tick * 4 + disruption) *
+              m.statusEffect === 'paralysis' ? Math.floor(totalThreat / 4) * 2 + 12 :
+              m.statusEffect === 'sleep' ? Math.floor(totalThreat * 0.75) + 15 : 0;
+            score = canApply && oppActive.currentHp > (m.statusEffect === 'sleep' ? 0 : tick * 2)
+              ? (m.statusEffect === 'paralysis' || m.statusEffect === 'sleep' ? disruption : tick * 4 + disruption) *
                 (m.accuracy === null ? 1 : m.accuracy / 100) : 0;
           } else {
             const statBoosts = evalData.statBoosts || m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m));

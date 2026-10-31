@@ -106,15 +106,19 @@
           if (command.outcome === 'APPLIED' && typeof this.view.updateStatusBadge === 'function') {
             this.view.updateStatusBadge(command.target, command.statusCondition);
           }
+          if ((command.outcome === 'CURED' || command.outcome === 'WOKE_UP') && typeof this.view.updateStatusBadge === 'function') {
+            this.view.updateStatusBadge(command.target, null);
+          }
           if (typeof this.view.displayMessage === 'function') {
             const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
             const status = command.statusCondition;
-            const label = status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : 'veneno';
+            const label = status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : 'veneno';
             const message = command.outcome === 'APPLIED'
-              ? status === 'poison' ? `${name} foi envenenado!` : `${name} sofreu ${label}!` :
+              ? (status === 'poison' ? `${name} foi envenenado!` : status === 'sleep' ? `${name} adormeceu!` : `${name} sofreu ${label}!`) :
               command.outcome === 'DAMAGE' ? `${name} perdeu ${command.damage} HP por ${label}!` :
               command.outcome === 'IMMUNE' ? `${name} é imune a ${label}!` :
-              command.outcome === 'IMMOBILIZED' ? `${name} não conseguiu agir por paralisia!` :
+              command.outcome === 'IMMOBILIZED' ? (status === 'sleep' ? `${name} está dormindo profundamente!` : `${name} não conseguiu agir por paralisia!`) :
+              (command.outcome === 'WOKE_UP' || command.outcome === 'CURED') ? `${name} acordou!` :
               command.outcome === 'FLINCHED' ? `${name} hesitou e não pôde se mover!` :
                 `${name} já possui uma condição de status.`;
             this.view.displayMessage(message);

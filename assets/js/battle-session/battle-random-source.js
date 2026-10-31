@@ -41,6 +41,7 @@
       this.damageSequence = Array.isArray(options.damageSequence) ? [...options.damageSequence] : null;
       this.statusSequence = Array.isArray(options.statusSequence) ? [...options.statusSequence] : null;
       this.secondaryEffectSequence = Array.isArray(options.secondaryEffectSequence) ? [...options.secondaryEffectSequence] : null;
+      this.sleepDurationSequence = Array.isArray(options.sleepDurationSequence) ? [...options.sleepDurationSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
 
@@ -90,6 +91,14 @@
      * @param {number} [count=3] - Quantidade de oponentes a selecionar.
      * @returns {number[]} Array com `count` IDs únicos.
      */
+    rollSleepDuration() {
+      if (this.sleepDurationSequence && this.sleepDurationSequence.length > 0) {
+        const next = Math.floor(Number(this.sleepDurationSequence.shift()));
+        return Math.max(1, Math.min(3, next));
+      }
+      return Math.floor(this.rng() * 3) + 1;
+    }
+
     rollSecondaryEffect() {
       if (this.secondaryEffectSequence && this.secondaryEffectSequence.length > 0) {
         const next = Math.floor(Number(this.secondaryEffectSequence.shift()));
@@ -150,6 +159,10 @@
 
     setStatusSequence(seq) {
       this.statusSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setSleepDurationSequence(seq) {
+      this.sleepDurationSequence = Array.isArray(seq) ? [...seq] : null;
     }
 
     setSecondaryEffectSequence(seq) {

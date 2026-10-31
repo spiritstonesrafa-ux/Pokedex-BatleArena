@@ -62,6 +62,29 @@
       // Golpes de status não causam dano na arquitetura atual
       if (damageClass === 'status' || power <= 0) {
         const statBoosts = move.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(move)) || null;
+        let expectedStatusBenefit = 0;
+        let statusChance = 0;
+        let isEligible = false;
+
+        if (move.statusEffect) {
+          const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
+          isEligible = !immune && !defender.statusCondition && (Number(defender.currentHp) || 0) > 0;
+          if (isEligible) {
+            let accuracyFactor = 1.0;
+            if (accuracy !== null && accuracy !== 'ALWAYS_HIT' && accuracy !== undefined) {
+              const accNum = Number(accuracy);
+              if (Number.isFinite(accNum)) {
+                accuracyFactor = Math.max(0, Math.min(100, accNum)) / 100;
+              }
+            }
+            const actionFactor = attacker.statusCondition === 'paralysis' ? 0.75 : 1;
+            statusChance = accuracyFactor * actionFactor;
+            if (move.statusEffect === 'sleep') {
+              expectedStatusBenefit = Math.round(statusChance * 25);
+            }
+          }
+        }
+
         return {
           moveId: move.id,
           moveName: move.name || 'unknown',
@@ -93,9 +116,10 @@
           wouldRecoilKo: false,
           selfStatDrops: null,
           secondaryEffect: null,
-          statusChance: 0,
-          isEligibleForSecondary: false,
-          expectedStatusBenefit: 0
+          statusChance,
+          isEligible,
+          isEligibleForSecondary: isEligible,
+          expectedStatusBenefit
         };
       }
 
