@@ -2,6 +2,56 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: Roadmap de mecânicas de batalha P0–P8
+
+Este registro consolida os ciclos implementados e revisados nesta expansão. Os registros anteriores permanecem como histórico; seus totais de testes e declarações de release descrevem aquele momento, não o estado atual de todas as mecânicas.
+
+### Última validação independente
+
+- Revisão do ciclo de congelamento e correções de Scald: **1.078 testes aprovados, 36 suítes, 0 falhas, 0 cancelados e 0 ignorados; código de saída 0**.
+- `git diff --check`: aprovado, código de saída 0.
+- Commit observado nesta atualização documental: `e21734d` — `feat(battle): implement phase P4 freeze and thaw mechanics with Scald interactions`.
+- Esses resultados são da última execução de revisão; esta atualização modifica apenas a documentação e não constitui nova homologação visual ou publicação.
+
+### Estado do roadmap
+
+| Fase | Estado e limites |
+| --- | --- |
+| P0 — Registro e validação de golpes | Base implementada: definições canônicas, classificação de suporte, validação e referências de dados. |
+| P1 — Prioridade e efeitos especiais | Parcial: prioridades e efeitos específicos implementados; infraestrutura e demais efeitos ainda exigem ciclos próprios. |
+| P2 — Drenagem e recuo | Mecânicas implementadas e validadas; recuperação geral, Struggle e expansões específicas permanecem pendentes. |
+| P3 — Estágios de atributos | Base validada, estágios de -6 a +6, atributos efetivos e reset em trocas; pilotos Swords Dance, Calm Mind, Close Combat, Overheat e Draco Meteor. |
+| P4 — Condições e efeitos secundários | Em andamento; ciclos validados listados abaixo. Não representa suporte completo a todos os golpes dessas famílias. |
+| P5 — Múltiplos acertos e dano especial | Pendente: expansão de dano fixo/variável, contra-ataques e histórico de dano. |
+| P6 — Carga, recarga, proteção e efeitos persistentes | Pendente. |
+| P7 — Habilidades, itens, clima e terreno | Pendente. |
+| P8 — Transform, Sketch, Hidden Power e formas dinâmicas | Pendente; inclui dependências de IVs e outras mecânicas específicas. |
+
+### Ciclos da P4 implementados e validados
+
+- **Condições secundárias:** Thunderbolt (paralisia), Flamethrower (queimadura), Sludge Bomb e Poison Jab (veneno), Scald (queimadura). Rolagens secundárias independentes e integração da paralisia recebida antes da ação no mesmo turno.
+- **Reduções secundárias de atributos:** Shadow Ball e Psychic reduzem Special Defense; Crunch reduz Defense. Limites, elegibilidade, sessão nos dois sentidos, eventos, trocas e avaliador verificados.
+- **Aumentos secundários:** Ancient Power usa uma única rolagem de 10% para os cinco atributos, respeita limites individuais e pode ativar após nocautear o alvo.
+- **Hesitação (flinch):** Bite e Rock Slide, 30%; impede somente movimento pendente no turno, sem consumir PP da ação impedida. Limpeza em fim de turno/trocas e inicialização sem hesitação herdada validadas.
+- **Sono:** Hypnosis, Sleep Powder e Spore; duração sorteada de 1 a 3 oportunidades de movimento impedidas, seguida de despertar na tentativa seguinte. Imunidade Grass a pó, preservação da duração no banco, precedência com flinch e encaminhamento da duração durante troca voluntária validados.
+- **Congelamento:** Ice Beam e Blizzard, 10%; imunidade Ice ao status, descongelamento natural de 20%, impedimento sem consumo de PP e integração das rolagens em movimentos e trocas.
+- **Scald e descongelamento:** usuário congelado supera a verificação de freeze, mas só descongela ao alcançar a execução; flinch anterior mantém o usuário congelado. Scald descongela o alvo sobrevivente após os efeitos secundários, sem queimá-lo no mesmo golpe. Golpes de dano Fire descongelam no impacto; golpes de status Fire não recebem esse comportamento automaticamente.
+- **Suporte no ciclo atual:** Ice Beam e Scald classificados como FULL; Blizzard permanece PARTIAL pela interação de precisão com clima. FULL descreve o escopo suportado pelo modelo atual, sem implicar implementação de habilidades, itens ou clima.
+
+### Próximos ciclos e pendências reais
+
+1. **Confusão — próximo ciclo proposto:** prompt preparado para Confuse Ray e Water Pulse; implementação ainda não revisada nem validada. Inclui duração, autoagressão, dano próprio, precedência de impedimentos e limpeza em trocas.
+2. **Toxic:** veneno grave com dano progressivo por múltiplos de 1/16 do HP máximo; não é crescimento exponencial.
+3. **Fake Out:** prioridade, flinch e restrição ao primeiro turno em campo do usuário.
+4. **Efeitos compostos:** por exemplo, Tri Attack; dependências de múltiplos acertos devem acompanhar a P5.
+5. **Expansão dos pilotos:** outros golpes semelhantes precisam de cadastro, verificação de exceções e testes; não são promovidos automaticamente a FULL.
+6. **Blizzard/clima:** o código ainda usa a identificação `WEATHER_ACCURACY_PHASE_P5`; alinhar a identificação e suas referências à **P7**, sem implementar clima neste ajuste documental.
+
+Os identificadores P0–P8 deste roadmap são próprios da expansão de mecânicas. Não substituem a numeração histórica PBA-xxx nem outras fases de UI/UX ou dificuldade já registradas neste arquivo.
+
+---
+
+
 ## Atualização — 09/10/2026: Correção Final da Fase 1 UI/UX (Listagem por Tipo com Escopo de Geração e Escopo Canônico)
 
 Resolução da última pendência identificada na Fase 1 de UI/UX da Pokédex: o carregamento por tipo agora respeita simultaneamente a geração selecionada, o tipo selecionado e o escopo canônico de espécies suportado (IDs 1 a 1025).
