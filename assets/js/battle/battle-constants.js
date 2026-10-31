@@ -218,6 +218,36 @@
       requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
       requiresDamage: true,
       requiresHit: true
+    }),
+    'shadow-ball': Object.freeze({
+      id: 247,
+      name: 'shadow-ball',
+      statDrops: Object.freeze({ specialDefense: -1 }),
+      chance: 20,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'psychic': Object.freeze({
+      id: 94,
+      name: 'psychic',
+      statDrops: Object.freeze({ specialDefense: -1 }),
+      chance: 10,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP']),
+      requiresDamage: true,
+      requiresHit: true
+    }),
+    'crunch': Object.freeze({
+      id: 242,
+      name: 'crunch',
+      statDrops: Object.freeze({ defense: -1 }),
+      chance: 20,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'SECONDARY_STAT_DROP']),
+      requiresDamage: true,
+      requiresHit: true
     })
   });
 
@@ -345,12 +375,15 @@
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     85: Object.freeze({ id: 85, name: 'thunderbolt', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['thunderbolt'] }),
     86: Object.freeze({ id: 86, name: 'thunder-wave', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
+    94: Object.freeze({ id: 94, name: 'psychic', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['psychic'] }),
     98: Object.freeze({ id: 98, name: 'quick-attack', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     141: Object.freeze({ id: 141, name: 'leech-life', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     183: Object.freeze({ id: 183, name: 'mach-punch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     188: Object.freeze({ id: 188, name: 'sludge-bomb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['sludge-bomb'] }),
     202: Object.freeze({ id: 202, name: 'giga-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
+    242: Object.freeze({ id: 242, name: 'crunch', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['crunch'] }),
     245: Object.freeze({ id: 245, name: 'extreme-speed', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 2 }),
+    247: Object.freeze({ id: 247, name: 'shadow-ball', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['shadow-ball'] }),
     261: Object.freeze({ id: 261, name: 'will-o-wisp', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     315: Object.freeze({ id: 315, name: 'overheat', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
     347: Object.freeze({ id: 347, name: 'calm-mind', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 }) }),

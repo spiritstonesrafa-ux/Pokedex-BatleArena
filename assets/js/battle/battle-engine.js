@@ -965,25 +965,46 @@
         }
       }
 
-      // 10C. Resolução de Efeitos Secundários de Status (Secondary Status Effects: P4)
+      // 10C. Resolução de Efeitos Secundários de Status e Atributos (Secondary Effects: P4)
       const secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
       if (secEffect && effectiveMultiplier > 0 && currentHp > 0) {
-        const canApply = constants.isEligibleForStatusCondition
-          ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
-          : (!defender.statusCondition && currentHp > 0);
-        if (canApply && secondaryEffectRoll <= secEffect.chance) {
-          defender.statusCondition = secEffect.statusCondition;
-          events.push({
-            type: BATTLE_EVENTS.STATUS_APPLIED,
-            source: attackerRole,
-            target: defenderRole,
-            pokemonName: defender.name,
-            statusCondition: secEffect.statusCondition,
-            moveId: selectedMove.id,
-            moveName: selectedMove.name,
-            secondaryEffectRoll,
-            chance: secEffect.chance
-          });
+        if (secEffect.statusCondition) {
+          const canApply = constants.isEligibleForStatusCondition
+            ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
+            : (!defender.statusCondition && currentHp > 0);
+          if (canApply && secondaryEffectRoll <= secEffect.chance) {
+            defender.statusCondition = secEffect.statusCondition;
+            events.push({
+              type: BATTLE_EVENTS.STATUS_APPLIED,
+              source: attackerRole,
+              target: defenderRole,
+              pokemonName: defender.name,
+              statusCondition: secEffect.statusCondition,
+              moveId: selectedMove.id,
+              moveName: selectedMove.name,
+              secondaryEffectRoll,
+              chance: secEffect.chance
+            });
+          }
+        }
+
+        if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
+          if (secondaryEffectRoll <= secEffect.chance) {
+            for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
+              const report = constants.applyStatStageChange(defender, statKey, delta);
+              events.push({
+                type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                combatant: defenderRole,
+                pokemonName: defender.name,
+                statKey: report.statKey,
+                previousStage: report.previousStage,
+                requestedDelta: report.requestedDelta,
+                appliedDelta: report.appliedDelta,
+                finalStage: report.finalStage,
+                blockedReason: report.blockedReason
+              });
+            }
+          }
         }
       }
 

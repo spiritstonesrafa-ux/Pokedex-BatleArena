@@ -193,33 +193,58 @@
       let isEligibleForSecondary = false;
 
       if (secEffect && typeMultiplier > 0) {
-        isEligibleForSecondary = Boolean(
-          constants.isEligibleForStatusCondition
-            ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
-            : (!defender.statusCondition && defenderHp > 0)
-        );
+        if (secEffect.statusCondition) {
+          isEligibleForSecondary = Boolean(
+            constants.isEligibleForStatusCondition
+              ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
+              : (!defender.statusCondition && defenderHp > 0)
+          );
 
-        if (isEligibleForSecondary && !guaranteedKo) {
-          const rawChance = Number(secEffect.chance) || 0;
-          expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+          if (isEligibleForSecondary && !guaranteedKo) {
+            const rawChance = Number(secEffect.chance) || 0;
+            expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
 
-          const defMaxHp = Number(defender.maxHp) || defenderHp || 1;
-          if (secEffect.statusCondition === 'poison') {
-            const tick = Math.max(1, Math.floor(defMaxHp / 8));
-            const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
-            expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining));
-          } else if (secEffect.statusCondition === 'burn') {
-            const tick = Math.max(1, Math.floor(defMaxHp / 16));
-            const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
-            const hasPhysicalThreat = Array.isArray(defender.moves) && defender.moves.some(m => (m.damageClass || m.damage_class?.name) === 'physical');
-            const disruptionBonus = hasPhysicalThreat ? 15 : 0;
-            expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining + disruptionBonus));
-          } else if (secEffect.statusCondition === 'paralysis') {
-            const defSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'speed') : defender.speed) || 1;
-            const atkSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'speed') : attacker.speed) || 1;
-            const speedAdvantage = defSpeed > atkSpeed ? 15 : 5;
-            const fullParalysisDisruption = 15;
-            expectedStatusBenefit = Math.round(expectedStatusChance * (speedAdvantage + fullParalysisDisruption));
+            const defMaxHp = Number(defender.maxHp) || defenderHp || 1;
+            if (secEffect.statusCondition === 'poison') {
+              const tick = Math.max(1, Math.floor(defMaxHp / 8));
+              const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
+              expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining));
+            } else if (secEffect.statusCondition === 'burn') {
+              const tick = Math.max(1, Math.floor(defMaxHp / 16));
+              const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
+              const hasPhysicalThreat = Array.isArray(defender.moves) && defender.moves.some(m => (m.damageClass || m.damage_class?.name) === 'physical');
+              const disruptionBonus = hasPhysicalThreat ? 15 : 0;
+              expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining + disruptionBonus));
+            } else if (secEffect.statusCondition === 'paralysis') {
+              const defSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'speed') : defender.speed) || 1;
+              const atkSpeed = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'speed') : attacker.speed) || 1;
+              const speedAdvantage = defSpeed > atkSpeed ? 15 : 5;
+              const fullParalysisDisruption = 15;
+              expectedStatusBenefit = Math.round(expectedStatusChance * (speedAdvantage + fullParalysisDisruption));
+            }
+          }
+        } else if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
+          isEligibleForSecondary = Object.entries(secEffect.statDrops).some(([k, delta]) => {
+            const currentStage = (defender.statStages && defender.statStages[k] !== undefined)
+              ? Number(defender.statStages[k])
+              : 0;
+            return delta < 0 ? currentStage > -6 : currentStage < 6;
+          });
+
+          if (isEligibleForSecondary && !guaranteedKo) {
+            const rawChance = Number(secEffect.chance) || 0;
+            expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+
+            let totalEffectiveDrop = 0;
+            for (const [k, delta] of Object.entries(secEffect.statDrops)) {
+              const currentStage = (defender.statStages && defender.statStages[k] !== undefined)
+                ? Number(defender.statStages[k])
+                : 0;
+              if (delta < 0 && currentStage > -6) {
+                totalEffectiveDrop += Math.min(Math.abs(delta), currentStage - (-6));
+              }
+            }
+            expectedStatusBenefit = Math.round(expectedStatusChance * totalEffectiveDrop * 15);
           }
         }
       }
