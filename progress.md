@@ -2,6 +2,36 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P5 concluída no motor de batalhas individuais
+
+- Fechadas as famílias de P5: dano por HP/peso/velocidade, Endeavor, Psywave, OHKO, histórico/Counter/Mirror Coat/Metal Burst/Comeuppance, Bide, Beak Blast/Shell Trap, golpes condicionais, tipos/categoria dinâmicos, quedas de atributos e múltiplos acertos avançados. Relatório e limites completos em docs/roadmap-p5.md; os registros anteriores abaixo são históricos.
+- Auditoria reproduzível node scripts/audit-p5.js: 60 pilotos disponíveis na campanha, 57 FULL e 3 PARTIAL apenas por dependências P6/P7/P8, zero pendências essenciais de P5. Sete rótulos antigos de P5 foram alinhados a itens/clima/aprisionamento/transformações nas fases correspondentes, mantendo os golpes BLOCKED/PARTIAL; a matriz está no relatório. Não significa suporte a todos os golpes da PokéAPI.
+- Casos especiais concluídos: Bide armazena por dois turnos e libera o dobro, com continuação a zero PP; Beak Blast queima por contato antes dos acertos seguintes; Shell Trap depende de dano físico; Hidden Power deriva o tipo dos IVs (31 padrão); Revelation Dance usa o tipo primário; Surging Strikes aplica três críticos garantidos. Sleep Talk exclui os três movimentos incompatíveis de preparação/armazenamento.
+- Histórico direto reinicia por turno/saída; Counter usa o último acerto, Bide acumula os acertos, sem incluir residual ou autoagressão. Comandos são imutáveis e intenções são transitórias. IA projeta condições sem RNG interno nem reutilização indevida de flags. Interface e comparador mostram tipo dinâmico, preparação e descrições corretas de dano.
+- Unown, Wobbuffet, Wynaut e Pyukumuku liberados para batalhas da campanha, com apenas um ou dois golpes canônicos. 1.347 registros aptos / 1.351 totais; Ditto, Smeargle, Cosmog e Cosmoem continuam como coleção. Snapshot incremental dessas quatro espécies; saves não foram editados diretamente.
+- Extras da campanha: 485 espécies / 80 definições curadas, limite de seis opções. Quatro golpes fixos anteriores e os 450 selecionáveis iniciais preservados. Oito extras comuns foram substituídos por golpes característicos; preferências antigas que usem opções removidas podem retornar ao padrão pela validação existente. A lista e as espécies estão no relatório. Mega Kick de Pikachu/Squirtle preservado.
+- Dependências externas explícitas: Heavy Slam/Heat Crash (Minimize/Dynamax), Photon Geyser (habilidades). Peso ausente de Eternatus Eternamax (#10190) produz falha controlada para golpes de peso. P6/P7/P8 e demais pendências anteriores de P1/P2/P3 não foram declaradas concluídas.
+- Adicionados 284 testes de fechamento em tests/battle/p5-completion.test.js e 65 testes fracionários no lote local. Suíte completa: **1.795 testes aprovados, 38 suítes, zero falhas/cancelados/ignorados; saída 0**. Auditorias P4/P5/draft aprovadas; P4: 316 conhecidos, 257 FULL, 59 PARTIAL, zero pendências P4. Regeneração offline idêntica e git diff --check aprovados.
+- Fontes primárias: Pokémon Showdown data/moves.ts, data/learnsets.ts, sim/battle-actions.ts e sim/pokemon.ts; PokéAPI moves.csv/pokemon.csv. O gerador completo do catálogo expandido foi atualizado, mas não foi reexecutado integralmente pela rede.
+- Próximo bloco: P6, especialmente proteção, recarga/carga genérica, aprisionamento e trocas especiais. Fechamento P5 permanece local, sem novo commit, push ou deploy após 34a0fae299d4604e1349e32ea8d9fc3c9f00eedf.
+
+---
+
+## Atualização — 31/10/2026: Publicação do dano constante e P5 — Dano fracionário
+
+- Ciclo anterior de Sonic Boom e Dragon Rage publicado em origin/main no commit 34a0fae299d4604e1349e32ea8d9fc3c9f00eedf, hash remoto confirmado. Checkout limpo antes de iniciar este ciclo; registros anteriores de trabalho local são históricos.
+- Implementados Super Fang (#162, Normal/Physical), Nature’s Madness (#717, Fairy/Special) e Ruination (#877, Dark/Special), precisão 90, PP 10, prioridade 0, FULL no escopo atual. Dano compartilhado: max(1, floor(HP atual do alvo / 2)), limitado ao alvo vivo; usa o HP na execução, inclusive após uma cura anterior no turno. Em 1 HP, causa 1 e pode nocautear.
+- Não usa HP máximo, atributos, estágios, nível, STAB, burn ou variância. Imunidade Ghost de Super Fang preservada sem aura. Resistências/fraquezas não multiplicam dano. Aura do Shadow supera imunidade apenas para o adversário, mantendo a metade do HP sem amplificação; motor e avaliador concordam. Eventos usam NEUTRAL ou IMMUNE para apresentação coerente.
+- Contratos: identificação conjunta ID/nome (incluindo alias nature-s-madness), rejeição de poderes adulterados antes de normalizar, hidratação real dos três pilotos, seleção heurística documentada com pontuação-base 50 (não uma fórmula de dano). Sleep Talk, trocas e regras existentes de condições/PP preservados.
+- Particularidade oficial: Super Fang e Nature’s Madness têm power null na PokéAPI; Ruination tem power 1 como sentinela. O catálogo, conversão e hidratação preservam o 1 oficial sem encaminhá-lo à fórmula comum. Legados null/undefined/zero são normalizados para o valor canônico do piloto; valores positivos diferentes do 1 exclusivo de Ruination são rejeitados.
+- Campanha: Super Fang em Raticate (#20), Nature’s Madness em Tapu Koko (#785), Ruination em Ting-Lu (#1003), com learnsets conferidos. Adicionadas três opções sem remover extras ou golpes fixos anteriores; 458 espécies com extras / 1.343 espécies, 34 definições curadas. Nenhum save foi editado diretamente.
+- Fontes: Pokémon Showdown data/moves.ts (superfang, naturesmadness, ruination; damageCallback) e data/learnsets.ts; PokéAPI data/v2/csv/moves.csv (metadados, incluindo sentinela de Ruination). https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts ; https://github.com/PokeAPI/pokeapi/blob/master/data/v2/csv/moves.csv .
+- Adicionados 65 testes em tests/battle/fractional-damage.test.js: HP par/ímpar e baixo, recálculo, cura anterior no turno, dano/PP/precisão, condições, imunidades/aura/IA, nocaute/reservas, sessões reais nos dois sentidos, ataque durante troca, Sleep Talk, apresentação e hidratação real com rejeição de dados adulterados. Ajustadas as asserções canônicas de suporte e contagem de espécies para o novo escopo, preservando testes dos golpes ainda bloqueados e a fixture oficial independente.
+- Suíte completa: **1.511 testes aprovados, 38 suítes, 0 falhas, 0 cancelados, 0 ignorados; saída 0**. Auditoria P4: 273 conhecidos, 214 FULL, 59 PARTIAL, 0 pendências P4. Geração offline idêntica e git diff --check aprovados.
+- P5 permanece parcial: dano por peso/velocidade/HP, dano aleatório, histórico e contra-ataques, OHKO e outras famílias específicas continuam pendentes. Habilidades/itens/formas/duplas não foram implementados. Novo ciclo fracionário permanece local, sem commit, push ou deploy após 34a0fae.
+
+---
+
 ## Atualização — 31/10/2026: P5 — Dano Fixo Constante (Sonic Boom e Dragon Rage) — Revisão Completa
 
 - Implementado suporte compartilhado a dano fixo constante no motor: Sonic Boom (#49; Normal, Special, precisão 90, PP 20, dano fixo de 20 HP) e Dragon Rage (#82; Dragon, Special, precisão 100, PP 10, dano fixo de 40 HP), ambos com power: null. Suporte promovido a FULL nas batalhas individuais do projeto.

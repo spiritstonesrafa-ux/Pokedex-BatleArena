@@ -80,10 +80,10 @@
         }
 
         case PRESENTATION_COMMANDS.MULTI_HIT_FEEDBACK:
-          this.view.displayMessage?.('Atingiu ' + command.hitCount + (command.hitCount === 1 ? ' vez!' : ' vezes!'));
+          this.view.displayMessage?.('Atingiu ' + command.hitCount + (command.hitCount === 1 ? ' vez!' : ' vezes!') + (command.critical ? ' Todos os acertos foram críticos!' : ''));
           break;
         case PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK: {
-          const descriptions={FIRST_ACTION_AFTER_ENTRY:'Fake Out falhou! Só funciona na primeira oportunidade de agir após entrar em campo.',REST_NOT_NEEDED:'Rest falhou: não é possível descansar agora.',REQUIRES_SLEEP:'O golpe só funciona enquanto está dormindo.',TARGET_NOT_ASLEEP:'Dream Eater falhou: o alvo não está dormindo.',NO_CALLABLE_MOVE:'Sleep Talk não encontrou um golpe disponível.',ALREADY_STATUS:'O alvo já possui uma condição ou está sonolento.',DROWSY:'ficou sonolento!',HEALED:`recuperou ${command.amount} HP!`};
+          const descriptions={BIDE_STORE:'está acumulando energia com Bide!',NO_BIDE_DAMAGE:'Bide falhou: nenhum dano de ataque foi acumulado.',BEAK_BLAST_READY:'está aquecendo o bico!',SHELL_TRAP_READY:'preparou Shell Trap!',SHELL_TRAP:'Shell Trap falhou: não recebeu um golpe físico neste turno.',WEIGHT_UNAVAILABLE:'O peso necessário para este golpe não está disponível.',ENDEAVOR_HP:'Endeavor falhou: o alvo precisa ter mais HP que o usuário.',OHKO_INELIGIBLE:'O alvo não é elegível para este golpe de nocaute.',NO_COUNTER_DAMAGE:'O golpe falhou: nenhum dano compatível foi recebido neste turno.',SUCKER_PUNCH:'Sucker Punch falhou: o alvo não vai executar um ataque antes de agir.',VENOM_DRENCH:'Venom Drench falhou: o alvo não está envenenado.',FIRST_ACTION_AFTER_ENTRY:'Fake Out falhou! Só funciona na primeira oportunidade de agir após entrar em campo.',REST_NOT_NEEDED:'Rest falhou: não é possível descansar agora.',REQUIRES_SLEEP:'O golpe só funciona enquanto está dormindo.',TARGET_NOT_ASLEEP:'Dream Eater falhou: o alvo não está dormindo.',NO_CALLABLE_MOVE:'Sleep Talk não encontrou um golpe disponível.',ALREADY_STATUS:'O alvo já possui uma condição ou está sonolento.',DROWSY:'ficou sonolento!',HEALED:`recuperou ${command.amount} HP!`};
           this.view.displayMessage?.(`${command.pokemonName}: ${descriptions[command.reason]||'O golpe falhou.'}`);
           break;
         }

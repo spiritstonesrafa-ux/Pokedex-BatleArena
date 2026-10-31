@@ -22,6 +22,10 @@ const SIMPLE_MOVES = new Set([
 
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
+  ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
+  'super-fang',
+  'natures-madness',
+  'ruination',
   'bullet-seed',
   'icicle-spear',
   'rock-blast',
@@ -52,6 +56,10 @@ const PILOT_P3_MOVES = new Set([
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
+  'super-fang': Object.freeze({"id":162,"name":"super-fang","type":"normal","damageClass":"physical","power":null,"accuracy":90,"pp":10}),
+  'natures-madness': Object.freeze({"id":717,"name":"natures-madness","type":"fairy","damageClass":"special","power":null,"accuracy":90,"pp":10}),
+  'ruination': Object.freeze({"id":877,"name":"ruination","type":"dark","damageClass":"special","power":1,"accuracy":90,"pp":10}),
   'bullet-seed': Object.freeze({"id":331,"name":"bullet-seed","type":"grass","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
   'icicle-spear': Object.freeze({"id":333,"name":"icicle-spear","type":"ice","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
   'rock-blast': Object.freeze({"id":350,"name":"rock-blast","type":"rock","power":25,"accuracy":90,"pp":10,"damageClass":"physical"}),
@@ -227,11 +235,51 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
   })
 });
 
-// Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
+// Curated canonical learnsets (supported generations, including historical moves) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  7: ["hydro-pump","mega-kick"],
+  25: ["mega-kick","shock-wave"],
+  237: ["triple-kick","aerial-ace"],
+  461: ["triple-axel","surf"],
+  733: ["beak-blast","drill-peck"],
+  741: ["revelation-dance","aerial-ace"],
+  776: ["shell-trap","dragon-claw"],
+  880: ["bolt-beak","dragon-pulse"],
+  925: ["population-bomb","aerial-ace"],
+  956: ["lumina-crash","drill-peck"],
+  10191: ["surging-strikes"],
+  1: ["leaf-storm","grass-knot"],
+  2: ["round","bide"],
+  4: ["counter","temper-flare"],
+  12: ["psywave","hidden-power"],
+  15: ["twineedle","endeavor"],
+  19: ["reversal","assurance"],
+  20: ["super-fang","sucker-punch"],
+  23: ["fissure","payback"],
+  24: ["stomping-tantrum"],
+  27: ["low-kick","flail"],
+  28: ["gyro-ball"],
+  29: ["venom-drench"],
+  30: ["horn-drill"],
+  34: ["double-kick","superpower"],
+  66: ["heavy-slam"],
+  72: ["mirror-coat"],
+  81: ["electro-ball"],
+  83: ["first-impression"],
+  98: ["guillotine"],
+  111: ["metal-burst"],
+  144: ["sheer-cold"],
+  151: ["heat-crash"],
+  155: ["eruption"],
+  223: ["water-spout"],
+  228: ["comeuppance"],
+  249: ["psycho-boost"],
+  801: ["fleur-cannon"],
+  895: ["dragon-energy"],
+  10247: ["last-respects"],
+  785: ['natures-madness'],
+  1003: ['ruination'],
   91: ['icicle-spear', 'rock-blast'],
-  34: ['double-kick', 'poison-jab'],
-  15: ['twineedle', 'aerial-ace'],
   143: ['rest','sleep-talk'], // Snorlax: canonical sleep combo.
   80: ['yawn','snore'], // Slowbro: delayed sleep and sleep-usable attack.
 
@@ -333,12 +381,13 @@ for (const [idStr, species] of Object.entries(Fixed.byId)) {
   if (CANONICAL_PILOT_SPECIES_EXTRAS[id]) {
     const chosenPilotNames = CANONICAL_PILOT_SPECIES_EXTRAS[id];
     const moves = chosenPilotNames.map(name => {
+      if (Object.values(BattleConstants.P5.moves).some(m=>m.name===name) || ['super-fang', 'natures-madness', 'ruination'].includes(name)) return CANONICAL_PILOT_MOVES[name];
       if (cachedMoves.has(name)) return cachedMoves.get(name);
       // Fallback from existing catalog or definitions
       const fromExisting = (existingExtras[id] || []).find(m => m.name === name);
       if (fromExisting) return fromExisting;
       if (CANONICAL_PILOT_MOVES[name]) return CANONICAL_PILOT_MOVES[name];
-      const fromKnown = BattleConstants.KNOWN_CATALOG_MOVES?.[name] || BattleConstants.CANONICAL_MOVE_DEFINITIONS?.[name];
+      const fromKnown = Object.values(BattleConstants.KNOWN_CATALOG_MOVES || {}).find(move=>move.name===name);
       if (fromKnown) return fromKnown;
       return null;
     }).filter(Boolean);

@@ -24,7 +24,7 @@ const obtainable = new Set([
 ].filter(pokemon => !pokemon.collectionOnly).map(pokemon => pokemon.id));
 
 test('every currently obtainable campaign Pokémon has one to four distinct supported fixed moves', () => {
-  assert.equal(obtainable.size, 1343);
+  assert.equal(obtainable.size, 1347);
   assert.equal(Object.keys(Fixed.extras).length, 18);
   for (const id of obtainable) {
     const pokemon = Fixed.byId[id];
@@ -202,6 +202,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
   vm.createContext(context);
   const scripts = [
     'expanded-pokemon-catalog.js',
+    'battle/p5-mechanics.js',
     'battle/battle-constants.js',
     'battle/type-chart.js',
     'battle/type-effectiveness.js',
@@ -221,7 +222,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
     const source = fs.readFileSync(path.join(__dirname, '../../assets/js', file), 'utf8');
     vm.runInContext(source, context, { filename: file });
   }
-  assert.equal(Object.keys(context.PBACampaign.CampaignFixedBattleCatalog.byId).length, 1343);
+  assert.equal(Object.keys(context.PBACampaign.CampaignFixedBattleCatalog.byId).length, 1347);
   assert.ok(context.PBACampaign.MatchupGuide);
   assert.ok(context.PBABattleSession.BattleSessionController);
   const html = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');

@@ -247,6 +247,7 @@
         }
       }
 
+      if(pokemonOrId && typeof pokemonOrId==='object' && pokemonOrId.ivs)pokeData={...pokeData,ivs:{...pokemonOrId.ivs}};
       const id = Number(pokeData.number || pokeData.id);
       const name = String(pokeData.name || '').trim();
       const types = Array.isArray(pokeData.types) ? [...pokeData.types] : (pokeData.type ? [pokeData.type] : ['normal']);
@@ -301,6 +302,8 @@
       return {
         id,
         name,
+        ...(pokeData.ivs?{ivs:{...pokeData.ivs}}:{}),
+        weightKg: Number(pokeData.weightKg)>0?Number(pokeData.weightKg):Number(pokeData.weight)>0?Number(pokeData.weight)/10:battleConstants.P5?.weightKgById[id],
         ...(pokeData.level !== undefined ? { level: pokeData.level } : {}),
         types,
         hp,
@@ -339,7 +342,7 @@
         reason: MOVESET_LIMIT_REASON.NONE,
         moves: moves.map(move => ({
           id: Number(move.id), name: String(move.name), type: String(move.type),
-          power: (move.power === null || move.power === undefined || ((battleConstants?.isLevelDamageMove?.(move) || battleConstants?.isConstantDamageMove?.(move)) && Number(move.power) === 0)) ? null : Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
+          power: (move.power === null || move.power === undefined || ((battleConstants?.isLevelDamageMove?.(move) || battleConstants?.isConstantDamageMove?.(move) || battleConstants?.isFractionalDamageMove?.(move)) && Number(move.power) === 0)) ? null : Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
           maxPp: Number(move.pp), currentPp: Number(move.pp),
           damageClass: String(move.damageClass),
           ...(move.statusEffect ? { statusEffect: String(move.statusEffect) } : {}),
@@ -488,7 +491,7 @@
 
           const isLvlDmg = Boolean(battleConstants?.isLevelDamageMove?.(moveDetail) || battleConstants?.isLevelDamageMove?.({ id: moveId, name: moveName }));
           const isConstDmg = Boolean(battleConstants?.isConstantDamageMove?.(moveDetail) || battleConstants?.isConstantDamageMove?.({ id: moveId, name: moveName }));
-          const power = (isLvlDmg || isConstDmg) ? null : Number(moveDetail.power);
+          const power = battleConstants.P5?.get(moveDetail) ? battleConstants.P5.get(moveDetail).power : battleConstants?.isFractionalDamageMove?.(moveDetail) ? battleConstants.FRACTIONAL_DAMAGE_MOVES[moveId].power : (isLvlDmg || isConstDmg) ? null : Number(moveDetail.power);
 
           const pp = Math.max(1, Number(moveDetail.pp || 15));
           validPool.push({
@@ -610,6 +613,9 @@
 
       const getMoveEffectivePower = (m) => {
         if (!m) return 0;
+        if (battleConstants.P5?.get(m) && (m.power == null || m.power<=1)) return 60;
+        // Only a selection heuristic: the actual half-HP amount is resolved against the live target.
+        if (battleConstants?.isFractionalDamageMove?.(m)) return 50;
         if (battleConstants?.isLevelDamageMove?.(m)) return 50;
         if (battleConstants?.isConstantDamageMove?.(m)) return battleConstants.getConstantDamageAmount(m) || 40;
         return Number(m.power) || 0;

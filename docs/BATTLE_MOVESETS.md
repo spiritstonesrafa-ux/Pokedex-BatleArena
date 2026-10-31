@@ -80,7 +80,7 @@ O sistema estabelece uma separação semântica estrita entre **limitação do E
 ### 6.1 Fontes (`moveLoadoutSource`)
 - `API_MOVESET`: Obteve o alvo completo de 4 golpes válidos a partir da PokéAPI.
 - `LIMITED_API_MOVESET`: A espécie possui entre 1 e 3 golpes ofensivos suportados pelo Engine na totalidade da biblioteca da PokéAPI (ex: Metapod com 2). Zero golpes falsos injetados.
-- `UNSUPPORTED_ENGINE_MOVESET`: A PokéAPI respondeu corretamente, mas 100% dos golpes da espécie dependem de mecânicas ainda não suportadas pelo Engine (ex: *Transform* em Ditto, *Counter*/*Mirror Coat* em Wobbuffet, *Sketch* em Smeargle, *Hidden Power* em Unown). O combatente recebe `moves = []`. Zero golpes falsos injetados.
+- `UNSUPPORTED_ENGINE_MOVESET`: A PokéAPI respondeu corretamente, mas 100% dos golpes da espécie dependem de mecânicas ainda não suportadas pelo Engine (ex: *Transform* em Ditto e *Sketch* em Smeargle). O combatente recebe `moves = []`. Zero golpes falsos injetados.
 - `NETWORK_FALLBACK_MOVESET`: Ocorre **estritamente** quando há evidência de falha de rede/PokéAPI indisponível. Requer `NETWORK_OR_API_FAILURE_DETECTED = YES`.
 
 ### 6.2 Motivos (`moveLoadoutReason`)
@@ -94,22 +94,17 @@ O sistema estabelece uma separação semântica estrita entre **limitação do E
 ## 7. Classificação de Complex Move Mechanics (PBA-014C-FINAL-HARDENING)
 A regra de suporte a golpes estabelece que **`damageClass === 'physical'|'special'` e `power > 0` não são suficientes para garantir suporte**. Um golpe só é aceito se sua mecânica essencial de dano e tipo puder ser modelada fielmente pelas regras do Engine atual.
 
-### 7.1 Categorias Conceituais
-- `SUPPORTED_SIMPLE_DAMAGE`: Golpes com dano estático, tipo elemental fixo e acurácia padrão (ex: *Tackle*, *Flamethrower*, *Surf*, *Thunderbolt*, *Psychic*, *Ice Beam*, *Shadow Ball*, *Body Slam*).
-- `UNSUPPORTED_STATUS`: Golpes sem dano direto (`status`), exceto os três explicitamente suportados na campanha: Poison Powder (#77), Will-O-Wisp (#261) e Thunder Wave (#86), apenas nos conjuntos fixos citados acima.
-- `UNSUPPORTED_DYNAMIC_TYPE`: Golpes cujo tipo depende de fatores em tempo de execução ou atributos individuais fora do modelo atual.
-  - **`hidden-power`**: Tipo dinâmico derivado dos IVs do Pokémon (`DYNAMIC_TYPE_FROM_IVS`). Status: **DEFERRED**. Não é aceito como ataque normal estático.
-- `UNSUPPORTED_VARIABLE_DAMAGE`: Golpes cujo poder base é variável e dependente de mecânicas complexas não modeladas (quando `power === null` na PokéAPI: *Low Kick*, *Grass Knot*, *Flail*, *Reversal*, *Counter*, *Mirror Coat*, ou quando o poder na PokéAPI é positivo mas depende de runtime dinâmico não modelado):
-  - **`eruption`**: Poder proporcional à razão de HP atual do usuário $\lfloor 150 \times \text{currentHp} / \text{maxHp} \rfloor$ (`POWER_FROM_USER_HP`). Status: **DEFERRED**. Não é aceito como poder constante 150.
-  - **`water-spout`**: Poder proporcional à razão de HP atual do usuário $\lfloor 150 \times \text{currentHp} / \text{maxHp} \rfloor$ (`POWER_FROM_USER_HP`). Status: **DEFERRED**. Não é aceito como poder constante 150.
+### 7.1 Suporte após P4 e P5
 
-### 7.2 Consequência para Unown (#201)
-Como *Hidden Power* é o único golpe da biblioteca de Unown na PokéAPI, e *Hidden Power* é classificado como `UNSUPPORTED_DYNAMIC_TYPE`:
-- `supportedCount = 0`
-- `moves = []`
-- `source = UNSUPPORTED_ENGINE_MOVESET`
-- `reason = ZERO_SUPPORTED_ENGINE_MOVES`
-- `BATTLE_COMPATIBLE = NO`
+O catálogo canônico e as auditorias são a fonte de verdade. Poder nulo não significa rejeição automática: golpes de nível, dano constante, dano fracionário, OHKO, contra-ataques e dano variável usam suas mecânicas explícitas, mantendo os metadados reais da PokéAPI. Eruption/Water Spout usam HP atual; Low Kick/Grass Knot usam peso; Hidden Power deriva o tipo dos IVs (31 por padrão, como no normalizador competitivo).
+
+Itens, clima, transformação e outras dependências ausentes continuam BLOCKED ou PARTIAL com fase explícita. Um poder positivo também não autoriza uma mecânica ainda ausente. Os pilotos de condições da P4 e Venom Drench são status suportados; a descoberta dinâmica continua priorizando ataques, enquanto a campanha pode oferecer status curados.
+
+### 7.2 Espécies com poucos golpes
+
+Unown (#201) possui Hidden Power; Wobbuffet (#202), Wynaut (#360) e Pyukumuku (#771) possuem Counter/Mirror Coat. São conjuntos limitados reais, de um ou dois golpes, aceitos pelo motor e pela campanha sem completar quatro espaços artificialmente. O catálogo expandido passou de 1.343 para 1.347 registros aptos a batalhas.
+
+Ditto, Smeargle, Cosmog e Cosmoem permanecem como coleção. A falta de um loadout suportado continua produzindo moves vazios e bloqueio controlado no preflight.
 
 ---
 
@@ -118,7 +113,7 @@ Para manter a integridade das regras de combate sem enfraquecer ou crashar o Bat
 - Se qualquer Pokémon escalado na equipe do jogador ou do adversário possuir `moves.length === 0` ou `moveLoadoutReason === ZERO_SUPPORTED_ENGINE_MOVES`:
   - A camada `BattleSessionController.prepareBattle()` e `startBattle()` bloqueia o início da batalha de forma controlada.
   - O `BattleEngine.createTeamBattle()` **não é executado**.
-  - A UI exibe mensagem clara e amigável ao jogador (ex: *"Unown ainda não é compatível com a Battle Arena porque seus golpes dependem de mecânicas que ainda não são suportadas."*).
+  - A UI exibe mensagem clara e amigável ao jogador (ex: *"Ditto ainda não é compatível com a Battle Arena porque seus golpes dependem de mecânicas que ainda não são suportadas."*).
   - O jogador recebe um botão direto *"Voltar para Meu Time"*, mantendo o Pokémon normalmente utilizável na Pokédex, detalhes e favoritos.
 
 ---

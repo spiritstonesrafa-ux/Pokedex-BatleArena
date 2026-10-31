@@ -188,11 +188,11 @@ describe('P5: Dano Baseado no Nível (Seismic Toss & Night Shade)', () => {
 
     // 2. Não libera outros golpes com power nulo ou variável ainda sem suporte
     const blockedMoves = [
-      { id: 12, name: 'guillotine', power: null },
-      { id: 32, name: 'horn-drill', power: null },
-      { id: 67, name: 'low-kick', power: null },
-      { id: 90, name: 'fissure', power: null },
-      { id: 175, name: 'flail', power: null }
+      {id:723,name:'light-that-burns-the-sky',power:null},
+      {id:449,name:'judgment',power:null},
+      {id:546,name:'techno-blast',power:null},
+      {id:718,name:'multi-attack',power:null},
+      {id:851,name:'tera-blast',power:null}
     ];
     for (const bm of blockedMoves) {
       assert.equal(isLevelDamageMove(bm), false);

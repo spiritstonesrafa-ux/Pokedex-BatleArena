@@ -102,10 +102,11 @@
         throw new Error(`Pokémon ativo de "${side}" está nocauteado ou inexistente.`);
       }
 
+      if(myActive.bideState)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:117},diagnostics:{strategy,reason:'BIDE_LOCKED',candidateCount:1,selectedScore:0}};
       // 1. Golpes utilizáveis do ativo (somente status curados)
       const isUsableStatusMove = (m) => {
         if (m.damageClass !== 'status') return true;
-        if ([156,214,281].includes(m.id)) return true;
+        if ([156,214,281,599].includes(m.id)) return true;
         if (['poison', 'toxic', 'burn', 'paralysis', 'sleep','confusion'].includes(m.statusEffect)) return true;
         if (m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m))) return true;
         return false;
@@ -216,7 +217,7 @@
 
       // Avaliação detalhada de cada golpe utilizável do ativo
       const evaluatedMoves = usableMoves.map(m => {
-        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { attackerSide: side, attackerTeam: myTeam, modifiers: state.modifiers || {} });
+        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { attackerSide: side, attackerTeam: myTeam, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} });
         let score = evalData.expectedDamage;
 
         if (m.damageClass === 'status') {
@@ -229,10 +230,10 @@
               (m.statusEffect === 'poison' ? 8 : 16)));
             const physicalThreat = Math.max(0, ...oppActive.moves.filter(move => move.damageClass === 'physical')
               .map(move => BattleEvaluator.evaluateMove(oppActive, myActive, move,
-                { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
+                { attackerSide: oppSideRole, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} }).expectedDamage));
             const totalThreat = Math.max(physicalThreat, ...oppActive.moves.filter(move =>
               move.damageClass !== 'status').map(move => BattleEvaluator.evaluateMove(oppActive, myActive,
-              move, { attackerSide: oppSideRole, modifiers: state.modifiers || {} }).expectedDamage));
+              move, { attackerSide: oppSideRole, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} }).expectedDamage));
             const disruption = m.statusEffect === 'burn' ? Math.floor(physicalThreat / 2) * 2 :
               m.statusEffect === 'paralysis' ? Math.floor(totalThreat / 4) * 2 + 12 :
               m.statusEffect === 'sleep' ? Math.floor(totalThreat * 0.75) + 15 : 0;

@@ -1,5 +1,6 @@
 /* Phase 3 picker editor. Gameplay validation stays in CampaignMoveOptions. */
 (function () {
+  const PowerRules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
   const Options = typeof module !== 'undefined' && module.exports
     ? require('./campaign-move-options.js') : window.PBACampaign?.CampaignMoveOptions;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char =>
@@ -38,7 +39,7 @@
           const selectedMove = ids.includes(move.id);
           const effect = move.statusEffect
             ? `Status: ${move.statusEffect === 'poison' ? 'veneno' : move.statusEffect === 'burn' ? 'queimadura' : 'paralisia'}`
-            : (move.damageClass === 'status' || move.power === 0 ? 'Status' : `Poder ${move.power}`);
+            : (PowerRules?.describeMovePower?.(move) || (move.damageClass === 'status' || move.power === 0 ? 'Status' : `Poder ${move.power}`));
           return `<label class="campaign-move-editor__option"><input type="checkbox" data-move-id="${move.id}" ${selectedMove ? 'checked' : ''}><span><strong>${escape(cap(move.name))}</strong><small>${escape(cap(move.type))} · ${effect} · ${move.accuracy === null ? 'sempre acerta' : `${move.accuracy}% precisão`} · PP ${move.pp}</small></span></label>`;
         }).join('');
         editor = `<div class="campaign-move-editor__form"><fieldset><legend>Golpes de ${escape(cap(pokemon.name))}</legend><p>Escolha de 1 a 4 golpes. A ordem em que selecionar será mantida na batalha.</p><div class="campaign-move-editor__options">${choices}</div></fieldset><p id="moveChoiceCount" aria-live="polite">${ids.length}/4 golpes escolhidos</p><p id="moveChoiceError" class="campaign-move-editor__error" role="alert"></p><div class="campaign-move-editor__actions"><button type="button" id="saveCampaignMoves" class="campaign-primary" ${ids.length ? '' : 'disabled'}>Salvar golpes</button><button type="button" id="resetCampaignMoves" class="campaign-secondary">Restaurar padrão</button><button type="button" id="cancelCampaignMoves" class="campaign-secondary">Fechar</button></div></div>`;

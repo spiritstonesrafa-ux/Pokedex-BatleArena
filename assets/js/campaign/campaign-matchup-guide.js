@@ -18,16 +18,25 @@
     try { return Types.calculate(type, types).multiplier; }
     catch (_) { return null; }
   }
+  function moveMultiplier(move,source,targetTypes,shadow=false){
+    let value=multiplier(Battle.P5?.type?.(move,source)||move.type,targetTypes);
+    if(value===null)return null;
+    if(shadow)value=Math.max(2,value);
+    if(move.id===117)return 1;
+    if(Battle.isLevelDamageMove?.(move)||Battle.isConstantDamageMove?.(move)||Battle.isFractionalDamageMove?.(move)||(Battle.P5?.get(move)&&Battle.P5.fixed(move)))return value===0?0:1;
+    return value;
+  }
   function buildReport({ selected = [], opponents = [], fallbackById = {}, shadow = false }) {
     const entries = selected.map(pokemon => {
       const source = fallbackById[pokemon.id];
       const moves = (source && Array.isArray(source.moves) ? source.moves : [])
         .filter(move => move && Types.isValidType(move.type) &&
-          (statusText[move.statusEffect] || (move.damageClass !== 'status' && Number(move.power) > 0)));
+          (statusText[move.statusEffect] || Battle.getSupportedStatusMove?.(move) || (move.damageClass !== 'status' && (Number(move.power)>0 || Battle.isLevelDamageMove?.(move) || Battle.isConstantDamageMove?.(move) || Battle.isFractionalDamageMove?.(move) || Battle.P5?.get(move)))))
+        .map(move=>({...move,type:Battle.P5?.type?.(move,pokemon)||move.type}));
       const offensiveMoves = moves.filter(move => move.damageClass !== 'status');
       const matchups = opponents.map(opponent => {
         const attacks = offensiveMoves.map(move => ({ name: move.name, type: move.type,
-          multiplier: multiplier(move.type, opponent.types) })).filter(x => x.multiplier !== null)
+          multiplier: moveMultiplier(move,pokemon,opponent.types) })).filter(x => x.multiplier !== null)
           .sort((a, b) => b.multiplier - a.multiplier || a.name.localeCompare(b.name));
         const enemySource = fallbackById[opponent.id];
         const enemyMoves = enemySource && Array.isArray(enemySource.moves) ? enemySource.moves : [];
@@ -36,13 +45,13 @@
           : (opponent.types || []).map(type => ({ type }));
         const incoming = incomingCandidates
           .map(move => ({ name: move.name || null, type: move.type,
-            multiplier: multiplier(move.type, pokemon.types) }))
+            multiplier: moveMultiplier(move,opponent,pokemon.types,shadow) }))
           .filter(x => x.multiplier !== null).sort((a, b) => b.multiplier - a.multiplier);
         const risk = incoming[0];
         const statusThreats = enemyMoves.filter(move => statusText[move.statusEffect] &&
           !Battle.isStatusMoveImmune(move, pokemon.types)).map(move => move.statusEffect);
         return { opponent, bestAttack: attacks[0] || null, statusThreats,
-          incoming: risk ? { ...risk, multiplier: shadow ? Math.max(2, risk.multiplier) : risk.multiplier } : null };
+          incoming: risk || null };
       });
       return { pokemon, moves, hasMoves: offensiveMoves.length > 0, matchups };
     });
@@ -84,7 +93,7 @@
         ? `<p class="campaign-matchup__warning">Os golpes conhecidos não atingem ${escape(cap(first.opponent.name))}; escolha outro Pokémon.</p>` : '';
       const moveList = moves.length
         ? `<ul class="campaign-matchup__moves" aria-label="Golpes de ${escape(cap(pokemon.name))}">${moves.map(move =>
-          `<li><strong>${escape(cap(move.name))}</strong><span>${statusText[move.statusEffect] ? `${move.statusEffect === 'poison' ? 'Veneno' : move.statusEffect === 'burn' ? 'Queimadura' : 'Paralisia'} · sem dano direto · ${statusText[move.statusEffect]}` : `${escape(cap(move.type))} · Poder ${Number(move.power)}`} · ${move.accuracy === null ? 'sempre acerta' : Number.isInteger(Number(move.accuracy)) ? `${Number(move.accuracy)}% precisão` : 'precisão não informada'}</span></li>`
+          `<li><strong>${escape(cap(move.name))}</strong><span>${statusText[move.statusEffect] ? `${move.statusEffect === 'poison' ? 'Veneno' : move.statusEffect === 'burn' ? 'Queimadura' : 'Paralisia'} · sem dano direto · ${statusText[move.statusEffect]}` : `${escape(cap(move.type))} · ${escape(Battle.describeMovePower?.(move) || (move.damageClass==='status'?'Status':`Poder ${Number(move.power)}`))}`} · ${move.accuracy === null ? 'sempre acerta' : Number.isInteger(Number(move.accuracy)) ? `${Number(move.accuracy)}% precisão` : 'precisão não informada'}</span></li>`
         ).join('')}</ul>`
         : '';
       return `<article class="campaign-matchup__card"><h4>${index === 0 ? '<span class="campaign-matchup__leader">LÍDER ATUAL</span> ' : ''}${escape(cap(pokemon.name))}</h4>${moveList}<p>${escape(attack)}</p><p class="campaign-matchup__risk">${escape(warning)}</p>${statusRisk}${immunity}</article>`;

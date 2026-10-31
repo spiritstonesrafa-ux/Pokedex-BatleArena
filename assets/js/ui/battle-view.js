@@ -18,6 +18,8 @@
  */
 
 (function () {
+  const PowerRules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+  const powerLabel=m=>PowerRules?.describeMovePower?.(m)||null;
   const STATUS_LABELS = Object.freeze({
     toxic: { short: 'VENENO GRAVE', aria: 'Gravemente envenenado', move: 'causa veneno progressivo' },
     confusion: { short: 'CONFUSÃO', aria: 'Confuso', move: 'confunde o alvo' },
@@ -506,9 +508,10 @@
 
       // Botões de golpes do Pokémon ativo do jogador
       const movesHtml = playerActive.moves.map(m => {
-        const isZeroPp = m.currentPp === 0;
-        const isDisabled = isResolving || isZeroPp;
-        const typeColor = `var(--type-${m.type}, #38bdf8)`;
+        const isZeroPp = m.currentPp === 0 && !(playerActive.bideState && m.id===117);
+        const isDisabled = isResolving || isZeroPp || Boolean(playerActive.bideState && m.id!==117);
+        const displayType=PowerRules?.P5?.type?.(m,playerActive)||m.type;
+        const typeColor = `var(--type-${displayType}, #38bdf8)`;
 
         return `
           <button
@@ -517,16 +520,16 @@
             style="--move-accent-color: ${typeColor};"
             ${isDisabled ? 'disabled' : ''}
             onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${m.id});"
-            aria-label="${m.name}, Tipo ${m.type}, ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id])?.move || `Poder ${m.power}`}, PP ${m.currentPp} de ${m.maxPp}"
+            aria-label="${m.name}, Tipo ${displayType}, ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id])?.move || powerLabel(m) || `Poder ${m.power}`}, PP ${m.currentPp} de ${m.maxPp}"
           >
             <div class="move-btn-top-row">
               <span class="move-btn-name">${m.name}</span>
-              <span class="move-btn-type" style="background: ${typeColor};">${m.type}</span>
+              <span class="move-btn-type" style="background: ${typeColor};">${displayType}</span>
             </div>
             <div class="move-btn-bottom-row">
               <span class="move-btn-category">
                 <i class="${m.damageClass === 'special' ? 'fa-solid fa-burst' : 'fa-solid fa-fist-raised'}"></i>
-                ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]) ? `STATUS · ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]).short}` : `${m.damageClass} (Pwr ${m.power})`}
+                ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]) ? `STATUS · ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]).short}` : powerLabel(m) || `${m.damageClass} (Pwr ${m.power})`}
               </span>
               <span id="ppLabel_${m.id}" class="move-btn-pp">PP ${m.currentPp}/${m.maxPp}</span>
             </div>

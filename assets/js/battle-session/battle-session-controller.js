@@ -151,13 +151,15 @@
   function prepareMultiHit(active, action, rng) {
     let move = active.moves.find(m => m.id === action.moveId);
     if (move?.id === 214) {
-      const candidates = active.moves.filter(m => m.id !== 214 && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
+      const candidates = active.moves.filter(m => m.id !== 214 && ![117,690,704].includes(m.id) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
       move = candidates[action.sleepTalkChoice ?? 0];
     }
+    if(move?.id===149)action.psywaveRoll=rng.rollPsywave?.()??100;
     const config = battleConstants.getMultiHitMove(move);
     if (!config) return;
     if (config.minHits !== config.maxHits) action.hitCountRoll = rng.rollHitCount?.() ?? 1;
     const count = battleConstants.getMultiHitCount(move, action.hitCountRoll);
+    if(config.multiAccuracy)action.hitAccuracyRolls=Array.from({length:count},(_,i)=>i?(rng.rollAccuracy?.()??1):(action.accuracyRoll??1));
     // Prepared externally even when an action later misses or is interrupted; only engine events count applied hits.
     action.hitDamageRolls = Array.from({length:count}, (_, i) => i ? (rng.rollDamage?.() ?? 100) : (action.damageRoll ?? 100));
     if (move.id === 41) action.hitSecondaryEffectRolls = Array.from({length:count}, (_, i) => i ? (rng.rollSecondaryEffect?.() ?? 100) : (action.secondaryEffectRoll ?? 100));
@@ -165,7 +167,7 @@
 
   function prepareSleepCall(active, action, targetAction, rng){
     if(action?.moveId!==214)return;
-    const candidates=active.moves.filter(m=>m.id!==214&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
+    const candidates=active.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
     if(!candidates.length)return;
     action.sleepTalkChoice=rng.rollCalledMove?.(candidates.length)??0;
     const move=candidates[action.sleepTalkChoice];

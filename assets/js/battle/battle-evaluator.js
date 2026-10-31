@@ -53,14 +53,33 @@
         throw new Error('Golpe inválido fornecido para evaluateMove.');
       }
 
-      const damageClass = move.damageClass || 'physical';
-      const moveType = (move.type || 'normal').toLowerCase();
-      const power = Number(move.power) || 0;
+      const planning = Boolean(context.planningTurn);
+      if (planning) {
+        attacker={...attacker,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
+        defender={...defender,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
+        const other=(defender.moves||[]).find(m=>m.currentPp!==0);
+        const speed=m=>Math.max(1,Math.floor(constants.getEffectiveStat(m,'speed')/(m.statusCondition==='paralysis'?2:1)));
+        if(other && (constants.getMovePriority(other)>constants.getMovePriority(move) || (constants.getMovePriority(other)===constants.getMovePriority(move)&&speed(defender)>speed(attacker)))) defender.actedThisTurn=true;
+        if(move.id===704 && defender.actedThisTurn && other?.damageClass==='physical')attacker.shellTrapTriggered=true;
+        if((constants.P5.counterIds.includes(Number(move.id)) && defender.actedThisTurn) || move.id===117){
+          const possible=(defender.moves||[]).filter(m=>m.currentPp!==0&&m.damageClass!=='status'&&!constants.P5.counterIds.includes(m.id)&&(move.id!==68||m.damageClass==='physical')&&(move.id!==243||m.damageClass==='special'));
+          const previews=possible.map(m=>({move:m,data:evaluateMove(defender,attacker,m,{...context,planningTurn:false,attackerSide:context.attackerSide==='enemy'?'player':'enemy'})})).sort((a,b)=>b.data.expectedDamage-a.data.expectedDamage);
+          const preview=previews[0];
+          if(move.id===117 && preview)attacker.bideState={damage:Math.floor(preview.data.expectedDamage*2)};
+          if(preview&&preview.data.expectedDamage>0&&preview.data.maxDamage<attacker.currentHp)attacker.lastDirectHit={turn:context.turn,sourceId:defender.id,damage:Math.floor(preview.data.expectedDamage),damageClass:preview.data.damageClass};
+        }
+      }
+      const p5 = constants.P5.get(move);
+      const damageClass = move.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack') ? 'physical' : (move.damageClass || 'physical');
+      const moveType = constants.P5.type(move,attacker) || 'normal';
+      const power = p5 ? constants.P5.power(move,attacker,defender,constants,{...context,faintCount:context.faintCount??context.attackerTeam?.filter(m=>m.currentHp<=0).length??0}) : Number(move.power) || 0;
       const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
       const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(move));
       const isConstantDamage = Boolean(constants?.isConstantDamageMove?.(move));
-      const isFixedDamage = isLevelDamage || isConstantDamage;
+      const isFractionalDamage = Boolean(constants?.isFractionalDamageMove?.(move));
+      const isP5Fixed = Boolean(p5 && constants.P5.fixed(move));
+      const isFixedDamage = isLevelDamage || isConstantDamage || isFractionalDamage || isP5Fixed;
 
       // Golpes de status não causam dano na arquitetura atual
       if ((damageClass === 'status' || power <= 0) && !isFixedDamage) {
@@ -121,11 +140,12 @@
           }
         }
 
+        if(move.id===599){isEligible=['poison','toxic'].includes(defender.statusCondition);expectedStatusBenefit=isEligible?30:0;}
         if(move.id===156){isEligible=attacker.currentHp<attacker.maxHp&&attacker.statusCondition!=='sleep';expectedStatusBenefit=isEligible?attacker.maxHp-attacker.currentHp:0;}
         if(move.id===281){isEligible=!defender.statusCondition&&!(defender.drowsyTurns>0);const canAct=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0?0:attacker.statusCondition==='freeze'?0.2:attacker.statusCondition==='paralysis'?0.75:1;expectedStatusBenefit=isEligible?Math.round(30*canAct):0;}
         if(move.id===214){
           isEligible=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0;
-          const candidates=(attacker.moves||[]).filter(m=>m.id!==214&&m.damageClass!=='status'&&constants.getMoveCapability(m)?.supportLevel==='FULL');
+          const candidates=(attacker.moves||[]).filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&m.damageClass!=='status'&&constants.getMoveCapability(m)?.supportLevel==='FULL');
           expectedStatusBenefit=isEligible&&candidates.length?Math.round(candidates.reduce((sum,m)=>sum+evaluateMove({...attacker,statusCondition:null,confusionTurns:0},defender,m,context).expectedDamage,0)/candidates.length):0;
         }
         return {
@@ -206,18 +226,27 @@
         typeClassification = effectiveness.classification;
       }
 
+      if(move.id===117){typeMultiplier=1;typeClassification='NEUTRAL';}
       // 4. Faixa e Média de Dano (PBA-014B: Level 50 e Variância 85..100)
       const simLevel = (constants && constants.BATTLE_CONFIG && constants.BATTLE_CONFIG.SIMULATION_LEVEL) || 50;
-      const entryRestricted = (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
+      const p5Failure = p5 ? constants.P5.failure(move,attacker,defender,{...context,targetMove:context.targetMove||(defender.moves||[]).find(m=>m.damageClass!=='status')}) : null;
+      const entryRestricted = Boolean(p5Failure) || (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
       const multiHit = constants.getMultiHitMove(move);
-      const expectedHits = multiHit ? (multiHit.maxHits === 5 ? 3.1 : 2) : 1;
+      const expectedHits = multiHit ? (multiHit.minHits!==multiHit.maxHits ? 3.1 : multiHit.maxHits) : 1;
       let baseDamage;
       let minDamage;
       let maxDamage;
       let averageDamage;
       let damageIfHit;
 
-      if (isLevelDamage) {
+      if (isP5Fixed) {
+        const failure=constants.P5.failure(move,attacker,defender,context);
+        const amount = failure || typeMultiplier===0 ? 0 : constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:100});
+        baseDamage=minDamage=maxDamage=averageDamage=damageIfHit=amount;
+        if((planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) || (constants.P5.ohko(move) && Number(accuracy)<100))minDamage=0;
+        if(move.id===149 && amount>0){minDamage=constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:50});maxDamage=constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:150});averageDamage=Array.from({length:101},(_,i)=>constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:i+50})).reduce((a,b)=>a+b,0)/101;damageIfHit=averageDamage;}
+        typeMultiplier=typeMultiplier===0?0:1;typeClassification=typeMultiplier===0?'IMMUNE':'NEUTRAL';
+      } else if (isLevelDamage) {
         const attackerLevel = Number(attacker.level) || simLevel;
         if (typeMultiplier === 0) {
           baseDamage = 0;
@@ -235,6 +264,11 @@
           typeMultiplier = 1;
           typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.NEUTRAL || 'NEUTRAL';
         }
+      } else if (isFractionalDamage) {
+        baseDamage = typeMultiplier === 0 ? 0 : constants.getFractionalDamageAmount(Number(defender.currentHp));
+        minDamage = maxDamage = averageDamage = damageIfHit = baseDamage;
+        typeMultiplier = typeMultiplier === 0 ? 0 : 1;
+        typeClassification = typeMultiplier === 0 ? 'IMMUNE' : 'NEUTRAL';
       } else if (isConstantDamage) {
         const constantAmount = constants?.getConstantDamageAmount ? constants.getConstantDamageAmount(move) : (move.id === 49 ? 20 : 40);
         if (typeMultiplier === 0) {
@@ -259,12 +293,25 @@
           : DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
 
         baseDamage = range.baseDamage;
-        minDamage = constants.applyBurnPenalty(range.minDamage, attacker, move) * (multiHit?.minHits || 1);
+        minDamage = constants.applyBurnPenalty(range.minDamage, attacker, damageClass===move.damageClass?move:{...move,damageClass}) * (multiHit?.minHits || 1);
         maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move) * (multiHit?.maxHits || 1);
         averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move) * expectedHits;
         damageIfHit = averageDamage;
       }
 
+      if(multiHit && (multiHit.multiAccuracy || multiHit.critical)){
+        const p=Math.min(1,Math.max(0,Number(accuracy)/100));
+        let lo=0,hi=0,avg=0;
+        for(let i=0;i<multiHit.maxHits;i++){
+          const hitPower=multiHit.escalating?power*(i+1):power;
+          const critical=Boolean(multiHit.critical);
+          const base=DamageCalculator.calculateBaseDamage(critical?Math.max(attacker.attack,attackStat):attackStat,critical?Math.min(defender.defense,defenseStat):defenseStat,hitPower);
+          const values=Array.from({length:16},(_,r)=>constants.applyBurnPenalty(DamageCalculator.applyModifier(base*(critical?1.5:1),typeMultiplier,stabMultiplier,r+85),attacker,move));
+          if(!multiHit.multiAccuracy||i===0)lo+=values[0];
+          hi+=values[15];avg+=values.reduce((a,b)=>a+b,0)/16*(multiHit.multiAccuracy?Math.pow(p,i):1);
+        }
+        minDamage=lo;maxDamage=hi;averageDamage=damageIfHit=avg;
+      }
       // 5. Ponderação por Precisão para obter Dano Esperado (Expected Value)
       let accuracyFactor = 1.0;
       if (accuracy !== null && accuracy !== 'ALWAYS_HIT' && accuracy !== undefined) {
@@ -285,7 +332,7 @@
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const guaranteedKo = minDamage >= defenderHp && minDamage > 0;
+      const guaranteedKo = !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
       const possibleKo = maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 

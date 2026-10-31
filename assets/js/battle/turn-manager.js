@@ -33,6 +33,7 @@
         ? Math.max(1, Math.floor(speed / 2)) : speed;
     }
     function resolveActionPriority(combatant, action) {
+      if (combatant?.bideState && action?.type!==constants.BATTLE_ACTIONS?.SWITCH)return 1;
       if (!action || typeof action !== 'object') return 0;
       if (typeof action.priority === 'number' && Number.isFinite(action.priority)) {
         return action.priority;

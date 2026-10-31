@@ -90,17 +90,14 @@ describe('FASE P0 — Capacidades, Auditoria e Registros de Golpes', () => {
     assert.equal(capLightOfRuin.recoilRatio, 0.5);
   });
 
-  test('P0-03: shell-trap e beak-blast permanecem estritamente contidos/bloqueados em UNSUPPORTED_COMPLEX_MOVES', () => {
-    assert.ok(UNSUPPORTED_COMPLEX_MOVES['shell-trap'], 'shell-trap deve estar em UNSUPPORTED_COMPLEX_MOVES');
-    assert.equal(UNSUPPORTED_COMPLEX_MOVES['shell-trap'].category, 'UNSUPPORTED_COUNTER');
-    assert.equal(UNSUPPORTED_COMPLEX_MOVES['shell-trap'].reason, 'PREPARATION_AND_PHYSICAL_TRIGGER_REQUIRED');
-
-    assert.ok(UNSUPPORTED_COMPLEX_MOVES['beak-blast'], 'beak-blast deve estar em UNSUPPORTED_COMPLEX_MOVES');
-    assert.equal(UNSUPPORTED_COMPLEX_MOVES['beak-blast'].category, 'UNSUPPORTED_COUNTER');
-    assert.equal(UNSUPPORTED_COMPLEX_MOVES['beak-blast'].reason, 'PREPARATION_AND_CONTACT_BURN_REQUIRED');
-
-    assert.equal(isMechanicallySupportedMove({ name: 'shell-trap' }), false);
-    assert.equal(isMechanicallySupportedMove({ name: 'beak-blast' }), false);
+  test('P0-03: shell-trap e beak-blast usam preparação P5 implementada',()=>{
+    for(const id of [690,704]){
+      const move=require('../../assets/js/battle/battle-constants').KNOWN_CATALOG_MOVES[id];
+      assert.equal(UNSUPPORTED_COMPLEX_MOVES[move.name],undefined);
+      assert.equal(getMoveCapability(move).supportLevel,MOVE_SUPPORT_LEVEL.FULL);
+      assert.equal(isMechanicallySupportedMove(move),true);
+      assert.equal(isMechanicallySupportedMove({name:move.name}),false,'Payload incompleto continua rejeitado');
+    }
   });
 
   test('P0-04: Toucannon (#733) e Turtonator (#776) utilizam conjuntos 100% suportados nos catálogos', () => {
@@ -652,16 +649,16 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     );
   });
 
-  test('CANON-05: Aliases de Nature\'s Madness resolvem para ID canônico 717 e nível BLOCKED', () => {
+  test('CANON-05: Aliases de Nature\'s Madness resolvem para ID canônico 717 e nível FULL', () => {
     const aliasHyphen = getMoveCapability('nature-s-madness');
     assert.ok(aliasHyphen);
     assert.equal(aliasHyphen.id, 717);
-    assert.equal(aliasHyphen.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(aliasHyphen.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     const aliasNoHyphen = getMoveCapability('natures-madness');
     assert.ok(aliasNoHyphen);
     assert.equal(aliasNoHyphen.id, 717);
-    assert.equal(aliasNoHyphen.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(aliasNoHyphen.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     assert.equal(isMechanicallySupportedMove({ name: 'nature-s-madness' }), false);
     assert.equal(isMechanicallySupportedMove({ name: 'natures-madness' }), false);
@@ -677,32 +674,34 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
   test('CANON-06: Integração no fluxo real — Validação de customização e opções de campanha', () => {
     const CampaignMoveOptions = require('../../assets/js/campaign/campaign-move-options.js');
 
-    // Toucannon (#733): pool de customização não contém beak-blast
+    // Toucannon (#733): pool de customização contém beak-blast
     const toucannonPool = CampaignMoveOptions.getPool(733);
     assert.ok(Array.isArray(toucannonPool));
     assert.ok(toucannonPool.length >= 4);
     assert.ok(toucannonPool.every(m => isMechanicallySupportedMove(m)));
-    assert.ok(!toucannonPool.some(m => m.name === 'beak-blast'));
+    assert.ok(toucannonPool.some(m => m.name === 'beak-blast'));
+    assert.ok(CampaignMoveOptions.validateSelection(733,[690,332,65,675]));
 
-    // Turtonator (#776): pool de customização não contém shell-trap
+    // Turtonator (#776): pool de customização contém shell-trap
     const turtonatorPool = CampaignMoveOptions.getPool(776);
     assert.ok(Array.isArray(turtonatorPool));
     assert.ok(turtonatorPool.length >= 4);
     assert.ok(turtonatorPool.every(m => isMechanicallySupportedMove(m)));
-    assert.ok(!turtonatorPool.some(m => m.name === 'shell-trap'));
+    assert.ok(turtonatorPool.some(m => m.name === 'shell-trap'));
+    assert.ok(CampaignMoveOptions.validateSelection(776,[704,53,406,89]));
 
-    // validateSelection rejeita tentativa de equipar golpe bloqueado (690: beak-blast)
+    // validateSelection ainda rejeita Tackle (#33), que não pertence ao pool da espécie
     assert.equal(CampaignMoveOptions.validateSelection(733, [690, 332, 65, 33]), null);
 
-    // resolveLoadout com seleção inválida/bloqueada cai com segurança no conjunto padrão legal
+    // resolveLoadout com seleção com golpe fora do pool cai com segurança no conjunto padrão legal
     const loadout = CampaignMoveOptions.resolveLoadout(733, [690, 332, 65, 33]);
     assert.equal(loadout.length, 4);
     assert.ok(!loadout.some(m => m.name === 'beak-blast'));
     assert.ok(loadout.every(m => isMechanicallySupportedMove(m)));
 
-    // sanitizePreferences descarta seleções com golpes bloqueados
+    // sanitizePreferences descarta seleções com golpes fora do pool
     const sanitized = CampaignMoveOptions.sanitizePreferences({ 733: [690, 332, 65, 33] }, [733]);
-    assert.equal(sanitized[733], undefined, 'Seleção inválida com beak-blast deve ser descartada de preferências');
+    assert.equal(sanitized[733], undefined, 'Seleção com Tackle fora do pool deve ser descartada');
   });
 
   test('CANON-07: Resolução de IDs canônicos auditados e preservação dos golpes deslocados', () => {
@@ -726,7 +725,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(venomDrench);
     assert.equal(venomDrench.id, 599);
     assert.equal(venomDrench.name, 'venom-drench');
-    assert.equal(venomDrench.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(venomDrench.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     // 3. Accelerock (709) e Anchor Shot (677)
     const accelerock = getMoveCapability(709);
@@ -747,7 +746,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(naturesMadness);
     assert.equal(naturesMadness.id, 717);
     assert.equal(naturesMadness.name, 'natures-madness');
-    assert.equal(naturesMadness.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(naturesMadness.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     const lightThatBurns = getMoveCapability(723);
     assert.ok(lightThatBurns);
@@ -760,19 +759,19 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(lastRespects);
     assert.equal(lastRespects.id, 854);
     assert.equal(lastRespects.name, 'last-respects');
-    assert.equal(lastRespects.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(lastRespects.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     const luminaCrash = getMoveCapability(855);
     assert.ok(luminaCrash);
     assert.equal(luminaCrash.id, 855);
     assert.equal(luminaCrash.name, 'lumina-crash');
-    assert.equal(luminaCrash.supportLevel, MOVE_SUPPORT_LEVEL.PARTIAL);
+    assert.equal(luminaCrash.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     const ruination = getMoveCapability(877);
     assert.ok(ruination);
     assert.equal(ruination.id, 877);
     assert.equal(ruination.name, 'ruination');
-    assert.equal(ruination.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(ruination.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     const chillyReception = getMoveCapability(881);
     assert.ok(chillyReception);
@@ -1040,7 +1039,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
 
     // 21. Golpes bloqueados
     assert.equal(
-      validateMoveData({ id: 284, name: 'eruption', type: 'fire', power: 150, accuracy: 100, pp: 5, damageClass: 'special' }),
+      validateMoveData({ id: 449, name: 'judgment', type: 'normal', power: 100, accuracy: 100, pp: 10, damageClass: 'special' }),
       false,
       'Golpe bloqueado deve ser rejeitado'
     );

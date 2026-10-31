@@ -27,6 +27,7 @@
     PP_CHANGED: 'PP_CHANGED',
     MOVE_MISSED: 'MOVE_MISSED',
     MOVE_FAILED: 'MOVE_FAILED',
+    MOVE_PREPARED: 'MOVE_PREPARED',
     MULTI_HIT_COMPLETE: 'MULTI_HIT_COMPLETE',
     HP_HEALED: 'HP_HEALED',
     DROWSY_APPLIED: 'DROWSY_APPLIED',
@@ -99,7 +100,7 @@
   function getMovePriority(move) {
     if (!move) return 0;
     const name = String(move.name || '').trim().toLowerCase();
-    return MOVE_PRIORITIES[name] || 0;
+    return P5.get(move)?.priority ?? MOVE_PRIORITIES[name] ?? 0;
   }
 
   function targetsDefenseWithSpAtk(move) {
@@ -178,11 +179,13 @@
   }
 
   function getSelfStatDrops(move) {
+    if (P5.drops[Number(move?.id)]) return P5.drops[Number(move.id)];
     if (!move) return null;
     const name = String(move.name || '').trim().toLowerCase();
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const P5 = typeof module !== 'undefined' && module.exports ? require('./p5-mechanics.js') : window.PBAP5Mechanics;
   const P4Catalog = typeof module !== 'undefined' && module.exports ? require('./p4-secondary-catalog.js') : (window.PBAP4SecondaryCatalog || {effects:{},definitions:{},moves:{},defrost:[]});
   const SECONDARY_EFFECT_MOVES = Object.freeze({
     'twineedle': Object.freeze({id:41,name:'twineedle',chance:20,statusCondition:'poison'}),
@@ -343,6 +346,7 @@
   );
 
   function getSecondaryEffect(move) {
+    if (Number(move?.id)===855 && (!move.name || move.name==='lumina-crash')) return {id:855,name:'lumina-crash',chance:100,statDrops:{specialDefense:-2}};
     if (!move) return null;
     const rawId = move.id !== undefined && move.id !== null ? Number(move.id) : null;
     const rawName = move.name ? String(move.name).trim().toLowerCase() : (typeof move === 'string' ? move.trim().toLowerCase() : null);
@@ -385,6 +389,7 @@
   }
 
   function getEffectiveAccuracy(move, attacker, defender) {
+    if (P5.ohko(move)) return P5.accuracy(move,attacker,defender);
     if(move.accuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
     const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Number(defender.evasionStage)||0)));
@@ -504,6 +509,31 @@
     return false;
   }
 
+  const FRACTIONAL_DAMAGE_MOVES = Object.freeze({
+    162: Object.freeze({"id":162,"name":"super-fang","type":"normal","damageClass":"physical","power":null,"accuracy":90,"pp":10}),
+    717: Object.freeze({"id":717,"name":"natures-madness","type":"fairy","damageClass":"special","power":null,"accuracy":90,"pp":10}),
+    877: Object.freeze({"id":877,"name":"ruination","type":"dark","damageClass":"special","power":1,"accuracy":90,"pp":10}),
+  });
+  function isFractionalDamageMove(move) {
+    if (!move) return false;
+    const id = typeof move === 'number' ? move : (typeof move === 'object' && move.id != null ? Number(move.id) : null);
+    const rawName = typeof move === 'string' ? move.trim().toLowerCase() : (typeof move === 'object' && move.name ? String(move.name).trim().toLowerCase() : null);
+    const name = rawName ? (MOVE_ALIASES[rawName] || rawName) : null;
+    const entry = id !== null ? FRACTIONAL_DAMAGE_MOVES[id] : Object.values(FRACTIONAL_DAMAGE_MOVES).find(m => m.name === name);
+    return Boolean(entry && (name === null || entry.name === name));
+  }
+  function isValidFractionalDamagePower(move) {
+    if (!isFractionalDamageMove(move)) return false;
+    const p = move.power;
+    if (p == null || p === 0 || p === '0') return true;
+    // PokéAPI uses a sentinel power of 1 for Ruination; this is not its damage formula.
+    return (move.id === 877 || move.name === 'ruination') && (p === 1 || p === '1');
+  }
+  function getFractionalDamageAmount(currentHp) {
+    if (!Number.isInteger(currentHp) || currentHp < 0) throw new Error('HP atual inválido para dano fracionário.');
+    return currentHp === 0 ? 0 : Math.max(1, Math.floor(currentHp / 2));
+  }
+
   const CONSTANT_DAMAGE_MOVES = Object.freeze({
     49: Object.freeze({ id: 49, name: 'sonic-boom', type: 'normal', damageClass: 'special', accuracy: 90, pp: 20, damage: 20 }),
     82: Object.freeze({ id: 82, name: 'dragon-rage', type: 'dragon', damageClass: 'special', accuracy: 100, pp: 10, damage: 40 })
@@ -572,7 +602,7 @@
   const MULTI_HIT_MOVES = Object.freeze(Object.fromEntries(Object.entries({"24":{"id":24,"name":"double-kick","minHits":2,"maxHits":2},"41":{"id":41,"name":"twineedle","minHits":2,"maxHits":2},"292":{"id":292,"name":"arm-thrust","minHits":2,"maxHits":5},"331":{"id":331,"name":"bullet-seed","minHits":2,"maxHits":5},"333":{"id":333,"name":"icicle-spear","minHits":2,"maxHits":5},"350":{"id":350,"name":"rock-blast","minHits":2,"maxHits":5},"594":{"id":594,"name":"water-shuriken","minHits":2,"maxHits":5}}).map(([id, move]) => [id, Object.freeze(move)])));
   function getMultiHitMove(move) {
     if (!move) return null;
-    return MULTI_HIT_MOVES[Number(move.id)] || Object.values(MULTI_HIT_MOVES).find(m => m.name === move.name) || null;
+    return MULTI_HIT_MOVES[Number(move.id)] || P5.multiHits[Number(move.id)] || Object.values(MULTI_HIT_MOVES).find(m => m.name === move.name) || null;
   }
   function getMultiHitCount(move, roll = 1) {
     const config = getMultiHitMove(move);
@@ -660,62 +690,23 @@
     570: Object.freeze({ id: 570, name: 'parabolic-charge', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     577: Object.freeze({ id: 577, name: 'draining-kiss', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.75 }),
     617: Object.freeze({ id: 617, name: 'light-of-ruin', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_RECOIL_DAMAGE_DEALT'], knownPending: [], blockedReason: null, priority: 0, recoilRatio: 0.5 }),
-    677: Object.freeze({ id: 677, name: 'anchor-shot', supportLevel: 'PARTIAL', requiredMechanics: ['PHYSICAL_DAMAGE'], knownPending: ['TRAPPING_PHASE_P5'], blockedReason: null, priority: 0 }),
+    677: Object.freeze({ id: 677, name: 'anchor-shot', supportLevel: 'PARTIAL', requiredMechanics: ['PHYSICAL_DAMAGE'], knownPending: ['TRAPPING_PHASE_P6'], blockedReason: null, priority: 0 }),
     709: Object.freeze({ id: 709, name: 'accelerock', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     776: Object.freeze({ id: 776, name: 'body-press', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'DEFENSE_AS_ATTACK'], knownPending: [], blockedReason: null, priority: 0, usesDefenseAsAttack: true }),
-    855: Object.freeze({ id: 855, name: 'lumina-crash', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: null, priority: 0 }),
     891: Object.freeze({ id: 891, name: 'bitter-blade', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
 
     // --- BLOCKED (Mecânicas complexas não implementadas / contenção estrita) ---
-    68: Object.freeze({ id: 68, name: 'counter', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_PHYSICAL_DAMAGE'], knownPending: ['COUNTER_PHASE_P5'], blockedReason: 'REFLECTS_PHYSICAL_DAMAGE', priority: -5 }),
-    117: Object.freeze({ id: 117, name: 'bide', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_STORED_DAMAGE'], knownPending: ['BIDE_PHASE_P5'], blockedReason: 'REFLECTS_STORED_DAMAGE', priority: 1 }),
-    162: Object.freeze({ id: 162, name: 'super-fang', supportLevel: 'BLOCKED', requiredMechanics: ['FRACTIONAL_HP_DAMAGE'], knownPending: ['FRACTIONAL_HP_DAMAGE_PHASE_P5'], blockedReason: 'HALF_TARGET_CURRENT_HP', priority: 0 }),
-    237: Object.freeze({ id: 237, name: 'hidden-power', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_IVS'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_IVS', priority: 0 }),
-    243: Object.freeze({ id: 243, name: 'mirror-coat', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_SPECIAL_DAMAGE'], knownPending: ['COUNTER_PHASE_P5'], blockedReason: 'REFLECTS_SPECIAL_DAMAGE', priority: -5 }),
+    162: Object.freeze({"id":162,"name":"super-fang","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","FRACTIONAL_HP_DAMAGE"],"knownPending":[],"blockedReason":null,"priority":0}),
     264: Object.freeze({ id: 264, name: 'focus-punch', supportLevel: 'BLOCKED', requiredMechanics: ['PREPARATION_PHASE', 'FAIL_ON_HIT'], knownPending: ['PREPARATION_PHASE_P6'], blockedReason: 'CHARGE_FAILS_IF_HIT', priority: -3 }),
-    283: Object.freeze({ id: 283, name: 'endeavor', supportLevel: 'BLOCKED', requiredMechanics: ['EQUALIZES_HP'], knownPending: ['EQUALIZES_HP_PHASE_P5'], blockedReason: 'SETS_TARGET_HP_TO_USER_HP', priority: 0 }),
-    284: Object.freeze({ id: 284, name: 'eruption', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
-    323: Object.freeze({ id: 323, name: 'water-spout', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
-    368: Object.freeze({ id: 368, name: 'metal-burst', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_LAST_DAMAGE'], knownPending: ['COUNTER_PHASE_P5'], blockedReason: 'REFLECTS_LAST_DAMAGE', priority: 0 }),
-    599: Object.freeze({ id: 599, name: 'venom-drench', supportLevel: 'BLOCKED', requiredMechanics: ['STATUS_APPLICATION'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_STAT_DROP', priority: 0 }),
-    690: Object.freeze({ id: 690, name: 'beak-blast', supportLevel: 'BLOCKED', requiredMechanics: ['CONTACT_BURN_PREPARATION', 'PREPARATION_PHASE'], knownPending: ['CONTACT_BURN_PREPARATION_PHASE_P5'], blockedReason: 'PREPARATION_AND_CONTACT_BURN_REQUIRED', priority: -3 }),
-    704: Object.freeze({ id: 704, name: 'shell-trap', supportLevel: 'BLOCKED', requiredMechanics: ['PHYSICAL_HIT_TRIGGER', 'PREPARATION_PHASE'], knownPending: ['COUNTER_PREPARATION_PHASE_P5'], blockedReason: 'PREPARATION_AND_PHYSICAL_TRIGGER_REQUIRED', priority: -3 }),
-    717: Object.freeze({ id: 717, name: 'natures-madness', supportLevel: 'BLOCKED', requiredMechanics: ['FRACTIONAL_HP_DAMAGE'], knownPending: ['FRACTIONAL_HP_DAMAGE_PHASE_P5'], blockedReason: 'HALF_TARGET_CURRENT_HP', priority: 0, aliases: ['nature-s-madness', 'natures-madness'] }),
-    723: Object.freeze({ id: 723, name: 'light-that-burns-the-sky', supportLevel: 'BLOCKED', requiredMechanics: ['Z_MOVE_MECHANICS'], knownPending: ['Z_MOVE_PHASE_P5'], blockedReason: 'Z_MOVE_NOT_IMPLEMENTED', priority: 0 }),
-    854: Object.freeze({ id: 854, name: 'last-respects', supportLevel: 'BLOCKED', requiredMechanics: ['SPECIAL_DAMAGE_FAINT_COUNT'], knownPending: ['SPECIAL_DAMAGE_PHASE_P5'], blockedReason: 'POWER_DEPENDS_ON_FAINTED_ALLIES', priority: 0 }),
-    877: Object.freeze({ id: 877, name: 'ruination', supportLevel: 'BLOCKED', requiredMechanics: ['FRACTIONAL_HP_DAMAGE'], knownPending: ['FRACTIONAL_HP_DAMAGE_PHASE_P5'], blockedReason: 'HALF_TARGET_CURRENT_HP', priority: 0 }),
-    881: Object.freeze({ id: 881, name: 'chilly-reception', supportLevel: 'BLOCKED', requiredMechanics: ['WEATHER_SWITCH'], knownPending: ['WEATHER_SWITCH_PHASE_P5'], blockedReason: 'SNOW_WEATHER_AND_SWITCH', priority: 0 }),
-    894: Object.freeze({ id: 894, name: 'comeuppance', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_LAST_DAMAGE'], knownPending: ['COUNTER_PHASE_P5'], blockedReason: 'REFLECTS_LAST_DAMAGE', priority: 0 }),
-    12: Object.freeze({ id: 12, name: 'guillotine', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
-    32: Object.freeze({ id: 32, name: 'horn-drill', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
-    67: Object.freeze({ id: 67, name: 'low-kick', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_TARGET_WEIGHT'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_TARGET_WEIGHT', priority: 0 }),
-    90: Object.freeze({ id: 90, name: 'fissure', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
-    149: Object.freeze({ id: 149, name: 'psywave', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_LEVEL'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'RANDOM_LEVEL_MULTIPLIER', priority: 0 }),
-    175: Object.freeze({ id: 175, name: 'flail', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
-    179: Object.freeze({ id: 179, name: 'reversal', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
-    276: Object.freeze({ id: 276, name: 'superpower', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
-    329: Object.freeze({ id: 329, name: 'sheer-cold', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
-    354: Object.freeze({ id: 354, name: 'psycho-boost', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
-    360: Object.freeze({ id: 360, name: 'gyro-ball', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_SPEED'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_RELATIVE_SPEED', priority: 0 }),
-    371: Object.freeze({ id: 371, name: 'payback', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_USER_MOVES_SECOND', priority: 0 }),
-    372: Object.freeze({ id: 372, name: 'assurance', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_TARGET_DAMAGED_THIS_TURN', priority: 0 }),
-    389: Object.freeze({ id: 389, name: 'sucker-punch', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_PRIORITY'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'REQUIRES_TARGET_DAMAGING_MOVE_AND_PRIORITY', priority: 1 }),
-    437: Object.freeze({ id: 437, name: 'leaf-storm', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
-    447: Object.freeze({ id: 447, name: 'grass-knot', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_TARGET_WEIGHT'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_TARGET_WEIGHT', priority: 0 }),
-    449: Object.freeze({ id: 449, name: 'judgment', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
-    484: Object.freeze({ id: 484, name: 'heavy-slam', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_RELATIVE_WEIGHT'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_RELATIVE_WEIGHT', priority: 0 }),
-    486: Object.freeze({ id: 486, name: 'electro-ball', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_RELATIVE_SPEED'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_RELATIVE_SPEED', priority: 0 }),
-    535: Object.freeze({ id: 535, name: 'heat-crash', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_RELATIVE_WEIGHT'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_RELATIVE_WEIGHT', priority: 0 }),
-    546: Object.freeze({ id: 546, name: 'techno-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
-    660: Object.freeze({ id: 660, name: 'first-impression', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_PRIORITY'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'REQUIRES_FIRST_TURN_AFTER_ENTRY_AND_PRIORITY', priority: 2 }),
-    686: Object.freeze({ id: 686, name: 'revelation-dance', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_USER_TYPE'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_USER_TYPE', priority: 0 }),
-    705: Object.freeze({ id: 705, name: 'fleur-cannon', supportLevel: 'BLOCKED', requiredMechanics: ['SELF_STAT_DROP'], knownPending: ['STAT_DROP_PHASE_P5'], blockedReason: 'UNIMPLEMENTED_HARSH_STAT_DROP', priority: 0 }),
-    707: Object.freeze({ id: 707, name: 'stomping-tantrum', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_PREVIOUS_MOVE_FAILED', priority: 0 }),
-    718: Object.freeze({ id: 718, name: 'multi-attack', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
-    754: Object.freeze({ id: 754, name: 'bolt-beak', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_USER_MOVES_FIRST', priority: 0 }),
-    820: Object.freeze({ id: 820, name: 'dragon-energy', supportLevel: 'BLOCKED', requiredMechanics: ['HP_SCALED_POWER'], knownPending: ['HP_SCALED_POWER_PHASE_P5'], blockedReason: 'POWER_FROM_USER_HP', priority: 0 }),
-    851: Object.freeze({ id: 851, name: 'tera-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_TERA'], knownPending: ['DYNAMIC_TYPE_PHASE_P5'], blockedReason: 'DYNAMIC_TYPE_FROM_TERA', priority: 0 }),
-    915: Object.freeze({ id: 915, name: 'temper-flare', supportLevel: 'BLOCKED', requiredMechanics: ['CONDITIONAL_DAMAGE'], knownPending: ['CONDITIONAL_DAMAGE_PHASE_P5'], blockedReason: 'DOUBLES_IF_PREVIOUS_MOVE_FAILED', priority: 0 })
+    717: Object.freeze({"id":717,"name":"natures-madness","supportLevel":"FULL","requiredMechanics":["SPECIAL_DAMAGE","FRACTIONAL_HP_DAMAGE"],"knownPending":[],"blockedReason":null,"priority":0,"aliases":["nature-s-madness","natures-madness"]}),
+    723: Object.freeze({ id: 723, name: 'light-that-burns-the-sky', supportLevel: 'BLOCKED', requiredMechanics: ['Z_MOVE_MECHANICS'], knownPending: ['Z_MOVE_PHASE_P8'], blockedReason: 'Z_MOVE_NOT_IMPLEMENTED', priority: 0 }),
+    877: Object.freeze({"id":877,"name":"ruination","supportLevel":"FULL","requiredMechanics":["SPECIAL_DAMAGE","FRACTIONAL_HP_DAMAGE"],"knownPending":[],"blockedReason":null,"priority":0}),
+    881: Object.freeze({ id: 881, name: 'chilly-reception', supportLevel: 'BLOCKED', requiredMechanics: ['WEATHER_SWITCH'], knownPending: ['WEATHER_SWITCH_PHASE_P7'], blockedReason: 'SNOW_WEATHER_AND_SWITCH', priority: 0 }),
+    449: Object.freeze({ id: 449, name: 'judgment', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['ITEM_TYPE_PHASE_P7'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
+    546: Object.freeze({ id: 546, name: 'techno-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['ITEM_TYPE_PHASE_P7'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
+    718: Object.freeze({ id: 718, name: 'multi-attack', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['ITEM_TYPE_PHASE_P7'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
+    851: Object.freeze({ id: 851, name: 'tera-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_TERA'], knownPending: ['TERASTALLIZATION_PHASE_P8'], blockedReason: 'DYNAMIC_TYPE_FROM_TERA', priority: 0 }),
+    ...P5.definitions
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -729,6 +720,9 @@
 
   // Mapeamento canônico dos golpes de dano utilizados nos catálogos da campanha e Pokédex expandida
   const KNOWN_CATALOG_MOVES = Object.freeze({
+    162: Object.freeze({"id":162,"name":"super-fang","type":"normal","damageClass":"physical","power":null,"accuracy":90,"pp":10}),
+    717: Object.freeze({"id":717,"name":"natures-madness","type":"fairy","damageClass":"special","power":null,"accuracy":90,"pp":10}),
+    877: Object.freeze({"id":877,"name":"ruination","type":"dark","damageClass":"special","power":1,"accuracy":90,"pp":10}),
     49: Object.freeze({ id: 49, name: 'sonic-boom', type: 'normal', power: null, accuracy: 90, pp: 20, damageClass: 'special' }),
     82: Object.freeze({ id: 82, name: 'dragon-rage', type: 'dragon', power: null, accuracy: 100, pp: 10, damageClass: 'special' }),
     69: Object.freeze({ id: 69, name: 'seismic-toss', type: 'fighting', power: null, accuracy: 100, pp: 20, damageClass: 'physical' }),
@@ -905,7 +899,6 @@
     473: Object.freeze({ id: 473, name: 'psyshock', type: 'psychic', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
     482: Object.freeze({ id: 482, name: 'sludge-wave', type: 'poison', power: 95, accuracy: 100, pp: 10, damageClass: 'special' }),
     490: Object.freeze({ id: 490, name: 'low-sweep', type: 'fighting', power: 65, accuracy: 100, pp: 20, damageClass: 'physical' }),
-    496: Object.freeze({ id: 496, name: 'round', type: 'normal', power: 60, accuracy: 100, pp: 15, damageClass: 'special' }),
     499: Object.freeze({ id: 499, name: 'clear-smog', type: 'poison', power: 50, accuracy: null, pp: 15, damageClass: 'special' }),
     503: Object.freeze({ id: 503, name: 'scald', type: 'water', power: 80, accuracy: 100, pp: 15, damageClass: 'special' }),
     509: Object.freeze({ id: 509, name: 'circle-throw', type: 'fighting', power: 60, accuracy: 90, pp: 10, damageClass: 'physical' }),
@@ -960,7 +953,6 @@
     712: Object.freeze({ id: 712, name: 'spectral-thief', type: 'ghost', power: 90, accuracy: 100, pp: 10, damageClass: 'physical' }),
     714: Object.freeze({ id: 714, name: 'moongeist-beam', type: 'ghost', power: 100, accuracy: 100, pp: 5, damageClass: 'special' }),
     716: Object.freeze({ id: 716, name: 'zing-zap', type: 'electric', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
-    722: Object.freeze({ id: 722, name: 'photon-geyser', type: 'psychic', power: 100, accuracy: 100, pp: 5, damageClass: 'special' }),
     730: Object.freeze({ id: 730, name: 'splishy-splash', type: 'water', power: 90, accuracy: 100, pp: 15, damageClass: 'special' }),
     731: Object.freeze({ id: 731, name: 'floaty-fall', type: 'flying', power: 90, accuracy: 95, pp: 15, damageClass: 'physical' }),
     738: Object.freeze({ id: 738, name: 'sappy-seed', type: 'grass', power: 100, accuracy: 90, pp: 10, damageClass: 'physical' }),
@@ -980,7 +972,6 @@
     831: Object.freeze({ id: 831, name: 'springtide-storm', type: 'fairy', power: 100, accuracy: 80, pp: 5, damageClass: 'special' }),
     833: Object.freeze({ id: 833, name: 'raging-fury', type: 'fire', power: 120, accuracy: 100, pp: 10, damageClass: 'physical' }),
     853: Object.freeze({ id: 853, name: 'axe-kick', type: 'fighting', power: 120, accuracy: 90, pp: 10, damageClass: 'physical' }),
-    855: Object.freeze({ id: 855, name: 'lumina-crash', type: 'psychic', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
     856: Object.freeze({ id: 856, name: 'order-up', type: 'dragon', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
     861: Object.freeze({ id: 861, name: 'ice-spinner', type: 'ice', power: 80, accuracy: 100, pp: 15, damageClass: 'physical' }),
     869: Object.freeze({ id: 869, name: 'kowtow-cleave', type: 'dark', power: 85, accuracy: null, pp: 10, damageClass: 'physical' }),
@@ -996,7 +987,8 @@
     902: Object.freeze({ id: 902, name: 'matcha-gotcha', type: 'grass', power: 80, accuracy: 90, pp: 15, damageClass: 'special' }),
     906: Object.freeze({ id: 906, name: 'tera-starstorm', type: 'normal', power: 120, accuracy: 100, pp: 5, damageClass: 'special' }),
     914: Object.freeze({ id: 914, name: 'alluring-voice', type: 'fairy', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
-    919: Object.freeze({ id: 919, name: 'malignant-chain', type: 'poison', power: 100, accuracy: 100, pp: 5, damageClass: 'special' })
+    919: Object.freeze({ id: 919, name: 'malignant-chain', type: 'poison', power: 100, accuracy: 100, pp: 5, damageClass: 'special' }),
+    ...P5.moves
   });
 
   const KNOWN_CATALOG_MOVES_BY_NAME = Object.freeze(
@@ -1282,9 +1274,13 @@
     // 7. Golpes ofensivos (physical ou special)
     const isLevelDamage = isLevelDamageMove(move);
     const isConstantDamage = isConstantDamageMove(move);
-    const isFixedDamage = isLevelDamage || isConstantDamage;
+    const isFixedDamage = isLevelDamage || isConstantDamage || isFractionalDamageMove(move) || Boolean(P5.get(move));
     let powerNum = null;
-    if (isFixedDamage) {
+    if (P5.get(move)) {
+      if (!P5.validPower(move)) return false;
+    } else if (isFractionalDamageMove(move)) {
+      if (!isValidFractionalDamagePower(move)) return false;
+    } else if (isFixedDamage) {
       if (move.power !== undefined && move.power !== null) {
         if (typeof move.power === 'boolean' || typeof move.power === 'object') return false;
         const pwr = Number(move.power);
@@ -1354,6 +1350,7 @@
 
   // Apenas golpes de status curados com efeito integral suportado.
   const SUPPORTED_STATUS_MOVES = Object.freeze({
+    'venom-drench': P5.moves[599],
     'sing': Object.freeze({"id":47,"name":"sing","type":"normal","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
     'lovely-kiss': Object.freeze({"id":142,"name":"lovely-kiss","type":"normal","accuracy":75,"pp":10,"statusEffect":"sleep","power":0,"damageClass":"status"}),
     'grass-whistle': Object.freeze({"id":320,"name":"grass-whistle","type":"grass","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
@@ -1565,6 +1562,20 @@
     SMART_SWITCH_MARGIN: 1.3
   });
 
+  function describeMovePower(move){
+    if(isLevelDamageMove(move))return 'Dano igual ao nível';
+    if(isConstantDamageMove(move))return 'Dano fixo: '+getConstantDamageAmount(move)+' HP';
+    if(isFractionalDamageMove(move))return 'Metade do HP atual do alvo';
+    if(P5.ohko(move))return 'Nocaute condicionado ao nível';
+    if(P5.counterIds.includes(Number(move.id)))return 'Devolve o dano recebido';
+    if(move.id===117)return 'Acumula dano por dois turnos';
+    if(move.id===599)return 'Reduz atributos de alvos envenenados';
+    if(move.id===149)return 'Dano variável pelo nível';
+    if(move.id===283)return 'Iguala o HP do alvo ao do usuário';
+    if(P5.variableIds.includes(Number(move.id))||[371,372,707,915,754,854].includes(Number(move.id)))return 'Poder variável';
+    return null;
+  }
+
   const BattleConstants = Object.freeze({
     BATTLE_STATUS,
     BATTLE_EVENTS,
@@ -1589,6 +1600,12 @@
     isForcedSwitchMove,
     LEVEL_DAMAGE_MOVES,
     isLevelDamageMove,
+    FRACTIONAL_DAMAGE_MOVES,
+    isFractionalDamageMove,
+    isValidFractionalDamagePower,
+    getFractionalDamageAmount,
+    P5,
+    describeMovePower,
     CONSTANT_DAMAGE_MOVES,
     isConstantDamageMove,
     getConstantDamageAmount,

@@ -76,27 +76,14 @@
    */
   const UNSUPPORTED_COMPLEX_MOVES = Object.freeze({
     // Dynamic typing
-    'hidden-power': Object.freeze({ name: 'hidden-power', category: 'UNSUPPORTED_DYNAMIC_TYPE', reason: 'DYNAMIC_TYPE_FROM_IVS' }),
     'judgment': Object.freeze({ name: 'judgment', category: 'UNSUPPORTED_DYNAMIC_TYPE', reason: 'DYNAMIC_TYPE_FROM_ITEM' }),
-    'revelation-dance': Object.freeze({ name: 'revelation-dance', category: 'UNSUPPORTED_DYNAMIC_TYPE', reason: 'DYNAMIC_TYPE_FROM_USER_TYPE' }),
     'techno-blast': Object.freeze({ name: 'techno-blast', category: 'UNSUPPORTED_DYNAMIC_TYPE', reason: 'DYNAMIC_TYPE_FROM_ITEM' }),
     'multi-attack': Object.freeze({ name: 'multi-attack', category: 'UNSUPPORTED_DYNAMIC_TYPE', reason: 'DYNAMIC_TYPE_FROM_ITEM' }),
     'tera-blast': Object.freeze({ name: 'tera-blast', category: 'UNSUPPORTED_DYNAMIC_TYPE', reason: 'DYNAMIC_TYPE_FROM_TERA' }),
 
     // Variable damage based on user HP
-    'eruption': Object.freeze({ name: 'eruption', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_USER_HP' }),
-    'water-spout': Object.freeze({ name: 'water-spout', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_USER_HP' }),
-    'dragon-energy': Object.freeze({ name: 'dragon-energy', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_USER_HP' }),
-    'flail': Object.freeze({ name: 'flail', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_USER_HP' }),
-    'reversal': Object.freeze({ name: 'reversal', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_USER_HP' }),
 
     // Variable damage based on weight / speed
-    'low-kick': Object.freeze({ name: 'low-kick', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_TARGET_WEIGHT' }),
-    'grass-knot': Object.freeze({ name: 'grass-knot', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_TARGET_WEIGHT' }),
-    'heavy-slam': Object.freeze({ name: 'heavy-slam', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_RELATIVE_WEIGHT' }),
-    'heat-crash': Object.freeze({ name: 'heat-crash', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_RELATIVE_WEIGHT' }),
-    'electro-ball': Object.freeze({ name: 'electro-ball', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_RELATIVE_SPEED' }),
-    'gyro-ball': Object.freeze({ name: 'gyro-ball', category: 'UNSUPPORTED_VARIABLE_DAMAGE', reason: 'POWER_FROM_RELATIVE_SPEED' }),
 
     // Self-destruct / suicide attacks
     'explosion': Object.freeze({ name: 'explosion', category: 'UNSUPPORTED_SELF_DESTRUCT', reason: 'USER_FAINTS_ON_USE' }),
@@ -170,21 +157,12 @@
     'sonic-boom': Object.freeze({ name: 'sonic-boom', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'FIXED_DAMAGE_20' }),
     'seismic-toss': Object.freeze({ name: 'seismic-toss', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'DAMAGE_EQUAL_TO_LEVEL' }),
     'night-shade': Object.freeze({ name: 'night-shade', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'DAMAGE_EQUAL_TO_LEVEL' }),
-    'psywave': Object.freeze({ name: 'psywave', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'RANDOM_LEVEL_MULTIPLIER' }),
     'super-fang': Object.freeze({ name: 'super-fang', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
     'nature-s-madness': Object.freeze({ name: 'nature-s-madness', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
     'natures-madness': Object.freeze({ name: 'natures-madness', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
     'ruination': Object.freeze({ name: 'ruination', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'HALF_TARGET_CURRENT_HP' }),
-    'endeavor': Object.freeze({ name: 'endeavor', category: 'UNSUPPORTED_FIXED_OR_HP_DAMAGE', reason: 'SETS_TARGET_HP_TO_USER_HP' }),
 
     // Counter / reflection damage
-    'counter': Object.freeze({ name: 'counter', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_PHYSICAL_DAMAGE' }),
-    'mirror-coat': Object.freeze({ name: 'mirror-coat', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_SPECIAL_DAMAGE' }),
-    'metal-burst': Object.freeze({ name: 'metal-burst', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_LAST_DAMAGE' }),
-    'bide': Object.freeze({ name: 'bide', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_STORED_DAMAGE' }),
-    'comeuppance': Object.freeze({ name: 'comeuppance', category: 'UNSUPPORTED_COUNTER', reason: 'REFLECTS_LAST_DAMAGE' }),
-    'shell-trap': Object.freeze({ name: 'shell-trap', category: 'UNSUPPORTED_COUNTER', reason: 'PREPARATION_AND_PHYSICAL_TRIGGER_REQUIRED' }),
-    'beak-blast': Object.freeze({ name: 'beak-blast', category: 'UNSUPPORTED_COUNTER', reason: 'PREPARATION_AND_CONTACT_BURN_REQUIRED' }),
 
     // Multi-hit moves
     'double-slap': Object.freeze({ name: 'double-slap', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_2_TO_5_TIMES' }),
@@ -202,7 +180,6 @@
     'arm-thrust': Object.freeze({ name: 'arm-thrust', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_2_TO_5_TIMES' }),
     'water-shuriken': Object.freeze({ name: 'water-shuriken', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_2_TO_5_TIMES' }),
     'scale-shot': Object.freeze({ name: 'scale-shot', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_2_TO_5_TIMES' }),
-    'population-bomb': Object.freeze({ name: 'population-bomb', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_UP_TO_10_TIMES' }),
     'double-hit': Object.freeze({ name: 'double-hit', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_TWICE' }),
     'dual-wingbeat': Object.freeze({ name: 'dual-wingbeat', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_TWICE' }),
     'dual-chop': Object.freeze({ name: 'dual-chop', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_TWICE' }),
@@ -213,9 +190,6 @@
     'tachyon-cutter': Object.freeze({ name: 'tachyon-cutter', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_TWICE' }),
     'dragon-darts': Object.freeze({ name: 'dragon-darts', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_TWICE' }),
     'twin-beam': Object.freeze({ name: 'twin-beam', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_TWICE' }),
-    'triple-kick': Object.freeze({ name: 'triple-kick', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_3_TIMES_PROGRESSIVE' }),
-    'triple-axel': Object.freeze({ name: 'triple-axel', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_3_TIMES_PROGRESSIVE' }),
-    'surging-strikes': Object.freeze({ name: 'surging-strikes', category: 'UNSUPPORTED_MULTI_HIT', reason: 'HITS_3_TIMES_CRIT' }),
 
     // Progressive damage
     'fury-cutter': Object.freeze({ name: 'fury-cutter', category: 'UNSUPPORTED_PROGRESSIVE_DAMAGE', reason: 'DOUBLES_ON_CONSECUTIVE_HITS' }),
@@ -232,7 +206,6 @@
     'punishment': Object.freeze({ name: 'punishment', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'POWER_DEPENDS_ON_TARGET_STAT_BOOSTS' }),
     'power-trip': Object.freeze({ name: 'power-trip', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'POWER_DEPENDS_ON_USER_STAT_BOOSTS' }),
     'stored-power': Object.freeze({ name: 'stored-power', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'POWER_DEPENDS_ON_USER_STAT_BOOSTS' }),
-    'last-respects': Object.freeze({ name: 'last-respects', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'POWER_DEPENDS_ON_FAINTED_ALLIES' }),
     'electro-drift': Object.freeze({ name: 'electro-drift', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'SPECIAL_SUPER_EFFECTIVE_BOOST' }),
     'collision-course': Object.freeze({ name: 'collision-course', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'SPECIAL_SUPER_EFFECTIVE_BOOST' }),
     'glaive-rush': Object.freeze({ name: 'glaive-rush', category: 'UNSUPPORTED_SPECIAL_CALCULATION', reason: 'USER_VULNERABLE_NEXT_TURN' }),
@@ -241,13 +214,6 @@
 
     // Conditional / Weather / Terrain / Status / Item dependent
     'weather-ball': Object.freeze({ name: 'weather-ball', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DEPENDS_ON_WEATHER' }),
-    'sucker-punch': Object.freeze({ name: 'sucker-punch', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'REQUIRES_TARGET_DAMAGING_MOVE_AND_PRIORITY' }),
-    'first-impression': Object.freeze({ name: 'first-impression', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'REQUIRES_FIRST_TURN_AFTER_ENTRY_AND_PRIORITY' }),
-    'bolt-beak': Object.freeze({ name: 'bolt-beak', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DOUBLES_IF_USER_MOVES_FIRST' }),
-    'payback': Object.freeze({ name: 'payback', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DOUBLES_IF_USER_MOVES_SECOND' }),
-    'assurance': Object.freeze({ name: 'assurance', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DOUBLES_IF_TARGET_DAMAGED_THIS_TURN' }),
-    'stomping-tantrum': Object.freeze({ name: 'stomping-tantrum', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DOUBLES_IF_PREVIOUS_MOVE_FAILED' }),
-    'temper-flare': Object.freeze({ name: 'temper-flare', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DOUBLES_IF_PREVIOUS_MOVE_FAILED' }),
     'terrain-pulse': Object.freeze({ name: 'terrain-pulse', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DEPENDS_ON_TERRAIN' }),
     'poltergeist': Object.freeze({ name: 'poltergeist', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DEPENDS_ON_TARGET_ITEM' }),
     'fling': Object.freeze({ name: 'fling', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'DEPENDS_ON_HELD_ITEM' }),
@@ -273,10 +239,6 @@
     'synchronoise': Object.freeze({ name: 'synchronoise', category: 'UNSUPPORTED_CONDITIONAL_DAMAGE', reason: 'REQUIRES_MATCHING_TYPE' }),
 
     // --- AUTO-DEBUFF / PENALIDADE DE ATRIBUTO NÃO IMPLEMENTADA (Poder desbalanceado sem a penalidade) ---
-    'leaf-storm': Object.freeze({ name: 'leaf-storm', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
-    'fleur-cannon': Object.freeze({ name: 'fleur-cannon', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
-    'psycho-boost': Object.freeze({ name: 'psycho-boost', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
-    'superpower': Object.freeze({ name: 'superpower', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'headlong-rush': Object.freeze({ name: 'headlong-rush', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'armor-cannon': Object.freeze({ name: 'armor-cannon', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
     'v-create': Object.freeze({ name: 'v-create', category: 'UNSUPPORTED_SELF_DEBUFF', reason: 'UNIMPLEMENTED_HARSH_STAT_DROP' }),
@@ -383,6 +345,7 @@
     isMechanicallySupportedMove,
     isLevelDamageMove: battleConstants.isLevelDamageMove,
     isConstantDamageMove: battleConstants.isConstantDamageMove,
+    isFractionalDamageMove: battleConstants.isFractionalDamageMove,
     getSecondaryEffect: battleConstants.getSecondaryEffect,
     isStatusConditionImmune: battleConstants.isStatusConditionImmune,
     isEligibleForStatusCondition: battleConstants.isEligibleForStatusCondition

@@ -47,6 +47,7 @@
       this.confusionHitSequence = Array.isArray(options.confusionHitSequence) ? [...options.confusionHitSequence] : null;
       this.confusionDamageSequence = Array.isArray(options.confusionDamageSequence) ? [...options.confusionDamageSequence] : null;
       this.secondaryStatusSequence=Array.isArray(options.secondaryStatusSequence)?[...options.secondaryStatusSequence]:null;
+      this.psywaveSequence=Array.isArray(options.psywaveSequence)?[...options.psywaveSequence]:null;
       this.hitCountSequence=Array.isArray(options.hitCountSequence)?[...options.hitCountSequence]:null;
       this.calledMoveSequence=Array.isArray(options.calledMoveSequence)?[...options.calledMoveSequence]:null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
@@ -106,6 +107,11 @@
       return Math.floor(this.rng() * 3) + 1;
     }
 
+    rollPsywave() {
+      const roll=this.psywaveSequence?.length?Number(this.psywaveSequence.shift()):50+Math.floor(this.rng()*101);
+      if(!Number.isInteger(roll)||roll<50||roll>150)throw new Error('Rolagem Psywave inválida.');
+      return roll;
+    }
     rollHitCount() {
       const value = this.hitCountSequence?.length ? Number(this.hitCountSequence.shift()) : Math.floor(this.rng() * 100) + 1;
       if (!Number.isInteger(value) || value < 1 || value > 100) throw new Error('Rolagem de quantidade de acertos inválida.');

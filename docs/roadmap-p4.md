@@ -1,5 +1,7 @@
 # P4 — Condições e efeitos secundários: conclusão
 
+Registro histórico do fechamento P4. Estado vigente após P5: docs/roadmap-p5.md e progress.md.
+
 Atualização: 31/10/2026. Escopo: motor atual de batalhas individuais, conjuntos fixos e opções de golpes da campanha. O encerramento desta fase não implica suporte integral a todos os movimentos das nove gerações, batalhas duplas ou às mecânicas das outras fases.
 
 ## Entregas concluídas

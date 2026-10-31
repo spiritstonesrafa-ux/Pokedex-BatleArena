@@ -29,7 +29,7 @@ test('Expansion covers every species and alternate record, with explicit collect
   assert.equal(Object.keys(Campaign.CANONICAL_BY_ID).length, 1351);
   assert.equal(Campaign.EXPANSION_SPECIES.length, 844);
   assert.equal(Expanded.entries.filter(p => p.id > 1025).length, 326);
-  assert.deepEqual(Expanded.entries.filter(p => p.collectionOnly).map(p => p.id), [132, 201, 202, 235, 360, 771, 789, 790]);
+  assert.deepEqual(Expanded.entries.filter(p => p.collectionOnly).map(p => p.id), [132, 235, 789, 790]);
   const reachable = new Set([...Campaign.DRAFT, ...Campaign.MASTER_SPECIES, ...Campaign.SUPER_TEAM, ...Campaign.LEGENDARY_TRIAL_TEAM, ...Campaign.MYTHICAL_TRIAL_TEAM, ...Campaign.TITANS_TRIAL_TEAM, ...Campaign.CELESTIAL_TRIAL_TEAM].map(p => p.id));
   Object.values(Wild.POINT_POOLS).flat().forEach(id => reachable.add(id));
   Object.values(Wild.POINT_SPECIAL_POOLS).flat().forEach(id => reachable.add(id));
@@ -40,7 +40,7 @@ test('Expansion covers every species and alternate record, with explicit collect
   assert.equal(pokeApi.isPokemonInGeneration(99999, 'all'), false);
 });
 
-test('All 1343 battle-ready records hydrate offline with legal form-specific stats and supported moves', async () => {
+test('All 1347 battle-ready records hydrate offline with legal form-specific stats and supported moves', async () => {
   const hydrator = new BattleTeamHydrator({ api: { getPokemonDetail() { throw Error('Unexpected network'); } } });
   for (const species of Expanded.entries) {
     if (species.collectionOnly) { assert.equal(Fixed.byId[species.id], undefined); continue; }
@@ -62,7 +62,7 @@ test('All 1343 battle-ready records hydrate offline with legal form-specific sta
   assert.notDeepEqual(Expanded.byId[10120].stats, Expanded.byId[718].stats);
 });
 
-test('All eight collection Pokémon can be encountered, captured, restored and kept out of battles', () => {
+test('All four remaining collection Pokémon can be encountered, captured, restored and kept out of battles', () => {
   for (const species of Expanded.entries.filter(p => p.collectionOnly)) {
     let manager = fresh();
     const [pointId, pool] = Object.entries(Wild.POINT_POOLS).concat(Object.entries(Wild.POINT_SPECIAL_POOLS)).find(([,ids]) => ids.includes(species.id));

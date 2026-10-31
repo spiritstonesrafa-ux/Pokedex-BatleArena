@@ -193,7 +193,10 @@
           const isLvl = Boolean(constants?.isLevelDamageMove?.(m));
           const isConst = Boolean(constants?.isConstantDamageMove?.(m));
           let pwr = null;
-          if (isLvl || isConst) {
+          if (constants.isFractionalDamageMove?.(m)) {
+            if (!constants.isValidFractionalDamagePower(m)) throw new Error('Poder de golpe fracionário inválido.');
+            pwr = constants.FRACTIONAL_DAMAGE_MOVES[Number(m.id)].power;
+          } else if (isLvl || isConst) {
             if (m.power !== undefined && m.power !== null) {
               if (typeof m.power === 'boolean' || typeof m.power === 'object' || !Number.isFinite(Number(m.power)) || Number(m.power) !== 0) {
                 const kind = isLvl ? 'baseado em nível' : 'de dano fixo constante';
@@ -266,6 +269,12 @@
         id,
         name: raw.name.trim().toLowerCase(),
         level,
+        weightKg: Number(raw.weightKg)>0?Number(raw.weightKg):Number(raw.weight)>0?Number(raw.weight)/10:constants.P5.weightKgById[id]||null,
+        ivs: Object.fromEntries(['hp','attack','defense','specialAttack','specialDefense','speed'].map(k=>{
+          const v=raw.ivs?.[k]??31;if(!Number.isInteger(v)||v<0||v>31)throw new Error('IV inválido.');return [k,v];
+        })),
+        bideState:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
+        actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
         types: normalizedTypes,
         maxHp: Math.floor(hp),
         currentHp: raw.currentHp !== undefined ? Math.max(0, Math.min(Math.floor(hp), Math.floor(raw.currentHp))) : Math.floor(hp),
@@ -478,6 +487,7 @@
       previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
+          previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
       previousActive.toxicStage = 0;
       targetPokemon.isFlinched = false;
       targetPokemon.entryMoveAttempts = 0;
@@ -501,6 +511,7 @@
         if (constants.resetStatStages) {
           constants.resetStatStages(pokemon);
         }
+        pokemon.bideState=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
         pokemon.isFlinched = false;
         pokemon.confusionTurns = 0;
         pokemon.toxicStage = 0;
@@ -537,7 +548,12 @@
       }
     }
 
+    function plannedMove(mon,action){
+      if(action?.moveId!==undefined || action?.moveName!==undefined)return mon.moves.find(m=>(action.moveId!==undefined&&m.id===Number(action.moveId))||(action.moveName!==undefined&&m.name.toLowerCase()===String(action.moveName).toLowerCase()));
+      return mon.moves.find(m=>m.currentPp>0)||mon.moves[0];
+    }
     function finishTurn(state, events) {
+      delete state.turnActions; // Intent is transient; never retain references to caller commands.
       if (state.status !== BATTLE_STATUS.IN_PROGRESS &&
           state.status !== BATTLE_STATUS.AWAITING_REPLACEMENT) return;
       const fainted = [];
@@ -610,6 +626,14 @@
       const nextState = JSON.parse(JSON.stringify(currentState));
       const events = [];
       const currentTurn = nextState.turn;
+      actions={...actions};
+      for(const role of ['player','enemy']){
+        if(getActiveCombatant(nextState,role).bideState && actions[role]?.type!=='SWITCH')actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:117,moveName:undefined};
+      }
+      nextState.turnActions = actions;
+      for(const role of ['player','enemy'])for(const mon of (nextState.version===2?nextState[role].team:[nextState[role]])){
+        mon.actedThisTurn=false;mon.damagedThisTurn=false;mon.lastDirectHit=null;mon.beakBlastReady=false;mon.shellTrapReady=false;mon.shellTrapTriggered=false;
+      }
       for(const role of ['player','enemy']){const side=nextState[role];for(const mon of (nextState.version===2?side.team:[side]))mon.statsRaisedThisTurn=false;}
 
       // Evento de início do turno
@@ -618,6 +642,14 @@
         turn: currentTurn
       });
 
+      for(const role of ['player','enemy']){
+        const mon=getActiveCombatant(nextState,role),a=actions[role];
+        const chosen=plannedMove(mon,a);
+        if(a?.type!=='SWITCH' && [690,704].includes(chosen?.id)){
+          mon.beakBlastReady=chosen.id===690;mon.shellTrapReady=chosen.id===704;
+          events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:role,pokemonName:mon.name,moveName:chosen.name,reason:chosen.id===690?'BEAK_BLAST_READY':'SHELL_TRAP_READY'});
+        }
+      }
       const isPlayerSwitch = actions.player && actions.player.type === BATTLE_ACTIONS.SWITCH;
       const isEnemySwitch = actions.enemy && actions.enemy.type === BATTLE_ACTIONS.SWITCH;
 
@@ -706,10 +738,41 @@
      * @param {Array<Object>} events - Lista de eventos do turno.
      * @param {Object} [action] - Comando da ação { moveId, accuracyRoll }.
      */
+    function afterDirectHit(attacker,defender,attackerRole,defenderRole,move,events,damage){
+      if(damage<=0)return;
+      if(defender.shellTrapReady && move.damageClass==='physical')defender.shellTrapTriggered=true;
+      if(defender.bideState)defender.bideState.damage+=damage;
+      if(defender.beakBlastReady && constants.P5.contactIds.includes(move.id) && constants.isEligibleForStatusCondition(attacker,'burn')){
+        attacker.statusCondition='burn';
+        events.push({type:BATTLE_EVENTS.STATUS_APPLIED,source:defenderRole,target:attackerRole,pokemonName:attacker.name,statusCondition:'burn',moveId:690,moveName:'beak-blast',chance:100});
+      }
+    }
     function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false) {
+      const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
+      executeActionCore(attackerRole,defenderRole,state,events,action,calledMove);
+      if(calledMove)return;
+      const batch=events.slice(start);
+      // Record each direct hit in order; Counter reflects the final hit of a multi-hit move.
+      for(const event of batch){
+        if(event.type===BATTLE_EVENTS.DAMAGE_APPLIED && event.previousHp>event.currentHp){
+          const target=originalTarget;
+          if(target && target.currentHp>0 && getActiveCombatant(state,event.target)===target){target.damagedThisTurn=true;target.lastDirectHit={turn:state.turn,sourceId:attacker.id,sourceRole:attackerRole,damage:event.previousHp-event.currentHp,damageClass:event.damageClass};}
+        }
+        if([BATTLE_EVENTS.RECOIL_APPLIED,BATTLE_EVENTS.CONFUSION_DAMAGE].includes(event.type))attacker.damagedThisTurn=true;
+      }
+      const attempted=batch.some(e=>e.type===BATTLE_EVENTS.PP_CHANGED);
+      const aborted=batch.some(e=>[BATTLE_EVENTS.STATUS_IMMOBILIZED,BATTLE_EVENTS.FLINCH_IMMOBILIZED,BATTLE_EVENTS.CONFUSION_DAMAGE].includes(e.type));
+      const changes=batch.filter(e=>e.type===BATTLE_EVENTS.STAT_STAGE_CHANGED);
+      if(attempted||aborted)attacker.lastMoveFailed=aborted||batch.some(e=>[BATTLE_EVENTS.MOVE_FAILED,BATTLE_EVENTS.MOVE_MISSED,BATTLE_EVENTS.STATUS_BLOCKED,BATTLE_EVENTS.CONFUSION_BLOCKED].includes(e.type))||batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.multiplier===0)||(changes.length>0&&changes.every(e=>e.appliedDelta===0)&&!batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED));
+      attacker.actedThisTurn=true;
+      if(batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED&&e.moveId===690))attacker.beakBlastReady=false;
+      if(attacker.bideState && !batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED))attacker.bideState=null;
+    }
+    function executeActionCore(attackerRole, defenderRole, state, events, action, calledMove = false) {
       const attacker = getActiveCombatant(state, attackerRole);
       const defender = getActiveCombatant(state, defenderRole);
 
+      if(attacker.bideState)action={...action,moveId:117,moveName:undefined};
       // B3-06: Validação de que apenas o Pokémon ativo pode realizar ações de combate
       if (action && action.pokemonId !== undefined && Number(action.pokemonId) !== attacker.id) {
         throw new Error(`Apenas o Pokémon ativo ("${attacker.name}") pode realizar ações de combate.`);
@@ -734,8 +797,12 @@
         throw new Error(`NO_USABLE_MOVES: "${attacker.name}" não possui golpes utilizáveis com PP disponível.`);
       }
 
+      const actualDamageClass = selectedMove.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')?'physical':selectedMove.damageClass;
+      const actualDamageType=constants.P5.type(selectedMove,attacker);
+      const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType};
+      const continuingBide=Boolean(attacker.bideState);
       // Validação de PP
-      if (!calledMove && selectedMove.currentPp <= 0) {
+      if (!calledMove && !continuingBide && selectedMove.currentPp <= 0) {
         throw new Error(`ACTION_REJECTED: PP do golpe "${selectedMove.name}" está esgotado.`);
       }
 
@@ -1000,14 +1067,14 @@
           pokemonName: attacker.name,
           moveId: selectedMove.id,
           moveName: selectedMove.name,
-          moveType: selectedMove.type,
-          damageClass: selectedMove.damageClass,
+          moveType: actualDamageType,
+          damageClass: actualDamageClass,
           power: selectedMove.power
         });
       }
 
       // Consumo de PP (ocorre antes da resolução de dano, em hits e em misses)
-      if(!calledMove){
+      if(!calledMove && !continuingBide){
       const previousPp = selectedMove.currentPp;
       selectedMove.currentPp = Math.max(0, selectedMove.currentPp - 1);
 
@@ -1034,6 +1101,17 @@
         return;
       }
 
+      if(selectedMove.id===117){
+        if(!attacker.bideState){attacker.bideState={turnsLeft:2,damage:0};events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'BIDE_STORE'});return;}
+        if(attacker.bideState.turnsLeft>1){attacker.bideState.turnsLeft--;events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'BIDE_STORE'});return;}
+        action={...action,bideDamage:attacker.bideState.damage*2};attacker.bideState=null;
+        if(!action.bideDamage){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'NO_BIDE_DAMAGE'});return;}
+      }
+      const targetAction=state.turnActions?.[defenderRole];
+      const targetMove=plannedMove(defender,targetAction);
+      const p5Context={turn:state.turn,executing:true,targetAction,targetMove,faintCount:state.version===2?state[attackerRole].team.filter(m=>m.currentHp<=0).length:0};
+      const p5Failure=constants.P5.get(selectedMove)?constants.P5.failure(selectedMove,attacker,defender,p5Context):null;
+      if(p5Failure){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:p5Failure});return;}
       const fail = reason => events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveId:selectedMove.id,moveName:selectedMove.name,reason});
       if(selectedMove.id===156){
         if(attacker.currentHp===attacker.maxHp||attacker.statusCondition==='sleep'){fail('REST_NOT_NEEDED');return;}
@@ -1045,7 +1123,7 @@
       }
       if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){fail('REQUIRES_SLEEP');return;}
       if(selectedMove.id===214){
-        const candidates=attacker.moves.filter(m=>m.id!==214&&constants.getMoveCapability(m)?.supportLevel==='FULL');
+        const candidates=attacker.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
         if(!candidates.length){fail('NO_CALLABLE_MOVE');return;}
         const index=action.sleepTalkChoice??0;
         if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
@@ -1083,6 +1161,12 @@
         return;
       }
 
+      if(selectedMove.id===599){
+        if(!['poison','toxic'].includes(defender.statusCondition)){fail('VENOM_DRENCH');return;}
+        if(['attack','specialAttack','speed'].every(k=>defender.statStages[k]<=-6)){fail('STAT_LIMIT');return;}
+        for(const statKey of ['attack','specialAttack','speed']){const report=constants.applyStatStageChange(defender,statKey,-1);events.push({type:BATTLE_EVENTS.STAT_STAGE_CHANGED,combatant:defenderRole,pokemonName:defender.name,statKey,...report});}
+        return;
+      }
       if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
         if (selectedMove.statusEffect === 'confusion') {
           const isImmune = constants.isStatusMoveImmune ? constants.isStatusMoveImmune(selectedMove, defender.types) : false;
@@ -1188,14 +1272,16 @@
       // 3. Resolução de STAB (Same-Type Attack Bonus)
       const isLevelDamage = Boolean(constants.isLevelDamageMove?.(selectedMove));
       const isConstantDamage = Boolean(constants.isConstantDamageMove?.(selectedMove));
-      const isFixedDamage = isLevelDamage || isConstantDamage;
-      const hasStab = attacker.types.includes(selectedMove.type);
+      const isFractionalDamage = Boolean(constants.isFractionalDamageMove?.(selectedMove));
+      const isP5Fixed = Boolean(constants.P5.get(selectedMove) && constants.P5.fixed(selectedMove));
+      const isFixedDamage = isLevelDamage || isConstantDamage || isFractionalDamage || isP5Fixed;
+      const hasStab = attacker.types.includes(actualDamageType);
       const stabMultiplier = (hasStab && !isFixedDamage) ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1;
 
       events.push({
         type: BATTLE_EVENTS.STAB_RESOLVED,
         actor: attackerRole,
-        moveType: selectedMove.type,
+        moveType: actualDamageType,
         attackerTypes: attacker.types,
         multiplier: stabMultiplier,
         hasStab: isFixedDamage ? false : hasStab
@@ -1219,21 +1305,21 @@
           type: BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED,
           source: attackerRole,
           target: defenderRole,
-          attackType: selectedMove.type,
+          attackType: actualDamageType,
           secondaryAttackType: 'flying',
           defenderTypes: defender.types,
           multiplier: effectiveMultiplier,
           classification: effectivenessClassification
         });
       } else {
-        const effectiveness = TypeEffectiveness.calculate(selectedMove.type, defender.types);
+        const effectiveness = TypeEffectiveness.calculate(actualDamageType, defender.types);
         const rawMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
           : effectiveness.multiplier;
         defenderTypesList = effectiveness.defenderTypes;
 
         if (isFixedDamage) {
-          if (rawMultiplier === 0) {
+          if (rawMultiplier === 0 && selectedMove.id!==117) {
             effectiveMultiplier = 0;
             effectivenessClassification = constants.TYPE_EFFECTIVENESS_CLASSIFICATION?.IMMUNE || 'IMMUNE';
           } else {
@@ -1259,7 +1345,7 @@
       // 5. Seleção de atributos de ataque e defesa baseados na categoria de dano
       let attackStat;
       let defenseStat;
-      if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.PHYSICAL) {
+      if (actualDamageClass === MOVE_DAMAGE_CLASSES.PHYSICAL) {
         attackStat = constants.usesDefenseAsAttack?.(selectedMove)
           ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense') : attacker.defense)
           : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack') : attacker.attack);
@@ -1271,6 +1357,10 @@
           : (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense') : defender.specialDefense);
       }
 
+      const resolvedPower=constants.P5.get(selectedMove)?constants.P5.power(selectedMove,attacker,defender,constants,p5Context):selectedMove.power;
+      if(selectedMove.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')){
+        attackStat=constants.getEffectiveStat(attacker,'attack');defenseStat=constants.getEffectiveStat(defender,'defense');
+      }
       // Validação do roll de dano determinístico (85..100)
       let damageRoll = 100; // Padrão de retrocompatibilidade para testes legados
       if (action && action.damageRoll !== undefined) {
@@ -1284,16 +1374,22 @@
       // 6. Pipeline de cálculo de dano v2 (PBA-014B: com variância 85..100)
       let baseDamage;
       let finalDamage;
-      if (isLevelDamage) {
+      if (isP5Fixed) {
+        baseDamage = effectiveMultiplier===0?0:constants.P5.fixedAmount(selectedMove,attacker,defender,action);
+        finalDamage = Math.min(defender.currentHp,baseDamage);
+      } else if (isLevelDamage) {
         const attackerLevel = Number(attacker.level) || constants.BATTLE_CONFIG?.SIMULATION_LEVEL || 50;
         baseDamage = effectiveMultiplier === 0 ? 0 : attackerLevel;
         finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, attackerLevel);
+      } else if (isFractionalDamage) {
+        baseDamage = effectiveMultiplier === 0 ? 0 : constants.getFractionalDamageAmount(defender.currentHp);
+        finalDamage = baseDamage;
       } else if (isConstantDamage) {
         const constantAmount = constants.getConstantDamageAmount ? constants.getConstantDamageAmount(selectedMove) : (selectedMove.id === 49 ? 20 : 40);
         baseDamage = effectiveMultiplier === 0 ? 0 : constantAmount;
         finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, constantAmount);
       } else {
-        baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, selectedMove.power);
+        baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, resolvedPower);
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
         const multiHit = constants.getMultiHitMove(selectedMove);
         if (multiHit) {
@@ -1306,18 +1402,25 @@
             return rolls;
           }
           const damageRolls = hitRolls('hitDamageRolls', damageRoll, 85, 100);
+        const accuracyRolls = multiHit.multiAccuracy ? hitRolls('hitAccuracyRolls',accuracyRoll,1,100) : null;
+        if(accuracyRolls && accuracyRolls[0]!==accuracyRoll)throw new Error('A precisão do primeiro acerto deve coincidir com accuracyRoll.');
           const poisonRolls = selectedMove.id === 41 ? hitRolls('hitSecondaryEffectRolls', secondaryEffectRoll, 1, 100) : null;
           let hitCount = 0;
           let totalDamage = 0;
           for (let index = 0; index < plannedHits && defender.currentHp > 0 && effectiveMultiplier > 0; index++) {
-            const hitDamage = constants.applyBurnPenalty(DamageCalculator.applyModifier(baseDamage, effectiveMultiplier, stabMultiplier, damageRolls[index]), attacker, selectedMove);
+            if(index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
+          const hitPower=multiHit.escalating?selectedMove.power*(index+1):resolvedPower;
+          const critical=Boolean(multiHit.critical);
+          const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?Math.max(attacker.attack,attackStat):attackStat,critical?Math.min(defender.defense,defenseStat):defenseStat,hitPower);
+          const hitDamage = constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), effectiveMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove);
             const previousHp = defender.currentHp;
             defender.currentHp = Math.max(0, previousHp - hitDamage);
             totalDamage += previousHp - defender.currentHp;
             hitCount++;
+          afterDirectHit(attacker,defender,attackerRole,defenderRole,damageMove,events,previousHp-defender.currentHp);
             events.push({ type: BATTLE_EVENTS.DAMAGE_APPLIED, source: attackerRole, target: defenderRole,
-              attackType: selectedMove.type, damageClass: selectedMove.damageClass, defenderTypes: defenderTypesList,
-              moveName: selectedMove.name, power: selectedMove.power, baseDamage, damageRoll: damageRolls[index],
+              attackType: actualDamageType, damageClass: actualDamageClass, defenderTypes: defenderTypesList,
+              moveName: selectedMove.name, power: hitPower, baseDamage:hitBaseDamage, critical, criticalMultiplier:critical?1.5:1, damageRoll: damageRolls[index],
               stabMultiplier, typeMultiplier: effectiveMultiplier, multiplier: effectiveMultiplier,
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
             if (poisonRolls && poisonRolls[index] <= 20 && constants.isEligibleForStatusCondition(defender, 'poison')) {
@@ -1329,13 +1432,13 @@
             }
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
-            moveName: selectedMove.name, hitCount, plannedHits, totalDamage});
+            moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical)});
           if (defender.currentHp === 0) resolveFaints(state, events, [defenderRole]);
           return;
         }
         finalDamage = constants.applyBurnPenalty(
           DamageCalculator.applyModifier(baseDamage, effectiveMultiplier, stabMultiplier, damageRoll),
-          attacker, selectedMove);
+          attacker, damageMove);
       }
 
       // 7. Aplicação do dano ao HP
@@ -1343,17 +1446,18 @@
       const currentHp = Math.max(0, previousHp - finalDamage);
       defender.currentHp = currentHp;
       const actualDamageDealt = previousHp - currentHp;
+      afterDirectHit(attacker,defender,attackerRole,defenderRole,damageMove,events,actualDamageDealt);
 
       // 8. Emite evento de dano aplicado com dados completos
       events.push({
         type: BATTLE_EVENTS.DAMAGE_APPLIED,
         source: attackerRole,
         target: defenderRole,
-        attackType: selectedMove.type,
-        damageClass: selectedMove.damageClass,
+        attackType: actualDamageType,
+        damageClass: actualDamageClass,
         defenderTypes: defenderTypesList,
         moveName: selectedMove.name,
-        power: selectedMove.power !== undefined ? selectedMove.power : null,
+        power: isFixedDamage ? (selectedMove.power ?? null) : resolvedPower,
         baseDamage,
         damageRoll: isFixedDamage ? 100 : damageRoll,
         stabMultiplier: isFixedDamage ? 1 : stabMultiplier,
@@ -1431,7 +1535,7 @@
       }
 
       // 10B. Auto-penalidades de Atributo (Self Stat Drops: Close Combat, Overheat, Draco Meteor)
-      const selfDrops = selectedMove.selfStatDrops || (constants.getSelfStatDrops && constants.getSelfStatDrops(selectedMove));
+      const selfDrops = constants.P5.drops[selectedMove.id] || selectedMove.selfStatDrops || (constants.getSelfStatDrops && constants.getSelfStatDrops(selectedMove));
       if (effectiveMultiplier > 0 && attacker.currentHp > 0 && selfDrops && typeof selfDrops === 'object') {
         for (const [statKey, delta] of Object.entries(selfDrops)) {
           const report = constants.applyStatStageChange(attacker, statKey, delta);
@@ -1627,6 +1731,7 @@
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
+          previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.toxicStage = 0;
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
@@ -1711,6 +1816,7 @@
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
+          previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.toxicStage = 0;
           side.activeIndex = targetIndex;
           replacedAny = true;

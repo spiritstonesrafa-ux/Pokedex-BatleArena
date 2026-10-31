@@ -65,7 +65,7 @@
     const rawClass = (raw.damageClass || raw.damage_class?.name || raw.damage_class || '').toString().trim().toLowerCase();
 
     if (rawClass === MOVE_DAMAGE_CLASSES.STATUS) {
-      const supported = constants.getSupportedStatusMove?.(raw);
+      const supported = constants.getSupportedStatusMove?.(raw) || (Number(raw.id)===599 && constants.P5?.get(raw) && constants.P5.validPower(raw) ? constants.P5.moves[599] : null);
       if (!supported) throw new Error(`Golpe de status "${raw.name}" não é suportado no Battle Engine v2 (UNSUPPORTED_IN_PBA_005).`);
       return Object.freeze({ ...supported });
     }
@@ -90,8 +90,15 @@
     const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(raw) || constants?.isLevelDamageMove?.({ id, name: raw.name }));
     const isConstantDamage = Boolean(constants?.isConstantDamageMove?.(raw) || constants?.isConstantDamageMove?.({ id, name: raw.name }));
     let power = null;
-    if (isLevelDamage || isConstantDamage) {
-      const kindLabel = isLevelDamage ? 'baseado em nível' : 'de dano fixo constante';
+    const isFractionalDamage = Boolean(constants?.isFractionalDamageMove?.(raw));
+    if (constants.P5?.get(raw)) {
+      if (!constants.validateMoveData(raw)) throw new Error("Dados de golpe P5 inválidos.");
+      power = constants.P5.get(raw).power;
+    } else if (isFractionalDamage) {
+      if (!constants.isValidFractionalDamagePower(raw)) throw new Error('Poder de golpe fracionário inválido.');
+      power = constants.FRACTIONAL_DAMAGE_MOVES[id].power;
+    } else if (isLevelDamage || isConstantDamage) {
+      const kindLabel = isLevelDamage ? 'baseado em nível' : (isFractionalDamage ? 'de dano fracionário' : 'de dano fixo constante');
       if (raw.power !== undefined && raw.power !== null) {
         if (typeof raw.power === 'boolean' || typeof raw.power === 'object') {
           throw new Error(`Poder do golpe ${kindLabel} "${raw.name}" inválido: ${raw.power}. Golpes ${kindLabel} devem ter power null ou 0.`);

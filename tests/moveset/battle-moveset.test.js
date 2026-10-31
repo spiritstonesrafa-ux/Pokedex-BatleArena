@@ -223,7 +223,7 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
     assert.strictEqual(slot.version_group_details[0].move_learn_method.name, 'level-up');
   });
 
-  it('MQ06 & MQ07 — Status and Null/Variable Power: Strictly rejected without inventing power', async () => {
+  it('MQ06 & MQ07 — Status remains rejected; supported P5 null-power moves retain canonical power', async () => {
     const mockApi = createMockApi();
     const hydrator = new BattleTeamHydrator({ api: mockApi });
 
@@ -246,9 +246,12 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
 
     const hydrated = await hydrator.hydratePokemon(testPokemon);
     const moveNames = hydrated.moves.map(m => m.name);
-    assert.ok(!moveNames.includes('horn-drill'), 'Não deve conter horn-drill');
-    assert.ok(!moveNames.includes('counter'), 'Não deve conter counter');
-    assert.ok(!moveNames.includes('flail'), 'Não deve conter flail');
+    assert.strictEqual(isMechanicallySupportedMove(MOCK_MOVE_DB['horn-drill']), true);
+    if(moveNames.includes('horn-drill'))assert.strictEqual(hydrated.moves.find(m=>m.name==='horn-drill').power,null);
+    assert.strictEqual(isMechanicallySupportedMove(MOCK_MOVE_DB['counter']), true);
+    if(moveNames.includes('counter'))assert.strictEqual(hydrated.moves.find(m=>m.name==='counter').power,null);
+    assert.strictEqual(isMechanicallySupportedMove(MOCK_MOVE_DB['flail']), true);
+    if(moveNames.includes('flail'))assert.strictEqual(hydrated.moves.find(m=>m.name==='flail').power,null);
     assert.ok(!moveNames.includes('growl'), 'Não deve conter status move');
     assert.strictEqual(hydrated.moves.length, 4);
   });
@@ -772,7 +775,7 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
     assert.ok(controller.incompatibilityError.includes('Ditto ainda não é compatível com a Battle Arena'), `Mensagem deve ser controlada: ${controller.incompatibilityError}`);
   });
 
-  it('HIDDEN-POWER-01 — Hidden Power Classification: special with power 60 is strictly rejected as mechanically unsupported', () => {
+  it('HIDDEN-POWER-01 — Hidden Power Classification: special with power 60 uses IV-derived type', () => {
     const hiddenPowerMock = {
       id: 237,
       name: 'hidden-power',
@@ -785,15 +788,13 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
 
     assert.strictEqual(
       isMechanicallySupportedMove(hiddenPowerMock),
-      false,
-      'Hidden Power NÃO deve ser considerado mecanicamente suportado devido a tipo dinâmico derivado de IVs'
+      true,
+      'Hidden Power usa a tipagem por IVs implementada na P5'
     );
-    assert.ok(UNSUPPORTED_COMPLEX_MOVES['hidden-power'], 'hidden-power deve estar no catálogo de UNSUPPORTED_COMPLEX_MOVES');
-    assert.strictEqual(UNSUPPORTED_COMPLEX_MOVES['hidden-power'].category, 'UNSUPPORTED_DYNAMIC_TYPE');
-    assert.strictEqual(UNSUPPORTED_COMPLEX_MOVES['hidden-power'].reason, 'DYNAMIC_TYPE_FROM_IVS');
+    assert.ok(!UNSUPPORTED_COMPLEX_MOVES['hidden-power']);
   });
 
-  it('UNOWN-01 — Zero Supported Moves for Unown: Unown with only Hidden Power yields moves=[], UNSUPPORTED_ENGINE_MOVESET, ZERO_SUPPORTED_ENGINE_MOVES', async () => {
+  it('UNOWN-01 — Unown with Hidden Power now has a canonical limited one-move loadout', async () => {
     const mockApi = createMockApi();
     const hydrator = new BattleTeamHydrator({ api: mockApi });
 
@@ -809,22 +810,22 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
 
     const hydrated = await hydrator.hydratePokemon(unown);
 
-    assert.strictEqual(hydrated.moves.length, 0, 'Unown deve ter 0 golpes suportados');
-    assert.strictEqual(hydrated.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.UNSUPPORTED_ENGINE_MOVESET);
-    assert.strictEqual(hydrated.moveLoadoutReason, MOVESET_LIMIT_REASON.ZERO_SUPPORTED_ENGINE_MOVES);
-    assert.notStrictEqual(hydrated.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.LIMITED_API_MOVESET);
+    assert.strictEqual(hydrated.moves.length, 1, 'Unown deve ter Hidden Power, sem golpes inventados');
+    assert.strictEqual(hydrated.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.LIMITED_API_MOVESET);
+    assert.strictEqual(hydrated.moveLoadoutReason, MOVESET_LIMIT_REASON.ENGINE_CAPABILITY_LIMIT);
+    assert.strictEqual(hydrated.moves[0].name,'hidden-power');
     assert.notStrictEqual(hydrated.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.NETWORK_FALLBACK_MOVESET);
 
     const diag = hydrator.lastLoadoutDiagnostic;
     assert.ok(diag, 'Deve expor diagnóstico de resolução');
     assert.strictEqual(diag.candidateCount, 1);
     assert.strictEqual(diag.moveDetailSuccesses, 1);
-    assert.strictEqual(diag.supportedCount, 0);
-    assert.strictEqual(diag.source, MOVESET_LOADOUT_SOURCE.UNSUPPORTED_ENGINE_MOVESET);
-    assert.strictEqual(diag.reason, MOVESET_LIMIT_REASON.ZERO_SUPPORTED_ENGINE_MOVES);
+    assert.strictEqual(diag.supportedCount, 1);
+    assert.strictEqual(diag.source, MOVESET_LOADOUT_SOURCE.LIMITED_API_MOVESET);
+    assert.strictEqual(diag.reason, MOVESET_LIMIT_REASON.ENGINE_CAPABILITY_LIMIT);
   });
 
-  it('SESSION-PREFLIGHT-UNOWN-01 — Session Blocks Team with Unown: startBattle aborted cleanly without engine call', async () => {
+  it('SESSION-PREFLIGHT-UNOWN-01 — Session blocks a mocked empty loadout before engine call', async () => {
     const { BattleSessionController } = require('../../assets/js/battle-session/battle-session-controller.js');
 
     let engineCalled = false;
@@ -871,7 +872,7 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
 
     await controller.startBattle();
 
-    assert.strictEqual(engineCalled, false, 'BattleEngine NUNCA deve ser chamado para equipe contendo Unown');
+    assert.strictEqual(engineCalled, false, 'BattleEngine não deve ser chamado para uma equipe com loadout vazio');
     assert.strictEqual(controller.battleState, null, 'battleState deve permanecer nulo');
     assert.strictEqual(controller.uiState, 'READY', 'UI state deve retornar para READY com alerta de incompatibilidade');
     assert.ok(controller.incompatibilityError, 'Deve registrar mensagem de incompatibilidade');
@@ -881,7 +882,7 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
     );
   });
 
-  it('ERUPTION-01 — Eruption Classification: special with power 150 is rejected as unsupported variable damage', () => {
+  it('ERUPTION-01 — Eruption Classification: special with power 150 uses supported live HP scaling', () => {
     const eruptionMock = {
       id: 284,
       name: 'eruption',
@@ -894,15 +895,13 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
 
     assert.strictEqual(
       isMechanicallySupportedMove(eruptionMock),
-      false,
-      'Eruption NÃO deve ser aceito como golpe simples porque seu dano depende do HP restante do usuário'
+      true,
+      'Eruption é suportado pela fórmula P5 dependente de HP'
     );
-    assert.ok(UNSUPPORTED_COMPLEX_MOVES['eruption'], 'eruption deve constar em UNSUPPORTED_COMPLEX_MOVES');
-    assert.strictEqual(UNSUPPORTED_COMPLEX_MOVES['eruption'].category, 'UNSUPPORTED_VARIABLE_DAMAGE');
-    assert.strictEqual(UNSUPPORTED_COMPLEX_MOVES['eruption'].reason, 'POWER_FROM_USER_HP');
+    assert.ok(!UNSUPPORTED_COMPLEX_MOVES['eruption']);
   });
 
-  it('WATER-SPOUT-01 — Water Spout Classification: special with power 150 is rejected as unsupported variable damage', () => {
+  it('WATER-SPOUT-01 — Water Spout Classification: special with power 150 uses supported live HP scaling', () => {
     const waterSpoutMock = {
       id: 323,
       name: 'water-spout',
@@ -915,15 +914,13 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
 
     assert.strictEqual(
       isMechanicallySupportedMove(waterSpoutMock),
-      false,
-      'Water Spout NÃO deve ser aceito como golpe simples porque seu dano depende do HP restante do usuário'
+      true,
+      'Water Spout é suportado pela fórmula P5 dependente de HP'
     );
-    assert.ok(UNSUPPORTED_COMPLEX_MOVES['water-spout'], 'water-spout deve constar em UNSUPPORTED_COMPLEX_MOVES');
-    assert.strictEqual(UNSUPPORTED_COMPLEX_MOVES['water-spout'].category, 'UNSUPPORTED_VARIABLE_DAMAGE');
-    assert.strictEqual(UNSUPPORTED_COMPLEX_MOVES['water-spout'].reason, 'POWER_FROM_USER_HP');
+    assert.ok(!UNSUPPORTED_COMPLEX_MOVES['water-spout']);
   });
 
-  it('LOADOUT-REGRESSION-HP-RATIO-01 — Species with Eruption/Water Spout ignores them and still selects 4 supported moves', async () => {
+  it('LOADOUT-REGRESSION-HP-RATIO-01 — Species with Eruption/Water Spout can select supported HP-scaling moves', async () => {
     const mockApi = createMockApi();
     const hydrator = new BattleTeamHydrator({ api: mockApi });
 
@@ -946,7 +943,7 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
     const hydrated = await hydrator.hydratePokemon(firePokemon);
 
     assert.strictEqual(hydrated.moves.length, 4, 'Deve selecionar exatamente 4 ataques suportados');
-    assert.ok(!hydrated.moves.some(m => m.name === 'eruption'), 'Eruption não deve estar no loadout final');
+    assert.ok(hydrated.moves.some(m => m.name === 'eruption' && m.power===150), 'Eruption deve entrar no loadout com metadado canônico e fórmula P5');
     assert.strictEqual(hydrated.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.API_MOVESET);
     assert.strictEqual(hydrated.moveLoadoutReason, MOVESET_LIMIT_REASON.NONE);
   });
