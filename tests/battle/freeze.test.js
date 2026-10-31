@@ -93,7 +93,7 @@ test('P4-FZ-01: Classificação canônica, dados de Ice Beam, Blizzard e Scald',
   assert.equal(blzCap.name, 'blizzard');
   assert.equal(blzCap.supportLevel, 'PARTIAL');
   assert.deepEqual(blzCap.requiredMechanics, ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']);
-  assert.deepEqual(blzCap.knownPending, ['WEATHER_ACCURACY_PHASE_P5']);
+  assert.deepEqual(blzCap.knownPending, ['WEATHER_ACCURACY_PHASE_P7']);
 
   assert.equal(BLIZZARD.id, 59);
   assert.equal(BLIZZARD.name, 'blizzard');

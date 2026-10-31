@@ -44,7 +44,12 @@
     STAT_STAGE_CHANGED: 'STAT_STAGE_CHANGED',
     FLINCH_APPLIED: 'FLINCH_APPLIED',
     FLINCH_IMMOBILIZED: 'FLINCH_IMMOBILIZED',
-    STATUS_CURED: 'STATUS_CURED'
+    STATUS_CURED: 'STATUS_CURED',
+    CONFUSION_APPLIED: 'CONFUSION_APPLIED',
+    CONFUSION_BLOCKED: 'CONFUSION_BLOCKED',
+    CONFUSION_CHECK: 'CONFUSION_CHECK',
+    CONFUSION_DAMAGE: 'CONFUSION_DAMAGE',
+    CONFUSION_ENDED: 'CONFUSION_ENDED'
   });
 
   const BATTLE_ACTIONS = Object.freeze({
@@ -307,6 +312,16 @@
       requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE']),
       requiresDamage: true,
       requiresHit: true
+    }),
+    'water-pulse': Object.freeze({
+      id: 352,
+      name: 'water-pulse',
+      confusion: true,
+      chance: 20,
+      target: 'defender',
+      requiredMechanics: Object.freeze(['SPECIAL_DAMAGE', 'SECONDARY_CONFUSION_CHANCE']),
+      requiresDamage: true,
+      requiresHit: true
     })
   });
 
@@ -431,7 +446,8 @@
     44: Object.freeze({ id: 44, name: 'bite', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_FLINCH'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bite'] }),
     53: Object.freeze({ id: 53, name: 'flamethrower', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['flamethrower'] }),
     58: Object.freeze({ id: 58, name: 'ice-beam', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['ice-beam'] }),
-    59: Object.freeze({ id: 59, name: 'blizzard', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: ['WEATHER_ACCURACY_PHASE_P5'], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['blizzard'] }),
+    59: Object.freeze({ id: 59, name: 'blizzard', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: ['WEATHER_ACCURACY_PHASE_P7'], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['blizzard'] }),
+    109: Object.freeze({ id: 109, name: 'confuse-ray', supportLevel: 'FULL', requiredMechanics: ['CONFUSION_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -440,6 +456,7 @@
     86: Object.freeze({ id: 86, name: 'thunder-wave', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     94: Object.freeze({ id: 94, name: 'psychic', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['psychic'] }),
     95: Object.freeze({ id: 95, name: 'hypnosis', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
+    92: Object.freeze({ id: 92, name: 'toxic', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION', 'PROGRESSIVE_POISON', 'POISON_USER_ACCURACY'], knownPending: [], blockedReason: null, priority: 0 }),
     98: Object.freeze({ id: 98, name: 'quick-attack', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'POSITIVE_PRIORITY'], knownPending: [], blockedReason: null, priority: 1 }),
     141: Object.freeze({ id: 141, name: 'leech-life', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     147: Object.freeze({ id: 147, name: 'spore', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -453,6 +470,7 @@
     247: Object.freeze({ id: 247, name: 'shadow-ball', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['shadow-ball'] }),
     261: Object.freeze({ id: 261, name: 'will-o-wisp', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     315: Object.freeze({ id: 315, name: 'overheat', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ specialAttack: -2 }) }),
+    352: Object.freeze({ id: 352, name: 'water-pulse', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_CONFUSION_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['water-pulse'] }),
     347: Object.freeze({ id: 347, name: 'calm-mind', supportLevel: 'FULL', requiredMechanics: ['STAT_STAGE_BOOST'], knownPending: [], blockedReason: null, priority: 0, statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1 }) }),
     370: Object.freeze({ id: 370, name: 'close-combat', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SELF_STAT_DROP'], knownPending: [], blockedReason: null, priority: 0, selfStatDrops: Object.freeze({ defense: -1, specialDefense: -1 }) }),
     398: Object.freeze({ id: 398, name: 'poison-jab', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['poison-jab'] }),
@@ -547,6 +565,7 @@
 
   // Mapeamento canônico dos golpes de dano utilizados nos catálogos da campanha e Pokédex expandida
   const KNOWN_CATALOG_MOVES = Object.freeze({
+    92: Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
     1: Object.freeze({ id: 1, name: 'pound', type: 'normal', power: 40, accuracy: 100, pp: 35, damageClass: 'physical' }),
     2: Object.freeze({ id: 2, name: 'karate-chop', type: 'fighting', power: 50, accuracy: 100, pp: 25, damageClass: 'physical' }),
     5: Object.freeze({ id: 5, name: 'mega-punch', type: 'normal', power: 80, accuracy: 85, pp: 20, damageClass: 'physical' }),
@@ -595,6 +614,7 @@
     94: Object.freeze({ id: 94, name: 'psychic', type: 'psychic', power: 90, accuracy: 100, pp: 10, damageClass: 'special' }),
     95: Object.freeze({ id: 95, name: 'hypnosis', type: 'psychic', power: 0, accuracy: 60, pp: 20, damageClass: 'status', statusEffect: 'sleep' }),
     98: Object.freeze({ id: 98, name: 'quick-attack', type: 'normal', power: 40, accuracy: 100, pp: 30, damageClass: 'physical' }),
+    109: Object.freeze({ id: 109, name: 'confuse-ray', type: 'ghost', power: 0, accuracy: 100, pp: 10, damageClass: 'status', statusEffect: 'confusion' }),
     121: Object.freeze({ id: 121, name: 'egg-bomb', type: 'normal', power: 100, accuracy: 75, pp: 10, damageClass: 'physical' }),
     122: Object.freeze({ id: 122, name: 'lick', type: 'ghost', power: 30, accuracy: 100, pp: 30, damageClass: 'physical' }),
     126: Object.freeze({ id: 126, name: 'fire-blast', type: 'fire', power: 110, accuracy: 85, pp: 5, damageClass: 'special' }),
@@ -653,6 +673,7 @@
     345: Object.freeze({ id: 345, name: 'magical-leaf', type: 'grass', power: 60, accuracy: null, pp: 20, damageClass: 'special' }),
     348: Object.freeze({ id: 348, name: 'leaf-blade', type: 'grass', power: 90, accuracy: 100, pp: 15, damageClass: 'physical' }),
     351: Object.freeze({ id: 351, name: 'shock-wave', type: 'electric', power: 60, accuracy: null, pp: 20, damageClass: 'special' }),
+    352: Object.freeze({ id: 352, name: 'water-pulse', type: 'water', power: 60, accuracy: 100, pp: 20, damageClass: 'special' }),
     369: Object.freeze({ id: 369, name: 'u-turn', type: 'bug', power: 70, accuracy: 100, pp: 20, damageClass: 'physical' }),
     370: Object.freeze({ id: 370, name: 'close-combat', type: 'fighting', power: 120, accuracy: 100, pp: 5, damageClass: 'physical' }),
     394: Object.freeze({ id: 394, name: 'flare-blitz', type: 'fire', power: 120, accuracy: 100, pp: 15, damageClass: 'physical' }),
@@ -1120,9 +1141,17 @@
   });
 
   const DEFAULT_SLEEP_TURNS = 2;
+  const DEFAULT_CONFUSION_TURNS = Object.freeze({
+    MIN: 2,
+    MAX: 5,
+    DEFAULT: 3
+  });
 
   // Apenas golpes de status curados com efeito integral suportado.
   const SUPPORTED_STATUS_MOVES = Object.freeze({
+    'toxic': Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
+    'confuse-ray': Object.freeze({ id: 109, name: 'confuse-ray', type: 'ghost',
+      power: 0, accuracy: 100, pp: 10, damageClass: 'status', statusEffect: 'confusion' }),
     'swords-dance': Object.freeze({ id: 14, name: 'swords-dance', type: 'normal',
       power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ attack: 2 }) }),
     'calm-mind': Object.freeze({ id: 347, name: 'calm-mind', type: 'psychic',
@@ -1157,6 +1186,7 @@
     if (!Array.isArray(types) || !statusCondition) return false;
     const normalizedStatus = String(statusCondition).trim().toLowerCase();
     switch (normalizedStatus) {
+      case 'toxic':
       case 'poison':
         return types.includes('poison') || types.includes('steel');
       case 'burn':
@@ -1202,6 +1232,16 @@
     return !isStatusConditionImmune(statusCondition, types);
   }
 
+  function isConfused(combatant) {
+    return Boolean(combatant && Number.isInteger(combatant.confusionTurns) && combatant.confusionTurns > 0);
+  }
+
+  function isEligibleForConfusion(target) {
+    if (!target || typeof target !== 'object') return false;
+    if (Number(target.currentHp) <= 0) return false;
+    return !(target.confusionTurns > 0);
+  }
+
   function isPoisonPowderImmune(types) {
     return Array.isArray(types) && (isStatusConditionImmune('poison', types) || types.includes('grass'));
   }
@@ -1210,6 +1250,8 @@
     if (!Array.isArray(types) || !move) return false;
     const name = String(move?.name || '').trim().toLowerCase();
     switch (name) {
+      case 'toxic':
+        return isStatusConditionImmune('toxic', types);
       case 'poison-powder':
         return isPoisonPowderImmune(types);
       case 'sleep-powder':
@@ -1355,7 +1397,10 @@
     isSelfThawingMove,
     isThawingMoveTarget,
     isDamagingFireMove,
-    DEFAULT_SLEEP_TURNS
+    DEFAULT_SLEEP_TURNS,
+    DEFAULT_CONFUSION_TURNS,
+    isConfused,
+    isEligibleForConfusion
   });
 
   // Suporte universal (Node.js & Browser)

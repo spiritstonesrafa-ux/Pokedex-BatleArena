@@ -112,9 +112,9 @@
           if (typeof this.view.displayMessage === 'function') {
             const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
             const status = command.statusCondition;
-            const label = status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : status === 'freeze' ? 'congelamento' : 'veneno';
+            const label = status === 'toxic' ? 'veneno grave' : status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : status === 'freeze' ? 'congelamento' : 'veneno';
             const message = command.outcome === 'APPLIED'
-              ? (status === 'poison' ? `${name} foi envenenado!` : status === 'sleep' ? `${name} adormeceu!` : status === 'freeze' ? `${name} foi congelado!` : `${name} sofreu ${label}!`) :
+              ? (status === 'toxic' ? `${name} foi gravemente envenenado!` : status === 'poison' ? `${name} foi envenenado!` : status === 'sleep' ? `${name} adormeceu!` : status === 'freeze' ? `${name} foi congelado!` : `${name} sofreu ${label}!`) :
               command.outcome === 'DAMAGE' ? `${name} perdeu ${command.damage} HP por ${label}!` :
               command.outcome === 'IMMUNE' ? `${name} é imune a ${label}!` :
               command.outcome === 'IMMOBILIZED' ? (status === 'sleep' ? `${name} está dormindo profundamente!` : status === 'freeze' ? `${name} está congelado e não pôde se mover!` : `${name} não conseguiu agir por paralisia!`) :
@@ -132,6 +132,23 @@
           if (typeof this.view.displayMessage === 'function') {
             const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
             this.view.displayMessage(`${name} hesitou e não pôde se mover!`);
+          }
+          break;
+        }
+
+        case PRESENTATION_COMMANDS.CONFUSION_FEEDBACK: {
+          if (typeof this.view.displayMessage === 'function') {
+            const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
+            const message = command.outcome === 'APPLIED'
+              ? `${name} ficou confuso!` :
+              command.outcome === 'DAMAGE'
+                ? `${name} se feriu na confusão!` :
+                command.outcome === 'CHECK'
+                  ? `${name} está confuso!` :
+                  command.outcome === 'ENDED'
+                    ? `${name} se livrou da confusão!` :
+                    `${name} já está confuso!`;
+            this.view.displayMessage(message);
           }
           break;
         }

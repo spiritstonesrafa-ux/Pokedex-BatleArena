@@ -67,23 +67,55 @@
         let isEligible = false;
 
         if (move.statusEffect) {
-          const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
-          isEligible = !immune && !defender.statusCondition && (Number(defender.currentHp) || 0) > 0;
-          if (isEligible) {
-            let accuracyFactor = 1.0;
-            if (accuracy !== null && accuracy !== 'ALWAYS_HIT' && accuracy !== undefined) {
-              const accNum = Number(accuracy);
-              if (Number.isFinite(accNum)) {
-                accuracyFactor = Math.max(0, Math.min(100, accNum)) / 100;
+          if (move.statusEffect === 'confusion') {
+            const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
+            isEligible = !immune && !(defender.confusionTurns > 0) && (Number(defender.currentHp) || 0) > 0;
+            if (isEligible) {
+              let accuracyFactor = 1.0;
+              if (accuracy !== null && accuracy !== 'ALWAYS_HIT' && accuracy !== undefined) {
+                const accNum = Number(accuracy);
+                if (Number.isFinite(accNum)) {
+                  accuracyFactor = Math.max(0, Math.min(100, accNum)) / 100;
+                }
               }
+              const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(move));
+              let actionFactor = attacker.statusCondition === 'paralysis'
+                ? 0.75
+                : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
+              if (attacker.confusionTurns > 0) {
+                actionFactor *= 0.67;
+              }
+              statusChance = accuracyFactor * actionFactor;
+              expectedStatusBenefit = Math.round(statusChance * 20);
             }
-            const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(move));
-            const actionFactor = attacker.statusCondition === 'paralysis'
-              ? 0.75
-              : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
-            statusChance = accuracyFactor * actionFactor;
-            if (move.statusEffect === 'sleep') {
-              expectedStatusBenefit = Math.round(statusChance * 25);
+          } else {
+            const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
+            isEligible = !immune && !defender.statusCondition && (Number(defender.currentHp) || 0) > 0;
+            if (isEligible) {
+              let accuracyFactor = 1.0;
+              if (accuracy !== null && accuracy !== 'ALWAYS_HIT' && accuracy !== undefined) {
+                const accNum = Number(accuracy);
+                if (Number.isFinite(accNum)) {
+                  accuracyFactor = Math.max(0, Math.min(100, accNum)) / 100;
+                }
+              }
+              const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(move));
+              let actionFactor = attacker.statusCondition === 'paralysis'
+                ? 0.75
+                : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
+              if (attacker.confusionTurns > 0) {
+                actionFactor *= 0.67;
+              }
+              statusChance = accuracyFactor * actionFactor;
+              if (move.statusEffect === 'sleep') {
+                expectedStatusBenefit = Math.round(statusChance * 25);
+              }
+              if (move.statusEffect === 'toxic') {
+                const hitChance = attacker.types.includes('poison') ? 1 : accuracyFactor;
+                statusChance = hitChance * actionFactor;
+                const unit = Math.max(1, Math.floor(Number(defender.maxHp || defender.currentHp) / 16));
+                expectedStatusBenefit = Math.round(statusChance * Math.min(defender.currentHp, unit * 6));
+              }
             }
           }
         }
@@ -186,9 +218,12 @@
       }
 
       const isSelfThaw = Boolean(constants?.isSelfThawingMove && constants.isSelfThawingMove(move));
-      const actionFactor = attacker.statusCondition === 'paralysis'
+      let actionFactor = attacker.statusCondition === 'paralysis'
         ? 0.75
         : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
+      if (attacker.confusionTurns > 0) {
+        actionFactor *= 0.67;
+      }
       const expectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
 
       // 6. Semântica refinada de nocaute (KO)
@@ -323,6 +358,13 @@
             const rawChance = Number(secEffect.chance) || 0;
             expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
             expectedStatusBenefit = Math.round(expectedStatusChance * 20);
+          }
+        } else if (secEffect.confusion) {
+          isEligibleForSecondary = !(defender.confusionTurns > 0) && !guaranteedKo && defenderHp > 0;
+          if (isEligibleForSecondary) {
+            const rawChance = Number(secEffect.chance) || 0;
+            expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
+            expectedStatusBenefit = Math.round(expectedStatusChance * 15);
           }
         }
       }

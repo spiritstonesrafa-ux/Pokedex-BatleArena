@@ -43,6 +43,9 @@
       this.secondaryEffectSequence = Array.isArray(options.secondaryEffectSequence) ? [...options.secondaryEffectSequence] : null;
       this.sleepDurationSequence = Array.isArray(options.sleepDurationSequence) ? [...options.sleepDurationSequence] : null;
       this.thawSequence = Array.isArray(options.thawSequence) ? [...options.thawSequence] : null;
+      this.confusionDurationSequence = Array.isArray(options.confusionDurationSequence) ? [...options.confusionDurationSequence] : null;
+      this.confusionHitSequence = Array.isArray(options.confusionHitSequence) ? [...options.confusionHitSequence] : null;
+      this.confusionDamageSequence = Array.isArray(options.confusionDamageSequence) ? [...options.confusionDamageSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
 
@@ -116,6 +119,30 @@
       return Math.floor(this.rng() * 100) + 1;
     }
 
+    rollConfusionDuration() {
+      if (this.confusionDurationSequence && this.confusionDurationSequence.length > 0) {
+        const next = Math.floor(Number(this.confusionDurationSequence.shift()));
+        return Math.max(2, Math.min(5, next));
+      }
+      return Math.floor(this.rng() * 4) + 2;
+    }
+
+    rollConfusionHit() {
+      if (this.confusionHitSequence && this.confusionHitSequence.length > 0) {
+        const next = Math.floor(Number(this.confusionHitSequence.shift()));
+        return Math.max(1, Math.min(100, next));
+      }
+      return Math.floor(this.rng() * 100) + 1;
+    }
+
+    rollConfusionDamage() {
+      if (this.confusionDamageSequence && this.confusionDamageSequence.length > 0) {
+        const next = Math.floor(Number(this.confusionDamageSequence.shift()));
+        return Math.max(85, Math.min(100, next));
+      }
+      return Math.floor(this.rng() * 16) + 85;
+    }
+
     pickOpponents(pool, count = 3) {
       if (!Array.isArray(pool) || pool.length === 0) {
         throw new Error('Pool de oponentes inválida ou vazia.');
@@ -180,6 +207,18 @@
 
     setThawSequence(seq) {
       this.thawSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setConfusionDurationSequence(seq) {
+      this.confusionDurationSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setConfusionHitSequence(seq) {
+      this.confusionHitSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setConfusionDamageSequence(seq) {
+      this.confusionDamageSequence = Array.isArray(seq) ? [...seq] : null;
     }
 
     setOpponentSequence(seq) {

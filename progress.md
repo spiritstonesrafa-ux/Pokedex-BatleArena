@@ -2,6 +2,56 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: Confirmação da equipe inicial dentro do jogo
+
+- Substituídas as confirmações nativas do navegador nos dois caminhos de escolha inicial por confirmDraft, seguindo o padrão visual da confirmação de recruta.
+- A tela mostra os seis Pokémon, nomes e tipos, avisa que a escolha é permanente e oferece Voltar e ajustar / Confirmar e começar. Voltar ou Esc preserva a seleção e restaura o foco; aceitar inicia apenas uma vez, usando a seleção exibida.
+- Falhas de validação aparecem na própria tela. O debounce de busca é cancelado antes da revisão, impedindo que uma busca atrasada substitua a confirmação.
+- Adicionados 4 testes de confirmação e atualizado o teste de corrida de busca para exigir aceitação explícita. Verificação visual local da tela e do retorno.
+- Suíte completa: **1.133 testes aprovados, 36 suítes, 0 falhas; saída 0**. git diff --check aprovado.
+- Alterações anteriores preservadas. Sem commit, push ou deploy.
+
+---
+
+## Atualização — 31/10/2026: P4 — Toxic e veneno progressivo
+
+- Implementado Toxic (#92): Poison, Status, precisão 90, PP 10. Usuários Poison ignoram a verificação de precisão (regra moderna), preservando imunidade de alvos Poison/Steel. Grass é suscetível; condições principais existentes não são substituídas.
+- Nova condição principal toxic, separada de poison. Dano residual: max(1, floor(maxHp / 16)) multiplicado pelo estágio N, crescente de 1 até o limite 15 e limitado ao HP restante. O veneno comum mantém dano fixo de 1/8.
+- Toxic começa com estágio 0 na aplicação/criação de batalha. Trocas voluntárias e forçadas reiniciam a progressão sem curar a condição; não há dano no banco. O próximo fim de turno em campo usa N=1. Desmaios e contadores órfãos são limpos.
+- Integração de eventos existentes, HP, indicador VENENO GRAVE, mensagens em português e avaliação tática para alvos elegíveis. Sem habilidades, itens, terrenos ou Toxic Spikes neste ciclo.
+- Toxic disponível nas opções curadas de Muk (#89), com pool de 6 golpes e gerador offline atualizado. Não foram modificados saves ou conjuntos equipados.
+- Referências: Pokémon Showdown, data/conditions.ts (tox) e data/moves.ts (toxic): https://github.com/smogon/pokemon-showdown/blob/master/data/conditions.ts e https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts .
+- Adicionados 16 testes em tests/battle/toxic.test.js: dados canônicos, precisão 90/91 e exceção Poison, imunidades, exclusividade, progressão/arredondamento/limites, trocas, nocaute e substituição, empate residual, regressão do veneno comum, apresentação, IA e sessão real nos dois sentidos e durante troca.
+- Suíte completa: **1.129 testes aprovados, 36 suítes, 0 falhas, 0 cancelados, 0 ignorados; saída 0**. git diff --check aprovado.
+- Toxic classificado FULL no modelo atual. P4 permanece parcial: próximos ciclos incluem Fake Out (primeiro turno em campo), efeitos compostos como Tri Attack e expansão de pilotos. Clima/habilidades/itens/terrenos permanecem na P7; Blizzard continua PARTIAL.
+- Alterações anteriores de confusão e cena Shadow preservadas. Sem commit, push ou deploy.
+
+---
+
+## Atualização — 31/10/2026: Confusão validada e cobertura de regressão completada
+
+- Ciclo P4 de confusão revisado: Confuse Ray (#109) e Water Pulse (#352), estado volátil independente das condições principais, duração e autoagressão determinísticas, limpeza nas trocas e apresentação de dano próprio. Pilotos disponíveis em Lapras e Golduck; suporte FULL no escopo atual.
+- Completados 4 testes de regressão em tests/battle/confusion.test.js: adversário aplica confusão pela sessão real, jogador age normalmente ou sofre autoagressão e recupera a lucidez; nocaute por autoagressão em equipes para jogador e adversário, com pedido de substituição, reserva sem confusão herdada e continuidade no turno seguinte.
+- Os novos cenários passaram sem alteração no código de produção. Suíte dedicada de confusão: 29 testes aprovados.
+- Suíte completa deste checkout: **1.113 testes aprovados, 36 suítes, 0 falhas, 0 cancelados, 0 ignorados; saída 0**. Inclui os 6 testes da cena Shadow. Este total substitui o número de 37 suítes informado no relatório externo.
+- Confusão deixa de ser o próximo ciclo proposto e passa a ciclo validado; o próximo ciclo recomendado da P4 é Toxic (veneno progressivo). Fake Out, efeitos compostos e expansão de pilotos continuam pendentes. A P4 permanece parcial.
+- A pendência de Blizzard no código já foi alinhada para WEATHER_ACCURACY_PHASE_P7. Os registros abaixo preservam o estado histórico anterior a esta revisão.
+- Sem commit, push ou deploy nesta correção; alterações preexistentes e cena Shadow preservadas.
+
+---
+
+## Atualização — 31/10/2026: Chegada cinematográfica do Shadow
+
+- Implementada uma apresentação em tela cheia antes da confirmação da revelação do Shadow: silêncio no salão do Super, rachaduras luminosas, fragmentos e transformação para a arena Shadow, silhueta e revelação final.
+- Reutilizados os assets locais das arenas e o retrato original do Shadow. A trilha de diálogo Shadow usa o controlador de áudio existente, respeitando seu mixer e preferências.
+- Cinco cenas com avanço automático; controles de continuar e pular (Esc). Em movimento reduzido, as cenas aguardam avanço manual e removem animações e tremores.
+- A conclusão ou o skip usa acknowledgeShadowReveal, seguindo para o fluxo existente de reforços. Sair da campanha cancela sem marcar a revelação como vista; timers, listeners, áudio, foco e rolagem são restaurados.
+- Sem alteração nas regras de batalha, Aura Sombria, reforços, saves ou textos dos diálogos existentes. Alterações preexistentes de confusão foram preservadas; esta entrada não constitui revisão independente dessa mecânica.
+- Adicionados 6 testes de ciclo de vida e integração da revelação. Suíte completa do checkout: 1.109 testes aprovados, 36 suítes, 0 falhas, saída 0 (inclui as alterações preexistentes de confusão).
+- Verificação visual local da sequência e conclusão no navegador. Sem commit, push ou deploy nesta implementação.
+
+---
+
 ## Atualização — 31/10/2026: Roadmap de mecânicas de batalha P0–P8
 
 Este registro consolida os ciclos implementados e revisados nesta expansão. Os registros anteriores permanecem como histórico; seus totais de testes e declarações de release descrevem aquele momento, não o estado atual de todas as mecânicas.

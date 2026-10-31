@@ -64,7 +64,12 @@
         POKEMON_SWITCHED: 'POKEMON_SWITCHED',
         REPLACEMENT_REQUIRED: 'REPLACEMENT_REQUIRED',
         TEAM_DEFEATED: 'TEAM_DEFEATED',
-        BATTLE_ENDED: 'BATTLE_ENDED'
+        BATTLE_ENDED: 'BATTLE_ENDED',
+        CONFUSION_APPLIED: 'CONFUSION_APPLIED',
+        CONFUSION_BLOCKED: 'CONFUSION_BLOCKED',
+        CONFUSION_CHECK: 'CONFUSION_CHECK',
+        CONFUSION_DAMAGE: 'CONFUSION_DAMAGE',
+        CONFUSION_ENDED: 'CONFUSION_ENDED'
       },
       BATTLE_ACTIONS: {
         MOVE: 'MOVE',
@@ -224,7 +229,7 @@
         });
       }
 
-      const statusCondition = (raw.statusCondition && ['poison', 'burn', 'paralysis', 'sleep', 'freeze'].includes(raw.statusCondition)) ? raw.statusCondition : null;
+      const statusCondition = (raw.statusCondition && ['poison', 'toxic', 'burn', 'paralysis', 'sleep', 'freeze'].includes(raw.statusCondition)) ? raw.statusCondition : null;
       let sleepTurns = 0;
       if (statusCondition === 'sleep') {
         const rawTurns = raw.sleepTurns ?? raw.sleepCounter;
@@ -248,9 +253,11 @@
         specialDefense: Math.floor(specialDefense),
         speed: Math.floor(speed),
         statusCondition,
+        toxicStage: 0, // New battle: retain the condition but never inherit residual progression.
         sleepTurns,
         sleepCounter: sleepTurns,
         isFlinched: false,
+        confusionTurns: 0,
         moves: normalizedMoves,
         statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
       };
@@ -441,7 +448,10 @@
         constants.resetStatStages(previousActive);
       }
       previousActive.isFlinched = false;
+      previousActive.confusionTurns = 0;
+      previousActive.toxicStage = 0;
       targetPokemon.isFlinched = false;
+      targetPokemon.toxicStage = 0;
 
       side.activeIndex = targetIndex;
 
@@ -462,6 +472,8 @@
           constants.resetStatStages(pokemon);
         }
         pokemon.isFlinched = false;
+        pokemon.confusionTurns = 0;
+        pokemon.toxicStage = 0;
         events.push({ type: BATTLE_EVENTS.POKEMON_FAINTED, target: role, pokemonName: pokemon.name });
       }
       const defeated = roles.filter(role => state.version === 1 ||
@@ -482,7 +494,7 @@
         state.status = winner === 'player' ? BATTLE_STATUS.PLAYER_WIN : BATTLE_STATUS.ENEMY_WIN;
         events.push({ type: BATTLE_EVENTS.BATTLE_ENDED, winner,
           reason: defeated.length === 2 ? 'Ambas as equipes caíram por status; empate conta como derrota do jogador.' :
-            ['poison', 'burn'].includes(cause) ? `A equipe ${defeated[0]} caiu por ${cause === 'poison' ? 'veneno' : 'queimadura'}.` :
+            ['poison', 'toxic', 'burn'].includes(cause) ? `A equipe ${defeated[0]} caiu por ${cause === 'poison' || cause === 'toxic' ? 'veneno' : 'queimadura'}.` :
               state.version === 2 ? `Todos os Pokémon da equipe ${defeated[0]} foram derrotados.` :
                 `${getActiveCombatant(state, defeated[0]).name} foi derrotado.` });
       } else {
@@ -501,10 +513,18 @@
       const fainted = [];
       for (const role of ['player', 'enemy']) {
         const pokemon = getActiveCombatant(state, role);
-        if (pokemon.currentHp <= 0 || !['poison', 'burn'].includes(pokemon.statusCondition)) continue;
+        if (pokemon.statusCondition !== 'toxic') pokemon.toxicStage = 0;
+        if (pokemon.currentHp <= 0 || !['poison', 'toxic', 'burn'].includes(pokemon.statusCondition)) continue;
         const previousHp = pokemon.currentHp;
-        const damage = Math.min(previousHp, Math.max(1, Math.floor(pokemon.maxHp /
-          (pokemon.statusCondition === 'poison' ? 8 : 16))));
+        // Modern Toxic: floor(maxHp / 16) * N, capped at N=15; switches reset N.
+        if (pokemon.statusCondition === 'toxic') {
+          const previousStage = Number.isInteger(pokemon.toxicStage) ? pokemon.toxicStage : 0;
+          pokemon.toxicStage = Math.min(15, Math.max(0, previousStage) + 1);
+        }
+        const residual = pokemon.statusCondition === 'toxic'
+          ? Math.max(1, Math.floor(pokemon.maxHp / 16)) * pokemon.toxicStage
+          : Math.max(1, Math.floor(pokemon.maxHp / (pokemon.statusCondition === 'poison' ? 8 : 16)));
+        const damage = Math.min(previousHp, residual);
         pokemon.currentHp -= damage;
         events.push({ type: BATTLE_EVENTS.STATUS_DAMAGE, target: role,
           pokemonName: pokemon.name, statusCondition: pokemon.statusCondition, damage, previousHp,
@@ -713,6 +733,24 @@
         thawRoll = roll;
       }
 
+      let confusionHitRoll = 100; // Padrão determinístico documentado: sem autoagressão quando ausente (100 > 33)
+      if (action && action.confusionHitRoll !== undefined) {
+        const roll = Number(action.confusionHitRoll);
+        if (!Number.isInteger(roll) || roll < 1 || roll > 100) {
+          throw new Error(`Roll de autoagressão de confusão inválido: ${action.confusionHitRoll}. Deve ser um inteiro entre 1 e 100.`);
+        }
+        confusionHitRoll = roll;
+      }
+
+      let confusionDamageRoll = 100; // Padrão determinístico documentado: roll máximo de variância (100) quando ausente
+      if (action && action.confusionDamageRoll !== undefined) {
+        const roll = Number(action.confusionDamageRoll);
+        if (!Number.isFinite(roll) || roll < 85 || roll > 100) {
+          throw new Error(`Roll de dano de confusão inválido: ${action.confusionDamageRoll}. Deve ser um número entre 85 e 100.`);
+        }
+        confusionDamageRoll = roll;
+      }
+
       // Evento de início de ação
       events.push({
         type: BATTLE_EVENTS.ACTION_STARTED,
@@ -805,6 +843,75 @@
         return;
       }
 
+      // Verificação canônica de confusão (Confusion: P4)
+      // Precedência canônica moderna (Showdown data/conditions.ts confusion.onBeforeMovePriority: 3 vs flinch: 8 e paralysis: 1):
+      // 1. O contador de confusão (confusionTurns) diminui em 1 no início da tentativa de movimento.
+      // 2. Se o contador chegar a 0: a confusão termina, emite CONFUSION_ENDED (SNAPPED_OUT) e o movimento prossegue normalmente no mesmo turno.
+      // 3. Se o contador permanecer > 0: o Pokémon continua confuso, emite CONFUSION_CHECK e avalia autoagressão (chance de 33% no Gen 7+: roll 1..33).
+      // 4. Se houver autoagressão (roll <= 33):
+      //    - O movimento escolhido é abortado sem consumo de PP e sem descongelamento por Scald (se estiver congelado).
+      //    - Calcula dano físico sem tipo com poder base 40, usando Attack e Defense do próprio atacante com respectivos estágios.
+      //    - Sem STAB, sem eficácia elemental, sem crítico e sem penalidade de queimadura.
+      //    - Aplica o dano ao próprio combatente e emite CONFUSION_DAMAGE.
+      //    - Se currentHp chegar a 0, resolve o nocaute via resolveFaints.
+      //    - Encerra a ação do combatente imediatamente (return).
+      // 5. Se não houver autoagressão (roll >= 34):
+      //    - A ação prossegue para as etapas seguintes (descongelamento por Scald, MOVE_SELECTED, paralisia, execução).
+      if (attacker.confusionTurns > 0) {
+        attacker.confusionTurns -= 1;
+        if (attacker.confusionTurns === 0) {
+          events.push({
+            type: BATTLE_EVENTS.CONFUSION_ENDED,
+            actor: attackerRole,
+            target: attackerRole,
+            pokemonName: attacker.name,
+            reason: 'SNAPPED_OUT'
+          });
+        } else {
+          events.push({
+            type: BATTLE_EVENTS.CONFUSION_CHECK,
+            actor: attackerRole,
+            pokemonName: attacker.name,
+            remainingTurns: attacker.confusionTurns
+          });
+
+          if (confusionHitRoll <= 33) {
+            const attackStat = constants.getEffectiveStat
+              ? constants.getEffectiveStat(attacker, 'attack')
+              : attacker.attack;
+            const defenseStat = constants.getEffectiveStat
+              ? constants.getEffectiveStat(attacker, 'defense')
+              : attacker.defense;
+            const simulationLevel = constants.BATTLE_CONFIG?.SIMULATION_LEVEL || 50;
+            const baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, 40, simulationLevel);
+            const finalDamage = DamageCalculator.applyModifier(baseDamage, 1, 1, confusionDamageRoll);
+
+            const previousHp = attacker.currentHp;
+            const currentHp = Math.max(0, previousHp - finalDamage);
+            attacker.currentHp = currentHp;
+
+            events.push({
+              type: BATTLE_EVENTS.CONFUSION_DAMAGE,
+              actor: attackerRole,
+              target: attackerRole,
+              pokemonName: attacker.name,
+              damage: finalDamage,
+              previousHp,
+              currentHp,
+              maxHp: attacker.maxHp,
+              baseDamage,
+              damageRoll: confusionDamageRoll,
+              confusionHitRoll
+            });
+
+            if (currentHp === 0) {
+              resolveFaints(state, events, [attackerRole], 'confusion');
+            }
+            return;
+          }
+        }
+      }
+
       // Descongelamento efetivo de golpe defrost (Scald: P4 / onModifyMove)
       // Sem outro impedimento prévio, Scald descongela o usuário ao atingir a etapa de execução.
       if (attacker.statusCondition === 'freeze') {
@@ -875,6 +982,9 @@
         isHit = accuracyRoll <= selectedMove.accuracy;
       }
 
+      // Gen VI+: Toxic used by a Poison-type bypasses accuracy checks, not status immunity.
+      if (selectedMove.id === 92 && selectedMove.name === 'toxic' && attacker.types.includes('poison')) isHit = true;
+
       if (!isHit) {
         // Notifica erro do golpe
         events.push({
@@ -891,6 +1001,44 @@
       }
 
       if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
+        if (selectedMove.statusEffect === 'confusion') {
+          const isImmune = constants.isStatusMoveImmune ? constants.isStatusMoveImmune(selectedMove, defender.types) : false;
+          const blocked = isImmune
+            ? 'IMMUNE'
+            : (defender.confusionTurns > 0)
+              ? 'ALREADY_CONFUSED'
+              : defender.currentHp <= 0
+                ? 'FAINTED'
+                : null;
+          if (blocked) {
+            events.push({
+              type: BATTLE_EVENTS.CONFUSION_BLOCKED,
+              source: attackerRole,
+              target: defenderRole,
+              pokemonName: defender.name,
+              reason: blocked
+            });
+          } else {
+            let duration = constants.DEFAULT_CONFUSION_TURNS?.DEFAULT || 3;
+            if (action && action.confusionDuration !== undefined) {
+              const parsed = Number(action.confusionDuration);
+              if (!Number.isInteger(parsed) || parsed < 2 || parsed > 5) {
+                throw new Error(`Duração de confusão inválida: ${action.confusionDuration}. Deve ser um inteiro entre 2 e 5.`);
+              }
+              duration = parsed;
+            }
+            defender.confusionTurns = duration;
+            events.push({
+              type: BATTLE_EVENTS.CONFUSION_APPLIED,
+              source: attackerRole,
+              target: defenderRole,
+              pokemonName: defender.name,
+              duration: defender.confusionTurns
+            });
+          }
+          return;
+        }
+
         if (selectedMove.statusEffect) {
           const isImmune = constants.isStatusMoveImmune(selectedMove, defender.types);
           const blocked = isImmune
@@ -910,6 +1058,7 @@
             });
           } else {
             defender.statusCondition = selectedMove.statusEffect;
+            defender.toxicStage = 0;
             if (selectedMove.statusEffect === 'sleep') {
               let sleepDuration = constants.DEFAULT_SLEEP_TURNS || 2;
               if (action && action.sleepDuration !== undefined) {
@@ -1192,6 +1341,32 @@
             }
           }
 
+          if (secEffect.confusion) {
+            const canApply = !(defender.confusionTurns > 0) && currentHp > 0;
+            if (canApply && secondaryEffectRoll <= secEffect.chance) {
+              let duration = constants.DEFAULT_CONFUSION_TURNS?.DEFAULT || 3;
+              if (action && action.confusionDuration !== undefined) {
+                const parsed = Number(action.confusionDuration);
+                if (!Number.isInteger(parsed) || parsed < 2 || parsed > 5) {
+                  throw new Error(`Duração de confusão inválida: ${action.confusionDuration}. Deve ser um inteiro entre 2 e 5.`);
+                }
+                duration = parsed;
+              }
+              defender.confusionTurns = duration;
+              events.push({
+                type: BATTLE_EVENTS.CONFUSION_APPLIED,
+                source: attackerRole,
+                target: defenderRole,
+                pokemonName: defender.name,
+                moveId: selectedMove.id,
+                moveName: selectedMove.name,
+                duration: defender.confusionTurns,
+                secondaryEffectRoll,
+                chance: secEffect.chance
+              });
+            }
+          }
+
           if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
             if (secondaryEffectRoll <= secEffect.chance) {
               for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
@@ -1276,6 +1451,8 @@
             constants.resetStatStages(previousActive);
           }
           previousActive.isFlinched = false;
+          previousActive.confusionTurns = 0;
+          previousActive.toxicStage = 0;
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
           newActive.isFlinched = false;
@@ -1355,6 +1532,8 @@
           }
 
           const previousActive = active;
+          previousActive.confusionTurns = 0;
+          previousActive.toxicStage = 0;
           side.activeIndex = targetIndex;
           replacedAny = true;
 

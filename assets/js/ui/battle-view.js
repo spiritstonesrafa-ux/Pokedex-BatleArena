@@ -19,6 +19,7 @@
 
 (function () {
   const STATUS_LABELS = Object.freeze({
+    toxic: { short: 'VENENO GRAVE', aria: 'Gravemente envenenado', move: 'causa veneno progressivo' },
     poison: { short: 'VENENO', aria: 'Envenenado', move: 'causa veneno' },
     burn: { short: 'QUEIMADURA', aria: 'Queimado', move: 'causa queimadura' },
     paralysis: { short: 'PARALISIA', aria: 'Paralisado', move: 'causa paralisia' },

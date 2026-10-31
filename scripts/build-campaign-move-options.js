@@ -32,10 +32,14 @@ const PILOT_P3_MOVES = new Set([
   'spore',
   'ice-beam',
   'blizzard',
-  'scald'
+  'scald',
+  'confuse-ray',
+  'water-pulse',
+  'toxic'
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  'toxic': Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
   'swords-dance': Object.freeze({
     id: 14,
     name: 'swords-dance',
@@ -139,17 +143,38 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     accuracy: 100,
     pp: 15,
     damageClass: 'special'
+  }),
+  'confuse-ray': Object.freeze({
+    id: 109,
+    name: 'confuse-ray',
+    type: 'ghost',
+    power: 0,
+    accuracy: 100,
+    pp: 10,
+    damageClass: 'status',
+    statusEffect: 'confusion'
+  }),
+  'water-pulse': Object.freeze({
+    id: 352,
+    name: 'water-pulse',
+    type: 'water',
+    power: 60,
+    accuracy: 100,
+    pp: 20,
+    damageClass: 'special'
   })
 });
 
 // Curated canonical learnsets (Gen IX / Scarlet & Violet canon) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  89: ['toxic', 'shock-wave'], // Muk: Toxic via modern TM; keep six campaign options.
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)
   9: ['blizzard', 'scald'],              // Blastoise (Gen 1 Starter)
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)
   97: ['hypnosis', 'body-press'],        // Hypno (Gen 1)
-  131: ['blizzard', 'body-press'],       // Lapras (Gen 1 Draft)
+  55: ['water-pulse', 'hydro-pump'],     // Golduck (Gen 1)
+  131: ['confuse-ray', 'blizzard'],       // Lapras (Gen 1 Draft)
   134: ['scald', 'blizzard'],            // Vaporeon (Gen 1 Draft)
   45: ['sleep-powder', 'dazzling-gleam'], // Vileplume (Gen 1)
   65: ['calm-mind', 'shock-wave'],       // Alakazam (Draft Gen 1)

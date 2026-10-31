@@ -122,13 +122,13 @@
 
         case BATTLE_EVENTS.STATUS_APPLIED:
         case BATTLE_EVENTS.STATUS_BLOCKED:
-          if (!event.target || !['poison', 'burn', 'paralysis', 'sleep', 'freeze'].includes(event.statusCondition) || !event.pokemonName) {
+          if (!event.target || !['poison', 'toxic', 'burn', 'paralysis', 'sleep', 'freeze'].includes(event.statusCondition) || !event.pokemonName) {
             throw new Error('INVALID_EVENT_PAYLOAD: status requer alvo, nome e condição suportada.');
           }
           break;
 
         case BATTLE_EVENTS.STATUS_DAMAGE:
-          if (!event.target || !['poison', 'burn'].includes(event.statusCondition) || !event.pokemonName ||
+          if (!event.target || !['poison', 'toxic', 'burn'].includes(event.statusCondition) || !event.pokemonName ||
               !Number.isFinite(Number(event.damage)) || !Number.isFinite(Number(event.previousHp)) ||
               !Number.isFinite(Number(event.currentHp)) || !Number.isFinite(Number(event.maxHp))) {
             throw new Error('INVALID_EVENT_PAYLOAD: dano de status requer HP e alvo válidos.');
@@ -163,6 +163,38 @@
           break;
 
         case BATTLE_EVENTS.FLINCH_APPLIED:
+          break;
+
+        case BATTLE_EVENTS.CONFUSION_APPLIED:
+          if (!event.target || !event.pokemonName) {
+            throw new Error('INVALID_EVENT_PAYLOAD: CONFUSION_APPLIED requer "target" e "pokemonName".');
+          }
+          break;
+
+        case BATTLE_EVENTS.CONFUSION_BLOCKED:
+          if (!event.target || !event.pokemonName || !event.reason) {
+            throw new Error('INVALID_EVENT_PAYLOAD: CONFUSION_BLOCKED requer "target", "pokemonName" e "reason".');
+          }
+          break;
+
+        case BATTLE_EVENTS.CONFUSION_CHECK:
+          if (!event.actor || !event.pokemonName) {
+            throw new Error('INVALID_EVENT_PAYLOAD: CONFUSION_CHECK requer "actor" e "pokemonName".');
+          }
+          break;
+
+        case BATTLE_EVENTS.CONFUSION_DAMAGE:
+          if (!event.actor || !event.pokemonName ||
+              !Number.isFinite(Number(event.damage)) || !Number.isFinite(Number(event.previousHp)) ||
+              !Number.isFinite(Number(event.currentHp)) || !Number.isFinite(Number(event.maxHp))) {
+            throw new Error('INVALID_EVENT_PAYLOAD: CONFUSION_DAMAGE requer actor, pokemonName e HP válidos.');
+          }
+          break;
+
+        case BATTLE_EVENTS.CONFUSION_ENDED:
+          if (!event.actor && !event.target) {
+            throw new Error('INVALID_EVENT_PAYLOAD: CONFUSION_ENDED requer "actor" ou "target".');
+          }
           break;
 
         case BATTLE_EVENTS.TYPE_EFFECTIVENESS_RESOLVED:
@@ -335,6 +367,62 @@
             target: event.actor,
             pokemonName: event.pokemonName,
             outcome: 'FLINCHED'
+          }];
+
+        case BATTLE_EVENTS.CONFUSION_APPLIED:
+          return [{
+            type: PRESENTATION_COMMANDS.CONFUSION_FEEDBACK || 'CONFUSION_FEEDBACK',
+            target: event.target,
+            pokemonName: event.pokemonName,
+            outcome: 'APPLIED',
+            duration: event.duration
+          }];
+
+        case BATTLE_EVENTS.CONFUSION_BLOCKED:
+          return [{
+            type: PRESENTATION_COMMANDS.CONFUSION_FEEDBACK || 'CONFUSION_FEEDBACK',
+            target: event.target,
+            pokemonName: event.pokemonName,
+            outcome: 'BLOCKED',
+            reason: event.reason
+          }];
+
+        case BATTLE_EVENTS.CONFUSION_CHECK:
+          return [{
+            type: PRESENTATION_COMMANDS.CONFUSION_FEEDBACK || 'CONFUSION_FEEDBACK',
+            target: event.actor,
+            pokemonName: event.pokemonName,
+            outcome: 'CHECK'
+          }];
+
+        case BATTLE_EVENTS.CONFUSION_DAMAGE:
+          return [
+            {
+              type: PRESENTATION_COMMANDS.CONFUSION_FEEDBACK || 'CONFUSION_FEEDBACK',
+              target: event.actor,
+              pokemonName: event.pokemonName,
+              outcome: 'DAMAGE',
+              damage: Number(event.damage)
+            },
+            {
+              type: PRESENTATION_COMMANDS.HP_TRANSITION,
+              side: event.actor,
+              target: event.actor,
+              damage: Number(event.damage),
+              previousHp: Number(event.previousHp),
+              currentHp: Number(event.currentHp),
+              maxHp: Number(event.maxHp),
+              cause: 'confusion'
+            }
+          ];
+
+        case BATTLE_EVENTS.CONFUSION_ENDED:
+          return [{
+            type: PRESENTATION_COMMANDS.CONFUSION_FEEDBACK || 'CONFUSION_FEEDBACK',
+            target: event.actor || event.target,
+            pokemonName: event.pokemonName,
+            outcome: 'ENDED',
+            reason: event.reason || 'SNAPPED_OUT'
           }];
 
         case BATTLE_EVENTS.STATUS_DAMAGE:

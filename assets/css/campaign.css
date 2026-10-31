@@ -1223,3 +1223,12 @@
 .recruit-confirmation [role="status"] { color: #fca5a5; text-align: center; }
 .recruit-confirmation h2:focus-visible { outline: 2px solid #facc15; outline-offset: 6px; }
 @media (max-width: 480px) { .recruit-confirmation__actions { flex-direction: column-reverse; } .recruit-confirmation__actions button { width: 100%; } }
+
+/* Revisão da equipe inicial, com os mesmos controles da confirmação de recruta. */
+.draft-confirmation__team { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+.draft-confirmation__pokemon { display: grid; justify-items: center; align-content: start; gap: 12px; padding: 20px 10px; border: 1px solid rgba(250,204,21,.3); border-radius: 20px; background: radial-gradient(ellipse at top,rgba(250,204,21,.09),rgba(15,23,42,.6)); text-align: center; }
+.draft-confirmation__pokemon img { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(250,204,21,.12)); }
+.draft-confirmation__pokemon strong { color: #f8fafc; overflow-wrap: anywhere; }
+.draft-confirmation__pokemon .type-chip { display: inline-block; margin: 3px; }
+.draft-confirmation h2:focus-visible { outline: 2px solid #facc15; outline-offset: 6px; }
+@media(max-width:480px) { .draft-confirmation__team { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; } .draft-confirmation__pokemon { padding: 14px 6px; } .draft-confirmation__pokemon img { width: 76px; height: 76px; } }

@@ -132,6 +132,15 @@
     return Boolean(getSec && getSec(move)?.statusCondition === 'sleep');
   }
 
+  function canMoveApplyConfusion(move) {
+    if (!move || typeof move !== 'object') return false;
+    if (move.statusEffect === 'confusion') return true;
+    const getSec = (battleConstants && typeof battleConstants.getSecondaryEffect === 'function')
+      ? battleConstants.getSecondaryEffect
+      : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
+    return Boolean(getSec && getSec(move)?.confusion === true);
+  }
+
   class BattleSessionController {
     /**
      * @param {Object} [options]
@@ -498,6 +507,36 @@
           enemyAction.thawRoll = this.randomSource.rollThaw();
         }
 
+        // Determina rolagens de confusão (duração, autoagressão e variância de dano)
+        // Cobre combatentes já confusos ou que possam receber confusão antes de agir
+        const playerCanConfuse = canMoveApplyConfusion(playerMove);
+        const enemyCanConfuse = canMoveApplyConfusion(enemyMove);
+
+        const playerConfusionDuration = (playerCanConfuse && typeof this.randomSource.rollConfusionDuration === 'function')
+          ? this.randomSource.rollConfusionDuration()
+          : undefined;
+        if (enemyCanConfuse && typeof this.randomSource.rollConfusionDuration === 'function') {
+          enemyAction.confusionDuration = this.randomSource.rollConfusionDuration();
+        }
+
+        const playerNeedsConfusionCheck = (activePlayer.confusionTurns > 0 || enemyCanConfuse) &&
+          typeof this.randomSource.rollConfusionHit === 'function';
+        const enemyNeedsConfusionCheck = enemyAction?.type === 'MOVE' &&
+          (activeEnemy.confusionTurns > 0 || playerCanConfuse) &&
+          typeof this.randomSource.rollConfusionHit === 'function';
+
+        const playerConfusionHitRoll = playerNeedsConfusionCheck ? this.randomSource.rollConfusionHit() : undefined;
+        const playerConfusionDamageRoll = (playerNeedsConfusionCheck && typeof this.randomSource.rollConfusionDamage === 'function')
+          ? this.randomSource.rollConfusionDamage()
+          : undefined;
+
+        if (enemyNeedsConfusionCheck) {
+          enemyAction.confusionHitRoll = this.randomSource.rollConfusionHit();
+          if (typeof this.randomSource.rollConfusionDamage === 'function') {
+            enemyAction.confusionDamageRoll = this.randomSource.rollConfusionDamage();
+          }
+        }
+
         // 3. Resolve o turno de forma pura no BattleEngine
         const turnActions = {
           player: {
@@ -508,7 +547,10 @@
             secondaryEffectRoll: playerSecondaryEffectRoll,
             ...(playerStatusRoll !== undefined ? { statusRoll: playerStatusRoll } : {}),
             ...(playerSleepDuration !== undefined ? { sleepDuration: playerSleepDuration } : {}),
-            ...(playerThawRoll !== undefined ? { thawRoll: playerThawRoll } : {})
+            ...(playerThawRoll !== undefined ? { thawRoll: playerThawRoll } : {}),
+            ...(playerConfusionDuration !== undefined ? { confusionDuration: playerConfusionDuration } : {}),
+            ...(playerConfusionHitRoll !== undefined ? { confusionHitRoll: playerConfusionHitRoll } : {}),
+            ...(playerConfusionDamageRoll !== undefined ? { confusionDamageRoll: playerConfusionDamageRoll } : {})
           },
           enemy: enemyAction
         };
@@ -579,6 +621,17 @@
             if (!isEnemySelfThaw) {
               enemyAction.thawRoll = this.randomSource.rollThaw();
             }
+          }
+
+          if (activeEnemy.confusionTurns > 0 && typeof this.randomSource.rollConfusionHit === 'function') {
+            enemyAction.confusionHitRoll = this.randomSource.rollConfusionHit();
+            if (typeof this.randomSource.rollConfusionDamage === 'function') {
+              enemyAction.confusionDamageRoll = this.randomSource.rollConfusionDamage();
+            }
+          }
+
+          if (canMoveApplyConfusion(enemyMove) && typeof this.randomSource.rollConfusionDuration === 'function') {
+            enemyAction.confusionDuration = this.randomSource.rollConfusionDuration();
           }
         }
 

@@ -105,7 +105,7 @@
       // 1. Golpes utilizáveis do ativo (somente status curados)
       const isUsableStatusMove = (m) => {
         if (m.damageClass !== 'status') return true;
-        if (['poison', 'burn', 'paralysis', 'sleep'].includes(m.statusEffect)) return true;
+        if (['poison', 'toxic', 'burn', 'paralysis', 'sleep'].includes(m.statusEffect)) return true;
         if (m.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(m))) return true;
         return false;
       };
@@ -219,7 +219,9 @@
         let score = evalData.expectedDamage;
 
         if (m.damageClass === 'status') {
-          if (m.statusEffect) {
+          if (m.statusEffect === 'toxic') {
+            score = evalData.expectedStatusBenefit;
+          } else if (m.statusEffect) {
             const immune = constants.isStatusMoveImmune(m, oppActive.types);
             const canApply = !immune && !oppActive.statusCondition;
             const tick = Math.max(1, Math.floor(oppActive.maxHp /

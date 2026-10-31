@@ -595,7 +595,11 @@ test('24. Search debounce, cancellation, and campaign start race condition prote
 
     // Confirm team while timer is pending
     confirmBtn.onclick();
-    assert.equal(manager.isStarted(), true, 'Campaign must have started');
+    assert.equal(manager.isStarted(), false, 'Review must not start the campaign before explicit acceptance');
+    assert.equal(view.draftDebounceTimer, null, 'Opening review cancels the pending search');
+    assert.ok(container.innerHTML.includes('draft-confirmation'));
+    container.querySelector('#draftConfirmAccept').onclick();
+    assert.equal(manager.isStarted(), true, 'Campaign must have started after acceptance');
     assert.ok(!container.innerHTML.includes('draft-tools'), 'Must transition away from draft');
 
     // Obsolete timer fires after campaign started
