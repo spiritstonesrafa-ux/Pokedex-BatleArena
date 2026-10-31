@@ -59,9 +59,11 @@
       const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
       const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(move));
+      const isConstantDamage = Boolean(constants?.isConstantDamageMove?.(move));
+      const isFixedDamage = isLevelDamage || isConstantDamage;
 
       // Golpes de status não causam dano na arquitetura atual
-      if ((damageClass === 'status' || power <= 0) && !isLevelDamage) {
+      if ((damageClass === 'status' || power <= 0) && !isFixedDamage) {
         const statBoosts = move.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(move)) || null;
         let expectedStatusBenefit = 0;
         let statusChance = 0;
@@ -182,7 +184,7 @@
       // 2. STAB (Same-Type Attack Bonus)
       const attackerTypes = Array.isArray(attacker.types) ? attacker.types : [];
       const hasStab = attackerTypes.includes(moveType);
-      const stabMultiplier = (hasStab && !isLevelDamage) ? (constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
+      const stabMultiplier = (hasStab && !isFixedDamage) ? (constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
 
       // 3. Efetividade de Tipos (Type Effectiveness)
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];
@@ -230,6 +232,24 @@
           maxDamage = attackerLevel;
           averageDamage = attackerLevel;
           damageIfHit = attackerLevel;
+          typeMultiplier = 1;
+          typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.NEUTRAL || 'NEUTRAL';
+        }
+      } else if (isConstantDamage) {
+        const constantAmount = constants?.getConstantDamageAmount ? constants.getConstantDamageAmount(move) : (move.id === 49 ? 20 : 40);
+        if (typeMultiplier === 0) {
+          baseDamage = 0;
+          minDamage = 0;
+          maxDamage = 0;
+          averageDamage = 0;
+          damageIfHit = 0;
+          typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.IMMUNE || 'IMMUNE';
+        } else {
+          baseDamage = constantAmount;
+          minDamage = constantAmount;
+          maxDamage = constantAmount;
+          averageDamage = constantAmount;
+          damageIfHit = constantAmount;
           typeMultiplier = 1;
           typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.NEUTRAL || 'NEUTRAL';
         }

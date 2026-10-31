@@ -345,6 +345,7 @@
     if (UNSUPPORTED_COMPLEX_MOVES[name]) return false;
     if (bc?.getSupportedStatusMove?.(moveDetail)) return true;
     if (bc?.isLevelDamageMove?.(moveDetail)) return true;
+    if (bc?.isConstantDamageMove?.(moveDetail)) return true;
 
     const dmgClass = String(moveDetail.damageClass || moveDetail.damage_class?.name || moveDetail.damage_class || '').toLowerCase();
     if (dmgClass !== 'physical' && dmgClass !== 'special') return false;
@@ -381,6 +382,7 @@
     validateMoveData,
     isMechanicallySupportedMove,
     isLevelDamageMove: battleConstants.isLevelDamageMove,
+    isConstantDamageMove: battleConstants.isConstantDamageMove,
     getSecondaryEffect: battleConstants.getSecondaryEffect,
     isStatusConditionImmune: battleConstants.isStatusConditionImmune,
     isEligibleForStatusCondition: battleConstants.isEligibleForStatusCondition

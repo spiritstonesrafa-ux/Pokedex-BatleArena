@@ -46,6 +46,8 @@ const PILOT_P3_MOVES = new Set([
   'fake-out',
   'seismic-toss',
   'night-shade',
+  'sonic-boom',
+  'dragon-rage',
   'rest','sleep-talk','yawn','snore','dream-eater'
 ]);
 
@@ -204,6 +206,24 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     accuracy: 100,
     pp: 15,
     damageClass: 'special'
+  }),
+  'sonic-boom': Object.freeze({
+    id: 49,
+    name: 'sonic-boom',
+    type: 'normal',
+    power: null,
+    accuracy: 90,
+    pp: 20,
+    damageClass: 'special'
+  }),
+  'dragon-rage': Object.freeze({
+    id: 82,
+    name: 'dragon-rage',
+    type: 'dragon',
+    power: null,
+    accuracy: 100,
+    pp: 10,
+    damageClass: 'special'
   })
 });
 
@@ -219,6 +239,8 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
 
   68: ['seismic-toss', 'high-horsepower'], // Machamp: iconic Seismic Toss user
   356: ['night-shade', 'shadow-punch'], // Dusclops: iconic Night Shade user
+  101: ['sonic-boom', 'shock-wave'], // Electrode: iconic Sonic Boom user
+  130: ['dragon-rage', 'surf'], // Gyarados: iconic Dragon Rage user
 
   89: ['toxic', 'shock-wave'], // Muk: Toxic via modern TM; keep six campaign options.
   6: ['overheat', 'swords-dance'],       // Charizard (Starter)

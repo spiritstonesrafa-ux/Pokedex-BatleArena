@@ -339,7 +339,7 @@
         reason: MOVESET_LIMIT_REASON.NONE,
         moves: moves.map(move => ({
           id: Number(move.id), name: String(move.name), type: String(move.type),
-          power: (move.power === null || move.power === undefined || (battleConstants?.isLevelDamageMove?.(move) && Number(move.power) === 0)) ? null : Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
+          power: (move.power === null || move.power === undefined || ((battleConstants?.isLevelDamageMove?.(move) || battleConstants?.isConstantDamageMove?.(move)) && Number(move.power) === 0)) ? null : Number(move.power), accuracy: move.accuracy, pp: Number(move.pp),
           maxPp: Number(move.pp), currentPp: Number(move.pp),
           damageClass: String(move.damageClass),
           ...(move.statusEffect ? { statusEffect: String(move.statusEffect) } : {}),
@@ -487,7 +487,8 @@
           seenMoveNames.add(moveName);
 
           const isLvlDmg = Boolean(battleConstants?.isLevelDamageMove?.(moveDetail) || battleConstants?.isLevelDamageMove?.({ id: moveId, name: moveName }));
-          const power = isLvlDmg ? null : Number(moveDetail.power);
+          const isConstDmg = Boolean(battleConstants?.isConstantDamageMove?.(moveDetail) || battleConstants?.isConstantDamageMove?.({ id: moveId, name: moveName }));
+          const power = (isLvlDmg || isConstDmg) ? null : Number(moveDetail.power);
 
           const pp = Math.max(1, Number(moveDetail.pp || 15));
           validPool.push({
@@ -607,9 +608,16 @@
     selectQualityLoadout(validPool, types, stats, targetCount) {
       const isPhysicalAttacker = Number(stats.attack || 50) >= Number(stats.specialAttack || 50);
 
+      const getMoveEffectivePower = (m) => {
+        if (!m) return 0;
+        if (battleConstants?.isLevelDamageMove?.(m)) return 50;
+        if (battleConstants?.isConstantDamageMove?.(m)) return battleConstants.getConstantDamageAmount(m) || 40;
+        return Number(m.power) || 0;
+      };
+
       // Calcula a pontuação individual de cada golpe candidato
       const scoredCandidates = validPool.map((move) => {
-        let score = (battleConstants?.isLevelDamageMove?.(move) ? 50 : (Number(move.power) || 0));
+        let score = getMoveEffectivePower(move);
 
         // 1. Bônus de STAB (Same-Type Attack Bonus)
         const isStab = types.includes(move.type);
@@ -638,8 +646,8 @@
       // Ordenação primária determinística dos candidatos pontuados
       scoredCandidates.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
-        const pwrA = battleConstants?.isLevelDamageMove?.(a.move) ? 50 : (Number(a.move.power) || 0);
-        const pwrB = battleConstants?.isLevelDamageMove?.(b.move) ? 50 : (Number(b.move.power) || 0);
+        const pwrA = getMoveEffectivePower(a.move);
+        const pwrB = getMoveEffectivePower(b.move);
         if (pwrB !== pwrA) return pwrB - pwrA;
         const accA = a.move.accuracy !== null ? a.move.accuracy : 100;
         const accB = b.move.accuracy !== null ? b.move.accuracy : 100;
@@ -680,11 +688,11 @@
       selected.sort((a, b) => {
         const itemA = scoredCandidates.find((c) => c.move.name === a.name);
         const itemB = scoredCandidates.find((c) => c.move.name === b.name);
-        const scoreA = itemA ? itemA.score : (battleConstants?.isLevelDamageMove?.(a) ? 50 : (Number(a.power) || 0));
-        const scoreB = itemB ? itemB.score : (battleConstants?.isLevelDamageMove?.(b) ? 50 : (Number(b.power) || 0));
+        const scoreA = itemA ? itemA.score : getMoveEffectivePower(a);
+        const scoreB = itemB ? itemB.score : getMoveEffectivePower(b);
         if (scoreB !== scoreA) return scoreB - scoreA;
-        const pwrA = battleConstants?.isLevelDamageMove?.(a) ? 50 : (Number(a.power) || 0);
-        const pwrB = battleConstants?.isLevelDamageMove?.(b) ? 50 : (Number(b.power) || 0);
+        const pwrA = getMoveEffectivePower(a);
+        const pwrB = getMoveEffectivePower(b);
         if (pwrB !== pwrA) return pwrB - pwrA;
         const accA = a.accuracy !== null ? a.accuracy : 100;
         const accB = b.accuracy !== null ? b.accuracy : 100;

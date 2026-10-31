@@ -86,17 +86,19 @@
       normalizedType = rawType.trim().toLowerCase();
     }
 
-    // Validação de Power (> 0, exceto golpes de dano fixo por nível)
+    // Validação de Power (> 0, exceto golpes de dano fixo por nível ou constante)
     const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(raw) || constants?.isLevelDamageMove?.({ id, name: raw.name }));
+    const isConstantDamage = Boolean(constants?.isConstantDamageMove?.(raw) || constants?.isConstantDamageMove?.({ id, name: raw.name }));
     let power = null;
-    if (isLevelDamage) {
+    if (isLevelDamage || isConstantDamage) {
+      const kindLabel = isLevelDamage ? 'baseado em nível' : 'de dano fixo constante';
       if (raw.power !== undefined && raw.power !== null) {
         if (typeof raw.power === 'boolean' || typeof raw.power === 'object') {
-          throw new Error(`Poder do golpe baseado em nível "${raw.name}" inválido: ${raw.power}. Golpes de dano fixo por nível devem ter power null ou 0.`);
+          throw new Error(`Poder do golpe ${kindLabel} "${raw.name}" inválido: ${raw.power}. Golpes ${kindLabel} devem ter power null ou 0.`);
         }
         const pwr = Number(raw.power);
         if (!Number.isFinite(pwr) || pwr !== 0) {
-          throw new Error(`Poder do golpe baseado em nível "${raw.name}" inválido: ${raw.power}. Golpes de dano fixo por nível devem ter power null ou 0.`);
+          throw new Error(`Poder do golpe ${kindLabel} "${raw.name}" inválido: ${raw.power}. Golpes ${kindLabel} devem ter power null ou 0.`);
         }
       }
       power = null;

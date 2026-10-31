@@ -504,6 +504,71 @@
     return false;
   }
 
+  const CONSTANT_DAMAGE_MOVES = Object.freeze({
+    49: Object.freeze({ id: 49, name: 'sonic-boom', type: 'normal', damageClass: 'special', accuracy: 90, pp: 20, damage: 20 }),
+    82: Object.freeze({ id: 82, name: 'dragon-rage', type: 'dragon', damageClass: 'special', accuracy: 100, pp: 10, damage: 40 })
+  });
+
+  function isConstantDamageMove(move) {
+    if (!move) return false;
+    let id = null;
+    let name = null;
+    if (typeof move === 'number') {
+      id = Number(move);
+    } else if (typeof move === 'string') {
+      name = move.trim().toLowerCase();
+    } else if (typeof move === 'object') {
+      if (move.id !== undefined && move.id !== null) {
+        id = Number(move.id);
+      }
+      if (move.name) {
+        name = String(move.name).trim().toLowerCase();
+      }
+    }
+
+    if (id !== null && name !== null) {
+      if (id === 49 && name === 'sonic-boom') return true;
+      if (id === 82 && name === 'dragon-rage') return true;
+      return false;
+    }
+    if (id !== null) {
+      return id === 49 || id === 82;
+    }
+    if (name !== null) {
+      return name === 'sonic-boom' || name === 'dragon-rage';
+    }
+    return false;
+  }
+
+  function getConstantDamageAmount(move) {
+    if (!move) return null;
+    if (typeof move === 'number') {
+      return CONSTANT_DAMAGE_MOVES[move]?.damage || null;
+    }
+    if (typeof move === 'string') {
+      const name = move.trim().toLowerCase();
+      const found = Object.values(CONSTANT_DAMAGE_MOVES).find(m => m.name === name);
+      return found?.damage || null;
+    }
+    if (typeof move === 'object') {
+      const id = (move.id !== undefined && move.id !== null) ? Number(move.id) : null;
+      const name = move.name ? String(move.name).trim().toLowerCase() : null;
+      if (id !== null && name !== null) {
+        if (id === 49 && name === 'sonic-boom') return 20;
+        if (id === 82 && name === 'dragon-rage') return 40;
+        return null;
+      }
+      if (id !== null && CONSTANT_DAMAGE_MOVES[id]) {
+        return CONSTANT_DAMAGE_MOVES[id].damage;
+      }
+      if (name !== null) {
+        const found = Object.values(CONSTANT_DAMAGE_MOVES).find(m => m.name === name);
+        return found?.damage || null;
+      }
+    }
+    return null;
+  }
+
   const MULTI_HIT_MOVES = Object.freeze(Object.fromEntries(Object.entries({"24":{"id":24,"name":"double-kick","minHits":2,"maxHits":2},"41":{"id":41,"name":"twineedle","minHits":2,"maxHits":2},"292":{"id":292,"name":"arm-thrust","minHits":2,"maxHits":5},"331":{"id":331,"name":"bullet-seed","minHits":2,"maxHits":5},"333":{"id":333,"name":"icicle-spear","minHits":2,"maxHits":5},"350":{"id":350,"name":"rock-blast","minHits":2,"maxHits":5},"594":{"id":594,"name":"water-shuriken","minHits":2,"maxHits":5}}).map(([id, move]) => [id, Object.freeze(move)])));
   function getMultiHitMove(move) {
     if (!move) return null;
@@ -518,6 +583,8 @@
   }
 
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
+    49: Object.freeze({ id: 49, name: 'sonic-boom', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
+    82: Object.freeze({ id: 82, name: 'dragon-rage', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     69: Object.freeze({ id: 69, name: 'seismic-toss', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'FIXED_DAMAGE_LEVEL'], knownPending: [], blockedReason: null, priority: 0 }),
     101: Object.freeze({ id: 101, name: 'night-shade', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_LEVEL'], knownPending: [], blockedReason: null, priority: 0 }),
     331: Object.freeze({"id":331,"name":"bullet-seed","supportLevel":"FULL","requiredMechanics":["PHYSICAL_DAMAGE","MULTI_HIT"],"knownPending":[],"blockedReason":null,"priority":0}),
@@ -621,7 +688,6 @@
     894: Object.freeze({ id: 894, name: 'comeuppance', supportLevel: 'BLOCKED', requiredMechanics: ['REFLECTS_LAST_DAMAGE'], knownPending: ['COUNTER_PHASE_P5'], blockedReason: 'REFLECTS_LAST_DAMAGE', priority: 0 }),
     12: Object.freeze({ id: 12, name: 'guillotine', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
     32: Object.freeze({ id: 32, name: 'horn-drill', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
-    49: Object.freeze({ id: 49, name: 'sonic-boom', supportLevel: 'BLOCKED', requiredMechanics: ['FIXED_DAMAGE'], knownPending: ['FIXED_DAMAGE_PHASE_P5'], blockedReason: 'FIXED_DAMAGE_20', priority: 0 }),
     67: Object.freeze({ id: 67, name: 'low-kick', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_TARGET_WEIGHT'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'POWER_FROM_TARGET_WEIGHT', priority: 0 }),
     90: Object.freeze({ id: 90, name: 'fissure', supportLevel: 'BLOCKED', requiredMechanics: ['ONE_HIT_KO'], knownPending: ['OHKO_PHASE_P5'], blockedReason: 'ONE_HIT_KO', priority: 0 }),
     149: Object.freeze({ id: 149, name: 'psywave', supportLevel: 'BLOCKED', requiredMechanics: ['VARIABLE_DAMAGE_LEVEL'], knownPending: ['VARIABLE_DAMAGE_PHASE_P5'], blockedReason: 'RANDOM_LEVEL_MULTIPLIER', priority: 0 }),
@@ -663,6 +729,8 @@
 
   // Mapeamento canônico dos golpes de dano utilizados nos catálogos da campanha e Pokédex expandida
   const KNOWN_CATALOG_MOVES = Object.freeze({
+    49: Object.freeze({ id: 49, name: 'sonic-boom', type: 'normal', power: null, accuracy: 90, pp: 20, damageClass: 'special' }),
+    82: Object.freeze({ id: 82, name: 'dragon-rage', type: 'dragon', power: null, accuracy: 100, pp: 10, damageClass: 'special' }),
     69: Object.freeze({ id: 69, name: 'seismic-toss', type: 'fighting', power: null, accuracy: 100, pp: 20, damageClass: 'physical' }),
     101: Object.freeze({ id: 101, name: 'night-shade', type: 'ghost', power: null, accuracy: 100, pp: 15, damageClass: 'special' }),
     331: Object.freeze({"id":331,"name":"bullet-seed","type":"grass","power":25,"accuracy":100,"pp":30,"damageClass":"physical"}),
@@ -1016,6 +1084,8 @@
         usesDefenseAsAttack: Boolean(def.usesDefenseAsAttack),
         isDualTypeEffectiveness: Boolean(def.isDualTypeEffectiveness),
         isLevelDamage: isLevelDamageMove(def),
+        isConstantDamage: isConstantDamageMove(def),
+        constantDamage: getConstantDamageAmount(def),
         drainRatio: def.drainRatio || 0,
         recoilRatio: def.recoilRatio || 0,
         isForcedSwitch: Boolean(def.isForcedSwitch),
@@ -1211,8 +1281,10 @@
 
     // 7. Golpes ofensivos (physical ou special)
     const isLevelDamage = isLevelDamageMove(move);
+    const isConstantDamage = isConstantDamageMove(move);
+    const isFixedDamage = isLevelDamage || isConstantDamage;
     let powerNum = null;
-    if (isLevelDamage) {
+    if (isFixedDamage) {
       if (move.power !== undefined && move.power !== null) {
         if (typeof move.power === 'boolean' || typeof move.power === 'object') return false;
         const pwr = Number(move.power);
@@ -1238,7 +1310,7 @@
 
     if (rawClass !== knownRef.damageClass) return false;
     if (rawType !== knownRef.type) return false;
-    if (!isLevelDamage && powerNum !== knownRef.power) return false;
+    if (!isFixedDamage && powerNum !== knownRef.power) return false;
     if (maxPp !== knownRef.pp) return false;
 
     // Validação estrita de precisão contra a definição canônica conhecida
@@ -1517,6 +1589,9 @@
     isForcedSwitchMove,
     LEVEL_DAMAGE_MOVES,
     isLevelDamageMove,
+    CONSTANT_DAMAGE_MOVES,
+    isConstantDamageMove,
+    getConstantDamageAmount,
     MULTI_HIT_MOVES,
     getMultiHitMove,
     getMultiHitCount,

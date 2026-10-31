@@ -2,6 +2,37 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P5 — Dano Fixo Constante (Sonic Boom e Dragon Rage) — Revisão Completa
+
+- Implementado suporte compartilhado a dano fixo constante no motor: Sonic Boom (#49; Normal, Special, precisão 90, PP 20, dano fixo de 20 HP) e Dragon Rage (#82; Dragon, Special, precisão 100, PP 10, dano fixo de 40 HP), ambos com power: null. Suporte promovido a FULL nas batalhas individuais do projeto.
+- Contratos e catálogo canônico: CONSTANT_DAMAGE_MOVES e helpers isConstantDamageMove / getConstantDamageAmount adicionados em battle-constants.js. IDs 49 e 82 promovidos em CANONICAL_MOVE_DEFINITIONS com mecânicas requeridas ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT']. ID 49 removido da lista de bloqueados e adicionado a KNOWN_CATALOG_MOVES. Exportações espelhadas em battle-session-constants.js.
+- Validação estrita de poder: validateMoveData, MoveModel.createMove, convertPokeApiMove e BattleEngine.createCombatant aceitam apenas null, undefined ou 0 para golpes de dano constante (normalizando para null), e rejeitam qualquer valor positivo, negativo, não-finito ou tipo inválido (boolean, object, etc.) sem mutar o objeto de entrada.
+- Prevenção contra combinações conflitantes de ID e nome em isConstantDamageMove: verificações conjuntas impedem que entradas adulteradas (como { id: 49, name: 'dragon-rage' } ou { id: 33, name: 'sonic-boom' }) ativem indevidamente a mecânica.
+- Comportamento real da SHADOW_AURA (distinção entre superar imunidade e multiplicar dano):
+  - A aura do adversário (modifiers.SHADOW_AURA com attackerSide === 'enemy') atua na resolução de efetividade elevando o multiplicador base para pelo menos 2 (Math.max(2, base)). Assim, a imunidade elemental canônica é superada antes da resolução do dano fixo (rawMultiplier = 2 > 0).
+  - Na resolução do dano constante, como rawMultiplier > 0, o multiplicador efetivo é normalizado para 1 (NEUTRAL), aplicando estritamente 20 HP (Sonic Boom) ou 40 HP (Dragon Rage). Fraqueza, resistência e a própria aura NÃO multiplicam esse dano (não amplifica para 40 ou 80 HP).
+  - Sem aura, imunidades normais são estritamente respeitadas: Sonic Boom causa 0 de dano a Ghost (IMMUNE, mult 0) e Dragon Rage causa 0 a Fairy (IMMUNE, mult 0).
+  - A aura é estritamente unilateral: se o jogador atacar um tipo imune enquanto a aura do inimigo estiver ativa no estado da batalha, o jogador continua sofrendo imunidade canônica (dano 0, IMMUNE, mult 0).
+  - Motor e avaliador concordam em 100% dos cenários (dano esperado, dano base e classificação NEUTRAL vs IMMUNE).
+  - HP capping e nocaute limpo: ao superar imunidade contra alvos com HP reduzido (ex: 15 HP restantes), o dano é limitado ao HP restante sem deixar HP negativo e sem vazamento para as reservas da equipe.
+  - PresentationMapper: quando a aura supera a imunidade, o evento TYPE_EFFECTIVENESS_RESOLVED emite multiplier: 1 e NEUTRAL, fazendo com que a apresentação não anuncie imunidade (pois houve dano) e não anuncie super efetivo/multiplicação por fraqueza.
+  - Regressões compartilhadas: golpes de nível (Seismic Toss e Night Shade) também superam imunidade com aura causando o nível exato sem amplificação por 2; golpes comuns (como Tackle) aplicam multiplicador >= 2 com a fórmula padrão de dano.
+- HP Capping e resolução de nocaute: dano limitado ao HP restante (Math.min(defender.currentHp, constantAmount)), evitando HP negativo e garantindo que nenhum dano excedente vaze para a reserva em batalhas 3x3.
+- Precisão e consumo de PP: Sonic Boom tem precisão 90% (erro consome 1 PP e causa 0 de dano); Dragon Rage tem precisão 100% (consome 1 PP).
+- Condições impeditivas de ação: sono, congelamento e hesitação (flinch) impedem a ação e não consomem PP; paralisia consome 1 PP quando imobiliza; confusão causa autoagressão sem consumo de PP do golpe quando ativa, e consome 1 PP com dano fixo aplicado quando superada.
+- Avaliador de IA (BattleEvaluator): reconhece golpes de dano constante, projeta dano médio/mínimo/máximo igual ao valor fixo, calcula dano esperado ponderado pela precisão (18 para Sonic Boom, 40 para Dragon Rage), reconhece imunidades (dano 0) e avalia letalidade (wouldKo e guaranteedKo) com precisão cirúrgica.
+- Hidratação real completa de ambos os pilotos (BattleTeamHydrator):
+  - Sonic Boom hidratado em Electrode (#101) e Dragon Rage hidratado em Gyarados (#130) usando fixtures autênticas no formato da PokéAPI (power: null, accuracy, pp, damage_class: special).
+  - Ambos os golpes atravessam com sucesso a seleção heurística determinística de qualidade, normalização de contratos e instanciação de combatente no motor.
+  - Comprovada em batalha a execução de 40 HP para Dragon Rage e 20 HP para Sonic Boom contra alvos elegíveis, e dano zero contra Fairy sem aura.
+  - Respostas adulteradas da API (como power: 999) são rejeitadas por validateMoveData e isMechanicallySupportedMove antes de entrar no loadout.
+  - Demonstração de que combatentes com níveis diferentes (ex: Gyarados nível 30 vs nível 75) causam exatamente o mesmo dano constante de 40 HP.
+- Campanha: pilotos adicionados ao gerador e catálogo curado em Electrode (#101; sonic-boom, shock-wave) e Gyarados (#130; dragon-rage, surf), preservando exatamente 455 espécies com extras e limite de 6 opções por espécie.
+- Suíte de testes: 15 testes detalhados e determinísticos em tests/battle/fixed-damage.test.js, validando catálogo, validação de poder, integridade de dano fixo, imunidades, estágios, variância, burn, SHADOW_AURA (superação de imunidade, lado específico, preservação de 20/40, capping e PresentationMapper), letalidade/nocaute, precisão 90%, impedimentos, Sleep Talk, IA, sessão bidirecional, hidratação autêntica de Electrode e Gyarados, e opções de campanha.
+- Estado de validação: 1.446 testes aprovados em 38 suítes, zero falhas. Auditoria P4 sem pendências (270 conhecidos, 211 FULL, 59 PARTIAL).
+- P5 permanece parcial: golpes de dano variável (Super Fang, Low Kick, Psywave, OHKO, Counter/Mirror Coat) continuam pendentes para os próximos ciclos.
+- Nenhum commit, push ou deploy foi realizado.
+
 ## Atualização — 31/10/2026: P5 — Dano Baseado no Nível (Seismic Toss e Night Shade) — Validação Completa
 
 - Implementado suporte compartilhado a dano baseado no nível do usuário: Seismic Toss (#69; Fighting, Physical, precisão 100, PP 20) e Night Shade (#101; Ghost, Special, precisão 100, PP 15), ambos com `power: null`. Suporte FULL no modelo atual de batalhas individuais.

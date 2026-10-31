@@ -191,11 +191,13 @@
           normalizedMove = MoveModel.createMove(m);
         } else {
           const isLvl = Boolean(constants?.isLevelDamageMove?.(m));
+          const isConst = Boolean(constants?.isConstantDamageMove?.(m));
           let pwr = null;
-          if (isLvl) {
+          if (isLvl || isConst) {
             if (m.power !== undefined && m.power !== null) {
               if (typeof m.power === 'boolean' || typeof m.power === 'object' || !Number.isFinite(Number(m.power)) || Number(m.power) !== 0) {
-                throw new Error(`Poder do golpe baseado em nível "${m.name}" inválido: ${m.power}.`);
+                const kind = isLvl ? 'baseado em nível' : 'de dano fixo constante';
+                throw new Error(`Poder do golpe ${kind} "${m.name}" inválido: ${m.power}.`);
               }
             }
           } else {
@@ -1185,8 +1187,10 @@
 
       // 3. Resolução de STAB (Same-Type Attack Bonus)
       const isLevelDamage = Boolean(constants.isLevelDamageMove?.(selectedMove));
+      const isConstantDamage = Boolean(constants.isConstantDamageMove?.(selectedMove));
+      const isFixedDamage = isLevelDamage || isConstantDamage;
       const hasStab = attacker.types.includes(selectedMove.type);
-      const stabMultiplier = (hasStab && !isLevelDamage) ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1;
+      const stabMultiplier = (hasStab && !isFixedDamage) ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1;
 
       events.push({
         type: BATTLE_EVENTS.STAB_RESOLVED,
@@ -1194,7 +1198,7 @@
         moveType: selectedMove.type,
         attackerTypes: attacker.types,
         multiplier: stabMultiplier,
-        hasStab: isLevelDamage ? false : hasStab
+        hasStab: isFixedDamage ? false : hasStab
       });
 
       // 4. Resolução de Type Effectiveness
@@ -1228,7 +1232,7 @@
           : effectiveness.multiplier;
         defenderTypesList = effectiveness.defenderTypes;
 
-        if (isLevelDamage) {
+        if (isFixedDamage) {
           if (rawMultiplier === 0) {
             effectiveMultiplier = 0;
             effectivenessClassification = constants.TYPE_EFFECTIVENESS_CLASSIFICATION?.IMMUNE || 'IMMUNE';
@@ -1284,6 +1288,10 @@
         const attackerLevel = Number(attacker.level) || constants.BATTLE_CONFIG?.SIMULATION_LEVEL || 50;
         baseDamage = effectiveMultiplier === 0 ? 0 : attackerLevel;
         finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, attackerLevel);
+      } else if (isConstantDamage) {
+        const constantAmount = constants.getConstantDamageAmount ? constants.getConstantDamageAmount(selectedMove) : (selectedMove.id === 49 ? 20 : 40);
+        baseDamage = effectiveMultiplier === 0 ? 0 : constantAmount;
+        finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, constantAmount);
       } else {
         baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, selectedMove.power);
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
@@ -1347,8 +1355,8 @@
         moveName: selectedMove.name,
         power: selectedMove.power !== undefined ? selectedMove.power : null,
         baseDamage,
-        damageRoll: isLevelDamage ? 100 : damageRoll,
-        stabMultiplier: isLevelDamage ? 1 : stabMultiplier,
+        damageRoll: isFixedDamage ? 100 : damageRoll,
+        stabMultiplier: isFixedDamage ? 1 : stabMultiplier,
         typeMultiplier: effectiveMultiplier,
         multiplier: effectiveMultiplier,
         damage: finalDamage,
