@@ -1,11 +1,38 @@
-.doubles-arena { max-width: 1100px; margin: auto; padding: 24px; }
-.doubles-board { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
-.doubles-card { padding: 16px; text-align: center; background: #161f35; border: 1px solid #475569; border-radius: 16px; }
-.doubles-card img { width: 120px; height: 120px; object-fit: contain; }
-.doubles-card progress { width: 70%; accent-color: #22c55e; }
-.doubles-controls { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 20px 0; }
-.doubles-controls fieldset { border: 1px solid #64748b; border-radius: 12px; padding: 16px; min-width: 0; }
-.doubles-controls label { display: block; margin: 10px 0; }
-.doubles-controls select { display: block; width: 100%; margin-top: 6px; padding: 10px; color: #f8fafc; background: #0f172a; border: 1px solid #64748b; border-radius: 8px; }
-.doubles-arena button { margin: 8px; }
-@media(max-width:600px) { .doubles-arena { padding: 12px; } .doubles-controls { grid-template-columns: 1fr; } .doubles-card { padding: 8px; } .doubles-card img { width: 90px; height: 90px; } }
+.doubles-arena { max-width: 1100px; margin: auto; padding: 20px 24px; color: #f8fafc; }
+.doubles-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.doubles-header h2 { margin: 4px 0; font-size: clamp(1.25rem,3vw,1.75rem); }
+.doubles-header p { margin: 4px 0; color: #b8c6dc; font-size: .9rem; }
+.duo-eyebrow { color: #72d8ff; font-size: .7rem; font-weight: 800; letter-spacing: .13em; }
+.duo-turn { flex-shrink: 0; padding: 8px 14px; border-radius: 999px; border: 1px solid #506580; color: #bdeaff; background: #142338; font-weight: 700; }
+.duo-side-heading { margin: 12px 0 8px; font-size: .9rem; color: #cbd5e1; }
+.doubles-board { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.doubles-card { display: grid; grid-template-columns: 88px minmax(0,1fr); align-items: center; gap: 4px 12px; padding: 12px 16px; background: linear-gradient(135deg,#18243b,#111c30); border: 1px solid #384b68; border-radius: 16px; min-width: 0; }
+.doubles-card img { display: block; width: 88px; height: 88px; object-fit: contain; margin: auto; grid-row: 1 / 3; }
+.doubles-card h3 { margin: 2px 0 4px; overflow-wrap: anywhere; font-size: 1.05rem; }
+.doubles-card-info { min-width: 0; }
+.duo-position { color: #94a9c7; font-size: .7rem; font-weight: 700; }
+.doubles-types { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.doubles-types span { background: var(--duo-type,#475569); color: #fff; padding: 1px 7px; border-radius: 10px; font-size: .7rem; }
+.duo-condition { margin: 4px 0 0; color: #bdc9dc; font-size: .75rem; }
+.doubles-vitals { display: flex; gap: 7px; align-items: center; min-width: 0; font-size: .75rem; font-variant-numeric: tabular-nums; }
+.doubles-vitals label { color: #b9c7db; }
+.doubles-vitals progress { min-width: 32px; flex: 1; height: 8px; accent-color: #29ce87; }
+.doubles-vitals progress.hp-warning { accent-color: #fbbf24; }
+.doubles-vitals progress.hp-danger { accent-color: #fb7185; }
+.doubles-card.is-fainted { opacity: .5; }
+.duo-field { margin: 10px 0 0; color: #fde68a; font-size: .8rem; }
+.doubles-controls { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 16px 0 10px; }
+.doubles-controls fieldset { border: 1px solid #4b607f; border-radius: 12px; padding: 8px 14px 10px; min-width: 0; background: #101b2e; }
+.doubles-controls legend { padding: 0 6px; font-weight: 700; }
+.doubles-controls label { display: block; margin: 7px 0; color: #cbd5e1; font-size: .8rem; }
+.doubles-controls label[hidden] { display: none; }
+.doubles-controls select { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; color: #f8fafc; background: #19273e; border: 1px solid #536a8c; border-radius: 8px; min-height: 36px; }
+.doubles-controls select:disabled { opacity: .65; }
+.doubles-controls select:focus-visible, .doubles-arena button:focus-visible { outline: 3px solid #7dd3fc; outline-offset: 2px; }
+.duo-action-hint { margin: 4px 0; min-height: 1em; color: #9db6d6; font-size: .72rem; }
+#doublesError { color: #fecaca; background: #451c2b; border: 1px solid #9f4561; padding: 10px 14px; border-radius: 10px; }
+.doubles-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.doubles-actions button { margin: 0; padding: 10px 18px; }
+.doubles-actions #battleNarrativeBox { flex: 1; min-width: 180px; margin: 0; color: #c4d2e7; font-size: .85rem; }
+@media(max-width:600px) { .doubles-arena { padding: 12px; } .doubles-header { gap: 8px; } .duo-eyebrow { font-size: .6rem; } .duo-turn { padding: 6px 10px; font-size: .8rem; } .doubles-header p { font-size: .8rem; } .doubles-board { gap: 8px; } .doubles-card { grid-template-columns: 1fr; text-align: center; padding: 10px 8px; gap: 2px; } .doubles-card img { grid-row: auto; width: 68px; height: 68px; } .doubles-card h3 { font-size: .9rem; } .doubles-types { justify-content: center; } .doubles-vitals { font-size: .65rem; gap: 4px; } .doubles-controls { grid-template-columns: 1fr; } .doubles-actions { align-items: stretch; } .doubles-actions button { flex: 1; min-width: 140px; } .doubles-actions #battleNarrativeBox { flex-basis: 100%; } }
+@media(prefers-reduced-motion:reduce) { .doubles-arena *, .doubles-arena *::before, .doubles-arena *::after { animation: none !important; transition: none !important; } }

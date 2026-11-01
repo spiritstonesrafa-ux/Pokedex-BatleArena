@@ -2,6 +2,13 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: controles e validação visual das duplas
+
+- Arena compacta e responsiva, identificação das posições, condições e HP. Alvos automáticos desativam a seleção e explicam golpes em área, inclusive risco ao aliado.
+- Pivôs permitem escolher a reserva; Baton Pass preserva sua transferência. Reservas repetidas são rejeitadas antes de enviar o turno; uma reserva que ficou indisponível não é substituída silenciosamente por outra.
+- Escolhas preservadas por Pokémon durante a batalha, substituições com seleção explícita e erros exibidos na tela. Mecânicas especiais ficam desativadas ao escolher troca/recarga.
+- Validação manual no navegador: batalha real, golpe em área, troca e avanço ao turno seguinte; conferência responsiva sem transbordamento horizontal. Sem erros de console observados.
+- Testes de regressão para prévia imutável, reserva manual, Baton Pass, conflitos e controles. Auditoria de conclusão preserva 384 FULL e zero PARTIAL. Alterações locais, ainda sem commit/push.
 ## Atualização — 01/11/2026: sete pendências concluídas e modo de duplas implementado
 
 - **P1 publicada: b14e942d145b7cce57a96e5618ceb264dd54e8fa**, hash confirmado em origin/main antes de iniciar este ciclo. P8 já publicada como dd90fd0.

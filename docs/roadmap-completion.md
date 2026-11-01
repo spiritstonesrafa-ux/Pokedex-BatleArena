@@ -66,3 +66,7 @@ O novo modo entrega batalhas de dois ativos e as interações descritas acima; n
 - [Showdown battle-actions.ts](https://github.com/smogon/pokemon-showdown/blob/master/sim/battle-actions.ts): sequência de roubo de aumentos e cálculo de dano.
 - [Showdown abilities.ts](https://github.com/smogon/pokemon-showdown/blob/master/data/abilities.ts), [conditions.ts](https://github.com/smogon/pokemon-showdown/blob/master/data/conditions.ts): Commander, estados vinculados e redirecionamento.
 - [PokéAPI move_targets.csv](https://github.com/PokeAPI/pokeapi/blob/master/data/v2/csv/move_targets.csv) e [moves.csv](https://github.com/PokeAPI/pokeapi/blob/master/data/v2/csv/moves.csv): identidades e tipos de alvo. Dados consultados como referência, sem executar callbacks externos.
+
+## Polimento de duplas — 01/11/2026
+
+Implementada escolha manual da reserva nos pivôs, incluindo Baton Pass; comandos antigos e IA mantêm a primeira reserva como padrão. Reservas conflitantes são rejeitadas e reserva indisponível durante a resolução mantém o usuário em campo com mensagem. Interface compacta e responsiva, alvos automáticos indicados, escolhas mantidas e erros na tela. Homologação visual local com turno real (ataque em área e troca) e viewport móvel sem transbordamento horizontal. Esta seção atualiza os limites históricos descritos acima; não amplia o catálogo de golpes ou o regulamento competitivo.

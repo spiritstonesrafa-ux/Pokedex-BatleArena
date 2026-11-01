@@ -486,7 +486,7 @@
       if(this.isResolving&&!internal)return;if(this.battleState?.battleFormat!=='DOUBLES'||this.battleState.status!=='AWAITING_REPLACEMENT')return;
       this.isResolving=true;try{const choices={player:playerChoices,enemy:{}},used=new Set();for(const p of this.battleState.pendingDoublesReplacements.filter(p=>p.role==='enemy')){const b=this.engine.doublesBench(this.battleState,'enemy').find(b=>!used.has(b.mon.id));if(b){choices.enemy[p.slot]=b.mon.id;used.add(b.mon.id);}}
         const result=this.engine.resolveDoublesReplacement(this.battleState,choices);this.battleState=result.state;if(this.presentationEngine)await this.presentationEngine.play(result.events,{battleState:this.battleState});await this.finishDoublesStep();
-      }catch(error){this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{error:error.message,battleState:this.battleState});this.view?.displayMessage?.(error.message);}finally{this.isResolving=false;}
+      }catch(error){this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{error:error.message,battleState:this.battleState});this.view?.showDoublesError?.(error.message);this.view?.displayMessage?.(error.message);}finally{this.isResolving=false;}
     }
 
     async submitDoublesTurn(playerActions){
@@ -504,7 +504,7 @@
           action.targetRolls={};let first=true;for(const targetRole of ['player','enemy'])for(const t of this.engine.doublesActive(this.battleState,targetRole)){if(targetRole===role&&t.index===p.index)continue;if(first){first=false;continue;}action.targetRolls[targetRole+':'+t.slot]={accuracyRoll:rng.rollAccuracy(),damageRoll:rng.rollDamage?.()??100,criticalRoll:rng.rollCritical?.()??24,secondaryEffectRoll:rng.rollSecondaryEffect?.()??100,abilityRoll:rng.rollAbility?.()??100};}
         }
         const result=this.engine.resolveDoublesTurn(this.battleState,commands);this.battleState=result.state;if(this.presentationEngine)await this.presentationEngine.play(result.events,{battleState:this.battleState});await this.finishDoublesStep();
-      }catch(error){this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{error:error.message,battleState:this.battleState});this.view?.displayMessage?.(error.message);}finally{this.isResolving=false;}
+      }catch(error){this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{error:error.message,battleState:this.battleState});this.view?.showDoublesError?.(error.message);this.view?.displayMessage?.(error.message);}finally{this.isResolving=false;}
     }
 
     async submitPlayerMove(moveId, specialOptions={}) {
