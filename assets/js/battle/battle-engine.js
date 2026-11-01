@@ -1652,6 +1652,7 @@
       // 6. Pipeline de cálculo de dano v2 (PBA-014B: com variância 85..100)
       let baseDamage;
       let finalDamage;
+      let critical=false;
       if (isP5Fixed) {
         baseDamage = effectiveMultiplier===0?0:constants.P5.fixedAmount(selectedMove,attacker,defender,action);
         finalDamage = Math.min(defender.currentHp,baseDamage);
@@ -1667,7 +1668,9 @@
         baseDamage = effectiveMultiplier === 0 ? 0 : constantAmount;
         finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, constantAmount);
       } else {
-        baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, effectivePower);
+        critical=constants.Critical.resolve(damageMove,action?.criticalRoll!==undefined?action.criticalRoll:action?.hitCriticalRolls?.[0]??24,constants);
+        const criticalStats=constants.Critical.stats(attacker,defender,damageMove,constants);
+        baseDamage = DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat, critical?criticalStats.defense:defenseStat, effectivePower);
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
         const multiHit = constants.getMultiHitMove(selectedMove);
         if (multiHit) {
@@ -1680,6 +1683,8 @@
             return rolls;
           }
           const damageRolls = hitRolls('hitDamageRolls', damageRoll, 85, 100);
+          const criticalRolls=hitRolls('hitCriticalRolls',action?.criticalRoll??24,1,24);
+          if(action?.criticalRoll!==undefined&&criticalRolls[0]!==action.criticalRoll)throw Error('O crítico do primeiro acerto deve coincidir com criticalRoll.');
         const accuracyRolls = multiHit.multiAccuracy ? hitRolls('hitAccuracyRolls',accuracyRoll,1,100) : null;
         if(accuracyRolls && accuracyRolls[0]!==accuracyRoll)throw new Error('A precisão do primeiro acerto deve coincidir com accuracyRoll.');
           const poisonRolls = selectedMove.id === 41 ? hitRolls('hitSecondaryEffectRolls', secondaryEffectRoll, 1, 100) : null;
@@ -1689,8 +1694,8 @@
             if(index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
           const hitEff=constants.P8.effectiveness(actualDamageType,defender,TypeEffectiveness,attacker,damageMove,constants);const hitMultiplier=BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(hitEff.multiplier,{attackerSide:attackerRole,modifiers:state.modifiers||{}}):hitEff.multiplier;
           const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
-          const critical=Boolean(multiHit.critical);
-          const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?Math.max(attacker.attack,attackStat):attackStat,critical?Math.min(defender.defense,defenseStat):defenseStat,hitPower);
+          const critical=constants.Critical.resolve(damageMove,criticalRolls[index],constants);
+          const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat,critical?criticalStats.defense:defenseStat,hitPower);
           let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
             hitDamage=Math.max(hitMultiplier===0?0:1,Math.floor(hitDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,hitMultiplier)));
             hitDamage=constants.P7.survive(state,attackerRole,damageMove,hitDamage,constants,events);
@@ -1719,11 +1724,11 @@
           return;
         }
         finalDamage = constants.applyBurnPenalty(
-          DamageCalculator.applyModifier(baseDamage, effectiveMultiplier, stabMultiplier, damageRoll),
+          DamageCalculator.applyModifier(baseDamage*(critical?1.5:1), effectiveMultiplier, stabMultiplier, damageRoll),
           attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier;
       }
 
-      if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove)));
+      if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,effectiveMultiplier)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P8.finalMultiplier(attacker,defender,damageMove)));
       finalDamage=constants.P7.survive(state,attackerRole,damageMove,finalDamage,constants,events);
@@ -1745,6 +1750,8 @@
         moveName: selectedMove.name,
         power: isFixedDamage ? (selectedMove.power ?? null) : effectivePower,
         baseDamage,
+        critical:critical&&effectiveMultiplier>0,
+        criticalMultiplier:critical&&effectiveMultiplier>0?1.5:1,
         damageRoll: isFixedDamage ? 100 : damageRoll,
         stabMultiplier: isFixedDamage ? 1 : stabMultiplier,
         typeMultiplier: effectiveMultiplier,

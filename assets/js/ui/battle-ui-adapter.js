@@ -192,6 +192,7 @@
         }
 
         case PRESENTATION_COMMANDS.HP_TRANSITION: {
+          if(command.critical&&command.damage>0)this.view.displayMessage?.('Acerto crítico!');
           if (typeof this.view.updateHpBar === 'function') {
             await this.view.updateHpBar(
               command.target,

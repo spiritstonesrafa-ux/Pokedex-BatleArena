@@ -53,7 +53,7 @@ test('burn lands only after accuracy, deals 1/16 and halves physical damage but 
   paralyzed.player.statusCondition = 'paralysis';
   assert.equal(Evaluator.evaluateMove(paralyzed.player, paralyzed.enemy, paralyzed.player.moves[1]).expectedDamage,
     Math.floor(Evaluator.evaluateMove(fresh.player, fresh.enemy, fresh.player.moves[1]).averageDamage * 0.75));
-  const burnedHit = Engine.resolveTurn(scorched, { player: act(33), enemy: act(261, { accuracyRoll: 100 }) });
+  const burnedHit = Engine.resolveTurn(scorched, { player: act(33, {criticalRoll:1}), enemy: act(261, { accuracyRoll: 100 }) });
   const direct = burnedHit.events.find(e => e.type === BATTLE_EVENTS.DAMAGE_APPLIED && e.source === 'player');
   assert.equal(direct.damage, burntPhysical.maxDamage);
 });

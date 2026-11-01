@@ -22,6 +22,7 @@ const SIMPLE_MOVES = new Set([
 
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
+  ...BattleConstants.Critical.highCriticalIds.map(id=>BattleConstants.KNOWN_CATALOG_MOVES[id].name),
   ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
   ...Object.values(BattleConstants.P8.moves).filter(m=>m.id!==723).map(m=>m.name),
   ...Object.values(BattleConstants.P7.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>m.name),
@@ -67,6 +68,7 @@ const PILOT_P3_MOVES = new Set([
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  ...Object.fromEntries(BattleConstants.Critical.highCriticalIds.map(id=>BattleConstants.KNOWN_CATALOG_MOVES[id]).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P8.moves).filter(m=>m.id!==723).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P7.moves).map(m=>[m.name,m])),
@@ -426,8 +428,8 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   48: ["baton-pass"],
   49: ["toxic-spikes"],
   50: ["sand-tomb"],
-  54: ["whirlpool"],
-  56: ["outrage"],
+  54: ["whirlpool","cross-chop"],
+  56: ["outrage","karate-chop"],
   57: ["focus-punch"],
   60: ["mist"],
   69: ["bind"],
@@ -463,6 +465,8 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   10187: ["aura-wheel"],
   10188: ["behemoth-blade"],
   10189: ["behemoth-bash"],
+
+  // P1: canonical critical pilots in existing free slots.
 
 });
 

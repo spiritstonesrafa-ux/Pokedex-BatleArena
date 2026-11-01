@@ -38,6 +38,7 @@
     constructor(options = {}) {
       this.rng = typeof options.rng === 'function' ? options.rng : defaultCryptoRandom;
       this.accuracySequence = Array.isArray(options.accuracySequence) ? [...options.accuracySequence] : null;
+      this.criticalSequence=Array.isArray(options.criticalSequence)?[...options.criticalSequence]:null;
       this.damageSequence = Array.isArray(options.damageSequence) ? [...options.damageSequence] : null;
       this.statusSequence = Array.isArray(options.statusSequence) ? [...options.statusSequence] : null;
       this.secondaryEffectSequence = Array.isArray(options.secondaryEffectSequence) ? [...options.secondaryEffectSequence] : null;
@@ -88,6 +89,13 @@
       const floatVal = this.rng();
       return Math.floor(floatVal * 16) + 85;
     }
+
+    rollCritical() {
+      const value=this.criticalSequence?.length?Number(this.criticalSequence.shift()):Math.floor(this.rng()*24)+1;
+      if(!Number.isInteger(value)||value<1||value>24)throw Error('Rolagem de crítico inválida.');
+      return value;
+    }
+    setCriticalSequence(sequence){this.criticalSequence=Array.isArray(sequence)?[...sequence]:null;}
 
     rollStatus() {
       if (this.statusSequence && this.statusSequence.length > 0) {

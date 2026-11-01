@@ -191,6 +191,7 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const Critical = typeof module !== 'undefined' && module.exports ? require('./critical-mechanics.js') : window.PBACriticalMechanics;
   const P8 = typeof module !== 'undefined' && module.exports ? require('./p8-mechanics.js') : window.PBAP8Mechanics;
   const P7 = typeof module !== 'undefined' && module.exports ? require('./p7-mechanics.js') : window.PBAP7Mechanics;
   const P6 = typeof module !== 'undefined' && module.exports ? require('./p6-mechanics.js') : window.PBAP6Mechanics;
@@ -906,7 +907,8 @@
     340: Object.freeze({ id: 340, name: 'bounce', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bounce'] }),
     ...P6.definitions,
     ...P7.definitions,
-    ...P8.definitions
+    ...P8.definitions,
+    ...Critical.promote({...P4Catalog.definitions,...P6.definitions,...P7.definitions})
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -1825,6 +1827,7 @@
     P6,
     P7,
     P8,
+    Critical,
     RECHARGE_MOVES,
     isRechargeMove,
     PROTECT_MOVES,

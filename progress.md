@@ -2,6 +2,16 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: bloco de críticos da P1 concluído
+
+- Após a P8 publicada como **dd90fd0**, implementado crítico comum de 1/24 e chance elevada de 1/8 para os **13 pilotos P1**, agora FULL. Multiplicador 1,5×, estágios desfavoráveis ignorados, barreiras ignoradas e queimadura/modificadores preservados. Relatório: docs/roadmap-p1.md.
+- Rolagens externas independentes por acerto, fonte aleatória injetável, sessões de ambos os lados, trocas, carga/Power Herb, Sleep Talk, variantes Max/Z e mensagem de acerto crítico integrados. Motor e IA continuam determinísticos e sem RNG interno.
+- Avaliador inclui chance/máximo de crítico e média ponderada, mantendo o mínimo comum para nocaute garantido. Corrigida a preservação dos modificadores de atributo no crítico garantido de Surging Strikes.
+- **52 testes novos; 2.574 testes aprovados / 38 suítes**, zero falhas/cancelados/ignorados. Auditorias P1/P4/P5/P6/P7/P8/draft aprovadas. UI validada automaticamente, sem homologação visual manual.
+- **384 golpes conhecidos: 377 FULL, 7 PARTIAL**. P6 tem 70/70 FULL; P7 tem 35 FULL e Order Up PARTIAL por duplas. Nenhuma dependência PHASE_P1 permanece no catálogo conhecido.
+- Restam P2: Axe Kick/Matcha Gotcha; P3: Sacred Sword/Darkest Lariat/Spectral Thief; duplas: Pollen Puff/Order Up. Itens/habilidades de crítico fora dos pilotos, bem como expansões futuras P8, não foram liberados implicitamente.
+- Cross Chop adicionado ao pool de Psyduck e Karate Chop ao de Mankey por learnsets legais, sem remover opções anteriores. Mantidos saves, 1.349 registros aptos, 542 espécies com extras (até seis opções) e draft 450. Este bloco permanece **local, sem novo commit/push/deploy**. Registros abaixo são históricos; para o estado atual, usar esta atualização e as auditorias.
+
 ## Atualização — 01/11/2026: P8 concluída no escopo individual dos pilotos
 
 - Entregues **Transform/Sketch, formas e tipos dinâmicos, Dynamax padrão (18 ataques Max + Max Guard), Terastallization (19 tipos, incluindo Stellar), Terapagos/Ogerpon e o golpe Z de Necrozma Ultra**. Relatório e limites: docs/roadmap-p8.md.

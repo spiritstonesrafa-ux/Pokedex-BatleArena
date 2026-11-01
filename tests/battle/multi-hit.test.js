@@ -90,7 +90,7 @@ for(const status of ['sleep','freeze','paralysis']) test(`P5: ${status} interrup
 test('P5: evaluator sums per-hit rounded damage and AI recognizes total damage',()=>{
  const state=E.createBattle(mon(1,[m(24),m(33)]),mon(2));const v=V.evaluateMove(state.player,state.enemy,state.player.moves[0]);
  const rolls=hits(run(24,{hitDamageRolls:[85,85]}));assert.equal(v.minDamage,rolls.reduce((n,e)=>n+e.damage,0));
- assert.equal(v.maxDamage,hits(run(24)).reduce((n,e)=>n+e.damage,0));
+ assert.equal(v.maxDamage,hits(run(24,{criticalRoll:1,hitCriticalRolls:[1,1]})).reduce((n,e)=>n+e.damage,0));
  state.enemy.currentHp=v.minDamage;assert.equal(V.evaluateMove(state.player,state.enemy,state.player.moves[0]).guaranteedKo,true);
  assert.equal(AI.chooseAction(state,'player',{strategy:'SMART'}).action.moveId,24);
  const variable=V.evaluateMove(state.player,state.enemy,m(331));assert.ok(variable.maxDamage>variable.minDamage*2);

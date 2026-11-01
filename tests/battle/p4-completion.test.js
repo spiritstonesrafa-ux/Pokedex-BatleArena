@@ -194,7 +194,7 @@ test('P4 registry is immutable and legacy generic P4 placeholders are resolved t
  for(const effect of Object.values(P4.effects))assert.equal(Object.isFrozen(effect),true);
  for(const move of Object.values(C.KNOWN_CATALOG_MOVES))assert.equal(C.getMoveCapability(move)?.knownPending.includes('SECONDARY_EFFECTS_PHASE_P4'),false,move.name);
  assert.equal(C.getMoveCapability(87).supportLevel,'FULL');
- assert.ok(C.getMoveCapability(299).knownPending.includes('HIGH_CRITICAL_PHASE_P1'));
+ assert.equal(C.getMoveCapability(299).supportLevel,'FULL');
 });
 
 test('Campaign exposes every newly introduced sleep family without invalidating its pool limits',()=>{

@@ -164,10 +164,13 @@
     }
     if(move?.id===290&&active.envTerrain==='grassy')action.sleepDuration=rng.rollSleepDuration?.()??2;
     if(move?.id===149)action.psywaveRoll=rng.rollPsywave?.()??100;
+    if(!move&&action.moveId===165)move=battleConstants.P6.struggle;
+    if(battleConstants.Critical.eligible(move,battleConstants))action.criticalRoll=rng.rollCritical?.()??24;
     const config = battleConstants.getMultiHitMove(move);
     if (!config) return;
     if (config.minHits !== config.maxHits) action.hitCountRoll = rng.rollHitCount?.() ?? 1;
     const count = battleConstants.getMultiHitCount(move, action.hitCountRoll);
+    action.hitCriticalRolls=Array.from({length:count},(_,i)=>i?(rng.rollCritical?.()??24):(action.criticalRoll??24));
     if(config.multiAccuracy)action.hitAccuracyRolls=Array.from({length:count},(_,i)=>i?(rng.rollAccuracy?.()??1):(action.accuracyRoll??1));
     // Prepared externally even when an action later misses or is interrupted; only engine events count applied hits.
     action.hitDamageRolls = Array.from({length:count}, (_, i) => i ? (rng.rollDamage?.() ?? 100) : (action.damageRoll ?? 100));

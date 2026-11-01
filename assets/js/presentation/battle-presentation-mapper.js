@@ -482,6 +482,7 @@
               target: event.target,
               source: event.source,
               damage: Number(event.damage),
+              ...(event.critical?{critical:true}:{}),
               previousHp: Number(event.previousHp),
               currentHp: Number(event.currentHp),
               attackType: event.attackType,

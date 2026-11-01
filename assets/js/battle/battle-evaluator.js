@@ -395,7 +395,7 @@
         for(let i=0;i<multiHit.maxHits;i++){
           const hitPower=multiHit.escalating?power*(i+1):power;
           const critical=Boolean(multiHit.critical);
-          const base=DamageCalculator.calculateBaseDamage(critical?Math.max(attacker.attack,attackStat):attackStat,critical?Math.min(defender.defense,defenseStat):defenseStat,hitPower);
+          const base=DamageCalculator.calculateBaseDamage(critical?constants.Critical.stats(attacker,defender,{...move,damageClass},constants).attack:attackStat,critical?constants.Critical.stats(attacker,defender,{...move,damageClass},constants).defense:defenseStat,hitPower);
           const values=Array.from({length:16},(_,r)=>constants.applyBurnPenalty(DamageCalculator.applyModifier(base*(critical?1.5:1),typeMultiplier,stabMultiplier,r+85),attacker,move));
           if(!multiHit.multiAccuracy||i===0)lo+=values[0];
           hi+=values[15];avg+=values.reduce((a,b)=>a+b,0)/16*(multiHit.multiAccuracy?Math.pow(p,i):1);
@@ -438,6 +438,34 @@
       if(!multiHit&&defender.currentHp===defender.maxHp&&(ab==='sturdy'||defender.item==='focus-sash')){minDamage=Math.min(minDamage,defender.currentHp-1);maxDamage=Math.min(maxDamage,defender.currentHp-1);averageDamage=Math.min(averageDamage,defender.currentHp-1);damageIfHit=averageDamage;}
       if(defender.minimized&&constants.P6.minimizeHits.includes(move.id)){minDamage*=2;maxDamage*=2;averageDamage*=2;damageIfHit=averageDamage;accuracyFactor=1;}
       if(constants.P6.consecutive.includes(move.id)&&attacker.lastP6Move===move.id){actionFactor=0;minDamage=maxDamage=averageDamage=damageIfHit=0;}
+      // Keep ordinary minimum damage for guaranteed KOs; rare criticals only raise the possible maximum/mean.
+      const criticalMove={...move,type:moveType,damageClass};
+      const criticalChance=constants.Critical.chance(criticalMove,constants);
+      let criticalMaxDamage=0;
+      if(criticalChance>0&&criticalChance<1&&!entryRestricted&&typeMultiplier>0&&actionFactor>0&&averageDamage>0){
+        const cs=constants.Critical.stats(attacker,defender,criticalMove,constants),n=multiHit?.maxHits||1;
+        let critAverage=0;
+        for(let i=0;i<n;i++){
+          const d=i>0?{...defender,currentHp:Math.max(1,defender.currentHp-1)}:defender;
+          const rawEff=i>0?constants.P8.effectiveness(moveType,d,TypeEffectiveness,attacker,criticalMove,constants).multiplier:typeMultiplier;
+          const eff=i>0&&BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(rawEff,context):rawEff;
+          const hitPower=multiHit?.escalating?power*(i+1):power,base=DamageCalculator.calculateBaseDamage(cs.attack,cs.defense,hitPower);
+          const values=Array.from({length:16},(_,j)=>{
+            let amount=constants.applyBurnPenalty(DamageCalculator.applyModifier(base*1.5,eff,stabMultiplier,j+85),attacker,criticalMove);
+            if(defender.twoTurnMove?.state)amount*=constants.getSemiInvulnerableDamageMultiplier(move,defender.twoTurnMove.state);
+            amount=Math.max(eff===0?0:1,Math.floor(amount*constants.P7.damageMultiplier(context.battleState,attacker,d,criticalMove,eff)));
+            amount=Math.max(eff===0?0:1,Math.floor(amount*constants.P8.finalMultiplier(attacker,d,criticalMove)));
+            if(defender.minimized&&constants.P6.minimizeHits.includes(move.id))amount*=2;
+            return amount;
+          });
+          criticalMaxDamage+=values[15];
+          critAverage+=values.reduce((a,b)=>a+b,0)/16*(multiHit?.multiAccuracy?Math.pow(accuracyFactor,i):1);
+        }
+        if(multiHit&&multiHit.minHits!==multiHit.maxHits)critAverage*=expectedHits/n;
+        if(!multiHit&&defender.currentHp===defender.maxHp&&(ab==='sturdy'||defender.item==='focus-sash')){criticalMaxDamage=Math.min(criticalMaxDamage,defender.currentHp-1);critAverage=Math.min(critAverage,defender.currentHp-1);}
+        maxDamage=Math.max(maxDamage,criticalMaxDamage);
+        averageDamage=damageIfHit=averageDamage*(1-criticalChance)+critAverage*criticalChance;
+      }else if(criticalChance===1)criticalMaxDamage=maxDamage;
       const isTwoTurn = Boolean(constants?.isTwoTurnMove?.(move));
       const isTwoTurnCharging = isTwoTurn && !attacker.twoTurnMove && !constants.P7.instantCharge(context.battleState,attacker,move);
       let projectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
@@ -613,6 +641,8 @@
         attackStat,
         defenseStat,
         baseDamage,
+        criticalChance,
+        criticalMaxDamage,
         minDamage,
         maxDamage,
         averageDamage,

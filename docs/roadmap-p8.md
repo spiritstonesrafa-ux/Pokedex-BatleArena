@@ -2,6 +2,8 @@
 
 Atualização: **01/11/2026. P8 concluída no escopo explícito de batalhas individuais dos pilotos cadastrados.** Auditoria: `node scripts/audit-p8.js`. Nenhuma dependência essencial `PHASE_P8` permanece no catálogo conhecido. Isso não significa suporte a todas as transformações, habilidades ou golpes existentes na série.
 
+> Estado posterior: críticos P1 entregues em 01/11/2026. O catálogo atual tem 377 FULL e 7 PARTIAL; P6 agora é 70/70 FULL. Ver docs/roadmap-p1.md. As contagens de validação abaixo registram o fechamento original da P8, publicado como dd90fd0.
+
 ## Entregas
 
 | Bloco | Implementação |

@@ -202,8 +202,10 @@ test('browser script order exposes fixed moves to a campaign battle started afte
   vm.createContext(context);
   const scripts = [
     'expanded-pokemon-catalog.js',
+    'battle/p4-secondary-catalog.js',
     'battle/p5-mechanics.js',
     'battle/p7-pokemon-data.js',
+    'battle/critical-mechanics.js',
     'battle/p8-special.js',
     'battle/p8-mechanics.js',
     'battle/p7-mechanics.js',

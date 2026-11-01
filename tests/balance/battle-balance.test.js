@@ -233,9 +233,10 @@ describe('PHASE PBA-014B — BATTLE BALANCE FOUNDATION (BAL01–BAL40)', () => {
     const move = { id: 85, name: 'thunderbolt', power: 90, type: 'electric', damageClass: 'special', accuracy: 100, pp: 15, currentPp: 15 };
     const ev = BattleEvaluator.evaluateMove(attacker, defender, move);
     assert.strictEqual(ev.minDamage, 102);
-    assert.strictEqual(ev.maxDamage, 122);
-    assert.strictEqual(ev.averageDamage, 112);
-    assert.strictEqual(ev.expectedDamage, 112);
+    assert.strictEqual(ev.maxDamage, 182);
+    assert.strictEqual(ev.criticalChance, 1/24);
+    assert.ok(ev.averageDamage > 112 && ev.averageDamage < 116);
+    assert.strictEqual(ev.expectedDamage, Math.floor(ev.averageDamage));
   });
 
   // BAL27 — Guaranteed KO Uses Min Roll
