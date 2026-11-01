@@ -2,6 +2,17 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: sete pendências concluídas e modo de duplas implementado
+
+- **P1 publicada: b14e942d145b7cce57a96e5618ceb264dd54e8fa**, hash confirmado em origin/main antes de iniciar este ciclo. P8 já publicada como dd90fd0.
+- Implementados Axe Kick (dano ao falhar), Matcha Gotcha (drenagem), Sacred Sword/Darkest Lariat (ignorar estágios/evasão), Spectral Thief (roubar aumentos), Pollen Puff (cura de aliado) e Order Up/Commander. **384 golpes conhecidos FULL; zero PARTIAL e zero dependências cadastradas pendentes**. Não equivale a todos os golpes da PokéAPI.
+- Usuário autorizou explicitamente incluir duplas. Novo modo na aba Batalhar: dois ativos por lado, ações/alvos por posição, dano em área, PP/rolagens por alvo, reservas, nocautes, substituições, IA e apresentação. Interface atual usa equipe de três (dois ativos + reserva); API aceita 2–6. Campanha existente permanece individual.
+- Commander implementado para as três formas de Tatsugiri com Dondozo: +2 em cinco atributos, vínculo/ocultação/bloqueio de ações e trocas, resíduos e liberação ao cair; Order Up dá o aumento correspondente à forma. P7 agora tem 36/36 pilotos FULL.
+- Spectral Thief adicionado a Marshadow e Matcha Gotcha a Sinistcha, sem remover opções anteriores. **543 espécies com extras**, até seis opções, 1.349 aptos e draft 450 preservados. Duplas prioriza os pilotos novos nos conjuntos legais; preferências explícitas prevalecem.
+- **55 testes novos; 2.629 testes / 38 suítes aprovados**, zero falhas/cancelados/ignorados. Auditorias P1/P4/P5/P6/P7/P8/draft e audit-roadmap-completion.js aprovadas. Gerador offline reproduzível; interface validada automaticamente, sem homologação visual manual.
+- Roadmap vigente e limites em docs/roadmap-completion.md. Expansões futuras: golpes/habilidades/itens fora do catálogo, outros Z/Gigantamax, Mega/Primal/Ultra Burst dinâmicos, múltiplos slots persistentes de Sketch e ampliação/polimento das regras de duplas. Pivôs em duplas usam a primeira reserva disponível neste ciclo.
+- Publicação deste conjunto autorizada pelo usuário em 01/11/2026; o commit de conclusão do roadmap e duplas consta no histórico Git. Sem deploy manual. Os registros abaixo são históricos.
+
 ## Atualização — 01/11/2026: bloco de críticos da P1 concluído
 
 - Após a P8 publicada como **dd90fd0**, implementado crítico comum de 1/24 e chance elevada de 1/8 para os **13 pilotos P1**, agora FULL. Multiplicador 1,5×, estágios desfavoráveis ignorados, barreiras ignoradas e queimadura/modificadores preservados. Relatório: docs/roadmap-p1.md.

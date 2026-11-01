@@ -9,7 +9,7 @@ const available=new Set(Object.keys(Fixed.byId).flatMap(id=>{const pool=Options.
 for(const m of Object.values(P.moves)){assert.ok(C.validateMoveData(m),m.name);assert.ok(available.has(m.id),m.name);assert.ok(['FULL','PARTIAL'].includes(C.getMoveCapability(m).supportLevel));}
 const unresolved=Object.values(C.CANONICAL_MOVE_DEFINITIONS).filter(m=>m.knownPending.some(p=>p.includes('PHASE_P7')));assert.deepEqual(unresolved,[]);
 for(const id of [723,851])assert.equal(C.getMoveCapability(id).supportLevel,'FULL','P8 delivered '+id);
-assert.ok(C.getMoveCapability(856).knownPending.includes('COMMANDER_DOUBLES_OUT_OF_SCOPE'));
+assert.equal(C.getMoveCapability(856).supportLevel,'FULL');
 const partial=Object.values(P.moves).filter(m=>C.getMoveCapability(m).supportLevel==='PARTIAL').map(m=>m.id);
-assert.deepEqual(partial,[856]);
-console.log(JSON.stringify({p7ExplicitSinglesScopeComplete:true,abilityPilots:66,itemPilots:66,movePilots:36,fullMoves:35,partialWithExternalDependencies:partial,officialPokemonWithNaturalAbilities:Object.keys(P.Data.byPokemon).length,unknownAbilitiesRemainInactive:true,unresolvedP7:0},null,2));
+assert.deepEqual(partial,[]);
+console.log(JSON.stringify({p7ExplicitSinglesScopeComplete:true,abilityPilots:66,itemPilots:66,movePilots:36,fullMoves:36,partialWithExternalDependencies:partial,officialPokemonWithNaturalAbilities:Object.keys(P.Data.byPokemon).length,unknownAbilitiesRemainInactive:true,unresolvedP7:0},null,2));

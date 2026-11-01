@@ -1,0 +1,11 @@
+.doubles-arena { max-width: 1100px; margin: auto; padding: 24px; }
+.doubles-board { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.doubles-card { padding: 16px; text-align: center; background: #161f35; border: 1px solid #475569; border-radius: 16px; }
+.doubles-card img { width: 120px; height: 120px; object-fit: contain; }
+.doubles-card progress { width: 70%; accent-color: #22c55e; }
+.doubles-controls { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 20px 0; }
+.doubles-controls fieldset { border: 1px solid #64748b; border-radius: 12px; padding: 16px; min-width: 0; }
+.doubles-controls label { display: block; margin: 10px 0; }
+.doubles-controls select { display: block; width: 100%; margin-top: 6px; padding: 10px; color: #f8fafc; background: #0f172a; border: 1px solid #64748b; border-radius: 8px; }
+.doubles-arena button { margin: 8px; }
+@media(max-width:600px) { .doubles-arena { padding: 12px; } .doubles-controls { grid-template-columns: 1fr; } .doubles-card { padding: 8px; } .doubles-card img { width: 90px; height: 90px; } }

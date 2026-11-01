@@ -152,6 +152,8 @@
           if(preview&&preview.data.expectedDamage>0&&preview.data.maxDamage<attacker.currentHp)attacker.lastDirectHit={turn:context.turn,sourceId:defender.id,damage:Math.floor(preview.data.expectedDamage),damageClass:preview.data.damageClass};
         }
       }
+      if(move.id===712&&!defender.isProtected&&!defender.twoTurnMove?.state&&constants.P8.effectiveness('ghost',defender,TypeEffectiveness,attacker,move,constants).multiplier>0){attacker={...attacker,statStages:{...attacker.statStages}};defender={...defender,statStages:{...defender.statStages}};constants.Completion.steal(attacker,defender,constants,[],context.attackerSide||'player',context.attackerSide==='enemy'?'player':'enemy');}
+      defender=constants.Completion.defender(move,defender);
       const p5 = constants.P5.get(move);
       const damageClass = constants.P8.damageClass(attacker,move,constants);
       const moveType = constants.P8.moveType(attacker,move,constants.P7.moveType(context.battleState,attacker,move,constants.P5.type(move,attacker))) || 'normal';
@@ -496,6 +498,7 @@
       const expectedRecoil = (recoilRatio > 0 && cappedExpectedDamage > 0)
         ? Math.max(1, Math.floor(cappedExpectedDamage * recoilRatio))
         : 0;
+      const expectedCrash=move.id===853&&constants.P7.ability(attacker)!=='magic-guard'?Math.min(attacker.currentHp,Math.max(1,Math.floor(constants.P8.baseMaxHp(attacker)/2)))*(typeMultiplier===0||defender.isProtected||defender.twoTurnMove?.state?1:1-accuracyFactor):0;
       const wouldRecoilKo = recoilRatio > 0 && expectedRecoil >= (Number(attacker.currentHp) || 0);
       const priority = constants.P7.priority(attacker,move,constants);
 
@@ -663,7 +666,8 @@
         drainRatio,
         expectedHeal,
         recoilRatio,
-        expectedRecoil,
+        expectedRecoil:expectedRecoil+expectedCrash,
+        expectedCrash,
         wouldRecoilKo,
         statBoosts: null,
         selfStatDrops: move.selfStatDrops || (constants?.getSelfStatDrops && constants.getSelfStatDrops(move)) || null,

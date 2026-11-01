@@ -6,7 +6,7 @@ function eligible(move,C){return Boolean(move&&move.damageClass!=='status'&&!C.P
 function chance(move,C){if(!eligible(move,C))return 0;if(C.getMultiHitMove(move)?.critical)return 1;return highCriticalIds.includes(Number(move.id))&&!move.p8Max&&!move.p8Z?1/8:1/24;}
 function roll(value=24){if(!Number.isInteger(value)||value<1||value>24)throw Error('Rolagem de crítico inválida: use inteiro entre 1 e 24.');return value;}
 function resolve(move,value,C){return roll(value)<=chance(move,C)*24;}
-function stats(a,d,move,C){const physical=move.damageClass==='physical',atkKey=physical?(C.usesDefenseAsAttack(move)?'defense':'attack'):'specialAttack',defKey=physical||C.targetsDefenseWithSpAtk(move)?'defense':'specialDefense';const attacker={...a,statStages:{...a.statStages,[atkKey]:Math.max(0,a.statStages?.[atkKey]||0)}},defender={...d,statStages:{...d.statStages,[defKey]:Math.min(0,d.statStages?.[defKey]||0)}};return {attack:C.getEffectiveStat(attacker,atkKey),defense:C.getEffectiveStat(defender,defKey)};}
+function stats(a,d,move,C){d=C.Completion.defender(move,d);const physical=move.damageClass==='physical',atkKey=physical?(C.usesDefenseAsAttack(move)?'defense':'attack'):'specialAttack',defKey=physical||C.targetsDefenseWithSpAtk(move)?'defense':'specialDefense';const attacker={...a,statStages:{...a.statStages,[atkKey]:Math.max(0,a.statStages?.[atkKey]||0)}},defender={...d,statStages:{...d.statStages,[defKey]:Math.min(0,d.statStages?.[defKey]||0)}};return {attack:C.getEffectiveStat(attacker,atkKey),defense:C.getEffectiveStat(defender,defKey)};}
 const api=Object.freeze({highCriticalIds,promote,eligible,chance,roll,resolve,stats});
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else window.PBACriticalMechanics=api;
 })();

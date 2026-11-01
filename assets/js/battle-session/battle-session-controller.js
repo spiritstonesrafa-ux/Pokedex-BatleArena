@@ -324,7 +324,8 @@
       const teamIds = Array.isArray(options.playerTeamIds) ? options.playerTeamIds.map(Number) : this.getPlayerTeamIds();
 
       const isFinalStand = options.metadata?.battleFormat === 'FINAL_STAND';
-      const teamIsValid = isFinalStand ? teamIds.length >= 1 : teamIds.length === SESSION_CONFIG.TEAM_SIZE;
+      const doublesMode=options.battleFormat==='DOUBLES'||options.metadata?.battleFormat==='DOUBLES';
+      const teamIsValid = doublesMode?teamIds.length>=2&&teamIds.length<=6:isFinalStand ? teamIds.length >= 1 : teamIds.length === SESSION_CONFIG.TEAM_SIZE;
       if (!teamIsValid) {
         this.notifyState(BATTLE_UI_STATES.NO_TEAM, { teamSize: teamIds.length });
         throw new Error(isFinalStand ? 'O Final Stand requer ao menos um Pokémon disponível.' : `Time incompleto: requer exatamente ${SESSION_CONFIG.TEAM_SIZE} Pokémon.`);
@@ -336,16 +337,17 @@
 
       try {
         const campaignMode = options.metadata?.mode === 'CAMPAIGN';
-        const fixedCatalog = campaignMode
+        const fixedCatalog = (campaignMode||doublesMode)
           ? (campaignFixedCatalog || (typeof window !== 'undefined' && window.PBACampaign?.CampaignFixedBattleCatalog))
           : null;
         if (campaignMode && !fixedCatalog) throw new Error('Catálogo de golpes da campanha indisponível.');
-        const moveOptions = campaignMode
+        const moveOptions = (campaignMode||doublesMode)
           ? (campaignMoveOptions || (typeof window !== 'undefined' && window.PBACampaign?.CampaignMoveOptions))
           : null;
-        const campaignInput = (ids, player = false) => campaignMode
+        const campaignInput = (ids, player = false) => (campaignMode||doublesMode)
           ? ids.map(id => fixedCatalog.byId[id]
             ? { ...fixedCatalog.byId[id],
+              ...(doublesMode&&moveOptions&&fixedCatalog.byId[id].moves.length===4?{moves:[...new Map([...moveOptions.getPool(id).filter(m=>battleConstants.Completion.ids.includes(m.id)),...fixedCatalog.byId[id].moves].map(m=>[m.id,m])).values()].slice(0,4),campaignCustomMoves:true}:{}),
               ...(player&&options.playerBattlePreferences?.[id]?{battlePreference:options.playerBattlePreferences[id]}:{}),
               ...(player && moveOptions && options.playerMovePreferences?.[id]
                 ? { moves: moveOptions.resolveLoadout(id, options.playerMovePreferences[id],options.playerSketchMoves?.[id]), campaignCustomMoves: true }
@@ -391,7 +393,7 @@
         this.incompatibilityError = null;
 
         // 3. Cria a batalha 3x3 no Battle Engine
-        this.battleState = this.engine.createTeamBattle(this.playerTeam, this.enemyTeam, { modifiers: options.modifiers || {}, metadata: options.metadata || null, battleFormat: options.metadata?.battleFormat || null });
+        this.battleState = this.engine.createTeamBattle(this.playerTeam, this.enemyTeam, { modifiers: options.modifiers || {}, metadata: options.metadata || null, battleFormat: options.battleFormat || options.metadata?.battleFormat || null });
 
         // 4. Sincroniza metadados visuais e sonoros nos combatentes do estado de batalha
         if (this.battleState && this.battleState.player && Array.isArray(this.battleState.player.team)) {
@@ -469,6 +471,42 @@
      * Executa a ação de golpe selecionada pelo jogador.
      * @param {number|string} moveId - ID do golpe escolhido.
      */
+    async startDoublesBattle(){await this.prepareBattle({playerTeamIds:this.getPlayerTeamIds(),battleFormat:'DOUBLES',metadata:{mode:'QUICK',battleFormat:'DOUBLES'}});if(this.battleState)await this.startBattle();}
+
+    async finishDoublesStep(){
+      if(this.battleState.status==='AWAITING_REPLACEMENT'){
+        if(!(this.battleState.pendingDoublesReplacements||[]).some(p=>p.role==='player'))return this.submitDoublesReplacement({},true);
+        this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{battleState:this.battleState});return;
+      }
+      if(this.battleState.status==='PLAYER_WIN'||this.battleState.status==='ENEMY_WIN')return this.handlePostResolutionState();
+      this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{battleState:this.battleState});
+    }
+
+    async submitDoublesReplacement(playerChoices={},internal=false){
+      if(this.isResolving&&!internal)return;if(this.battleState?.battleFormat!=='DOUBLES'||this.battleState.status!=='AWAITING_REPLACEMENT')return;
+      this.isResolving=true;try{const choices={player:playerChoices,enemy:{}},used=new Set();for(const p of this.battleState.pendingDoublesReplacements.filter(p=>p.role==='enemy')){const b=this.engine.doublesBench(this.battleState,'enemy').find(b=>!used.has(b.mon.id));if(b){choices.enemy[p.slot]=b.mon.id;used.add(b.mon.id);}}
+        const result=this.engine.resolveDoublesReplacement(this.battleState,choices);this.battleState=result.state;if(this.presentationEngine)await this.presentationEngine.play(result.events,{battleState:this.battleState});await this.finishDoublesStep();
+      }catch(error){this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{error:error.message,battleState:this.battleState});this.view?.displayMessage?.(error.message);}finally{this.isResolving=false;}
+    }
+
+    async submitDoublesTurn(playerActions){
+      if(this.isResolving||this.battleState?.battleFormat!=='DOUBLES'||this.battleState.status!=='IN_PROGRESS')return;
+      this.isResolving=true;this.notifyState(BATTLE_UI_STATES.RESOLVING);try{
+        const commands={player:JSON.parse(JSON.stringify(playerActions||{})),enemy:this.engine.chooseDoublesActions(this.battleState,'enemy')};
+        for(const role of ['player','enemy'])for(const p of this.engine.doublesActive(this.battleState,role)){
+          const action=commands[role][p.slot];if(!action||action.type!=='MOVE'||p.mon.commanding)continue;const rng=this.randomSource;
+          action.accuracyRoll=rng.rollAccuracy();action.damageRoll=rng.rollDamage?.()??100;action.secondaryEffectRoll=rng.rollSecondaryEffect?.()??100;action.statusRoll=rng.rollStatus?.()??100;action.thawRoll=rng.rollThaw?.()??100;action.confusionHitRoll=rng.rollConfusionHit?.()??100;action.confusionDamageRoll=rng.rollConfusionDamage?.()??100;action.sleepDuration=rng.rollSleepDuration?.()??2;action.confusionDuration=rng.rollConfusionDuration?.()??3;
+          prepareSleepCall(p.mon,action,{},rng);prepareCompoundSecondary(p.mon.moves.find(m=>m.id===action.moveId),action,rng);prepareMultiHit(p.mon,action,rng);
+          const base=p.mon.moves.find(m=>m.id===action.moveId),preview={...this.battleState,[role]:{...this.battleState[role],activeIndex:p.index}};
+          if(role==='enemy'&&battleConstants.P8.canActivate(preview,role,p.mon.specialMechanic)&&(p.mon.specialMechanic!=='z'||base?.id===722)&&!Object.values(commands[role]).some(a=>a.special))action.special=p.mon.specialMechanic;
+          if(battleConstants.isProtectMove(base)||base?.damageClass==='status'&&(p.mon.dynamax||action.special==='dynamax'))action.protectRoll=rng.rollProtect?.(Math.min(729,Math.pow(3,p.mon.stallCount||0)))??1;
+          const candidates=this.engine.doublesActive(this.battleState,role==='player'?'enemy':'player').filter(p=>!p.mon.commanding);action.randomTargetIndex=candidates.length?Math.min(candidates.length-1,Math.floor(((rng.rollAccuracy?.()??1)-1)/100*candidates.length)):0;
+          action.targetRolls={};let first=true;for(const targetRole of ['player','enemy'])for(const t of this.engine.doublesActive(this.battleState,targetRole)){if(targetRole===role&&t.index===p.index)continue;if(first){first=false;continue;}action.targetRolls[targetRole+':'+t.slot]={accuracyRoll:rng.rollAccuracy(),damageRoll:rng.rollDamage?.()??100,criticalRoll:rng.rollCritical?.()??24,secondaryEffectRoll:rng.rollSecondaryEffect?.()??100,abilityRoll:rng.rollAbility?.()??100};}
+        }
+        const result=this.engine.resolveDoublesTurn(this.battleState,commands);this.battleState=result.state;if(this.presentationEngine)await this.presentationEngine.play(result.events,{battleState:this.battleState});await this.finishDoublesStep();
+      }catch(error){this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION,{error:error.message,battleState:this.battleState});this.view?.displayMessage?.(error.message);}finally{this.isResolving=false;}
+    }
+
     async submitPlayerMove(moveId, specialOptions={}) {
       if (this.isResolving) return;
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;

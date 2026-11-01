@@ -253,10 +253,11 @@
      * @param {Object} [context] - Contexto imutável opcional.
      * @returns {Array<Object>} Lista de comandos de apresentação normalizados.
      */
-    function mapEvent(event, context = null) {
+    function mapEventBase(event, context = null) {
       validateEvent(event);
 
       switch (event.type) {
+        case BATTLE_EVENTS.DOUBLES_REPLACEMENT_REQUIRED:return [];
         case BATTLE_EVENTS.BATTLE_STARTED:
           return [
             {
@@ -479,6 +480,7 @@
             {
               type: PRESENTATION_COMMANDS.HP_TRANSITION,
               side: event.target,
+              ...(event.targetSlot!==undefined?{targetSlot:event.targetSlot}:{}),
               target: event.target,
               source: event.source,
               damage: Number(event.damage),
@@ -611,6 +613,8 @@
      * @param {Object} [context] - Contexto imutável opcional.
      * @returns {Array<Object>} Lista sequencial de comandos de apresentação.
      */
+    function mapEvent(event,context=null){return mapEventBase(event,context).map(command=>{const slot=event.targetSlot??event.combatantSlot??event.actorSlot;if(slot===undefined)return command;return {...command,targetSlot:slot,...(event.actorSlot!==undefined?{actorSlot:event.actorSlot}:{})};});}
+
     function mapEvents(events, context = null) {
       if (!Array.isArray(events)) {
         throw new Error('INVALID_EVENTS_STREAM: A entrada de eventos deve ser um Array.');

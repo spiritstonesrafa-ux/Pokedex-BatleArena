@@ -45,6 +45,7 @@
     SWITCH_STARTED: 'SWITCH_STARTED',
     POKEMON_SWITCHED: 'POKEMON_SWITCHED',
     REPLACEMENT_REQUIRED: 'REPLACEMENT_REQUIRED',
+    DOUBLES_REPLACEMENT_REQUIRED:'DOUBLES_REPLACEMENT_REQUIRED',
     TEAM_DEFEATED: 'TEAM_DEFEATED',
     BATTLE_ENDED: 'BATTLE_ENDED',
     STAT_STAGE_CHANGED: 'STAT_STAGE_CHANGED',
@@ -129,7 +130,8 @@
     'draining-kiss': 0.75,
     'horn-leech': 0.5,
     'bitter-blade': 0.5,
-    'parabolic-charge': 0.5
+    'parabolic-charge': 0.5,
+    'matcha-gotcha': 0.5
   });
 
   function getDrainRatio(move) {
@@ -191,6 +193,7 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const Completion = typeof module !== 'undefined' && module.exports ? require('./move-completion.js') : window.PBAMoveCompletion;
   const Critical = typeof module !== 'undefined' && module.exports ? require('./critical-mechanics.js') : window.PBACriticalMechanics;
   const P8 = typeof module !== 'undefined' && module.exports ? require('./p8-mechanics.js') : window.PBAP8Mechanics;
   const P7 = typeof module !== 'undefined' && module.exports ? require('./p7-mechanics.js') : window.PBAP7Mechanics;
@@ -406,7 +409,7 @@
     const weatherAccuracy=P7.accuracy(move,attacker,defender,move.accuracy);
     if(weatherAccuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
-    const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Number(defender.evasionStage)||0)));
+    const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Completion.ignoresStages(move)?0:Number(defender.evasionStage)||0)));
     return Math.min(100,Math.floor(Number(weatherAccuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
   }
 
@@ -908,7 +911,8 @@
     ...P6.definitions,
     ...P7.definitions,
     ...P8.definitions,
-    ...Critical.promote({...P4Catalog.definitions,...P6.definitions,...P7.definitions})
+    ...Critical.promote({...P4Catalog.definitions,...P6.definitions,...P7.definitions}),
+    ...Completion.promote({...P4Catalog.definitions,...P7.definitions})
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -1828,6 +1832,7 @@
     P7,
     P8,
     Critical,
+    Completion,
     RECHARGE_MOVES,
     isRechargeMove,
     PROTECT_MOVES,

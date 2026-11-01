@@ -519,7 +519,7 @@
       const fieldSummary=role=>Object.entries(battleState.p6Sides?.[role]||{}).filter(([key,value])=>value&&fieldNames[key]).map(([key,value])=>fieldNames[key]+(key==='spikes'||key==='toxicSpikes'?' ×'+value:'')).join(' · ');
       const p7Names={sun:'Sol intenso',rain:'Chuva',sand:'Tempestade de areia',snow:'Neve',hail:'Granizo',electric:'Terreno elétrico',grassy:'Terreno de grama',misty:'Terreno de névoa',psychic:'Terreno psíquico'};
       const p7Field=['weather','terrain'].filter(k=>battleState[k]).map(k=>p7Names[battleState[k].id]+(k==='weather'&&!PowerRules.P7.fieldWeather(battleState)?' (efeito suspenso)':'')+' · '+battleState[k].turns+' turnos').join(' / ');
-      const p7Loadout=[playerActive,enemyActive].map(m=>m.name+(m.dynamax?' [Dynamax · '+m.dynamax.turns+' turnos]':m.tera?' [Tera '+m.tera+']':'')+(m.transformedName?' → '+m.transformedName:'')+': '+(m.ability||'sem habilidade')+(m.ability&&![...PowerRules.P7.abilityNames,...PowerRules.P8.abilityNames].includes(m.ability)?' (efeito pendente)':'')+(m.abilitySuppressed?' (suprimida)':'')+' · '+(m.item||'sem item')).join(' / ');
+      const p7Loadout=[playerActive,enemyActive].map(m=>m.name+(m.dynamax?' [Dynamax · '+m.dynamax.turns+' turnos]':m.tera?' [Tera '+m.tera+']':'')+(m.transformedName?' → '+m.transformedName:'')+': '+(m.ability||'sem habilidade')+(m.ability&&![...PowerRules.P7.abilityNames,...PowerRules.P8.abilityNames,...PowerRules.Completion.abilityNames].includes(m.ability)?' (efeito pendente)':'')+(m.abilitySuppressed?' (suprimida)':'')+' · '+(m.item||'sem item')).join(' / ');
       const fieldHtml='<p role="status">'+p7Field+'</p><p>'+p7Loadout+'</p>'+['player','enemy'].map(role=>fieldSummary(role)?`<p role="status">${role==='player'?'Seu campo':'Campo adversário'}: ${fieldSummary(role)}</p>`:'').join('');
       // Botões de golpes do Pokémon ativo do jogador
       const activationOptions=['dynamax','tera'].filter(kind=>PowerRules.P8.canActivate(battleState,'player',kind));
@@ -1098,6 +1098,8 @@
     }
   }
 
+  const doublesView=typeof module!=='undefined'&&module.exports?require('./doubles-battle-view.js'):window.PBADoublesView;
+  doublesView.install(BattleView,PowerRules);
   const exportsObj = {
     BattleView,
     createBattleView: (opts) => new BattleView(opts)

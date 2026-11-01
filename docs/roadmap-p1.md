@@ -1,5 +1,8 @@
 # P1 — Críticos: bloco concluído
 
+> Estado posterior em 01/11/2026: as sete pendências restantes foram implementadas junto do modo de duplas. O catálogo conhecido está em 384 FULL, zero PARTIAL. Ver docs/roadmap-completion.md; as contagens abaixo registram o fechamento histórico desta fase.
+
+
 Atualização: **01/11/2026**, após a P8 publicada em `dd90fd0`. Bloco de críticos da P1 concluído no catálogo atual de batalhas individuais. Não declara suporte a todos os golpes, itens e habilidades da série.
 
 ## Regras entregues

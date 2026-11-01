@@ -22,6 +22,7 @@ const SIMPLE_MOVES = new Set([
 
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
+  ...BattleConstants.Completion.ids.map(id=>BattleConstants.KNOWN_CATALOG_MOVES[id].name),
   ...BattleConstants.Critical.highCriticalIds.map(id=>BattleConstants.KNOWN_CATALOG_MOVES[id].name),
   ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
   ...Object.values(BattleConstants.P8.moves).filter(m=>m.id!==723).map(m=>m.name),
@@ -68,6 +69,7 @@ const PILOT_P3_MOVES = new Set([
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  ...Object.fromEntries(BattleConstants.Completion.ids.map(id=>BattleConstants.KNOWN_CATALOG_MOVES[id]).map(m=>[m.name,m])),
   ...Object.fromEntries(BattleConstants.Critical.highCriticalIds.map(id=>BattleConstants.KNOWN_CATALOG_MOVES[id]).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P8.moves).filter(m=>m.id!==723).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
@@ -467,6 +469,10 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   10189: ["behemoth-bash"],
 
   // P1: canonical critical pilots in existing free slots.
+
+  // Remaining signature moves, legal species, without removing old choices.
+  802: ["spectral-thief"],
+  1013: ["magical-leaf","matcha-gotcha"],
 
 });
 

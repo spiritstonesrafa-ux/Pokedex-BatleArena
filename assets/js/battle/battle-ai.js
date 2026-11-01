@@ -223,7 +223,7 @@
       // Avaliação detalhada de cada golpe utilizável do ativo
       const evaluatedMoves = usableMoves.map(m => {
         const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { battleState:state, special:myActive.specialMechanic, attackerSide: side, attackerTeam: myTeam, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} });
-        let score = evalData.expectedDamage;
+        let score = evalData.expectedDamage-(evalData.expectedCrash||0);
         // Account for the forced idle turn without hiding the immediate KO prediction.
         if(evalData.requiresRecharge && !evalData.guaranteedKo)score=Math.floor(score/2);
         if(evalData.chargingTurn)score=Math.floor((evalData.projectedDamage || 0)/2);

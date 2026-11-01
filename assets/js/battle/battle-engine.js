@@ -543,6 +543,7 @@
         pokemon.toxicStage = 0;
         events.push({ type: BATTLE_EVENTS.POKEMON_FAINTED, target: role, pokemonName: pokemon.name });
       }
+      if(state.battleFormat==='DOUBLES')return;
       const defeated = roles.filter(role => state.version === 1 ||
         state[role].team.every(pokemon => pokemon.currentHp === 0));
       constants.P7.sync(state);
@@ -633,8 +634,7 @@
         }
       }
 
-      constants.P6.endField(state,events);
-      constants.P7.endTurn(state,constants,events);
+      if(state.battleFormat!=='DOUBLES'||!state.doublesResidualPass){constants.P6.endField(state,events);constants.P7.endTurn(state,constants,events);}
       constants.P8.endTurn(state,constants,events);
       // Limpeza de estados temporários de turno (Flinch: P4 & Protect: P6)
       for (const role of ['player', 'enemy']) {
@@ -827,12 +827,13 @@
       if(attacker.currentHp<=0 || state.status!=='IN_PROGRESS')return;
       executeActionCore(attackerRole,defenderRole,state,events,action,calledMove);
       attacker.abilityIgnored=false;originalTarget.abilityIgnored=false;attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;originalTarget.p7BlockDrop=false;originalTarget.p7BlockAttackDrop=false;
-      if(!calledMove)constants.P7.afterMove(state,attackerRole,events,constants,events.slice(start));
+      constants.Completion.crash(state,attackerRole,attacker,action,events.slice(start),constants,events);
+      if(!calledMove&&!state.doublesSpread)constants.P7.afterMove(state,attackerRole,events,constants,events.slice(start));
       if(attacker.currentHp<=0&&!events.slice(start).some(e=>e.type===BATTLE_EVENTS.POKEMON_FAINTED&&e.target===attackerRole))resolveFaints(state,events,[attackerRole],'item');
       if(attacker.pivotAfterHit){const id=attacker.pivotAfterHit;delete attacker.pivotAfterHit;if(attacker.currentHp>0&&!['PLAYER_WIN','ENEMY_WIN'].includes(state.status))constants.P6.requestPivot(state,attackerRole,id,events);}
       const batch=events.slice(start);
       constants.P8.remember(attacker,batch,attackerRole);
-      const lastSpecial=batch.findLast(e=>e.type==='MOVE_USED'&&e.actor===attackerRole&&e.damageClass!=='status')||batch.find(e=>e.type==='MOVE_USED'&&e.actor===attackerRole),specialMove=lastSpecial&&{...constants.KNOWN_CATALOG_MOVES[lastSpecial.moveId],id:lastSpecial.moveId,type:lastSpecial.moveType,damageClass:lastSpecial.damageClass};if(!calledMove)constants.P8.finishMove(attacker,specialMove||{},Boolean(specialMove&&!constants.P5.fixed(specialMove)&&!constants.isFractionalDamageMove(specialMove)&&!constants.isConstantDamageMove(specialMove)&&!constants.isLevelDamageMove(specialMove)&&batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.source===attackerRole&&e.damage>0)));
+      const lastSpecial=batch.findLast(e=>e.type==='MOVE_USED'&&e.actor===attackerRole&&e.damageClass!=='status')||batch.find(e=>e.type==='MOVE_USED'&&e.actor===attackerRole),specialMove=lastSpecial&&{...constants.KNOWN_CATALOG_MOVES[lastSpecial.moveId],id:lastSpecial.moveId,type:lastSpecial.moveType,damageClass:lastSpecial.damageClass};if(!calledMove&&!state.doublesSpread)constants.P8.finishMove(attacker,specialMove||{},Boolean(specialMove&&!constants.P5.fixed(specialMove)&&!constants.isFractionalDamageMove(specialMove)&&!constants.isConstantDamageMove(specialMove)&&!constants.isLevelDamageMove(specialMove)&&batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.source===attackerRole&&e.damage>0)));
       const used=batch.find(e=>e.type===BATTLE_EVENTS.MOVE_USED && constants.isRechargeMove({id:e.moveId,name:e.moveName}));
       if(used && attacker.currentHp>0 && batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED && e.source===attackerRole && e.moveName===used.moveName && e.damage>0)){
         attacker.rechargeMoveId=used.moveId;
@@ -892,7 +893,7 @@
 
       // 1. Seleciona o golpe a ser executado
       let selectedMove;
-      const isStruggle=(constants.P6.mustStruggle(attacker)||constants.P7.mustStruggle(attacker)||constants.P8.mustStruggle(attacker));
+      const isStruggle=(constants.P6.mustStruggle(attacker)||constants.P7.mustStruggle(attacker)||constants.P8.mustStruggle(attacker)||state.battleFormat==='DOUBLES'&&!attacker.moves.some(m=>m.currentPp>0&&constants.P7.legalMove(attacker,m)));
       if(isStruggle)selectedMove={...constants.P6.struggle};
       else if (action && (action.moveId !== undefined || action.moveName !== undefined)) {
         selectedMove = attacker.moves.find(m =>
@@ -1334,6 +1335,7 @@
         if(!action.bideDamage){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:'NO_BIDE_DAMAGE'});return;}
       }
 
+      if(state.doublesNoTarget){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,moveId:selectedMove.id,moveName:selectedMove.name,reason:'NO_TARGET'});return;}
       const isSelfTarget = selectedMove.target === 'self' || selectedMove.damageClass === 'status_self' || [14, 156, 214, 347, 182, 197].includes(selectedMove.id);
       const bypassesProtect = Boolean([144,166].includes(selectedMove.id)||selectedMove.p8Max||selectedMove.p8Z)||constants.isProtectBypassingMove?.(selectedMove)||(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(selectedMove.id));
       if ((defender.maxGuard&&!isSelfTarget&&selectedMove.target!=='foeSide') || (defender.isProtected && !isSelfTarget && selectedMove.target!=='foeSide' && !bypassesProtect)) {
@@ -1428,6 +1430,7 @@
         return;
       }
 
+      if(state.doublesAllyTarget&&selectedMove.id===676){constants.P6.heal(events,defenderRole,defender,Math.floor(constants.P8.baseMaxHp(defender)/2));return;}
       if(constants.P8.action(state,attackerRole,selectedMove,constants,events))return;
       if(constants.P7.statusAction(state,attackerRole,selectedMove,constants,events))return;
       if(constants.P6.statusAction(state,attackerRole,selectedMove,action||{},constants,events))return;
@@ -1613,6 +1616,7 @@
         });
       }
 
+      if(selectedMove.id===712&&effectiveMultiplier>0)constants.Completion.steal(attacker,defender,constants,events,attackerRole,defenderRole);
       // 5. Seleção de atributos de ataque e defesa baseados na categoria de dano
       let attackStat;
       let defenseStat;
@@ -1620,12 +1624,12 @@
         attackStat = constants.usesDefenseAsAttack?.(selectedMove)
           ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense') : attacker.defense)
           : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack') : attacker.attack);
-        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense;
+        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'defense') : defender.defense;
       } else {
         attackStat = constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack') : attacker.specialAttack;
         defenseStat = constants.targetsDefenseWithSpAtk?.(selectedMove)
           ? (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense)
-          : (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense') : defender.specialDefense);
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'specialDefense') : defender.specialDefense);
       }
 
       let resolvedPower=constants.P5.get(selectedMove)?constants.P5.power(selectedMove,attacker,defender,constants,p5Context):selectedMove.power;
@@ -1728,6 +1732,7 @@
           attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier;
       }
 
+      if(!isFixedDamage&&state.battleFormat==='DOUBLES'&&state.doublesSpread)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*.75));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,effectiveMultiplier)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P8.finalMultiplier(attacker,defender,damageMove)));
@@ -2004,7 +2009,7 @@
       }
 
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)
-      if (currentHp > 0 && finalDamage > 0 && state.version === 2 && !defender.dynamax && constants.isForcedSwitchMove?.(selectedMove)) {
+      if (currentHp > 0 && finalDamage > 0 && state.version === 2 && state.battleFormat!=='DOUBLES' && !defender.dynamax && constants.isForcedSwitchMove?.(selectedMove)) {
         const defenderSide = state[defenderRole];
         const eligibleBench = defenderSide.team
           .map((p, idx) => ({ pokemon: p, index: idx }))
@@ -2296,7 +2301,7 @@
       };
     }
 
-    return {
+    const api = {
       createCombatant,
       validateAndCreateTeam,
       getActiveCombatant,
@@ -2307,6 +2312,8 @@
       simulateBattle,
       simulateTeamBattle
     };
+    const doubles=typeof module!=='undefined'&&module.exports?require('./doubles-battle.js'):window.PBADoublesBattle;
+    return doubles.install(api,{executeAction,executeSwitch,finishTurn,resolveFaints},constants,TypeEffectiveness);
   })();
 
   // Suporte universal (Node.js & Browser)
@@ -2325,6 +2332,7 @@
   const regularCreateTeamBattle = Engine.createTeamBattle;
   Engine.createTeamBattle = function (playerTeamInput, enemyTeamInput, options = {}) {
     const format = options.battleFormat || options.metadata?.battleFormat;
+    if(format==='DOUBLES')return Engine.createDoublesBattle(playerTeamInput,enemyTeamInput,options);
     if (format === 'TRIAL_3X1' || format === 'THREE_VS_ONE' || format === '3X1') {
       if (!Array.isArray(playerTeamInput) || playerTeamInput.length !== 3) {
         throw new Error('A Prova 3 contra 1 requer exatamente três Pokémon na equipe do jogador.');

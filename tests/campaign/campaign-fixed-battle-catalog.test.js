@@ -205,6 +205,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
     'battle/p4-secondary-catalog.js',
     'battle/p5-mechanics.js',
     'battle/p7-pokemon-data.js',
+    'battle/move-completion.js',
     'battle/critical-mechanics.js',
     'battle/p8-special.js',
     'battle/p8-mechanics.js',

@@ -1153,7 +1153,7 @@ describe('P5: Dano Fixo Constante (Sonic Boom #49 & Dragon Rage #82)', () => {
   });
 
   test('15. Integração com catálogo e customização da campanha', () => {
-    assert.equal(Object.keys(CampaignExtras.byId).length, 542, '542 espécies com extras após expansão P8');
+    assert.equal(Object.keys(CampaignExtras.byId).length, 543, '543 espécies com extras após expansão P8');
 
     // Electrode (#101) possui Sonic Boom disponível no pool da campanha
     const electrodePool = CampaignOptions.getPool(101);
