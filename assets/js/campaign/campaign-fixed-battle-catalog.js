@@ -30,7 +30,7 @@
   const trialOverrides = Object.freeze({
     1007: ['dragon-claw', 'brick-break', 'iron-head', 'heat-wave'],
     383: ['earthquake', 'stone-edge', 'fire-punch', 'crunch'],
-    889: ['body-press', 'iron-head', 'crunch', 'earthquake'],
+    889: ['body-press', 'iron-head', 'crunch', 'stone-edge'],
     791: ['psychic', 'iron-head', 'earthquake', 'crunch']
   });
   const trialTeams = [

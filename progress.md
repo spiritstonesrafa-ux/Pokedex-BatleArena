@@ -2,6 +2,13 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: auditoria de golpes por espécie e forma
+
+- Conferidos os 1.351 registros / 1.349 aptos contra snapshot versionado da PokéAPI: 30.713 atribuições entre oito fontes, zero incompatibilidades restantes. Relatório: docs/pokemon-learnset-audit.md e .json.
+- Zamazenta deixou de receber Earthquake; Stone Edge substitui o golpe nos conjuntos fixo e legado. Corrigido Vine Whip para ID 22 e removida sua equivalência indevida com Absorb 71; sua mecânica é dano físico sem drenagem.
+- Contingência de rede usa somente golpes comprovados da espécie/forma; retiradas as concessões genéricas por tipo e o Tackle artificial para espécies desconhecidas. Identidades conflitantes são descartadas; IDs ausentes são resolvidos pelo nome oficial.
+- Referência local imutável de aprendizado, filtro das opções da campanha e auditoria reproduzível sem rede. Preservados aprendizado histórico, herança de formas sem lista própria e exceções explícitas das formas coroadas/Sketch.
+- Nove regressões novas; 2.651 testes / 38 suítes aprovados, zero falhas/cancelados/ignorados. Auditoria do roadmap preserva 384 FULL, zero PARTIAL. Alterações locais, sem novo commit/push.
 ## Atualização — 01/11/2026: efeitos de ataque nas quatro posições de duplas
 
 - Corrigida a causa da ausência de efeitos: o palco de duplas não registrava seus sprites nos controladores de animação, VFX e câmera. Agora as quatro posições têm âncoras independentes, usando os efeitos já existentes da batalha comum.

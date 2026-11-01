@@ -841,7 +841,7 @@
     58: Object.freeze({ id: 58, name: 'ice-beam', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['ice-beam'] }),
     59: Object.freeze({ id: 59, name: 'blizzard', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'SECONDARY_STATUS_CHANCE'], knownPending: ['WEATHER_ACCURACY_PHASE_P7'], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['blizzard'] }),
     109: Object.freeze({ id: 109, name: 'confuse-ray', supportLevel: 'FULL', requiredMechanics: ['CONFUSION_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
-    71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb', 'vine-whip'] }),
+    71: Object.freeze({ id: 71, name: 'absorb', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5, aliases: ['absorb'] }),
     72: Object.freeze({ id: 72, name: 'mega-drain', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'HP_DRAIN'], knownPending: [], blockedReason: null, priority: 0, drainRatio: 0.5 }),
     77: Object.freeze({ id: 77, name: 'poison-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
     79: Object.freeze({ id: 79, name: 'sleep-powder', supportLevel: 'FULL', requiredMechanics: ['STATUS_APPLICATION'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -1210,7 +1210,7 @@
   );
 
   const PURE_DAMAGE_MOVES = new Set([
-    'pound', 'mega-punch', 'mega-kick', 'horn-attack', 'slam', 'tackle', 'scratch', 'vice-grip',
+    'vine-whip', 'pound', 'mega-punch', 'mega-kick', 'horn-attack', 'slam', 'tackle', 'scratch', 'vice-grip',
     'cut', 'gust', 'wing-attack', 'peck', 'drill-peck', 'strength', 'rock-throw', 'earthquake',
     'surf', 'egg-bomb', 'swift', 'water-gun', 'hydro-pump', 'aerial-ace', 'dragon-claw',
     'magical-leaf', 'shock-wave', 'aura-sphere', 'seed-bomb', 'x-scissor', 'power-gem',
@@ -1260,8 +1260,7 @@
       }
       if (expectedIdForName && expectedIdForName !== id) {
         const aliasesForId = defForId?.aliases || [];
-        const isLegacyVineWhip = (normalizedName === 'vine-whip' && (id === 71 || id === 22));
-        if (!aliasesForId.includes(normalizedName) && !isLegacyVineWhip) {
+        if (!aliasesForId.includes(normalizedName)) {
           isMismatch = true;
         }
       }
@@ -1406,8 +1405,7 @@
     }
     if (expectedIdForName && expectedIdForName !== rawId) {
       const aliasesForId = defForId?.aliases || [];
-      const isLegacyVineWhip = (normalizedName === 'vine-whip' && (rawId === 71 || rawId === 22));
-      if (!aliasesForId.includes(normalizedName) && !isLegacyVineWhip) return false;
+      if (!aliasesForId.includes(normalizedName)) return false;
     }
 
     // 2. Tipo elemental: estritamente obrigatório e deve ser tipo Pokémon válido

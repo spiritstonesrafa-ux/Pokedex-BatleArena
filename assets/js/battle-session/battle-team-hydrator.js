@@ -105,7 +105,7 @@
     fire: { id: 52, name: 'ember', type: 'fire', power: 40, accuracy: 100, pp: 25, damageClass: 'special' },
     water: { id: 55, name: 'water-gun', type: 'water', power: 40, accuracy: 100, pp: 25, damageClass: 'special' },
     electric: { id: 84, name: 'thunder-shock', type: 'electric', power: 40, accuracy: 100, pp: 30, damageClass: 'special' },
-    grass: { id: 71, name: 'vine-whip', type: 'grass', power: 45, accuracy: 100, pp: 25, damageClass: 'physical' },
+    grass: { id: 22, name: 'vine-whip', type: 'grass', power: 45, accuracy: 100, pp: 25, damageClass: 'physical' },
     ice: { id: 181, name: 'powder-snow', type: 'ice', power: 40, accuracy: 100, pp: 25, damageClass: 'special' },
     fighting: { id: 280, name: 'brick-break', type: 'fighting', power: 75, accuracy: 100, pp: 15, damageClass: 'physical' },
     poison: { id: 40, name: 'poison-sting', type: 'poison', power: 35, accuracy: 100, pp: 35, damageClass: 'physical' },
@@ -122,9 +122,9 @@
   });
 
   const FALLBACK_SPECIES = Object.freeze({
-    1: { id: 1, number: 1, name: 'bulbasaur', types: ['grass', 'poison'], stats: { hp: 45, attack: 49, defense: 49, specialAttack: 65, specialDefense: 65, speed: 45 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/1.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/1.ogg', moves: [{ id: 71, name: 'vine-whip', power: 45, accuracy: 100, type: 'grass', damageClass: 'physical', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
-    2: { id: 2, number: 2, name: 'ivysaur', types: ['grass', 'poison'], stats: { hp: 60, attack: 62, defense: 63, specialAttack: 80, specialDefense: 80, speed: 60 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/2.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/2.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/2.ogg', moves: [{ id: 71, name: 'vine-whip', power: 45, accuracy: 100, type: 'grass', damageClass: 'physical', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
-    3: { id: 3, number: 3, name: 'venusaur', types: ['grass', 'poison'], stats: { hp: 80, attack: 82, defense: 83, specialAttack: 100, specialDefense: 100, speed: 80 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/3.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/3.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/3.ogg', moves: [{ id: 71, name: 'vine-whip', power: 45, accuracy: 100, type: 'grass', damageClass: 'physical', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
+    1: { id: 1, number: 1, name: 'bulbasaur', types: ['grass', 'poison'], stats: { hp: 45, attack: 49, defense: 49, specialAttack: 65, specialDefense: 65, speed: 45 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/1.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/1.ogg', moves: [{ id: 22, name: 'vine-whip', power: 45, accuracy: 100, type: 'grass', damageClass: 'physical', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
+    2: { id: 2, number: 2, name: 'ivysaur', types: ['grass', 'poison'], stats: { hp: 60, attack: 62, defense: 63, specialAttack: 80, specialDefense: 80, speed: 60 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/2.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/2.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/2.ogg', moves: [{ id: 22, name: 'vine-whip', power: 45, accuracy: 100, type: 'grass', damageClass: 'physical', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
+    3: { id: 3, number: 3, name: 'venusaur', types: ['grass', 'poison'], stats: { hp: 80, attack: 82, defense: 83, specialAttack: 100, specialDefense: 100, speed: 80 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/3.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/3.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/3.ogg', moves: [{ id: 22, name: 'vine-whip', power: 45, accuracy: 100, type: 'grass', damageClass: 'physical', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
     4: { id: 4, number: 4, name: 'charmander', types: ['fire'], stats: { hp: 39, attack: 52, defense: 43, specialAttack: 60, specialDefense: 50, speed: 65 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/4.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/4.ogg', moves: [{ id: 53, name: 'flamethrower', power: 90, accuracy: 100, type: 'fire', damageClass: 'special', pp: 15 }, { id: 52, name: 'ember', power: 40, accuracy: 100, type: 'fire', damageClass: 'special', pp: 25 }] },
     6: { id: 6, number: 6, name: 'charizard', types: ['fire', 'flying'], stats: { hp: 78, attack: 84, defense: 78, specialAttack: 109, specialDefense: 85, speed: 100 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/6.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/6.ogg', moves: [{ id: 53, name: 'flamethrower', power: 90, accuracy: 100, type: 'fire', damageClass: 'special', pp: 15 }, { id: 52, name: 'ember', power: 40, accuracy: 100, type: 'fire', damageClass: 'special', pp: 25 }] },
     7: { id: 7, number: 7, name: 'squirtle', types: ['water'], stats: { hp: 44, attack: 48, defense: 65, specialAttack: 50, specialDefense: 64, speed: 43 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/7.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/7.ogg', moves: [{ id: 55, name: 'water-gun', power: 40, accuracy: 100, type: 'water', damageClass: 'special', pp: 25 }, { id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }] },
@@ -151,7 +151,7 @@
     1007: { id: 1007, number: 1007, name: 'koraidon', types: ['fighting', 'dragon'], stats: { hp: 100, attack: 135, defense: 115, specialAttack: 85, specialDefense: 100, speed: 135 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1007.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/1007.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/1007.ogg', moves: [{ id: 370, name: 'close-combat', power: 120, accuracy: 100, type: 'fighting', damageClass: 'physical', pp: 5 }, { id: 337, name: 'dragon-claw', power: 80, accuracy: 100, type: 'dragon', damageClass: 'physical', pp: 15 }, { id: 394, name: 'flare-blitz', power: 120, accuracy: 100, type: 'fire', damageClass: 'physical', pp: 15 }, { id: 200, name: 'outrage', power: 120, accuracy: 100, type: 'dragon', damageClass: 'physical', pp: 10 }] },
     383: { id: 383, number: 383, name: 'groudon', types: ['ground'], stats: { hp: 100, attack: 150, defense: 140, specialAttack: 100, specialDefense: 90, speed: 90 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/383.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/383.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/383.ogg', moves: [{ id: 89, name: 'earthquake', power: 100, accuracy: 100, type: 'ground', damageClass: 'physical', pp: 10 }, { id: 444, name: 'stone-edge', power: 100, accuracy: 80, type: 'rock', damageClass: 'physical', pp: 5 }, { id: 7, name: 'fire-punch', power: 75, accuracy: 100, type: 'fire', damageClass: 'physical', pp: 15 }, { id: 359, name: 'hammer-arm', power: 100, accuracy: 90, type: 'fighting', damageClass: 'physical', pp: 10 }] },
     717: { id: 717, number: 717, name: 'yveltal', types: ['dark', 'flying'], stats: { hp: 126, attack: 131, defense: 95, specialAttack: 131, specialDefense: 98, speed: 99 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/717.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/717.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/717.ogg', moves: [{ id: 399, name: 'dark-pulse', power: 80, accuracy: 100, type: 'dark', damageClass: 'special', pp: 15 }, { id: 403, name: 'air-slash', power: 75, accuracy: 95, type: 'flying', damageClass: 'special', pp: 15 }, { id: 94, name: 'psychic', power: 90, accuracy: 100, type: 'psychic', damageClass: 'special', pp: 10 }, { id: 247, name: 'shadow-ball', power: 80, accuracy: 100, type: 'ghost', damageClass: 'special', pp: 15 }] },
-    889: { id: 889, number: 889, name: 'zamazenta', types: ['fighting'], stats: { hp: 92, attack: 120, defense: 115, specialAttack: 80, specialDefense: 115, speed: 138 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/889.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/889.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/889.ogg', moves: [{ id: 370, name: 'close-combat', power: 120, accuracy: 100, type: 'fighting', damageClass: 'physical', pp: 5 }, { id: 442, name: 'iron-head', power: 80, accuracy: 100, type: 'steel', damageClass: 'physical', pp: 15 }, { id: 242, name: 'crunch', power: 80, accuracy: 100, type: 'dark', damageClass: 'physical', pp: 15 }, { id: 89, name: 'earthquake', power: 100, accuracy: 100, type: 'ground', damageClass: 'physical', pp: 10 }] },
+    889: { id: 889, number: 889, name: 'zamazenta', types: ['fighting'], stats: { hp: 92, attack: 120, defense: 115, specialAttack: 80, specialDefense: 115, speed: 138 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/889.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/889.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/889.ogg', moves: [{ id: 370, name: 'close-combat', power: 120, accuracy: 100, type: 'fighting', damageClass: 'physical', pp: 5 }, { id: 442, name: 'iron-head', power: 80, accuracy: 100, type: 'steel', damageClass: 'physical', pp: 15 }, { id: 242, name: 'crunch', power: 80, accuracy: 100, type: 'dark', damageClass: 'physical', pp: 15 }, { id: 444, name: 'stone-edge', power: 100, accuracy: 80, type: 'rock', damageClass: 'physical', pp: 5 }] },
     791: { id: 791, number: 791, name: 'solgaleo', types: ['psychic', 'steel'], stats: { hp: 137, attack: 137, defense: 107, specialAttack: 113, specialDefense: 89, speed: 97 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/791.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/791.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/791.ogg', moves: [{ id: 94, name: 'psychic', power: 90, accuracy: 100, type: 'psychic', damageClass: 'special', pp: 10 }, { id: 442, name: 'iron-head', power: 80, accuracy: 100, type: 'steel', damageClass: 'physical', pp: 15 }, { id: 394, name: 'flare-blitz', power: 120, accuracy: 100, type: 'fire', damageClass: 'physical', pp: 15 }, { id: 242, name: 'crunch', power: 80, accuracy: 100, type: 'dark', damageClass: 'physical', pp: 15 }] },
     487: { id: 487, number: 487, name: 'giratina', types: ['ghost', 'dragon'], stats: { hp: 150, attack: 100, defense: 120, specialAttack: 100, specialDefense: 120, speed: 90 }, photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/487.png', animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/487.gif', cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/487.ogg', moves: [{ id: 247, name: 'shadow-ball', power: 80, accuracy: 100, type: 'ghost', damageClass: 'special', pp: 15 }, { id: 406, name: 'dragon-pulse', power: 85, accuracy: 100, type: 'dragon', damageClass: 'special', pp: 10 }, { id: 396, name: 'aura-sphere', power: 80, accuracy: null, type: 'fighting', damageClass: 'special', pp: 20 }, { id: 85, name: 'thunderbolt', power: 90, accuracy: 100, type: 'electric', damageClass: 'special', pp: 15 }] }
   });
@@ -181,9 +181,11 @@
       photo: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${num || 25}.png`,
       animatedPhoto: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${num || 25}.gif`,
       cry: '',
-      moves: [{ id: 33, name: 'tackle', power: 40, accuracy: 100, type: 'normal', damageClass: 'physical', pp: 35 }]
+      moves: []
     };
   }
+
+  const Learnsets = typeof module !== 'undefined' && module.exports ? require('../battle/pokemon-learnsets.js') : window.PBAPokemonLearnsets;
 
   class BattleTeamHydrator {
     /**
@@ -296,7 +298,7 @@
         ? this.createCampaignFixedLoadout(candidateMoves, Boolean(pokeData.campaignCustomMoves), Boolean(pokeData.campaignLimitedMoves))
         : [132,235].includes(id)
           ? {...this.createCampaignFixedLoadout([battleConstants.P8.moves[id===132?144:166]],false,true),source:MOVESET_LOADOUT_SOURCE.API_MOVESET}
-          : await this.selectDeterministicLoadout(candidateMoves, types, stats);
+          : await this.selectDeterministicLoadout(candidateMoves, types, stats, id);
       if(pokemonOrId&&typeof pokemonOrId==='object'&&pokemonOrId.battlePreference)pokeData={...pokeData,battlePreference:pokemonOrId.battlePreference};
       const pref=pokeData.battlePreference?battleConstants.P7.validatePreference(id,pokeData.battlePreference):null;
       if(pokeData.battlePreference&&!pref)throw new Error('Preferência de habilidade/item inválida.');
@@ -406,12 +408,12 @@
      * @param {Object} stats - Stats do Pokémon (para priorização físico/especial).
      * @returns {Promise<{ moves: Object[], source: string, reason: string }|Object[]>} Objeto com moves ou array de 1 a 4 golpes normalizados.
      */
-    async selectDeterministicLoadout(candidates, types, stats) {
+    async selectDeterministicLoadout(candidates, types, stats, pokemonId) {
       const normalizedTypes = (Array.isArray(types) ? types : ['normal']).map((t) => String(t || '').toLowerCase());
       const candidateList = Array.isArray(candidates) ? candidates : [];
 
       if (candidateList.length === 0) {
-        return this.createNetworkFallback(normalizedTypes);
+        return this.createNetworkFallback(normalizedTypes, candidateList, pokemonId);
       }
 
       // Reordena os candidatos dando prioridade a level-up moves (mais propensos a STAB e identidade)
@@ -467,8 +469,9 @@
 
         const details = await Promise.all(detailPromises);
 
-        for (const moveDetail of details) {
-          if (!moveDetail) continue;
+        for (const rawMoveDetail of details) {
+          if (!rawMoveDetail) continue;
+          const moveDetail = {...rawMoveDetail, id: Number(rawMoveDetail.id) || Number(String(rawMoveDetail.url || '').match(/\/move\/(\d+)/)?.[1]) || Learnsets.moveId(String(rawMoveDetail.name || '').trim().toLowerCase())};
 
           // O piloto de status pertence somente aos conjuntos fixos da campanha.
           const dynamicClass = String(moveDetail.damageClass || moveDetail.damage_class?.name || '').toLowerCase();
@@ -487,10 +490,8 @@
               if (match) moveId = parseInt(match[1], 10);
             }
           }
-          if (!Number.isInteger(moveId) || moveId <= 0) {
-            const fallbackByType = FALLBACK_MOVES_BY_TYPE[String(moveDetail.type?.name || moveDetail.type || 'normal').toLowerCase()] || FALLBACK_MOVES_BY_TYPE.normal;
-            moveId = fallbackByType.id || 33;
-          }
+          if (!Number.isInteger(moveId) || moveId <= 0) moveId = Learnsets.moveId(String(moveDetail.name).trim().toLowerCase());
+          if (!Number.isInteger(moveId) || moveId <= 0 || (Learnsets.names[moveId] && Learnsets.names[moveId] !== String(moveDetail.name).trim().toLowerCase())) continue;
           const moveName = String(moveDetail.name).trim().toLowerCase();
 
           if (seenMoveIds.has(moveId) || seenMoveNames.has(moveName)) continue;
@@ -544,7 +545,7 @@
         const isNetworkFailure = totalAttempts > 0 && moveDetailSuccesses === 0 && moveDetailFailures > 0;
 
         if (isNetworkFailure || !hadCandidates) {
-          const fallback = this.createNetworkFallback(normalizedTypes);
+          const fallback = this.createNetworkFallback(normalizedTypes, candidateList, pokemonId);
           this.lastLoadoutDiagnostic = {
             candidateCount: totalCandidates,
             moveDetailSuccesses,
@@ -721,31 +722,20 @@
     /**
      * Fallback determinístico de contingência estritamente reservado para falhas de rede.
      */
-    createNetworkFallback(types) {
-      const primaryType = (types[0] || 'normal').toLowerCase();
-      const primaryFallback = FALLBACK_MOVES_BY_TYPE[primaryType] || FALLBACK_MOVES_BY_TYPE.normal;
-      const tackleFallback = FALLBACK_MOVES_BY_TYPE.normal;
-
-      const fallbackList = [
-        {
-          ...primaryFallback,
-          maxPp: primaryFallback.pp,
-          currentPp: primaryFallback.pp
-        }
-      ];
-
-      if (primaryType !== 'normal') {
-        fallbackList.push({
-          ...tackleFallback,
-          maxPp: tackleFallback.pp,
-          currentPp: tackleFallback.pp
-        });
+    createNetworkFallback(types, candidates = [], pokemonId) {
+      // Never infer ownership from type. Use only verified, supported moves of this exact species/form.
+      const known = getFallbackSpecies(pokemonId), canonical = new Map(Object.values(battleConstants.KNOWN_CATALOG_MOVES).map(m=>[m.id,m]));
+      for (const m of Object.values(battleConstants.SUPPORTED_STATUS_MOVES || {})) canonical.set(m.id,m);
+      const available = new Map();
+      for (const entry of [...candidates,...(known.id === Number(pokemonId) ? known.moves : [])]) {
+        const raw = entry.move || entry, id = Learnsets.moveId(raw.id || raw.name || Number(String(raw.url || '').match(/\/move\/(\d+)/)?.[1]));
+        const move = canonical.get(id);
+        if (move && (!raw.name || raw.name === move.name) && Learnsets.canLearn(pokemonId,move) && isMechanicallySupportedMove(move)) available.set(id,move);
       }
-
+      const fallbackList = this.selectQualityLoadout([...available.values()],types,{},4).map(move=>({...move,maxPp:move.pp,currentPp:move.pp}));
       fallbackList.source = MOVESET_LOADOUT_SOURCE.NETWORK_FALLBACK_MOVESET;
       fallbackList.reason = MOVESET_LIMIT_REASON.NETWORK_FALLBACK;
       fallbackList.moves = fallbackList;
-
       return fallbackList;
     }
   }

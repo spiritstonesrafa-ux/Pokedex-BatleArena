@@ -75,7 +75,7 @@ const MOCK_MOVE_DB = {
   'thunderbolt': { id: 85, name: 'thunderbolt', type: 'electric', power: 90, accuracy: 100, pp: 15, damageClass: 'special' },
   thunder: { id: 87, name: 'thunder', type: 'electric', power: 110, accuracy: 70, pp: 10, damageClass: 'special' },
   'thunder-punch': { id: 9, name: 'thunder-punch', type: 'electric', power: 75, accuracy: 100, pp: 15, damageClass: 'physical' },
-  'vine-whip': { id: 71, name: 'vine-whip', type: 'grass', power: 45, accuracy: 100, pp: 25, damageClass: 'physical' },
+  'vine-whip': { id: 22, name: 'vine-whip', type: 'grass', power: 45, accuracy: 100, pp: 25, damageClass: 'physical' },
   'solar-beam': { id: 76, name: 'solar-beam', type: 'grass', power: 120, accuracy: 100, pp: 10, damageClass: 'special' },
   psychic: { id: 94, name: 'psychic', type: 'psychic', power: 90, accuracy: 100, pp: 10, damageClass: 'special' },
   confusion: { id: 93, name: 'confusion', type: 'psychic', power: 50, accuracy: 100, pp: 25, damageClass: 'special' },
@@ -380,7 +380,7 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
     assert.ok(hydrated.moves.length >= 1, 'Deve possuir golpes de fallback');
     assert.strictEqual(hydrated.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.NETWORK_FALLBACK_MOVESET);
     assert.strictEqual(hydrated.moveLoadoutReason, MOVESET_LIMIT_REASON.NETWORK_FALLBACK);
-    assert.strictEqual(hydrated.moves[0].name, 'ember');
+    assert.ok(hydrated.moves.every(move => require('../../assets/js/battle/pokemon-learnsets').canLearn(testPokemon.id,move)), 'Fallback deve pertencer à espécie, nunca ser inferido pelo tipo');
   });
 
   it('MQ16, MQ17 & MQ18 — True Limited Species: Allowed < 4 with explicit ENGINE_CAPABILITY_LIMIT and zero fake moves', async () => {

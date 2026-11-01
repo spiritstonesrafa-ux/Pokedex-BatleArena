@@ -1,0 +1,29 @@
+{
+  "source": {
+    "repository": "https://github.com/PokeAPI/pokeapi",
+    "commit": "6b8db7f3cb31cfaa37cb74e5c3edff124bcba5ce",
+    "policy": "Any recorded version group; default-form inheritance only for empty form learnsets.",
+    "files": {
+      "pokemon.csv": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b",
+      "pokemon_moves.csv": "22a807cef26891eeac0d0c900bd363e66baf421f7ee795bc7bc3e718f23b939e",
+      "moves.csv": "8aafd37bf78f19471495c05b201545180f50f0a08a2a2a844d69f9837dd39ac9"
+    }
+  },
+  "policy": "Ownership across any recorded version, not a single generation/level ruleset. Empty-form learnsets inherit only the same species default form. Crowned signatures are explicit Iron Head replacements. Battle-only Transform, Sketch, Sleep Talk, Struggle and Max/Z conversions are not initial learnset assignments.",
+  "pokemonRecords": 1351,
+  "checkedPokemon": 1351,
+  "battleSpecies": 1349,
+  "assignments": 30713,
+  "counts": {
+    "expanded": 1351,
+    "draft": 450,
+    "fixed": 1349,
+    "extras": 543,
+    "wild": 25,
+    "fallback": 1349,
+    "campaign-pool": 1349,
+    "offline-hydrated": 1349
+  },
+  "inheritedForms": 48,
+  "errors": []
+}

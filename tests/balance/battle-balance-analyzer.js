@@ -40,7 +40,7 @@ const COHORT_MOVES = {
   ember: { id: 52, name: 'ember', type: 'fire', power: 40, damageClass: 'special', accuracy: 100 },
   water_gun: { id: 55, name: 'water-gun', type: 'water', power: 40, damageClass: 'special', accuracy: 100 },
   thunder_shock: { id: 84, name: 'thunder-shock', type: 'electric', power: 40, damageClass: 'special', accuracy: 100 },
-  vine_whip: { id: 71, name: 'vine-whip', type: 'grass', power: 45, damageClass: 'physical', accuracy: 100 },
+  vine_whip: { id: 22, name: 'vine-whip', type: 'grass', power: 45, damageClass: 'physical', accuracy: 100 },
 
   confusion: { id: 93, name: 'confusion', type: 'psychic', power: 50, damageClass: 'special', accuracy: 100 },
   low_kick: { id: 67, name: 'low-kick', type: 'fighting', power: 50, damageClass: 'physical', accuracy: 100 },

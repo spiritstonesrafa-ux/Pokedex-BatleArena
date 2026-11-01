@@ -8,11 +8,13 @@
     ? require('../battle-session/battle-session-constants.js') : window.PBABattleSession;
 
   const Rules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+  const Learnsets = typeof module !== 'undefined' && module.exports ? require('../battle/pokemon-learnsets.js') : window.PBAPokemonLearnsets;
   function getPool(id,sketchMoveId) {
     const species = Fixed.byId[Number(id)];
     if (!species) return [];
     const learned=Number(id)===235&&Rules.P8.canSketch(Rules,sketchMoveId)?Rules.P8.canonical(Rules,sketchMoveId):null;
     return [...species.moves, ...(Extras.byId[Number(id)] || []),...(learned&&!species.moves.some(m=>m.id===learned.id)?[learned]:[])]
+      .filter(move => Learnsets.canLearn(id,move) || Number(id) === 235 && learned?.id === move.id)
       .map(move => Object.freeze({ ...move }));
   }
 

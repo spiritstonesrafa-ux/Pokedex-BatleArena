@@ -165,12 +165,12 @@ describe('PHASE PBA-014B — BATTLE BALANCE FOUNDATION (BAL01–BAL40)', () => {
       specialDefense: 85,
       speed: 65,
       types: ['grass'],
-      moves: [{ id: 71, name: 'vine-whip', power: 45, type: 'grass', pp: 25, damageClass: 'physical' }]
+      moves: [{ id: 22, name: 'vine-whip', power: 45, type: 'grass', pp: 25, damageClass: 'physical' }]
     };
     const b1 = BattleEngine.createBattle(combatant, combatant);
     const res = BattleEngine.resolveTurn(b1, {
-      player: { type: 'MOVE', moveId: 71, accuracyRoll: 50, damageRoll: 90 },
-      enemy: { type: 'MOVE', moveId: 71, accuracyRoll: 50, damageRoll: 90 }
+      player: { type: 'MOVE', moveId: 22, accuracyRoll: 50, damageRoll: 90 },
+      enemy: { type: 'MOVE', moveId: 22, accuracyRoll: 50, damageRoll: 90 }
     });
     assert.strictEqual(res.events.some(e => e.type === 'DAMAGE_APPLIED' && e.damageRoll === 90), true);
   });
@@ -180,7 +180,7 @@ describe('PHASE PBA-014B — BATTLE BALANCE FOUNDATION (BAL01–BAL40)', () => {
     const state = {
       status: 'IN_PROGRESS',
       player: {
-        team: [{ id: 1, name: 'bulbasaur', currentHp: 120, specialAttack: 85, specialDefense: 85, types: ['grass'], moves: [{ id: 71, name: 'vine-whip', power: 45, type: 'grass', currentPp: 25, damageClass: 'physical', accuracy: 100 }] }],
+        team: [{ id: 1, name: 'bulbasaur', currentHp: 120, specialAttack: 85, specialDefense: 85, types: ['grass'], moves: [{ id: 22, name: 'vine-whip', power: 45, type: 'grass', currentPp: 25, damageClass: 'physical', accuracy: 100 }] }],
         activeIndex: 0
       },
       enemy: {
@@ -312,7 +312,7 @@ describe('PHASE PBA-014B — BATTLE BALANCE FOUNDATION (BAL01–BAL40)', () => {
 
       const res = BattleEngine.resolveTurn(state, {
         player: { type: 'MOVE', moveId: 53, accuracyRoll: 50, damageRoll: 90 },
-        enemy: { type: 'MOVE', moveId: 71, accuracyRoll: 50, damageRoll: 90 }
+        enemy: { type: 'MOVE', moveId: 22, accuracyRoll: 50, damageRoll: 90 }
       });
       assert.strictEqual(res.state.status, 'IN_PROGRESS');
       assert.strictEqual(res.state.enemy.currentHp > 0, true); // Não morre em 1 golpe com dano neutro/balanceado
