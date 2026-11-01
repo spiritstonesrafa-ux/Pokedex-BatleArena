@@ -575,6 +575,8 @@
           return ARENA_CATALOG[ARENA_THEME_KEYS.SUPER] || DEFAULT_ARENA_THEME;
         }
 
+        const postgameArena={ZYGARDE_TRIAL:'GRASS',KYUREM_TRIAL:'ICE',NECROZMA_TRIAL:'PSYCHIC',CREATION_TRIAL:'GHOST'}[context.kind];
+        if(postgameArena)return ARENA_CATALOG[ARENA_THEME_KEYS[postgameArena]]||DEFAULT_ARENA_THEME;
         if (context.kind === 'MEWTWO_TRIAL') return ARENA_CATALOG[ARENA_THEME_KEYS.PSYCHIC] || DEFAULT_ARENA_THEME;
 
         // 3. Trial Arenas

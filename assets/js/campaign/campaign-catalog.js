@@ -80,8 +80,25 @@
   const TITANS_TRIAL_TEAM = Object.freeze([1007,383,717].map(id => allById[id]));
   const MEWTWO_TRIAL_TEAM = Object.freeze([150,10043,10044].map(id => allById[id]));
   const CELESTIAL_TRIAL_TEAM = Object.freeze([889,791,487].map(id => allById[id]));
+  const POSTGAME_TRIALS=Object.freeze(Object.fromEntries([
+    ['MEWTWO_TRIAL','mewtwo','Desafio Mewtwo','As Três Faces do Poder',[150,10043,10044],'psychic'],
+    ['ZYGARDE_TRIAL','zygarde','Equilíbrio de Zygarde','A Ordem das Células',[10181,718,10120],'grass'],
+    ['KYUREM_TRIAL','kyurem','Zero Absoluto','Os Dragões da Fusão',[646,10022,10023],'ice'],
+    ['NECROZMA_TRIAL','necrozma','Eclipse de Necrozma','A Luz Devorada',[10155,10156,10157],'psychic'],
+    ['CREATION_TRIAL','creation','Ruptura da Criação','Além do Tempo e do Espaço',[10245,10246,10007],'ghost']
+  ].map(([kind,key,name,subtitle,ids,arena])=>[kind,Object.freeze({kind,key,name,subtitle,arena,team:Object.freeze(ids.map(id=>allById[id]))})])));
+  function getPostgameLockReason(kind,state){
+    if(!POSTGAME_TRIALS[kind])return null;
+    if(!state?.shadowTrainer?.defeated)return 'Derrote o Shadow para iniciar esta jornada.';
+    const done=key=>Boolean(state.endgameTrials?.[key]?.completed);
+    if(kind==='KYUREM_TRIAL'&&!done('mewtwo')&&!done('zygarde'))return 'Conclua Mewtwo ou Zygarde para desbloquear.';
+    if(kind==='NECROZMA_TRIAL'&&!done('kyurem'))return 'Conclua Zero Absoluto para desbloquear.';
+    if(kind==='CREATION_TRIAL'&&!['mewtwo','zygarde','kyurem','necrozma'].every(done))return 'Conclua Mewtwo, Zygarde, Kyurem e Necrozma para desbloquear.';
+    return null;
+  }
   const api = Object.freeze({
-    DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SHADOW_TEAM, SUPER_REWARD_IDS, LEGACY_SUPER_REWARD_IDS, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
+    ZYGARDE_TRIAL_TEAM:POSTGAME_TRIALS.ZYGARDE_TRIAL.team, KYUREM_TRIAL_TEAM:POSTGAME_TRIALS.KYUREM_TRIAL.team, NECROZMA_TRIAL_TEAM:POSTGAME_TRIALS.NECROZMA_TRIAL.team, CREATION_TRIAL_TEAM:POSTGAME_TRIALS.CREATION_TRIAL.team,
+    POSTGAME_TRIALS, getPostgameLockReason, DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SHADOW_TEAM, SUPER_REWARD_IDS, LEGACY_SUPER_REWARD_IDS, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
     EXPANSION_SPECIES, EXPLORATION_SPECIES,
     WILD_SPECIAL_SPECIES: Object.freeze([...WildSpecial.entries, ...Expanded.entries.filter(entry =>
       (entry.legendary || entry.mythical) && !WildSpecial.byId[entry.id])]),

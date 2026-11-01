@@ -30,7 +30,7 @@ test('Expansion covers every species and alternate record, with explicit collect
   assert.equal(Campaign.EXPANSION_SPECIES.length, 844);
   assert.equal(Expanded.entries.filter(p => p.id > 1025).length, 326);
   assert.deepEqual(Expanded.entries.filter(p => p.collectionOnly).map(p => p.id), [789, 790]);
-  const reachable = new Set([...Campaign.DRAFT, ...Campaign.MASTER_SPECIES, ...Campaign.SUPER_TEAM, ...Campaign.LEGENDARY_TRIAL_TEAM, ...Campaign.MYTHICAL_TRIAL_TEAM, ...Campaign.TITANS_TRIAL_TEAM, ...Campaign.CELESTIAL_TRIAL_TEAM].map(p => p.id));
+  const reachable = new Set([...Campaign.DRAFT, ...Campaign.MASTER_SPECIES, ...Campaign.SUPER_TEAM, ...Campaign.LEGENDARY_TRIAL_TEAM, ...Campaign.MYTHICAL_TRIAL_TEAM, ...Campaign.TITANS_TRIAL_TEAM, ...Campaign.CELESTIAL_TRIAL_TEAM,...Object.values(Campaign.POSTGAME_TRIALS).flatMap(d=>d.team)].map(p => p.id));
   Object.values(Wild.POINT_POOLS).flat().forEach(id => reachable.add(id));
   Object.values(Wild.POINT_SPECIAL_POOLS).flat().forEach(id => reachable.add(id));
   assert.deepEqual(Expanded.entries.filter(p => !reachable.has(p.id)).map(p => p.name), []);
@@ -113,15 +113,15 @@ test('Completed campaigns continue collecting past three captures per point and 
   assert.equal(Wild.getCaptureLimit({ status: 'ACTIVE' }, 'region-1', 'r1-meadow'), 3);
 
   const allPostgame = new Set(Object.values(Wild.POINTS).flatMap(point => Wild.getPool([], point.regionId, point.id, manager.getState())));
-  assert.equal(allPostgame.size, 1351);
+  const rewardIds=new Set([...Campaign.MASTER_SPECIES,...Campaign.SUPER_TEAM,...Campaign.SHADOW_TEAM,...Campaign.LEGENDARY_TRIAL_TEAM,...Campaign.MYTHICAL_TRIAL_TEAM,...Campaign.TITANS_TRIAL_TEAM,...Campaign.CELESTIAL_TRIAL_TEAM,...Object.values(Campaign.POSTGAME_TRIALS).flatMap(d=>d.team)].map(p=>p.id));
+  assert.equal(allPostgame.size,1351-rewardIds.size);
+  assert.ok([...allPostgame].every(id=>!rewardIds.has(id)));
   const missedReward = Campaign.MASTER_SPECIES.find(p => !manager.getRosterIds().includes(p.id));
   const point = Object.values(Wild.POINTS).find(point => point.types.some(type => missedReward.types.includes(type)));
   assert.ok(!Wild.getPool([], point.regionId, point.id).includes(missedReward.id), 'Reward stays protected during the story');
-  const roll = rollFor(missedReward.id, point.regionId, point.id, manager.getRosterIds(), manager.getState());
-  assert.equal(manager.beginWildEncounter(point.regionId, roll, point.id).pokemonId, missedReward.id);
-  manager.recordBattle({ battleId: 'postgame-unchosen-reward', kind: 'WILD', id: missedReward.id, winner: 'player' });
-  assert.equal(manager.attemptWildCapture(0).captured, true);
-  manager = new CampaignManager(Store);
-  assert.ok(manager.getRosterIds().includes(missedReward.id));
+  assert.ok(!Wild.getPool([],point.regionId,point.id,manager.getState()).includes(missedReward.id),'Challenge rewards stay exclusive after the ending');
+  const roster=manager.getRosterIds();
+  manager=new CampaignManager(Store);
+  assert.deepEqual(manager.getRosterIds(),roster);
 
 });

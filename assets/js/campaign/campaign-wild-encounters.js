@@ -72,6 +72,8 @@
   const reserved = new Set([
     ...Catalog.MASTER_SPECIES,
     ...Catalog.SUPER_TEAM,
+    ...Catalog.SHADOW_TEAM,
+    ...Object.values(Catalog.POSTGAME_TRIALS).flatMap(d=>d.team),
     ...Catalog.LEGENDARY_TRIAL_TEAM,
     ...Catalog.MYTHICAL_TRIAL_TEAM,
     ...Catalog.TITANS_TRIAL_TEAM,
@@ -165,13 +167,13 @@
   ])));
   const isSpecial = id => Boolean(Catalog.byId(id)?.legendary || Catalog.byId(id)?.mythical);
   const allowedAtPoint = (campaign, pointId, id) => campaign?.status === 'COMPLETED'
-    ? collectionPointPools[pointId]?.includes(id) : allowedByPoint[pointId]?.has(id);
+    ? collectionPointPools[pointId]?.includes(id)&&!reserved.has(id) : allowedByPoint[pointId]?.has(id);
 
   function getPool(ownedIds = [], regionId = 'region-1', pointId = defaultPointId(regionId), campaign = null) {
     if (!isPointId(regionId, pointId)) return [];
     const owned = new Set(ownedIds.map(Number));
     return (campaign?.status === 'COMPLETED' ? collectionPointPools[pointId] : [...POINT_POOLS[pointId], ...POINT_SPECIAL_POOLS[pointId]])
-      .filter(id => !owned.has(id));
+      .filter(id => !reserved.has(id) && !owned.has(id));
   }
 
   function getRarity(regionId, pokemonId, pointId = defaultPointId(regionId), campaign = null) {
@@ -215,9 +217,12 @@
 
   function sanitize(raw, campaign) {
     const clean = getDefaultState();
-    // These forms were valid wild encounters before becoming boss rewards.
+    // Preserve captures already earned under earlier exploration rules, never new encounters.
+    const formerWild=new Set([10190,10194,10188,...Catalog.LEGACY_SUPER_REWARD_IDS,
+      ...Object.values(Catalog.POSTGAME_TRIALS).flatMap(d=>d.team.map(p=>p.id))]);
     const validSavedPoint=(pointId,id)=>allowedAtPoint(campaign,pointId,id)||
-      [10190,10194,10188].includes(id)&&Catalog.byId(id)?.types.some(type=>POINTS[pointId]?.types.includes(type));
+      reserved.has(id)&&(campaign?.status==='COMPLETED'||formerWild.has(id))&&
+      Catalog.byId(id)?.types.some(type=>POINTS[pointId]?.types.includes(type));
     if (!raw || typeof raw !== 'object' || !Array.isArray(campaign?.startingRosterIds)
       || campaign.startingRosterIds.length !== 6) return clean;
     const coreOwned = new Set([
@@ -243,7 +248,7 @@
       }
     }
     const validPokemon = (regionId, pointId, value) => isPointId(regionId, pointId)
-      && validSavedPoint(pointId, Number(value))
+      && allowedAtPoint(campaign, pointId, Number(value))
       && !coreOwned.has(Number(value)) && !seen.has(Number(value));
     const validEncounterId = value => typeof value === 'string' && value.length > 0 && value.length < 100;
     const pending = raw.pendingCapture;

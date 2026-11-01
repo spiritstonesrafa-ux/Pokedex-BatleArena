@@ -122,7 +122,7 @@
       if (master) {
         opponents = master.team;
       } else {
-        opponents = catalog[TEAMS[kind]];
+        opponents = catalog.POSTGAME_TRIALS?.[kind]?.team || catalog[TEAMS[kind]];
       }
       if (!Array.isArray(opponents) || !opponents.length) return result;
       const available = [...this.manager.getRoster(),

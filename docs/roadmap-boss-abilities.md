@@ -67,3 +67,5 @@ Referências adicionais para alvos e PP:
 https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts
 https://github.com/smogon/pokemon-showdown/blob/master/sim/battle-actions.ts
 https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts
+
+Atualização posterior de exploração: a publicação dos desafios pós-Shadow tornou as recompensas dos desafios exclusivas. Capturas já concluídas continuam preservadas, mas encontros ativos e capturas pendentes de Pokémon exclusivos são encerrados ao carregar o save.

@@ -442,6 +442,7 @@
           </div>
 
           <div class="campaign-map-header__controls">
+            ${this.manager.getState().shadowTrainer?.defeated?'<button id="returnPostgameHub" class="campaign-secondary">← Desafios após Shadow</button>':''}
             <div class="campaign-view-toggle-group" role="group" aria-label="Modo de visualização">
               <button type="button" 
                       id="viewModeMapBtn" 
@@ -1118,6 +1119,8 @@
       }
 
       // Single confirmation: delegate directly to this.onReset()
+      const postgameButton=this.container.querySelector('#returnPostgameHub');
+      if(postgameButton)postgameButton.onclick=()=>{if(!this._travel)this.onPostgame?.();};
       const resetBtn = this.container.querySelector('#campaignResetBtn');
       if (resetBtn) {
         resetBtn.onclick = () => {

@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const {CampaignBattleCoordinator}=require('../../assets/js/campaign/campaign-battle-coordinator'),Catalog=require('../../assets/js/campaign/campaign-catalog');
 const source=fs.readFileSync(path.join(__dirname,'../../assets/js/campaign/trial-arrival.js'),'utf8');
-const definitions={MEWTWO_TRIAL:'MEWTWO_TRIAL_TEAM',LEGENDARY_TRIAL:'LEGENDARY_TRIAL_TEAM',MYTHICAL_TRIAL:'MYTHICAL_TRIAL_TEAM',TITANS_TRIAL:'TITANS_TRIAL_TEAM',CELESTIAL_TRIAL:'CELESTIAL_TRIAL_TEAM'};
+const definitions={ZYGARDE_TRIAL:'ZYGARDE_TRIAL_TEAM',KYUREM_TRIAL:'KYUREM_TRIAL_TEAM',NECROZMA_TRIAL:'NECROZMA_TRIAL_TEAM',CREATION_TRIAL:'CREATION_TRIAL_TEAM',MEWTWO_TRIAL:'MEWTWO_TRIAL_TEAM',LEGENDARY_TRIAL:'LEGENDARY_TRIAL_TEAM',MYTHICAL_TRIAL:'MYTHICAL_TRIAL_TEAM',TITANS_TRIAL:'TITANS_TRIAL_TEAM',CELESTIAL_TRIAL:'CELESTIAL_TRIAL_TEAM'};
 function setup(reduced=true){
  const timers=new Map(),listeners=new Map(),nodes=new Map();let serial=0;
  const node=()=>({textContent:'',dataset:{},hidden:false,isConnected:true,attributes:{},classList:{values:new Set(),toggle(k,v){if(v)this.values.add(k);else this.values.delete(k);}},setAttribute(k,v){this.attributes[k]=v;},focus(){doc.activeElement=this;}});

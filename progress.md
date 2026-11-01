@@ -2,6 +2,23 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: publicação dos desafios e recompensas exclusivas
+
+- Jornada pós-Shadow concluída: Zygarde, Kyurem, Necrozma e Criação, com aberturas, música e progressão aprovadas.
+- Recompensas dos desafios atuais removidas de todos os sorteios selvagens, incluindo o modo de coleção após Shadow. Capturas antigas preservadas; encontros ativos e capturas pendentes dessas espécies são encerrados na leitura do save.
+- Revisto o contrato anterior de coleção irrestrita: desafios passam a ser a fonte exclusiva de novos recrutamentos de suas equipes.
+- Validação final: **2.833 testes aprovados em 39 suítes, zero falhas**; auditorias de learnsets e conclusão do roadmap aprovadas; git diff --check sem erros.
+- Commit e push autorizados pelo usuário para esta entrega.
+
+## Atualização — 01/11/2026: jornada de desafios após Shadow
+
+- Implementados Equilíbrio de Zygarde (10%, 50%, Completa), Zero Absoluto (Kyurem, Black, White), Eclipse de Necrozma (Dusk Mane, Dawn Wings, Ultra) e Ruptura da Criação (Dialga Origin, Palkia Origin, Giratina Origin).
+- Mewtwo e Zygarde abrem após Shadow; vencer um libera Kyurem; Kyurem libera Necrozma; concluir os quatro libera Criação. Requisitos exibidos no novo hub e validados pelo gerente de batalhas.
+- Quatro aberturas cinematográficas em seis cenas com suspense, revelação do time real, efeitos distintos e músicas originais: células, gelo/fusão, eclipse prismático e fenda dimensional. Arenas temáticas, opção de pular e movimento reduzido preservados.
+- Primeira vitória oferece escolha de um adversário para o elenco; revanches não duplicam recompensas. Posse prévia das três opções não bloqueia o fluxo. Saves antigos e progresso do Mewtwo são preservados.
+- Documentação em `docs/postgame-challenges.md`. Validação: **2.828 testes aprovados em 39 suítes, zero falhas**; auditorias de learnsets e conclusão do roadmap aprovadas.
+- Implementação local; ainda sem commit ou push desta expansão.
+
 ## Atualização — 01/11/2026: habilidades funcionais dos novos chefes
 
 - Equipes publicadas no commit `3008f41`. Implementados Pressure, Intrepid Sword, As One (Spectrier), Unnerve e Grim Neigh no motor, válidos para jogador e IA nos formatos individuais, equipes, Final Stand e duplas.

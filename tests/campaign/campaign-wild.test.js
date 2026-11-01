@@ -580,14 +580,13 @@ test('Wild exploration — nine thematic points have distinct map targets and sa
 test('Wild special encounters — expanded legendary and mythical candidates exclude every final reward', () => {
   const Fixed = require('../../assets/js/campaign/campaign-fixed-battle-catalog.js');
   const reserved = new Set([
-    ...Catalog.SUPER_TEAM, ...Catalog.LEGENDARY_TRIAL_TEAM,
+    ...Catalog.SUPER_TEAM, ...Object.values(Catalog.POSTGAME_TRIALS).flatMap(d=>d.team), ...Catalog.LEGENDARY_TRIAL_TEAM,
     ...Catalog.MYTHICAL_TRIAL_TEAM, ...Catalog.TITANS_TRIAL_TEAM,
     ...Catalog.CELESTIAL_TRIAL_TEAM
   ].map(pokemon => pokemon.id));
-  assert.equal(Wild.SPECIAL_POOL.length, 143);
-  assert.equal(new Set(Wild.SPECIAL_POOL).size, 143);
-  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).legendary).length, 108);
-  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).mythical).length, 35);
+  const expected=Catalog.WILD_SPECIAL_SPECIES.filter(p=>(p.legendary||p.mythical)&&!reserved.has(p.id)).map(p=>p.id);
+  assert.deepEqual(Wild.SPECIAL_POOL,expected);
+  assert.equal(new Set(Wild.SPECIAL_POOL).size,Wild.SPECIAL_POOL.length);
   for (const id of Wild.SPECIAL_POOL) {
     const pokemon = Catalog.byId(id);
     assert.ok(!reserved.has(id), `${pokemon.name} cannot replace a final reward`);

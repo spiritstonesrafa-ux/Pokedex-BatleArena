@@ -241,6 +241,7 @@
     TITANS_TRIAL: { key: 'titans', title: 'PROVA DOS TITÃS', label: 'Prova dos Titãs', team: C.TITANS_TRIAL_TEAM, difficulty: 'MUITO DIFÍCIL' },
     CELESTIAL_TRIAL: { key: 'celestial', title: 'PROVA CELESTIAL', label: 'Prova Celestial', team: C.CELESTIAL_TRIAL_TEAM, difficulty: 'MUITO DIFÍCIL' }
   };
+  Object.assign(trial,Object.fromEntries(Object.entries(C.POSTGAME_TRIALS).map(([kind,d])=>[kind,{...d,title:d.name.toLocaleUpperCase('pt-BR'),label:d.name,difficulty:'EXTREMA',postgame:true}])));
   const preview = team => `<section class="opponent-team-preview" aria-label="Equipe adversária"><p class="eyebrow">EQUIPE ADVERSÁRIA</p><div class="opponent-team-preview__grid">${team.map(pokemon => `<article class="opponent-preview-card"><img src="${pokemon.sprite}" alt="${cap(pokemon.name)}"><strong>${cap(pokemon.name)}</strong><span>${pokemon.types.map(type => `<i class="type-chip type-${type}">${type}</i>`).join('')}</span><small>BST ${pokemon.bst}</small></article>`).join('')}</div></section>`;
   const card = (kind, definition, state) => `<article class="endgame-trial endgame-trial--${definition.key}"><h3>${definition.title}</h3><p>Desafio opcional de elite para ampliar seu elenco estratégico.</p><small class="trial-difficulty">DIFICULDADE: ${definition.difficulty}</small><strong>${state.rewardClaimed ? 'CONCLUÍDA' : state.completed ? 'VITÓRIA — RECOMPENSA PENDENTE' : 'RECOMPENSA DISPONÍVEL'}</strong><button class="campaign-secondary" data-trial="${kind}">${state.rewardClaimed ? 'REENFRENTAR' : state.completed ? 'ESCOLHER RECOMPENSA' : 'ENFRENTAR'}</button></article>`;
 
@@ -263,7 +264,7 @@
     `).join('');
 
     let rewardCallout = '';
-    if (definition.key === 'mewtwo' && isRewardClaimed && !trialState.rewardPokemonId) {
+    if (definition.postgame && isRewardClaimed && !trialState.rewardPokemonId) {
       rewardCallout='<div class="trial-reward-callout claimed">Você já possui as três formas. Revanche disponível sem novo recrutamento.</div>';
     } else if (isRewardClaimed) {
       const claimedMon = C.byId(trialState.rewardPokemonId);
@@ -425,6 +426,7 @@ if (typeof window !== 'undefined') {
     CELESTIAL_TRIAL: { title: 'PROVA CELESTIAL', subtitle: '3 contra 3 · Elite', difficulty: 'MUITO DIFÍCIL' }
   };
 
+  Object.assign(trialInfo,Object.fromEntries(Object.entries(window.PBACampaign.POSTGAME_TRIALS).map(([kind,d])=>[kind,{title:d.name.toLocaleUpperCase('pt-BR'),subtitle:d.subtitle+' · 3 contra 3',difficulty:'EXTREMA'}])));
   View.prototype.enhanceMobilePicker = function () {
     if (!this.container) return;
     const shell = this.container.querySelector('.campaign-shell');
@@ -750,18 +752,22 @@ if (typeof window !== 'undefined') {
   };
 })();
 
-/* Post-Shadow saves retain their ending and gain access to the Mewtwo epilogue. */
+/* Post-Shadow epilogue: unlocks use the same rules as the battle manager. */
 (function(){
- const View=window.PBACampaign?.CampaignView;if(!View)return;
- const complete=View.prototype.renderComplete;
+ const C=window.PBACampaign,View=C?.CampaignView;if(!View)return;
+ const complete=View.prototype.renderComplete,home=View.prototype.renderHome;
  View.prototype.renderComplete=function(){
-   complete.call(this);
-   const state=this.manager.getState();if(!state.shadowTrainer?.defeated)return;
-   const progress=state.endgameTrials?.mewtwo||{};
-   this.container.insertAdjacentHTML?.('beforeend',`<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">PÓS-SHADOW · NOVO DESAFIO</p><h2>As Três Faces de Mewtwo</h2><p>Enfrente Mewtwo, Mega Mewtwo X e Mega Mewtwo Y em uma batalha de equipe. Escolha uma das formas para seu elenco na primeira vitória.</p><strong>${progress.rewardClaimed?'Desafio concluído · Revanche disponível':'O Núcleo Psíquico está aberto.'}</strong></div><button id="postgameMewtwo" class="campaign-primary">${progress.rewardClaimed?'Reenfrentar Mewtwo':'Enfrentar Mewtwo'}</button><button id="postgameMap" class="campaign-secondary">Explorar a Região Final</button></section>`);
-   const challenge=this.container.querySelector('#postgameMewtwo');if(challenge)challenge.onclick=()=>{this.pending={kind:'MEWTWO_TRIAL',id:'mewtwo'};this.pick=[];this.render();};
+   complete.call(this);const state=this.manager.getState();if(!state.shadowTrainer?.defeated)return;
+   const cap=value=>String(value).replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+   const cards=Object.entries(C.POSTGAME_TRIALS).map(([kind,d])=>{
+     const progress=state.endgameTrials?.[d.key]||{},reason=C.getPostgameLockReason(kind,state),available=this.manager.canChallenge(kind),label=reason?'BLOQUEADO':progress.rewardClaimed?'CONCLUÍDO · REVANCHE DISPONÍVEL':'DESAFIO DISPONÍVEL';
+     return `<article class="postgame-card postgame-card--${d.key} ${reason?'is-locked':''}"><p class="eyebrow">${label}</p><h3>${d.name}</h3><p>${d.subtitle}</p><div class="postgame-card__team">${d.team.map(p=>`<figure><img src="${p.sprite}" alt="${cap(p.name)}" loading="lazy"><figcaption>${cap(p.name)}</figcaption></figure>`).join('')}</div><p id="postgame-${d.key}-requirement">${reason||'Primeira vitória: escolha um dos três Pokémon ainda não possuídos. Revanches não repetem recompensas.'}</p><button ${kind==='MEWTWO_TRIAL'?'id="postgameMewtwo"':''} class="campaign-primary" data-postgame="${kind}" aria-describedby="postgame-${d.key}-requirement" ${available?'':'disabled'}>${reason?'Bloqueado':progress.rewardClaimed?'Reenfrentar':'Enfrentar'}</button></article>`;
+   }).join('');
+   this.container.insertAdjacentHTML?.('beforeend',`<section class="campaign-shell postgame-hub" aria-label="Desafios após Shadow"><div class="campaign-hero"><p class="eyebrow">ALÉM DO ECLIPSE</p><h2>Uma nova jornada de desafios</h2><p>Mewtwo e Zygarde são seus primeiros caminhos. Vença um deles para abrir Zero Absoluto, avance até Necrozma e conclua os quatro para enfrentar a Ruptura da Criação.</p></div><div class="postgame-grid">${cards}</div><button id="postgameMap" class="campaign-secondary">Explorar a Região Final</button></section>`);
+   this.container.querySelectorAll('[data-postgame]').forEach(button=>button.onclick=()=>{if(!this.manager.canChallenge(button.dataset.postgame))return;const d=C.POSTGAME_TRIALS[button.dataset.postgame];this.pending={kind:d.kind,id:d.key};this.pick=[];this.render();});
    const map=this.container.querySelector('#postgameMap');if(map)map.onclick=()=>{this.postgameMap=true;this.render();if(this.mapView){this.mapView.activeRegionId='region-endgame';this.mapView.selectedNodeId='node-mewtwo';this.mapView.render();}};
  };
+ View.prototype.renderHome=function(){home.call(this);if(this.mapView)this.mapView.onPostgame=()=>{this.postgameMap=false;this.pending=null;this.render();};};
 })();
 
 /* Old exploration saves may already own every new Super reward. */
