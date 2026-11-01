@@ -13,7 +13,8 @@ function battle(move){return E.createBattle(mon(1,[move],['normal'],200),mon(2))
 function stage(target,key){return ['accuracy','evasion'].includes(key)?target[key+'Stage']:target.statStages[key];}
 
 for(const effect of Object.values(P4.effects))test(`P4 expansion: ${effect.name} applies its registered secondary to the proper combatant`,()=>{
- const result=E.resolveTurn(battle(m(effect.id)),{player:a(effect.id,{secondaryEffectRoll2:1,secondaryStatusChoice:1}),enemy:a(33)});
+ let result=E.resolveTurn(battle(m(effect.id)),{player:a(effect.id,{secondaryEffectRoll2:1,secondaryStatusChoice:1}),enemy:a(33)});
+ if(result.state.player.twoTurnMove) result=E.resolveTurn(result.state,{player:a(effect.id,{secondaryEffectRoll2:1,secondaryStatusChoice:1}),enemy:a(33)});
  const attacker=result.state.player,defender=result.state.enemy;
  if(effect.statusCondition)assert.equal(defender.statusCondition,effect.statusCondition);
  if(effect.statusChoices)assert.equal(defender.statusCondition,'burn');

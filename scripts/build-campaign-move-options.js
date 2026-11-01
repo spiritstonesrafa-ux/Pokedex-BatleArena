@@ -23,6 +23,7 @@ const SIMPLE_MOVES = new Set([
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
   ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
+  ...Object.values(BattleConstants.P6.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>m.name),
   ...Object.values(BattleConstants.RECHARGE_MOVES).map(m=>m.name),
   'super-fang',
   'natures-madness',
@@ -55,11 +56,17 @@ const PILOT_P3_MOVES = new Set([
   'dragon-rage',
   'protect',
   'detect',
+  'solar-beam',
+  'fly',
+  'dig',
+  'dive',
+  'bounce',
   'rest','sleep-talk','yawn','snore','dream-eater'
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
   ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
+  ...Object.fromEntries(Object.values(BattleConstants.P6.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.RECHARGE_MOVES).map(m=>[m.name,m])),
   'super-fang': Object.freeze({"id":162,"name":"super-fang","type":"normal","damageClass":"physical","power":null,"accuracy":90,"pp":10}),
   'natures-madness': Object.freeze({"id":717,"name":"natures-madness","type":"fairy","damageClass":"special","power":null,"accuracy":90,"pp":10}),
@@ -256,11 +263,61 @@ const CANONICAL_PILOT_MOVES = Object.freeze({
     pp: 5,
     damageClass: 'status',
     priority: 4
+  }),
+  'solar-beam': Object.freeze({
+    id: 76,
+    name: 'solar-beam',
+    type: 'grass',
+    power: 120,
+    accuracy: 100,
+    pp: 10,
+    damageClass: 'special'
+  }),
+  'fly': Object.freeze({
+    id: 19,
+    name: 'fly',
+    type: 'flying',
+    power: 90,
+    accuracy: 95,
+    pp: 15,
+    damageClass: 'physical'
+  }),
+  'dig': Object.freeze({
+    id: 91,
+    name: 'dig',
+    type: 'ground',
+    power: 80,
+    accuracy: 100,
+    pp: 10,
+    damageClass: 'physical'
+  }),
+  'dive': Object.freeze({
+    id: 291,
+    name: 'dive',
+    type: 'water',
+    power: 80,
+    accuracy: 100,
+    pp: 10,
+    damageClass: 'physical'
+  }),
+  'bounce': Object.freeze({
+    id: 340,
+    name: 'bounce',
+    type: 'flying',
+    power: 85,
+    accuracy: 85,
+    pp: 5,
+    damageClass: 'physical'
   })
 });
 
 // Curated canonical learnsets (supported generations, including historical moves) for obtainable campaign Pokémon
 const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
+  51: ["dig"],
+  325: ["bounce"],
+  18: ["wing-attack", "fly"],
+  321: ["hydro-pump", "dive"],
+  103: ["power-whip", "solar-beam"],
   107: ["detect"],
   197: ["hyper-voice", "protect"],
   257: ["aura-sphere", "detect"],
@@ -346,6 +403,42 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   800: ["prismatic-laser"],
   865: ["meteor-assault","slam"],
   890: ["eternabeam","brutal-swing"],
+  // P6: legal learnsets in free extra slots; existing options preserved.
+  5: ["fire-spin"],
+  16: ["razor-wind"],
+  17: ["reflect"],
+  21: ["sky-attack"],
+  22: ["twister"],
+  32: ["thrash"],
+  33: ["skull-bash"],
+  35: ["teleport"],
+  37: ["safeguard"],
+  39: ["light-screen"],
+  40: ["minimize"],
+  41: ["mean-look"],
+  42: ["defog"],
+  43: ["leech-seed"],
+  44: ["petal-dance"],
+  48: ["baton-pass"],
+  49: ["toxic-spikes"],
+  50: ["sand-tomb"],
+  54: ["whirlpool"],
+  56: ["outrage"],
+  57: ["focus-punch"],
+  60: ["mist"],
+  69: ["bind"],
+  70: ["wrap"],
+  74: ["block"],
+  75: ["stealth-rock"],
+  82: ["volt-switch"],
+  86: ["flip-turn"],
+  90: ["clamp"],
+  138: ["spikes"],
+  167: ["spider-web"],
+  283: ["sticky-web"],
+  725: ["parting-shot"],
+  781: ["body-press","anchor-shot"],
+
 });
 
 const cache = path.join(__dirname, '..', '.cache_pokeapi');

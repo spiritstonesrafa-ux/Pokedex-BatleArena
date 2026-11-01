@@ -106,7 +106,7 @@
     const id = Number(move.id);
     if (id === 182 || id === 197) return 4;
     const name = String(move.name || '').trim().toLowerCase();
-    return P5.get(move)?.priority ?? MOVE_PRIORITIES[name] ?? 0;
+    return P6.moves[id]?.priority ?? P5.get(move)?.priority ?? MOVE_PRIORITIES[name] ?? 0;
   }
 
   function targetsDefenseWithSpAtk(move) {
@@ -191,6 +191,7 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const P6 = typeof module !== 'undefined' && module.exports ? require('./p6-mechanics.js') : window.PBAP6Mechanics;
   const P5 = typeof module !== 'undefined' && module.exports ? require('./p5-mechanics.js') : window.PBAP5Mechanics;
   const P4Catalog = typeof module !== 'undefined' && module.exports ? require('./p4-secondary-catalog.js') : (window.PBAP4SecondaryCatalog || {effects:{},definitions:{},moves:{},defrost:[]});
   const SECONDARY_EFFECT_MOVES = Object.freeze({
@@ -352,6 +353,8 @@
   );
 
   function getSecondaryEffect(move) {
+    if(Number(move?.id)===239)return {id:239,name:'twister',chance:20,flinch:true};
+    if(Number(move?.id)===143)return {id:143,name:'sky-attack',chance:30,flinch:true};
     if (Number(move?.id)===855 && (!move.name || move.name==='lumina-crash')) return {id:855,name:'lumina-crash',chance:100,statDrops:{specialDefense:-2}};
     if (!move) return null;
     const rawId = move.id !== undefined && move.id !== null ? Number(move.id) : null;
@@ -396,6 +399,7 @@
 
   function getEffectiveAccuracy(move, attacker, defender) {
     if (P5.ohko(move)) return P5.accuracy(move,attacker,defender);
+    if(defender?.minimized&&P6.minimizeHits.includes(Number(move.id)))return null;
     if(move.accuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
     const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Number(defender.evasionStage)||0)));
@@ -650,6 +654,149 @@
     return name === 'hyper-drill' || name === 'hyperdrill';
   };
 
+  // Two-turn charge and semi-invulnerability family (Gen VI+)
+  const TWO_TURN_MOVES = Object.freeze({
+    76: Object.freeze({
+      id: 76,
+      name: 'solar-beam',
+      type: 'grass',
+      power: 120,
+      accuracy: 100,
+      pp: 10,
+      damageClass: 'special',
+      semiInvulnerable: null,
+      prepReason: 'CHARGE_SOLAR'
+    }),
+    19: Object.freeze({
+      id: 19,
+      name: 'fly',
+      type: 'flying',
+      power: 90,
+      accuracy: 95,
+      pp: 15,
+      damageClass: 'physical',
+      semiInvulnerable: 'airborne',
+      prepReason: 'FLY_UP'
+    }),
+    91: Object.freeze({
+      id: 91,
+      name: 'dig',
+      type: 'ground',
+      power: 80,
+      accuracy: 100,
+      pp: 10,
+      damageClass: 'physical',
+      semiInvulnerable: 'underground',
+      prepReason: 'DIG_UNDERGROUND'
+    }),
+    291: Object.freeze({
+      id: 291,
+      name: 'dive',
+      type: 'water',
+      power: 80,
+      accuracy: 100,
+      pp: 10,
+      damageClass: 'physical',
+      semiInvulnerable: 'underwater',
+      prepReason: 'DIVE_UNDERWATER'
+    }),
+    340: Object.freeze({
+      id: 340,
+      name: 'bounce',
+      type: 'flying',
+      power: 85,
+      accuracy: 85,
+      pp: 5,
+      damageClass: 'physical',
+      semiInvulnerable: 'airborne',
+      prepReason: 'BOUNCE_UP',
+      secondaryEffect: Object.freeze({
+        id: 340,
+        name: 'bounce',
+        chance: 30,
+        target: 'defender',
+        requiresHit: true,
+        requiresDamage: true,
+        statusCondition: 'paralysis',
+        requiredMechanics: Object.freeze(['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE', 'SECONDARY_STATUS_CHANCE'])
+      })
+    }),
+    ...Object.fromEntries([13,130,143].map(id=>[id,Object.freeze({...P6.moves[id],semiInvulnerable:null,prepReason:'CHARGE_GENERIC'})]))
+  });
+
+  const SEMI_INVULNERABLE_STATES = Object.freeze({
+    AIRBORNE: 'airborne',
+    UNDERGROUND: 'underground',
+    UNDERWATER: 'underwater'
+  });
+
+  function isTwoTurnMove(move) {
+    if (!move) return false;
+    const id = typeof move === 'number' ? move : Number(move.id);
+    if (TWO_TURN_MOVES[id]) {
+      return !move.name || move.name === TWO_TURN_MOVES[id].name;
+    }
+    const name = String(move.name || (typeof move === 'string' ? move : '')).trim().toLowerCase();
+    return Object.values(TWO_TURN_MOVES).some(m => m.name === name);
+  }
+
+  function getTwoTurnMove(move) {
+    if (!move) return null;
+    const id = typeof move === 'number' ? move : Number(move.id);
+    if (TWO_TURN_MOVES[id]) return TWO_TURN_MOVES[id];
+    const name = String(move.name || (typeof move === 'string' ? move : '')).trim().toLowerCase();
+    return Object.values(TWO_TURN_MOVES).find(m => m.name === name) || null;
+  }
+
+  function canHitSemiInvulnerable(move, state, attacker = null) {
+    if (!move || !state) return false;
+    const id = Number(move.id);
+    const name = String(move.name || '').trim().toLowerCase();
+
+    // Poison-type user using Toxic bypasses semi-invulnerability across all states (Gen 6+)
+    if (id === 92 || name === 'toxic') {
+      const attackerTypes = Array.isArray(attacker?.types) ? attacker.types : (attacker?.type ? [attacker.type] : []);
+      if (attackerTypes.includes('poison')) return true;
+    }
+
+    if (state === 'airborne') {
+      // Gust (16), Twister (239), Thunder (87), Hurricane (542), Sky Uppercut (327)
+      return [16, 239, 87, 542, 327].includes(id) || ['gust', 'twister', 'thunder', 'hurricane', 'sky-uppercut'].includes(name);
+    }
+
+    if (state === 'underground') {
+      // Only Earthquake and Magnitude reach an underground target.
+      return [89, 222].includes(id) || ['earthquake', 'magnitude'].includes(name);
+    }
+
+    if (state === 'underwater') {
+      // Surf (57), Whirlpool (250)
+      return [57, 250].includes(id) || ['surf', 'whirlpool'].includes(name);
+    }
+
+    return false;
+  }
+
+  function getSemiInvulnerableDamageMultiplier(move, state) {
+    if (!move || !state) return 1;
+    const id = Number(move.id);
+    const name = String(move.name || '').trim().toLowerCase();
+
+    if (state === 'airborne') {
+      if (id === 16 || id === 239 || name === 'gust' || name === 'twister') return 2;
+    }
+
+    if (state === 'underground') {
+      if (id === 89 || id === 222 || name === 'earthquake' || name === 'magnitude') return 2;
+    }
+
+    if (state === 'underwater') {
+      if (id === 57 || id === 250 || name === 'surf' || name === 'whirlpool') return 2;
+    }
+
+    return 1;
+  }
+
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     182: Object.freeze({ id: 182, name: 'protect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
     197: Object.freeze({ id: 197, name: 'detect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
@@ -747,7 +894,13 @@
     718: Object.freeze({ id: 718, name: 'multi-attack', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_ITEM'], knownPending: ['ITEM_TYPE_PHASE_P7'], blockedReason: 'DYNAMIC_TYPE_FROM_ITEM', priority: 0 }),
     851: Object.freeze({ id: 851, name: 'tera-blast', supportLevel: 'BLOCKED', requiredMechanics: ['DYNAMIC_TYPE_FROM_TERA'], knownPending: ['TERASTALLIZATION_PHASE_P8'], blockedReason: 'DYNAMIC_TYPE_FROM_TERA', priority: 0 }),
     ...P5.definitions,
-    ...Object.fromEntries(Object.values(RECHARGE_MOVES).map(m=>[m.id,Object.freeze({id:m.id,name:m.name,supportLevel:'FULL',requiredMechanics:[m.damageClass==='special'?'SPECIAL_DAMAGE':'PHYSICAL_DAMAGE','RECHARGE'],knownPending:[],blockedReason:null,priority:0})]))
+    ...Object.fromEntries(Object.values(RECHARGE_MOVES).map(m=>[m.id,Object.freeze({id:m.id,name:m.name,supportLevel:'FULL',requiredMechanics:[m.damageClass==='special'?'SPECIAL_DAMAGE':'PHYSICAL_DAMAGE','RECHARGE'],knownPending:[],blockedReason:null,priority:0})])),
+    19: Object.freeze({ id: 19, name: 'fly', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE'], knownPending: [], blockedReason: null, priority: 0 }),
+    76: Object.freeze({ id: 76, name: 'solar-beam', supportLevel: 'PARTIAL', requiredMechanics: ['SPECIAL_DAMAGE', 'TWO_TURN_CHARGE'], knownPending: ['WEATHER_PHASE_P7', 'ITEM_PHASE_P7'], blockedReason: null, priority: 0 }),
+    91: Object.freeze({ id: 91, name: 'dig', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE'], knownPending: [], blockedReason: null, priority: 0 }),
+    291: Object.freeze({ id: 291, name: 'dive', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE'], knownPending: [], blockedReason: null, priority: 0 }),
+    340: Object.freeze({ id: 340, name: 'bounce', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bounce'] }),
+    ...P6.definitions
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -775,6 +928,9 @@
     24: Object.freeze({"id":24,"name":"double-kick","type":"fighting","power":30,"accuracy":100,"pp":30,"damageClass":"physical"}),
     41: Object.freeze({"id":41,"name":"twineedle","type":"bug","power":25,"accuracy":100,"pp":20,"damageClass":"physical"}),
     594: Object.freeze({"id":594,"name":"water-shuriken","type":"water","power":15,"accuracy":100,"pp":20,"damageClass":"special"}),
+    19: Object.freeze({ id: 19, name: 'fly', type: 'flying', power: 90, accuracy: 95, pp: 15, damageClass: 'physical' }),
+    91: Object.freeze({ id: 91, name: 'dig', type: 'ground', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
+    291: Object.freeze({ id: 291, name: 'dive', type: 'water', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
     ...P4Catalog.moves,
     47: Object.freeze({"id":47,"name":"sing","type":"normal","accuracy":55,"pp":15,"statusEffect":"sleep","power":0,"damageClass":"status"}),
     142: Object.freeze({"id":142,"name":"lovely-kiss","type":"normal","accuracy":75,"pp":10,"statusEffect":"sleep","power":0,"damageClass":"status"}),
@@ -1031,7 +1187,8 @@
     919: Object.freeze({ id: 919, name: 'malignant-chain', type: 'poison', power: 100, accuracy: 100, pp: 5, damageClass: 'special' }),
     ...P5.moves,
     ...RECHARGE_MOVES,
-    ...PROTECT_MOVES
+    ...PROTECT_MOVES,
+    ...P6.moves
   });
 
   const KNOWN_CATALOG_MOVES_BY_NAME = Object.freeze(
@@ -1427,7 +1584,8 @@
     'thunder-wave': Object.freeze({ id: 86, name: 'thunder-wave', type: 'electric',
       power: 0, accuracy: 90, pp: 20, damageClass: 'status', statusEffect: 'paralysis' }),
     'protect': PROTECT_MOVES[182],
-    'detect': PROTECT_MOVES[197]
+    'detect': PROTECT_MOVES[197],
+    ...P6.statusMoves
   });
 
   function getSupportedStatusMove(move) {
@@ -1654,12 +1812,19 @@
     isValidFractionalDamagePower,
     getFractionalDamageAmount,
     P5,
+    P6,
     RECHARGE_MOVES,
     isRechargeMove,
     PROTECT_MOVES,
     isProtectMove,
     PROTECT_BYPASSING_MOVES,
     isProtectBypassingMove,
+    TWO_TURN_MOVES,
+    SEMI_INVULNERABLE_STATES,
+    isTwoTurnMove,
+    getTwoTurnMove,
+    canHitSemiInvulnerable,
+    getSemiInvulnerableDamageMultiplier,
     describeMovePower,
     CONSTANT_DAMAGE_MOVES,
     isConstantDamageMove,

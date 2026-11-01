@@ -102,10 +102,14 @@
         throw new Error(`Pokémon ativo de "${side}" está nocauteado ou inexistente.`);
       }
 
+      if(constants.P6.mustStruggle(myActive))return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:165},diagnostics:{strategy,reason:'CONSECUTIVE_FALLBACK',candidateCount:1,selectedScore:0}};
       if(myActive.rechargeMoveId)return {action:{type:constants.BATTLE_ACTIONS.RECHARGE},diagnostics:{strategy,reason:'RECHARGE_REQUIRED',candidateCount:1,selectedScore:0}};
       if(myActive.bideState)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:117},diagnostics:{strategy,reason:'BIDE_LOCKED',candidateCount:1,selectedScore:0}};
+      if(myActive.lockedMove)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:myActive.lockedMove.id},diagnostics:{strategy,reason:'RAMPAGE_LOCKED',candidateCount:1,selectedScore:0}};
+      if(myActive.twoTurnMove)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:myActive.twoTurnMove.id},diagnostics:{strategy,reason:'TWO_TURN_LOCKED',candidateCount:1,selectedScore:0}};
       // 1. Golpes utilizáveis do ativo (somente status curados)
       const isUsableStatusMove = (m) => {
+        if(constants.isProtectMove(m)||constants.P6.statusMoves[m.name])return true;
         if (m.damageClass !== 'status') return true;
         if ([156,214,281,599].includes(m.id)) return true;
         if (['poison', 'toxic', 'burn', 'paralysis', 'sleep','confusion'].includes(m.statusEffect)) return true;
@@ -116,7 +120,7 @@
       const activeMoves = Array.isArray(myActive.moves) ? myActive.moves : [];
       const usableMoves = activeMoves
         .map((m, idx) => ({ ...m, loadoutIndex: idx }))
-        .filter(m => (m.currentPp === undefined || m.currentPp > 0) && isUsableStatusMove(m));
+        .filter(m => (m.currentPp === undefined || m.currentPp > 0) && !(constants.P6.consecutive.includes(m.id)&&myActive.lastP6Move===m.id) && isUsableStatusMove(m));
 
       // 2. Candidatos do banco vivos
       const livingBench = myTeam
@@ -124,7 +128,7 @@
         .filter(item => item.teamIndex !== myActiveIndex && item.pokemon.currentHp > 0);
 
       // Candidatos do banco vivos que possuem pelo menos 1 golpe utilizável com PP
-      const livingBenchWithMoves = livingBench.filter(item => {
+      const livingBenchWithMoves = (constants.P6.switchBlocked(state,side)?[]:livingBench).filter(item => {
         const mvs = Array.isArray(item.pokemon.moves) ? item.pokemon.moves : [];
         return mvs.some(m => (m.currentPp === undefined || m.currentPp > 0) && isUsableStatusMove(m));
       });
@@ -218,10 +222,11 @@
 
       // Avaliação detalhada de cada golpe utilizável do ativo
       const evaluatedMoves = usableMoves.map(m => {
-        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { attackerSide: side, attackerTeam: myTeam, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} });
+        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { battleState:state, attackerSide: side, attackerTeam: myTeam, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} });
         let score = evalData.expectedDamage;
         // Account for the forced idle turn without hiding the immediate KO prediction.
         if(evalData.requiresRecharge && !evalData.guaranteedKo)score=Math.floor(score/2);
+        if(evalData.chargingTurn)score=Math.floor((evalData.projectedDamage || 0)/2);
 
         if (m.damageClass === 'status') {
           if (constants.isProtectMove(m)) {

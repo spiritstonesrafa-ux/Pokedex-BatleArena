@@ -83,10 +83,15 @@
           this.view.displayMessage?.('Atingiu ' + command.hitCount + (command.hitCount === 1 ? ' vez!' : ' vezes!') + (command.critical ? ' Todos os acertos foram críticos!' : ''));
           break;
         case PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK: {
-          const descriptions={
+          const descriptions={NO_RESERVE:'Não há outro Pokémon disponível para entrar.',BOUND:'ficou preso no ataque!',TRAPPED:'não pode sair do campo!',LEECH_SEED:'foi semeado!',BINDING_ENDED:'se libertou do aprisionamento!',BARRIER_STARTED:'ergueu uma barreira para a equipe!',BARRIER_ENDED:'A barreira da equipe terminou.',HAZARD_STARTED:'Armadilhas foram espalhadas no campo!',HAZARDS_CLEARED:'removeu as armadilhas do seu campo!',FIELD_CLEARED:'limpou as condições do campo!',TOXIC_SPIKES_ABSORBED:'absorveu os espinhos venenosos!',FOCUS_READY:'está concentrando energia!',FOCUS_LOST:'perdeu a concentração e não pôde atacar!',CHARGE_GENERIC:'está preparando o próximo ataque!',SEED_INELIGIBLE:'A semente não pôde afetar o alvo.',BARRIER_EXISTS:'A barreira já está ativa.',HAZARD_LIMIT:'O campo já atingiu o limite desta armadilha.',TRAP_INELIGIBLE:'O alvo não pode ser aprisionado.',NOTHING_TO_CLEAR:'Não havia efeito para remover.',MIST:'A névoa protege os atributos!',SAFEGUARD:'A proteção da equipe impediu a condição!',
             PROTECTED_SELF: 'se protegeu com uma barreira protetora!',
             BLOCKED_BY_PROTECT: 'se protegeu do ataque!',
             PROTECT_FAILED: 'mas falhou!',
+            CHARGE_SOLAR: 'começou a absorver luz solar!',
+            FLY_UP: 'voou alto!',
+            DIG_UNDERGROUND: 'cavou um buraco!',
+            DIVE_UNDERWATER: 'mergulhou nas profundezas!',
+            BOUNCE_UP: 'saltou alto!',
             RECHARGE_REQUIRED:'precisará recarregar no próximo turno!',RECHARGING:'está recarregando e não pode agir neste turno!',BIDE_STORE:'está acumulando energia com Bide!',NO_BIDE_DAMAGE:'Bide falhou: nenhum dano de ataque foi acumulado.',BEAK_BLAST_READY:'está aquecendo o bico!',SHELL_TRAP_READY:'preparou Shell Trap!',SHELL_TRAP:'Shell Trap falhou: não recebeu um golpe físico neste turno.',WEIGHT_UNAVAILABLE:'O peso necessário para este golpe não está disponível.',ENDEAVOR_HP:'Endeavor falhou: o alvo precisa ter mais HP que o usuário.',OHKO_INELIGIBLE:'O alvo não é elegível para este golpe de nocaute.',NO_COUNTER_DAMAGE:'O golpe falhou: nenhum dano compatível foi recebido neste turno.',SUCKER_PUNCH:'Sucker Punch falhou: o alvo não vai executar um ataque antes de agir.',VENOM_DRENCH:'Venom Drench falhou: o alvo não está envenenado.',FIRST_ACTION_AFTER_ENTRY:'Fake Out falhou! Só funciona na primeira oportunidade de agir após entrar em campo.',REST_NOT_NEEDED:'Rest falhou: não é possível descansar agora.',REQUIRES_SLEEP:'O golpe só funciona enquanto está dormindo.',TARGET_NOT_ASLEEP:'Dream Eater falhou: o alvo não está dormindo.',NO_CALLABLE_MOVE:'Sleep Talk não encontrou um golpe disponível.',ALREADY_STATUS:'O alvo já possui uma condição ou está sonolento.',DROWSY:'ficou sonolento!',HEALED:`recuperou ${command.amount} HP!`
           };
           this.view.displayMessage?.(`${command.pokemonName}: ${descriptions[command.reason]||'O golpe falhou.'}`);
@@ -111,7 +116,11 @@
 
         case PRESENTATION_COMMANDS.MOVE_MISS_FEEDBACK: {
           if (typeof this.view.displayMessage === 'function') {
-            this.view.displayMessage('O golpe errou!');
+            if (command.reason === 'SEMI_INVULNERABLE') {
+              this.view.displayMessage('O alvo está fora de alcance!');
+            } else {
+              this.view.displayMessage('O golpe errou!');
+            }
           }
           break;
         }
@@ -126,7 +135,8 @@
           if (typeof this.view.displayMessage === 'function') {
             const name = command.pokemonName || (command.target === 'player' ? 'Seu Pokémon' : 'O Pokémon oponente');
             const status = command.statusCondition;
-            const label = status === 'toxic' ? 'veneno grave' : status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : status === 'freeze' ? 'congelamento' : 'veneno';
+            const residualLabel={'leech-seed':'Leech Seed',binding:'aprisionamento',spikes:'espinhos','stealth-rock':'pedras de entrada'}[status];
+            const label = residualLabel || (status === 'toxic' ? 'veneno grave' : status === 'burn' ? 'queimadura' : status === 'paralysis' ? 'paralisia' : status === 'sleep' ? 'sono' : status === 'freeze' ? 'congelamento' : 'veneno');
             const message = command.outcome === 'APPLIED'
               ? (status === 'toxic' ? `${name} foi gravemente envenenado!` : status === 'poison' ? `${name} foi envenenado!` : status === 'sleep' ? `${name} adormeceu!` : status === 'freeze' ? `${name} foi congelado!` : `${name} sofreu ${label}!`) :
               command.outcome === 'DAMAGE' ? `${name} perdeu ${command.damage} HP por ${label}!` :

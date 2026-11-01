@@ -353,7 +353,8 @@
               moveId: event.moveId,
               moveName: event.moveName,
               accuracyRoll: event.accuracyRoll,
-              accuracy: event.accuracy
+              accuracy: event.accuracy,
+              reason: event.reason
             }
           ];
 

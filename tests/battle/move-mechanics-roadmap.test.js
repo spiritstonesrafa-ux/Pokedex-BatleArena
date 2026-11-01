@@ -739,7 +739,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(anchorShot);
     assert.equal(anchorShot.id, 677);
     assert.equal(anchorShot.name, 'anchor-shot');
-    assert.equal(anchorShot.supportLevel, MOVE_SUPPORT_LEVEL.PARTIAL);
+    assert.equal(anchorShot.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     // 4. Nature\'s Madness (717) e Light That Burns the Sky (723)
     const naturesMadness = getMoveCapability(717);
@@ -850,9 +850,9 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
 
     // 5. Rejeição de golpes de status não suportados mesmo que bem formados
     const unsupportedStatus = {
-      id: 100,
-      name: 'teleport',
-      type: 'psychic',
+      id: 694,
+      name: 'aurora-veil',
+      type: 'ice',
       power: 0,
       accuracy: null,
       pp: 20,

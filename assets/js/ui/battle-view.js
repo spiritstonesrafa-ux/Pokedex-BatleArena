@@ -31,6 +31,7 @@
   });
   const statusBadge = status => STATUS_LABELS[status] || null;
   const SUPPORT_MOVE_LABELS = {
+    ...Object.fromEntries(Object.values(PowerRules.P6.statusMoves).map(m=>[m.id,{short:'ESTRATÉGIA',move:m.name.replaceAll('-',' ')}])),
     156: { short: 'RECUPERAÇÃO', move: 'recupera HP e adormece o usuário' },
     214: { short: 'DURANTE O SONO', move: 'usa outro golpe enquanto dorme' },
     281: { short: 'SONOLÊNCIA', move: 'adormece o alvo ao fim do próximo turno' },
@@ -512,10 +513,13 @@
 
       const getHpClass = (pct) => pct > 50 ? 'status-healthy' : (pct > 20 ? 'status-warning' : 'status-danger');
 
+      const fieldNames={spikes:'Espinhos',toxicSpikes:'Espinhos venenosos',stealthRock:'Pedras de entrada',stickyWeb:'Teia pegajosa',reflect:'Barreira física',lightScreen:'Barreira especial',safeguard:'Proteção contra condições',mist:'Névoa protetora',auroraVeil:'Véu protetor'};
+      const fieldSummary=role=>Object.entries(battleState.p6Sides?.[role]||{}).filter(([key,value])=>value&&fieldNames[key]).map(([key,value])=>fieldNames[key]+(key==='spikes'||key==='toxicSpikes'?' ×'+value:'')).join(' · ');
+      const fieldHtml=['player','enemy'].map(role=>fieldSummary(role)?`<p role="status">${role==='player'?'Seu campo':'Campo adversário'}: ${fieldSummary(role)}</p>`:'').join('');
       // Botões de golpes do Pokémon ativo do jogador
-      const movesHtml = playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.moves.map(m => {
+      const movesHtml = PowerRules.P6.mustStruggle(playerActive) ? `<button id="btnConsecutiveFallback" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(165);">Struggle · sem golpe disponível</button>` : playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.twoTurnMove ? `<button id="btnTwoTurnContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.twoTurnMove.id});"><span class="move-btn-name">Executar ${(playerActive.twoTurnMove.name || 'GOLPE').toUpperCase()}</span><span>Continuação obrigatória · sem gasto de PP</span></button>` : playerActive.lockedMove ? `<button id="btnRampageContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.lockedMove.id});">Continuar sequência</button>` : playerActive.moves.map(m => {
         const isZeroPp = m.currentPp === 0 && !(playerActive.bideState && m.id===117);
-        const isDisabled = isResolving || isZeroPp || Boolean(playerActive.bideState && m.id!==117);
+        const isDisabled = isResolving || isZeroPp || Boolean(PowerRules.P6.consecutive.includes(m.id)&&playerActive.lastP6Move===m.id) || Boolean(playerActive.bideState && m.id!==117);
         const displayType=PowerRules?.P5?.type?.(m,playerActive)||m.type;
         const typeColor = `var(--type-${displayType}, #38bdf8)`;
 
@@ -609,7 +613,7 @@
                 <div class="arena-ambient-container" id="arenaAmbientContainer" aria-hidden="true"></div>
 
                 <!-- Slot do Pokémon do Jogador -->
-                <div class="combatant-slot player-slot" data-pokemon-target="player" id="playerCombatantTarget">
+                <div class="combatant-slot player-slot" data-pokemon-target="player" id="playerCombatantTarget" data-semi-state="${playerActive.twoTurnMove?.state||''}">
                   <img
                     id="playerSpriteImg"
                     class="combatant-sprite-img ${playerActive.currentHp === 0 ? 'fainted' : ''}"
@@ -623,7 +627,7 @@
                 </div>
 
                 <!-- Slot do Pokémon Adversário -->
-                <div class="combatant-slot enemy-slot" data-pokemon-target="enemy" id="enemyCombatantTarget">
+                <div class="combatant-slot enemy-slot" data-pokemon-target="enemy" id="enemyCombatantTarget" data-semi-state="${enemyActive.twoTurnMove?.state||''}">
                   <img
                     id="enemySpriteImg"
                     class="combatant-sprite-img ${enemyActive.currentHp === 0 ? 'fainted' : ''} ${finalStand ? 'shadow-pokemon-aura' : ''}"
@@ -675,13 +679,14 @@
               O que ${playerActive.name} deve fazer?
             </div>
 
+            <div class="battle-field-summary">${fieldHtml}</div>
             <!-- Painel de Ação do Jogador -->
             <div class="battle-action-panel">
               <div class="action-controls-row">
                 <button
                   id="btnOpenSwitch"
                   class="btn-switch-action"
-                  ${isResolving || playerActive.rechargeMoveId ? 'disabled' : ''}
+                  ${isResolving || PowerRules.P6.switchBlocked(battleState,'player') ? 'disabled' : ''}
                   onclick="if(window.battleView) window.battleView.openSwitchModal();"
                 >
                   <i class="fa-solid fa-repeat"></i> TROCAR POKÉMON
@@ -766,7 +771,7 @@
 
       const player = battleState.player;
       const activeIdx = player.activeIndex;
-      if(player.team[activeIdx].rechargeMoveId)return;
+      if(PowerRules.P6.switchBlocked(battleState,'player'))return;
 
       const itemsHtml = player.team.map((p, idx) => {
         const visual = this.resolveCombatantVisual(p, 'player');
@@ -776,7 +781,7 @@
 
         let badge = '';
         if (isActive) badge = '<span class="switch-item-status-tag active">EM CAMPO</span>';
-        else if (isFainted) badge = '<span class="switch-item-status-tag fainted">NOCAUTEADO</span>';
+        else if (isFainted) badge = isFainted?'<span class="switch-item-status-tag fainted">NOCAUTEADO</span>':'<span class="switch-item-status-tag">EM CAMPO</span>';
 
         return `
           <button

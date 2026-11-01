@@ -1583,10 +1583,12 @@
       "name": "solar-beam",
       "supportLevel": "PARTIAL",
       "requiredMechanics": [
-        "SPECIAL_DAMAGE"
+        "SPECIAL_DAMAGE",
+        "TWO_TURN_CHARGE"
       ],
       "knownPending": [
-        "CHARGE_PHASE_P6"
+        "WEATHER_PHASE_P7",
+        "ITEM_PHASE_P7"
       ],
       "blockedReason": null,
       "priority": 0
@@ -2506,14 +2508,13 @@
     "340": {
       "id": 340,
       "name": "bounce",
-      "supportLevel": "PARTIAL",
+      "supportLevel": "FULL",
       "requiredMechanics": [
         "PHYSICAL_DAMAGE",
+        "TWO_TURN_SEMI_INVULNERABLE",
         "SECONDARY_STATUS_CHANCE"
       ],
-      "knownPending": [
-        "CHARGE_PHASE_P6"
-      ],
+      "knownPending": [],
       "blockedReason": null,
       "priority": 0,
       "secondaryEffect": {
@@ -2529,6 +2530,42 @@
           "SECONDARY_STATUS_CHANCE"
         ]
       }
+    },
+    "19": {
+      "id": 19,
+      "name": "fly",
+      "supportLevel": "FULL",
+      "requiredMechanics": [
+        "PHYSICAL_DAMAGE",
+        "TWO_TURN_SEMI_INVULNERABLE"
+      ],
+      "knownPending": [],
+      "blockedReason": null,
+      "priority": 0
+    },
+    "91": {
+      "id": 91,
+      "name": "dig",
+      "supportLevel": "FULL",
+      "requiredMechanics": [
+        "PHYSICAL_DAMAGE",
+        "TWO_TURN_SEMI_INVULNERABLE"
+      ],
+      "knownPending": [],
+      "blockedReason": null,
+      "priority": 0
+    },
+    "291": {
+      "id": 291,
+      "name": "dive",
+      "supportLevel": "FULL",
+      "requiredMechanics": [
+        "PHYSICAL_DAMAGE",
+        "TWO_TURN_SEMI_INVULNERABLE"
+      ],
+      "knownPending": [],
+      "blockedReason": null,
+      "priority": 0
     },
     "341": {
       "id": 341,
@@ -4476,6 +4513,33 @@
     }
   },
   "moves": {
+    "19": {
+      "id": 19,
+      "name": "fly",
+      "type": "flying",
+      "power": 90,
+      "accuracy": 95,
+      "pp": 15,
+      "damageClass": "physical"
+    },
+    "91": {
+      "id": 91,
+      "name": "dig",
+      "type": "ground",
+      "power": 80,
+      "accuracy": 100,
+      "pp": 10,
+      "damageClass": "physical"
+    },
+    "291": {
+      "id": 291,
+      "name": "dive",
+      "type": "water",
+      "power": 80,
+      "accuracy": 100,
+      "pp": 10,
+      "damageClass": "physical"
+    },
     "7": {
       "id": 7,
       "name": "fire-punch",

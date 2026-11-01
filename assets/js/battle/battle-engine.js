@@ -235,6 +235,7 @@
           maxPp: normalizedMove.pp,
           currentPp: m.currentPp !== undefined ? Number(m.currentPp) : normalizedMove.pp,
           damageClass: normalizedMove.damageClass,
+          ...((constants.P6.moves[normalizedMove.id]?.target||normalizedMove.target)?{target:constants.P6.moves[normalizedMove.id]?.target||normalizedMove.target}:{}),
           ...((normalizedMove.statusEffect || m.statusEffect || constants?.getSupportedStatusMove?.(m)?.statusEffect) ? { statusEffect: normalizedMove.statusEffect || m.statusEffect || constants.getSupportedStatusMove(m).statusEffect } : {}),
           ...(normalizedMove.statBoosts || (constants?.getStatBoosts && constants.getStatBoosts(normalizedMove))
             ? { statBoosts: { ...(normalizedMove.statBoosts || constants.getStatBoosts(normalizedMove)) } } : {}),
@@ -273,8 +274,9 @@
         ivs: Object.fromEntries(['hp','attack','defense','specialAttack','specialDefense','speed'].map(k=>{
           const v=raw.ivs?.[k]??31;if(!Number.isInteger(v)||v<0||v>31)throw new Error('IV inválido.');return [k,v];
         })),
-        rechargeMoveId:null,bideState:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
+        rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
+        bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
         types: normalizedTypes,
         maxHp: Math.floor(hp),
@@ -449,6 +451,7 @@
 
       const side = state[role];
       const previousActive = side.team[side.activeIndex];
+      if(reason==='VOLUNTARY' && constants.P6.switchBlocked(state,role))throw new Error('ACTION_REJECTED: troca impedida.');
 
       let targetIndex = -1;
       if (action.targetIndex !== undefined) {
@@ -488,13 +491,15 @@
       previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
-          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          constants.P6.leave(state,role,previousActive);
+          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.isProtected = false;
           previousActive.stallCount = 0;
       previousActive.toxicStage = 0;
       targetPokemon.isFlinched = false;
       targetPokemon.isProtected = false;
       targetPokemon.stallCount = 0;
+      targetPokemon.twoTurnMove = null;
       targetPokemon.entryMoveAttempts = 0;
       targetPokemon.toxicStage = 0;
 
@@ -507,6 +512,9 @@
         newPokemonId: targetPokemon.id,
         reason: constants.SWITCH_REASON ? constants.SWITCH_REASON[reason] || reason : reason
       });
+      if(reason==='PIVOT'&&action.batonPass?.stages){targetPokemon.statStages={...action.batonPass.stages};Object.assign(targetPokemon,action.batonPass.passVolatiles||{});targetPokemon.leechSeed=action.batonPass.passSeed;targetPokemon.minimized=action.batonPass.passMinimized;}
+      constants.P6.entry(state,role,constants,TypeEffectiveness,events);
+      if(targetPokemon.currentHp<=0)resolveFaints(state,events,[role],'entry-hazard');
     }
 
     function resolveFaints(state, events, faintedRoles, cause = 'move') {
@@ -516,7 +524,8 @@
         if (constants.resetStatStages) {
           constants.resetStatStages(pokemon);
         }
-        pokemon.rechargeMoveId=null;pokemon.bideState=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
+        constants.P6.leave(state,role,pokemon);
+        pokemon.rechargeMoveId=null;pokemon.bideState=null;pokemon.twoTurnMove=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
         pokemon.isProtected = false;
         pokemon.stallCount = 0;
         pokemon.isFlinched = false;
@@ -538,6 +547,8 @@
             events.push({ type: BATTLE_EVENTS.TEAM_DEFEATED, side: role, winner });
           }
         }
+        delete state.pendingPivot;delete state.pendingTurn;delete state.turnActions;
+        for(const role of ['player','enemy'])for(const mon of (state.version===2?state[role].team:[state[role]])){mon.twoTurnMove=null;mon.lockedMove=null;mon.bound=null;mon.trapped=null;mon.leechSeed=null;mon.isProtected=false;}
         state.winner = winner;
         state.status = winner === 'player' ? BATTLE_STATUS.PLAYER_WIN : BATTLE_STATUS.ENEMY_WIN;
         events.push({ type: BATTLE_EVENTS.BATTLE_ENDED, winner,
@@ -555,15 +566,23 @@
       }
     }
 
+    function cloneData(value){
+      if(Array.isArray(value))return value.map(cloneData);
+      if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,cloneData(item)]));
+      return value;
+    }
     function plannedMove(mon,action){
       if(action?.moveId!==undefined || action?.moveName!==undefined)return mon.moves.find(m=>(action.moveId!==undefined&&m.id===Number(action.moveId))||(action.moveName!==undefined&&m.name.toLowerCase()===String(action.moveName).toLowerCase()));
       return mon.moves.find(m=>m.currentPp>0)||mon.moves[0];
     }
     function finishTurn(state, events) {
+      if(state.pendingPivot)return;
       delete state.turnActions; // Intent is transient; never retain references to caller commands.
       if (state.status !== BATTLE_STATUS.IN_PROGRESS &&
           state.status !== BATTLE_STATUS.AWAITING_REPLACEMENT) return;
-      const fainted = [];
+      const aliveAtResidual=['player','enemy'].filter(r=>getActiveCombatant(state,r).currentHp>0);
+      constants.P6.residual(state,constants,events,'seed');
+      const fainted = aliveAtResidual.filter(r=>getActiveCombatant(state,r).currentHp<=0);
       for (const role of ['player', 'enemy']) {
         const pokemon = getActiveCombatant(state, role);
         if (pokemon.statusCondition !== 'toxic') pokemon.toxicStage = 0;
@@ -584,9 +603,12 @@
           currentHp: pokemon.currentHp, maxHp: pokemon.maxHp });
         if (pokemon.currentHp === 0) fainted.push(role);
       }
-      if (fainted.length) resolveFaints(state, events, fainted,
-        getActiveCombatant(state, fainted[0]).statusCondition);
 
+
+      const aliveBeforeP6=['player','enemy'].filter(r=>getActiveCombatant(state,r).currentHp>0);
+      constants.P6.residual(state,constants,events,'binding');
+      const residualFaints=aliveBeforeP6.filter(r=>getActiveCombatant(state,r).currentHp<=0);
+      if(fainted.length||residualFaints.length)resolveFaints(state,events,[...new Set([...fainted,...residualFaints])],'persistent');
       // Yawn resolves after residual damage; leaving the field cancels drowsiness.
       for(const role of ['player','enemy']){
         const mon=getActiveCombatant(state,role);
@@ -594,11 +616,12 @@
         mon.drowsyTurns--;
         if(mon.drowsyTurns===0){
           events.push({type:BATTLE_EVENTS.DROWSY_ENDED,target:role,pokemonName:mon.name});
-          if(!mon.statusCondition){mon.statusCondition='sleep';mon.sleepTurns=mon.drowsySleepDuration||2;mon.sleepCounter=mon.sleepTurns;events.push({type:BATTLE_EVENTS.STATUS_APPLIED,target:role,pokemonName:mon.name,statusCondition:'sleep',sleepDuration:mon.sleepTurns});}
+          if(!mon.statusCondition&&!state.p6Sides[role].safeguard){mon.statusCondition='sleep';mon.sleepTurns=mon.drowsySleepDuration||2;mon.sleepCounter=mon.sleepTurns;events.push({type:BATTLE_EVENTS.STATUS_APPLIED,target:role,pokemonName:mon.name,statusCondition:'sleep',sleepDuration:mon.sleepTurns});}
           mon.drowsySleepDuration=0;
         }
       }
 
+      constants.P6.endField(state,events);
       // Limpeza de estados temporários de turno (Flinch: P4 & Protect: P6)
       for (const role of ['player', 'enemy']) {
         const mon = getActiveCombatant(state, role);
@@ -631,17 +654,22 @@
       }
 
       // Clona o estado para garantir total imutabilidade da entrada
-      const nextState = JSON.parse(JSON.stringify(currentState));
+      const nextState = cloneData(currentState);
       const events = [];
+      constants.P6.init(nextState);
       const currentTurn = nextState.turn;
-      actions={...actions};
+      actions=cloneData({...actions});
+      for(const role of ['player','enemy'])if(actions[role])delete actions[role].pursuitIntercept;
       for(const role of ['player','enemy']){
+        if(constants.P6.mustStruggle(getActiveCombatant(nextState,role)))actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:165,moveName:undefined};
         if(getActiveCombatant(nextState,role).rechargeMoveId)actions[role]={type:BATTLE_ACTIONS.RECHARGE};
         if(getActiveCombatant(nextState,role).bideState && actions[role]?.type!=='SWITCH')actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:117,moveName:undefined};
+        if(getActiveCombatant(nextState,role).lockedMove)actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:getActiveCombatant(nextState,role).lockedMove.id,moveName:undefined};
+        if(getActiveCombatant(nextState,role).twoTurnMove)actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:getActiveCombatant(nextState,role).twoTurnMove.id,moveName:getActiveCombatant(nextState,role).twoTurnMove.name};
       }
       nextState.turnActions = actions;
       for(const role of ['player','enemy'])for(const mon of (nextState.version===2?nextState[role].team:[nextState[role]])){
-        mon.actedThisTurn=false;mon.damagedThisTurn=false;mon.lastDirectHit=null;mon.beakBlastReady=false;mon.shellTrapReady=false;mon.shellTrapTriggered=false;
+        mon.actedThisTurn=false;mon.damagedThisTurn=false;mon.lastDirectHit=null;mon.beakBlastReady=false;mon.shellTrapReady=false;mon.shellTrapTriggered=false;mon.focusLost=false;
       }
       for(const role of ['player','enemy']){const side=nextState[role];for(const mon of (nextState.version===2?side.team:[side]))mon.statsRaisedThisTurn=false;}
 
@@ -654,6 +682,7 @@
       for(const role of ['player','enemy']){
         const mon=getActiveCombatant(nextState,role),a=actions[role];
         const chosen=plannedMove(mon,a);
+        if(!mon.rechargeMoveId && a?.type!=='SWITCH' && chosen?.id===264)events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:role,pokemonName:mon.name,moveName:chosen.name,reason:'FOCUS_READY'});
         if(!mon.rechargeMoveId && a?.type!=='SWITCH' && [690,704].includes(chosen?.id)){
           mon.beakBlastReady=chosen.id===690;mon.shellTrapReady=chosen.id===704;
           events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:role,pokemonName:mon.name,moveName:chosen.name,reason:chosen.id===690?'BEAK_BLAST_READY':'SHELL_TRAP_READY'});
@@ -662,6 +691,14 @@
       const isPlayerSwitch = actions.player && actions.player.type === BATTLE_ACTIONS.SWITCH;
       const isEnemySwitch = actions.enemy && actions.enemy.type === BATTLE_ACTIONS.SWITCH;
 
+      for(const role of ['player','enemy']){
+        const foe=constants.P6.other(role);
+        if(actions[foe]?.type==='SWITCH'&&actions[role]?.type!=='SWITCH'&&plannedMove(getActiveCombatant(nextState,role),actions[role])?.id===228){
+          executeAction(role,foe,nextState,events,{...actions[role],pursuitIntercept:true});
+          if(nextState.status==='IN_PROGRESS')executeSwitch(foe,nextState,events,actions[foe],'VOLUNTARY');
+          finishTurn(nextState,events);return {state:nextState,events};
+        }
+      }
       // CENÁRIO 1: AMBOS ESCOLHERAM SWITCH (Prioridade total, ordem determinística player -> enemy)
       if (isPlayerSwitch && isEnemySwitch) {
         executeSwitch('player', nextState, events, actions.player, 'VOLUNTARY');
@@ -676,6 +713,7 @@
         executeSwitch('player', nextState, events, actions.player, 'VOLUNTARY');
         // O ataque do adversário atinge o NOVO Pokémon ativo que acabou de entrar!
         executeAction('enemy', 'player', nextState, events, actions.enemy);
+        if(nextState.pendingPivot)nextState.pendingTurn={};
 
         finishTurn(nextState, events);
         return { state: nextState, events };
@@ -686,6 +724,7 @@
         executeSwitch('enemy', nextState, events, actions.enemy, 'VOLUNTARY');
         // O ataque do jogador atinge o NOVO Pokémon ativo adversário!
         executeAction('player', 'enemy', nextState, events, actions.player);
+        if(nextState.pendingPivot)nextState.pendingTurn={};
 
         finishTurn(nextState, events);
         return { state: nextState, events };
@@ -705,6 +744,12 @@
       // --- AÇÃO DO PRIMEIRO COMBATENTE ---
       executeAction(firstRole, secondRole, nextState, events, firstAction);
 
+      if(nextState.pendingPivot){
+        if(nextState.pendingPivot.moveId!==226&&plannedMove(startingActiveSecond,secondAction)?.id===228){
+          const p=nextState.pendingPivot;nextState.status='IN_PROGRESS';executeAction(secondRole,firstRole,nextState,events,{...secondAction,pursuitIntercept:true});
+          if(getActiveCombatant(nextState,firstRole).currentHp>0){nextState.pendingPivot=p;nextState.status='AWAITING_REPLACEMENT';nextState.pendingTurn={};}else delete nextState.pendingPivot;
+        }else nextState.pendingTurn={role:secondRole,opponent:firstRole,action:secondAction,actorId:startingActiveSecond.id};
+      }
       // Se o defensor foi nocauteado (ou a batalha terminou), o segundo combatente NÃO contra-ataca
       if (nextState.status !== BATTLE_STATUS.IN_PROGRESS) {
         finishTurn(nextState, events);
@@ -727,6 +772,7 @@
       // --- AÇÃO DO SEGUNDO COMBATENTE ---
       executeAction(secondRole, firstRole, nextState, events, secondAction);
 
+      if(nextState.pendingPivot)nextState.pendingTurn={};
       // Se a batalha continuar em progresso, avança o contador de turnos
       finishTurn(nextState, events);
 
@@ -750,15 +796,18 @@
     function afterDirectHit(attacker,defender,attackerRole,defenderRole,move,events,damage){
       if(damage<=0)return;
       if(defender.shellTrapReady && move.damageClass==='physical')defender.shellTrapTriggered=true;
+      defender.focusLost=true;
       if(defender.bideState)defender.bideState.damage+=damage;
-      if(defender.beakBlastReady && constants.P5.contactIds.includes(move.id) && constants.isEligibleForStatusCondition(attacker,'burn')){
+      if(defender.beakBlastReady && !attacker.safeguarded && constants.P5.contactIds.includes(move.id) && constants.isEligibleForStatusCondition(attacker,'burn')){
         attacker.statusCondition='burn';
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,source:defenderRole,target:attackerRole,pokemonName:attacker.name,statusCondition:'burn',moveId:690,moveName:'beak-blast',chance:100});
       }
     }
     function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false) {
       const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
+      if(attacker.currentHp<=0 || state.status!=='IN_PROGRESS')return;
       executeActionCore(attackerRole,defenderRole,state,events,action,calledMove);
+      if(attacker.pivotAfterHit){const id=attacker.pivotAfterHit;delete attacker.pivotAfterHit;if(!['PLAYER_WIN','ENEMY_WIN'].includes(state.status))constants.P6.requestPivot(state,attackerRole,id,events);}
       const batch=events.slice(start);
       const used=batch.find(e=>e.type===BATTLE_EVENTS.MOVE_USED && constants.isRechargeMove({id:e.moveId,name:e.moveName}));
       if(used && attacker.currentHp>0 && batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED && e.source===attackerRole && e.moveName===used.moveName && e.damage>0)){
@@ -778,6 +827,15 @@
       const aborted=batch.some(e=>[BATTLE_EVENTS.STATUS_IMMOBILIZED,BATTLE_EVENTS.FLINCH_IMMOBILIZED,BATTLE_EVENTS.CONFUSION_DAMAGE].includes(e.type));
       const changes=batch.filter(e=>e.type===BATTLE_EVENTS.STAT_STAGE_CHANGED);
       if(attempted||aborted)attacker.lastMoveFailed=aborted||batch.some(e=>[BATTLE_EVENTS.MOVE_FAILED,BATTLE_EVENTS.MOVE_MISSED,BATTLE_EVENTS.STATUS_BLOCKED,BATTLE_EVENTS.CONFUSION_BLOCKED].includes(e.type))||batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.multiplier===0)||(changes.length>0&&changes.every(e=>e.appliedDelta===0)&&!batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED));
+      const usedP6=batch.find(e=>e.type===BATTLE_EVENTS.MOVE_USED&&e.actor===attackerRole);
+      if(usedP6)attacker.lastP6Move=usedP6.moveId;
+      if(usedP6&&constants.P6.rampage.includes(usedP6.moveId)&&attacker.currentHp>0&&batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.source===attackerRole&&e.damage>0)){
+        if(!attacker.lockedMove){const turns=action?.lockedDuration??2;if(!Number.isInteger(turns)||turns<2||turns>3)throw new Error('Duração de sequência inválida.');attacker.lockedMove={id:usedP6.moveId,left:turns};}
+        if(--attacker.lockedMove.left===0){attacker.lockedMove=null;const turns=action?.confusionDuration??3;if(!Number.isInteger(turns)||turns<2||turns>5)throw new Error('Duração de confusão inválida.');if(!attacker.confusionTurns){attacker.confusionTurns=turns;events.push({type:BATTLE_EVENTS.CONFUSION_APPLIED,target:attackerRole,pokemonName:attacker.name,duration:turns,moveName:usedP6.moveName});}}
+      }else if(attacker.lockedMove){
+        const confuse=attacker.lockedMove.left===1&&attacker.currentHp>0&&attacker.statusCondition!=='sleep';attacker.lockedMove=null;
+        if(confuse&&!attacker.confusionTurns){const turns=action?.confusionDuration??3;if(!Number.isInteger(turns)||turns<2||turns>5)throw new Error('Duração de confusão inválida.');attacker.confusionTurns=turns;events.push({type:BATTLE_EVENTS.CONFUSION_APPLIED,target:attackerRole,pokemonName:attacker.name,duration:turns});}
+      }
       attacker.actedThisTurn=true;
       if(batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED&&e.moveId===690))attacker.beakBlastReady=false;
       if(attacker.bideState && !batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED))attacker.bideState=null;
@@ -785,6 +843,9 @@
     function executeActionCore(attackerRole, defenderRole, state, events, action, calledMove = false) {
       const attacker = getActiveCombatant(state, attackerRole);
       const defender = getActiveCombatant(state, defenderRole);
+      constants.P6.init(state);
+      attacker.safeguarded=Boolean(state.p6Sides[attackerRole].safeguard);
+      defender.safeguarded=Boolean(state.p6Sides[defenderRole].safeguard);
 
       // Recharge precedes PP, sleep, freeze, flinch and confusion checks. It is an action, not a move failure.
       if(attacker.rechargeMoveId){
@@ -795,6 +856,10 @@
       }
       if(action?.type===BATTLE_ACTIONS.RECHARGE)throw new Error('ACTION_REJECTED: nenhuma recarga pendente.');
       if(attacker.bideState)action={...action,moveId:117,moveName:undefined};
+      const continuingLocked=Boolean(attacker.lockedMove);
+      if(continuingLocked)action={...action,moveId:attacker.lockedMove.id,moveName:undefined};
+      const continuingTwoTurn=Boolean(attacker.twoTurnMove);
+      if(continuingTwoTurn)action={...action,moveId:attacker.twoTurnMove.id,moveName:attacker.twoTurnMove.name};
       // B3-06: Validação de que apenas o Pokémon ativo pode realizar ações de combate
       if (action && action.pokemonId !== undefined && Number(action.pokemonId) !== attacker.id) {
         throw new Error(`Apenas o Pokémon ativo ("${attacker.name}") pode realizar ações de combate.`);
@@ -802,7 +867,9 @@
 
       // 1. Seleciona o golpe a ser executado
       let selectedMove;
-      if (action && (action.moveId !== undefined || action.moveName !== undefined)) {
+      const isStruggle=constants.P6.mustStruggle(attacker);
+      if(isStruggle)selectedMove={...constants.P6.struggle};
+      else if (action && (action.moveId !== undefined || action.moveName !== undefined)) {
         selectedMove = attacker.moves.find(m =>
           (action.moveId !== undefined && m.id === Number(action.moveId)) ||
           (action.moveName !== undefined && m.name.toLowerCase() === String(action.moveName).trim().toLowerCase())
@@ -819,12 +886,13 @@
         throw new Error(`NO_USABLE_MOVES: "${attacker.name}" não possui golpes utilizáveis com PP disponível.`);
       }
 
+      if(!calledMove && constants.P6.consecutive.includes(selectedMove.id)&&attacker.lastP6Move===selectedMove.id)throw new Error('ACTION_REJECTED: este golpe não pode ser usado consecutivamente.');
       const actualDamageClass = selectedMove.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')?'physical':selectedMove.damageClass;
       const actualDamageType=constants.P5.type(selectedMove,attacker);
       const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType};
       const continuingBide=Boolean(attacker.bideState);
       // Validação de PP
-      if (!calledMove && !continuingBide && selectedMove.currentPp <= 0) {
+      if (!calledMove && !continuingBide && !continuingTwoTurn && !continuingLocked && !isStruggle && selectedMove.currentPp <= 0) {
         throw new Error(`ACTION_REJECTED: PP do golpe "${selectedMove.name}" está esgotado.`);
       }
 
@@ -934,6 +1002,7 @@
           if(!sleepUsable){
           attacker.isFlinched = false;
           attacker.stallCount = 0;
+          if (attacker.twoTurnMove) attacker.twoTurnMove = null;
           events.push({
             type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
             actor: attackerRole,
@@ -985,6 +1054,7 @@
         } else {
           attacker.isFlinched = false;
           attacker.stallCount = 0;
+          if (attacker.twoTurnMove) attacker.twoTurnMove = null;
           events.push({
             type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
             actor: attackerRole,
@@ -1004,6 +1074,7 @@
       if (!calledMove && attacker.isFlinched) {
         attacker.isFlinched = false;
         attacker.stallCount = 0;
+        if (attacker.twoTurnMove) attacker.twoTurnMove = null;
         events.push({
           type: BATTLE_EVENTS.FLINCH_IMMOBILIZED,
           actor: attackerRole,
@@ -1046,6 +1117,7 @@
 
           if (confusionHitRoll <= 33) {
             attacker.stallCount = 0;
+            if (attacker.twoTurnMove) attacker.twoTurnMove = null;
             const attackStat = constants.getEffectiveStat
               ? constants.getEffectiveStat(attacker, 'attack')
               : attacker.attack;
@@ -1111,8 +1183,11 @@
       });
 
       const immobilized = !calledMove && attacker.statusCondition === 'paralysis' && statusRoll <= 25;
+      if(selectedMove.id===264&&attacker.focusLost&&!immobilized){attacker.lastMoveFailed=true;attacker.stallCount=0;events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,pokemonName:attacker.name,moveId:264,moveName:selectedMove.name,reason:'FOCUS_LOST'});return;}
+
       const entryRestricted = selectedMove.id === 252 && selectedMove.name === 'fake-out' && attacker.entryMoveAttempts > 1;
-      if (!immobilized && !entryRestricted) {
+      const isTwoTurnCharging = !calledMove && !continuingTwoTurn && constants.isTwoTurnMove(selectedMove);
+      if (!immobilized && !entryRestricted && !isTwoTurnCharging) {
         // Mantém a ordem histórica MOVE_USED → PP_CHANGED nos golpes executados.
         events.push({
           type: BATTLE_EVENTS.MOVE_USED,
@@ -1128,7 +1203,7 @@
       }
 
       // Consumo de PP (ocorre antes da resolução de dano, em hits e em misses)
-      if(!calledMove && !continuingBide){
+      if(!calledMove && !continuingBide && !continuingTwoTurn && !continuingLocked && !isStruggle){
       const previousPp = selectedMove.currentPp;
       selectedMove.currentPp = Math.max(0, selectedMove.currentPp - 1);
 
@@ -1146,6 +1221,7 @@
 
       if (immobilized) {
         attacker.stallCount = 0;
+        if (attacker.twoTurnMove) attacker.twoTurnMove = null;
         events.push({ type: BATTLE_EVENTS.STATUS_IMMOBILIZED, actor: attackerRole,
           pokemonName: attacker.name, statusCondition: 'paralysis', statusRoll });
         return;
@@ -1154,6 +1230,32 @@
       if (entryRestricted) {
         events.push({ type: BATTLE_EVENTS.MOVE_FAILED, actor: attackerRole, target: defenderRole, pokemonName: attacker.name, moveId: selectedMove.id, moveName: selectedMove.name, reason: 'FIRST_ACTION_AFTER_ENTRY' });
         return;
+      }
+
+      if (isTwoTurnCharging) {
+        if(selectedMove.id===130)constants.P6.stage(constants,events,attackerRole,attacker,'defense',1);
+        attacker.stallCount = 0;
+        const twoTurnDef = constants.getTwoTurnMove(selectedMove);
+        attacker.twoTurnMove = {
+          id: selectedMove.id,
+          name: selectedMove.name,
+          state: twoTurnDef?.semiInvulnerable || null
+        };
+        events.push({
+          type: BATTLE_EVENTS.MOVE_PREPARED,
+          actor: attackerRole,
+          pokemonName: attacker.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: twoTurnDef?.prepReason || 'CHARGE',
+          semiInvulnerable: twoTurnDef?.semiInvulnerable || null
+        });
+        return;
+      }
+
+      if (continuingTwoTurn) {
+        attacker.twoTurnMove = null;
+        attacker.stallCount = 0;
       }
 
       if (isProtecting) {
@@ -1200,7 +1302,7 @@
 
       const isSelfTarget = selectedMove.target === 'self' || selectedMove.damageClass === 'status_self' || [14, 156, 214, 347, 182, 197].includes(selectedMove.id);
       const bypassesProtect = constants.isProtectBypassingMove?.(selectedMove);
-      if (defender.isProtected && !isSelfTarget && !bypassesProtect) {
+      if (defender.isProtected && !isSelfTarget && selectedMove.target!=='foeSide' && !bypassesProtect) {
         attacker.lastMoveFailed = true;
         events.push({
           type: BATTLE_EVENTS.MOVE_FAILED,
@@ -1215,6 +1317,24 @@
         });
         return;
       }
+      if (defender.twoTurnMove?.state && !isSelfTarget && selectedMove.target!=='foeSide') {
+        const canHit = constants.canHitSemiInvulnerable?.(selectedMove, defender.twoTurnMove.state, attacker);
+        if (!canHit) {
+          attacker.lastMoveFailed = true;
+          events.push({
+            type: BATTLE_EVENTS.MOVE_MISSED,
+            actor: attackerRole,
+            target: defenderRole,
+            pokemonName: attacker.name,
+            defenderName: defender.name,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            reason: 'SEMI_INVULNERABLE'
+          });
+          return;
+        }
+      }
+      if([280,706,873].includes(selectedMove.id)){delete state.p6Sides[defenderRole].reflect;delete state.p6Sides[defenderRole].lightScreen;delete state.p6Sides[defenderRole].auroraVeil;}
       const targetAction=state.turnActions?.[defenderRole];
       const targetMove=plannedMove(defender,targetAction);
       const p5Context={turn:state.turn,executing:true,targetAction,targetMove,faintCount:state.version===2?state[attackerRole].team.filter(m=>m.currentHp<=0).length:0};
@@ -1231,13 +1351,14 @@
       }
       if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){attacker.stallCount=0;fail('REQUIRES_SLEEP');return;}
       if(selectedMove.id===214){
-        const candidates=attacker.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
+        const candidates=attacker.moves.filter(m=>m.id!==214&&![117,264,690,704].includes(m.id)&&!constants.isTwoTurnMove(m)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
         if(!candidates.length){attacker.stallCount=0;fail('NO_CALLABLE_MOVE');return;}
         const index=action.sleepTalkChoice??0;
         if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
         executeAction(attackerRole,defenderRole,state,events,{...action,moveId:candidates[index].id,moveName:undefined},true);return;
       }
       if(selectedMove.id===138&&defender.statusCondition!=='sleep'){fail('TARGET_NOT_ASLEEP');return;}
+      if(selectedMove.id===281 && defender.safeguarded){fail('SAFEGUARD');return;}
       if(selectedMove.id===281){
         if(defender.statusCondition||defender.drowsyTurns>0){fail('ALREADY_STATUS');return;}
         const duration=action.sleepDuration??2;if(!Number.isInteger(duration)||duration<1||duration>3)throw new Error('Duração de Yawn inválida.');
@@ -1251,6 +1372,8 @@
         isHit = accuracyRoll <= effectiveAccuracy;
       }
 
+      if(action?.pursuitIntercept&&selectedMove.id===228)isHit=true;
+      if(defender.minimized&&constants.P6.minimizeHits.includes(selectedMove.id))isHit=true;
       // Gen VI+: Toxic used by a Poison-type bypasses accuracy checks, not status immunity.
       if (selectedMove.id === 92 && selectedMove.name === 'toxic' && attacker.types.includes('poison')) isHit = true;
 
@@ -1269,6 +1392,8 @@
         return;
       }
 
+      if(constants.P6.statusAction(state,attackerRole,selectedMove,action||{},constants,events))return;
+      if(selectedMove.id===599&&state.p6Sides[defenderRole].mist){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,moveId:599,moveName:selectedMove.name,reason:'MIST'});return;}
       if(selectedMove.id===599){
         if(!['poison','toxic'].includes(defender.statusCondition)){fail('VENOM_DRENCH');return;}
         if(['attack','specialAttack','speed'].every(k=>defender.statStages[k]<=-6)){fail('STAT_LIMIT');return;}
@@ -1277,7 +1402,7 @@
       }
       if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
         if (selectedMove.statusEffect === 'confusion') {
-          const isImmune = constants.isStatusMoveImmune ? constants.isStatusMoveImmune(selectedMove, defender.types) : false;
+          const isImmune = defender.safeguarded || (constants.isStatusMoveImmune ? constants.isStatusMoveImmune(selectedMove, defender.types) : false);
           const blocked = isImmune
             ? 'IMMUNE'
             : (defender.confusionTurns > 0)
@@ -1315,7 +1440,7 @@
         }
 
         if (selectedMove.statusEffect) {
-          const isImmune = constants.isStatusMoveImmune(selectedMove, defender.types);
+          const isImmune = defender.safeguarded || constants.isStatusMoveImmune(selectedMove, defender.types);
           const blocked = isImmune
             ? 'IMMUNE'
             : defender.statusCondition
@@ -1384,7 +1509,7 @@
       const isP5Fixed = Boolean(constants.P5.get(selectedMove) && constants.P5.fixed(selectedMove));
       const isFixedDamage = isLevelDamage || isConstantDamage || isFractionalDamage || isP5Fixed;
       const hasStab = attacker.types.includes(actualDamageType);
-      const stabMultiplier = (hasStab && !isFixedDamage) ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1;
+      const stabMultiplier = (hasStab && !isFixedDamage && !isStruggle) ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1;
 
       events.push({
         type: BATTLE_EVENTS.STAB_RESOLVED,
@@ -1392,7 +1517,7 @@
         moveType: actualDamageType,
         attackerTypes: attacker.types,
         multiplier: stabMultiplier,
-        hasStab: isFixedDamage ? false : hasStab
+        hasStab: isFixedDamage || isStruggle ? false : hasStab
       });
 
       // 4. Resolução de Type Effectiveness
@@ -1422,8 +1547,8 @@
       } else {
         const effectiveness = TypeEffectiveness.calculate(actualDamageType, defender.types);
         const rawMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
-          ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
-          : effectiveness.multiplier;
+          ? BattleModifierResolver.resolveTypeMultiplier(isStruggle?1:effectiveness.multiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
+          : (isStruggle?1:effectiveness.multiplier);
         defenderTypesList = effectiveness.defenderTypes;
 
         if (isFixedDamage) {
@@ -1436,7 +1561,7 @@
           }
         } else {
           effectiveMultiplier = rawMultiplier;
-          effectivenessClassification = effectiveness.classification;
+          effectivenessClassification = TypeEffectiveness.getClassification(effectiveMultiplier);
         }
 
         events.push({
@@ -1466,6 +1591,11 @@
       }
 
       const resolvedPower=constants.P5.get(selectedMove)?constants.P5.power(selectedMove,attacker,defender,constants,p5Context):selectedMove.power;
+      const semiInvulnerableMultiplier = (defender.twoTurnMove?.state && constants.getSemiInvulnerableDamageMultiplier)
+        ? constants.getSemiInvulnerableDamageMultiplier(selectedMove, defender.twoTurnMove.state)
+        : 1;
+      const minimizeMultiplier=defender.minimized&&constants.P6.minimizeHits.includes(selectedMove.id)?2:1;
+      const effectivePower = action?.pursuitIntercept&&selectedMove.id===228?resolvedPower*2:resolvedPower;
       if(selectedMove.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')){
         attackStat=constants.getEffectiveStat(attacker,'attack');defenseStat=constants.getEffectiveStat(defender,'defense');
       }
@@ -1497,7 +1627,7 @@
         baseDamage = effectiveMultiplier === 0 ? 0 : constantAmount;
         finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, constantAmount);
       } else {
-        baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, resolvedPower);
+        baseDamage = DamageCalculator.calculateBaseDamage(attackStat, defenseStat, effectivePower);
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
         const multiHit = constants.getMultiHitMove(selectedMove);
         if (multiHit) {
@@ -1517,10 +1647,10 @@
           let totalDamage = 0;
           for (let index = 0; index < plannedHits && defender.currentHp > 0 && effectiveMultiplier > 0; index++) {
             if(index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
-          const hitPower=multiHit.escalating?selectedMove.power*(index+1):resolvedPower;
+          const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
           const critical=Boolean(multiHit.critical);
           const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?Math.max(attacker.attack,attackStat):attackStat,critical?Math.min(defender.defense,defenseStat):defenseStat,hitPower);
-          const hitDamage = constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), effectiveMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove);
+          const hitDamage = Math.max(effectiveMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), effectiveMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
             const previousHp = defender.currentHp;
             defender.currentHp = Math.max(0, previousHp - hitDamage);
             totalDamage += previousHp - defender.currentHp;
@@ -1546,9 +1676,10 @@
         }
         finalDamage = constants.applyBurnPenalty(
           DamageCalculator.applyModifier(baseDamage, effectiveMultiplier, stabMultiplier, damageRoll),
-          attacker, damageMove);
+          attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier;
       }
 
+      if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove)));
       // 7. Aplicação do dano ao HP
       const previousHp = defender.currentHp;
       const currentHp = Math.max(0, previousHp - finalDamage);
@@ -1565,7 +1696,7 @@
         damageClass: actualDamageClass,
         defenderTypes: defenderTypesList,
         moveName: selectedMove.name,
-        power: isFixedDamage ? (selectedMove.power ?? null) : resolvedPower,
+        power: isFixedDamage ? (selectedMove.power ?? null) : effectivePower,
         baseDamage,
         damageRoll: isFixedDamage ? 100 : damageRoll,
         stabMultiplier: isFixedDamage ? 1 : stabMultiplier,
@@ -1620,9 +1751,9 @@
 
       // 10. Efeitos de Recuo de HP (Recoil Moves: recuo proporcional ao dano efetivamente causado)
       let attackerFaintedFromRecoil = false;
-      if (actualDamageDealt > 0 && constants.getRecoilRatio?.(selectedMove) > 0) {
+      if (actualDamageDealt > 0 && (isStruggle || constants.getRecoilRatio?.(selectedMove) > 0)) {
         const recoilRatio = constants.getRecoilRatio(selectedMove);
-        const rawRecoil = Math.max(1, Math.floor(actualDamageDealt * recoilRatio));
+        const rawRecoil = isStruggle?Math.max(1,Math.round(attacker.maxHp/4)):Math.max(1, Math.floor(actualDamageDealt * recoilRatio));
         const previousAttackerHp = attacker.currentHp;
         const newAttackerHp = Math.max(0, previousAttackerHp - rawRecoil);
         const actualRecoil = previousAttackerHp - newAttackerHp;
@@ -1675,7 +1806,7 @@
             const canApply = constants.isEligibleForStatusCondition
               ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
               : (!defender.statusCondition && currentHp > 0);
-            if (canApply && secondaryEffectRoll <= secEffect.chance) {
+            if (!defender.safeguarded && canApply && secondaryEffectRoll <= secEffect.chance) {
               defender.statusCondition = secEffect.statusCondition;
               defender.toxicStage=0;
               events.push({
@@ -1711,7 +1842,7 @@
           }
 
           if (secEffect.confusion && (!secEffect.requiresRaisedStats || defender.statsRaisedThisTurn)) {
-            const canApply = !(defender.confusionTurns > 0) && currentHp > 0;
+            const canApply = !defender.safeguarded && !(defender.confusionTurns > 0) && currentHp > 0;
             if (canApply && secondaryEffectRoll <= secEffect.chance) {
               let duration = constants.DEFAULT_CONFUSION_TURNS?.DEFAULT || 3;
               if (action && action.confusionDuration !== undefined) {
@@ -1737,7 +1868,7 @@
           }
 
           if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
-            if (secondaryEffectRoll <= secEffect.chance) {
+            if (!state.p6Sides[defenderRole].mist && secondaryEffectRoll <= secEffect.chance) {
               for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
                 const report = constants.applyStatStageChange(defender, statKey, delta);
                 events.push({
@@ -1839,7 +1970,7 @@
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
-          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.toxicStage = 0;
           defenderSide.activeIndex = targetIndex;
           const newActive = defenderSide.team[targetIndex];
@@ -1853,9 +1984,13 @@
             newPokemonId: newActive.id,
             reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FORCED : 'FORCED'
           });
+          constants.P6.leave(state,defenderRole,previousActive);
+          constants.P6.entry(state,defenderRole,constants,TypeEffectiveness,events);
+          if(newActive.currentHp<=0)resolveFaints(state,events,[defenderRole],'entry-hazard');
         }
       }
 
+      constants.P6.afterDamage(state,attackerRole,selectedMove,action||{},constants,events,actualDamageDealt);
       // 12. Nocaute (Faint Detection - defensor e/ou atacante por recuo)
       const faintedRoles = [];
       if (currentHp === 0) faintedRoles.push(defenderRole);
@@ -1873,6 +2008,13 @@
      * @param {Object} replacementActions - Ações { player: { targetPokemonId }, enemy: { targetPokemonId } }.
      * @returns {{ state: Object, events: Array<Object> }}
      */
+    function resumePendingTurn(state,events){
+      if(!state.pendingTurn||state.status!=='IN_PROGRESS')return;
+      const pending=state.pendingTurn;delete state.pendingTurn;
+      if(pending.action&&getActiveCombatant(state,pending.role).id===pending.actorId&&getActiveCombatant(state,pending.role).currentHp>0)executeAction(pending.role,pending.opponent,state,events,pending.action);
+      if(state.pendingPivot){state.pendingTurn={};return;}
+      finishTurn(state,events);
+    }
     function resolveReplacement(currentState, replacementActions = {}) {
       if (!currentState || typeof currentState !== 'object') {
         throw new Error('Estado de batalha inválido.');
@@ -1882,7 +2024,18 @@
         throw new Error(`resolveReplacement só pode ser executado quando a batalha está em AWAITING_REPLACEMENT. Status atual: ${currentState.status}.`);
       }
 
-      const nextState = JSON.parse(JSON.stringify(currentState));
+      if(currentState.pendingPivot){
+        const nextState=cloneData(currentState),events=[],p=nextState.pendingPivot;
+        const choice=replacementActions[p.role];if(!choice)throw new Error('Escolha do substituto do pivô ausente.');
+        delete nextState.pendingPivot;nextState.status=BATTLE_STATUS.IN_PROGRESS;
+        executeSwitch(p.role,nextState,events,{...choice,batonPass:p},'PIVOT');
+        const incoming=getActiveCombatant(nextState,p.role);
+
+        if(['player','enemy'].some(r=>getActiveCombatant(nextState,r).currentHp<=0))nextState.status=BATTLE_STATUS.AWAITING_REPLACEMENT;
+        resumePendingTurn(nextState,events);
+        return {state:nextState,events};
+      }
+      const nextState = cloneData(currentState);
       const events = [];
       const roles = ['player', 'enemy'];
       let replacedAny = false;
@@ -1924,12 +2077,13 @@
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
-          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.isProtected = false;
           previousActive.stallCount = 0;
           previousActive.toxicStage = 0;
           target.isProtected = false;
           target.stallCount = 0;
+          target.twoTurnMove = null;
           side.activeIndex = targetIndex;
           replacedAny = true;
 
@@ -1940,13 +2094,17 @@
             newPokemonId: target.id,
             reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FAINT_REPLACEMENT : 'FAINT_REPLACEMENT'
           });
+          constants.P6.leave(nextState,role,previousActive);
+          constants.P6.entry(nextState,role,constants,TypeEffectiveness,events);
+          if(target.currentHp<=0)resolveFaints(nextState,events,[role],'entry-hazard');
         }
       }
 
-      if (replacedAny) {
+      if (replacedAny && !['PLAYER_WIN','ENEMY_WIN'].includes(nextState.status) && ['player','enemy'].every(r=>getActiveCombatant(nextState,r).currentHp>0)) {
         nextState.status = BATTLE_STATUS.IN_PROGRESS;
-        nextState.turn += 1;
+        if(!nextState.pendingTurn)nextState.turn += 1;
       }
+      resumePendingTurn(nextState,events);
 
       return {
         state: nextState,

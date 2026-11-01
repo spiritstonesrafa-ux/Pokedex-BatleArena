@@ -55,6 +55,21 @@
 
       if(attacker.rechargeMoveId)return {moveId:move.id,moveName:move.name,currentPp:move.currentPp,expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,averageDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:0,statusChance:0,isEligibleForSecondary:false,priority:0,recharging:true,requiresRecharge:false};
 
+      if(constants.P6.statusMoves[move.name]){
+        const own=context.battleState?.p6Sides?.[context.attackerSide]||{},foe=context.battleState?.p6Sides?.[context.attackerSide==='enemy'?'player':'enemy']||{};
+        const id=move.id,shield=constants.P6.screens[id],hazard=constants.P6.hazards[id];let benefit=0;
+        if(shield)benefit=own[shield]?0:35;
+        if(hazard)benefit=(foe[hazard]||0)>=(id===191?3:id===390?2:1)?0:35;
+        if(id===73)benefit=defender.leechSeed||defender.types.includes('grass')?0:Math.floor(defender.maxHp/8);
+        if([169,212,335].includes(id))benefit=defender.trapped||defender.types.includes('ghost')?0:15;
+        if(id===107)benefit=(attacker.evasionStage||0)>=6?0:25;
+        if(id===432)benefit=Object.values(constants.P6.hazards).some(k=>own[k]||foe[k])?60:10;
+        if([100,226,575].includes(id))benefit=(context.attackerTeam||[]).some(m=>m.id!==attacker.id&&m.currentHp>0)?20:0;
+        if(move.target!=='self'&&move.target!=='foeSide'&&(defender.isProtected||defender.twoTurnMove?.state))benefit=0;
+        const factor=move.accuracy===null?1:constants.getEffectiveAccuracy(move,attacker,defender)/100;
+        if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0||attacker.statusCondition==='freeze')benefit=0;
+        return {moveId:id,moveName:move.name,damageClass:'status',power:null,accuracy:move.accuracy,currentPp:move.currentPp,priority:constants.getMovePriority(move),expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:Math.round(benefit*factor),statusChance:factor};
+      }
       if (constants.isProtectMove(move)) {
         const consecutive = Math.max(0, Number.isInteger(attacker.stallCount) ? attacker.stallCount : 0);
         const denominator = Math.min(729, Math.pow(3, consecutive));
@@ -110,9 +125,10 @@
       if (planning) {
         attacker={...attacker,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
         defender={...defender,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
-        const other=(defender.moves||[]).find(m=>m.currentPp!==0);
+        const other=defender.twoTurnMove ? (defender.moves||[]).find(m=>m.id===defender.twoTurnMove.id) : (defender.moves||[]).find(m=>m.currentPp!==0);
         const speed=m=>Math.max(1,Math.floor(constants.getEffectiveStat(m,'speed')/(m.statusCondition==='paralysis'?2:1)));
-        if(other && (constants.getMovePriority(other)>constants.getMovePriority(move) || (constants.getMovePriority(other)===constants.getMovePriority(move)&&speed(defender)>speed(attacker)))) defender.actedThisTurn=true;
+        if(other && (constants.getMovePriority(other)>constants.getMovePriority(move) || (constants.getMovePriority(other)===constants.getMovePriority(move)&&(speed(defender)>speed(attacker)||(speed(defender)===speed(attacker)&&context.attackerSide==='enemy'))))) defender.actedThisTurn=true;
+        if(defender.twoTurnMove && defender.actedThisTurn)defender.twoTurnMove=null;
         if(move.id===704 && defender.actedThisTurn && other?.damageClass==='physical')attacker.shellTrapTriggered=true;
         if((constants.P5.counterIds.includes(Number(move.id)) && defender.actedThisTurn) || move.id===117){
           const possible=(defender.moves||[]).filter(m=>m.currentPp!==0&&m.damageClass!=='status'&&!constants.P5.counterIds.includes(m.id)&&(move.id!==68||m.damageClass==='physical')&&(move.id!==243||m.damageClass==='special'));
@@ -341,14 +357,19 @@
           typeClassification = constants?.TYPE_EFFECTIVENESS_CLASSIFICATION?.NEUTRAL || 'NEUTRAL';
         }
       } else {
+        const semiInvulnerableMultiplier = (defender.twoTurnMove?.state && constants.getSemiInvulnerableDamageMultiplier)
+          ? constants.getSemiInvulnerableDamageMultiplier(move, defender.twoTurnMove.state)
+          : 1;
+        const effectivePower = power;
         const range = entryRestricted
           ? { baseDamage: 0, minDamage: 0, maxDamage: 0, averageDamage: 0 }
-          : DamageCalculator.calculateDamageRange(attackStat, defenseStat, power, simLevel, typeMultiplier, stabMultiplier);
+          : DamageCalculator.calculateDamageRange(attackStat, defenseStat, effectivePower, simLevel, typeMultiplier, stabMultiplier);
 
         baseDamage = range.baseDamage;
         minDamage = constants.applyBurnPenalty(range.minDamage, attacker, damageClass===move.damageClass?move:{...move,damageClass}) * (multiHit?.minHits || 1);
         maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move) * (multiHit?.maxHits || 1);
         averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move) * expectedHits;
+        minDamage *= semiInvulnerableMultiplier;maxDamage *= semiInvulnerableMultiplier;averageDamage *= semiInvulnerableMultiplier;
         damageIfHit = averageDamage;
       }
 
@@ -385,12 +406,28 @@
         actionFactor = 0;
         baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
       }
-      const expectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
+      if (defender.twoTurnMove?.state && move.target !== 'self' && move.damageClass !== 'status_self') {
+        const canHit = constants.canHitSemiInvulnerable?.(move, defender.twoTurnMove.state, attacker);
+        if (!canHit) {
+          actionFactor = 0;
+          baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
+        }
+      }
+      if(context.battleState && !isFixedDamage){const role=context.attackerSide==='enemy'?'player':'enemy';const f=constants.P6.barrierMultiplier(context.battleState,role,{...move,damageClass},Boolean(multiHit?.critical));minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
+      if(defender.minimized&&constants.P6.minimizeHits.includes(move.id)){minDamage*=2;maxDamage*=2;averageDamage*=2;damageIfHit=averageDamage;accuracyFactor=1;}
+      if(constants.P6.consecutive.includes(move.id)&&attacker.lastP6Move===move.id){actionFactor=0;minDamage=maxDamage=averageDamage=damageIfHit=0;}
+      const isTwoTurn = Boolean(constants?.isTwoTurnMove?.(move));
+      const isTwoTurnCharging = isTwoTurn && !attacker.twoTurnMove;
+      let projectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
+      let expectedDamage = projectedDamage;
+      if (isTwoTurnCharging) {
+        expectedDamage = 0;
+      }
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const guaranteedKo = !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
-      const possibleKo = !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
+      const guaranteedKo = !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
+      const possibleKo = !isTwoTurnCharging && !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 
       // 7. Avaliação de Efeitos Especiais (Drenagem, Recuo e Prioridade proporcionais ao dano real do alvo)
@@ -563,6 +600,9 @@
         damageIfHit,
         entryRestricted,
         requiresRecharge:constants.isRechargeMove(move),
+        isTwoTurnMove: isTwoTurn,
+        chargingTurn: isTwoTurnCharging,
+        projectedDamage,
         expectedDamage,
         guaranteedKo,
         possibleKo,

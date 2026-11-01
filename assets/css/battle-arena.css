@@ -1060,3 +1060,8 @@ body.battle-immersive-active #futureModuleView {
 
 /* PBA-015I — Final Stand enemy-only Shadow aura. */
 .final-stand-active .shadow-pokemon-aura{filter:drop-shadow(0 0 7px #d87cff) drop-shadow(0 0 18px #7626b5);animation:shadow-pokemon-pulse 2.4s ease-in-out infinite}.final-stand-active .enemy-slot::before{content:'';position:absolute;inset:10%;border-radius:50%;background:radial-gradient(circle,rgba(219,109,255,.34),rgba(91,26,144,.10) 56%,transparent 70%);z-index:0;pointer-events:none}.final-stand-active .enemy-slot img{position:relative;z-index:1}.final-stand-active .battle-turn-tag{color:#f3d9ff;border-color:#bc79ec;background:rgba(72,21,109,.8)}@keyframes shadow-pokemon-pulse{50%{filter:drop-shadow(0 0 12px #f0a5ff) drop-shadow(0 0 27px #8c2dd0)}}@media(prefers-reduced-motion:reduce){.final-stand-active .shadow-pokemon-aura{animation:none}}
+
+/* Derived from current battle state: restored automatically on landing, cancellation or exit. */
+.combatant-slot[data-semi-state]:not([data-semi-state=""]) .combatant-sprite-img { opacity: .35; filter: saturate(.55); }
+.battle-field-summary { font-size: .8rem; color: #cbd5e1; }
+.battle-field-summary p { margin: .2rem 0; }

@@ -50,6 +50,8 @@
       this.psywaveSequence=Array.isArray(options.psywaveSequence)?[...options.psywaveSequence]:null;
       this.hitCountSequence=Array.isArray(options.hitCountSequence)?[...options.hitCountSequence]:null;
       this.calledMoveSequence=Array.isArray(options.calledMoveSequence)?[...options.calledMoveSequence]:null;
+      this.bindingDurationSequence=Array.isArray(options.bindingDurationSequence)?[...options.bindingDurationSequence]:null;
+      this.lockedDurationSequence=Array.isArray(options.lockedDurationSequence)?[...options.lockedDurationSequence]:null;
       this.protectSequence = Array.isArray(options.protectSequence) ? [...options.protectSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
@@ -169,6 +171,8 @@
       return Math.floor(this.rng() * 16) + 85;
     }
 
+    rollBindingDuration(){const n=this.bindingDurationSequence?.length?Number(this.bindingDurationSequence.shift()):4+Math.floor(this.rng()*2);if(![4,5].includes(n))throw new Error('Duração de aprisionamento inválida.');return n;}
+    rollLockedDuration(){const n=this.lockedDurationSequence?.length?Number(this.lockedDurationSequence.shift()):2+Math.floor(this.rng()*2);if(![2,3].includes(n))throw new Error('Duração de sequência inválida.');return n;}
     rollProtect(denominator = 3) {
       if (this.protectSequence && this.protectSequence.length > 0) {
         const next = Number(this.protectSequence.shift());

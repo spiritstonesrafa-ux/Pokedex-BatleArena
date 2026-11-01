@@ -2,6 +2,67 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P6 concluída no motor atual de batalhas individuais
+
+- Fechamento das famílias de proteção/recarga/carga, semi-invulnerabilidade, aprisionamento, semente, armadilhas de entrada, remoção, barreiras, pivôs/interceptação, sequências obrigatórias, Minimize, Focus Punch e restrição de uso consecutivo. Estado vigente e limites em docs/roadmap-p6.md; registros anteriores abaixo são históricos.
+- Corrigidas as três falhas revisadas: Fissure não atinge Dig; bônus de Gust/Twister/Earthquake/Surf altera dano, não poder; previsão considera ordem e empate ao sair da semi-invulnerabilidade. Correções anteriores de Protect/Bide/Sleep Talk/Hyper Drill e inicialização estrita preservadas.
+- Pivôs usam escolha real de substituto e preservam somente a ação ainda não executada, com cópia independente dos comandos. Cobertos dois pivôs no mesmo turno, hazards/KO na entrada, KO do alvo, Pursuit, Baton Pass antes dos efeitos de entrada e encerramento sem comandos pendentes. IA, sessão, interface, campo e mensagens integrados.
+- Aprisionamento de 4/5 turnos e sequências de 2/3 turnos recebem rolagens externas independentes; Ghost pode escapar de aprisionamento. Leech Seed, poison/burn e binding usam ordem residual adequada. Barreiras duram cinco turnos, não reduzem dano fixo nem críticos garantidos e não se empilham com o componente de Aurora Veil.
+- Conjuntos limitados por Gigaton Hammer/Blood Moon têm fallback legal de Struggle, para evitar travamento quando sem outro golpe ou sob aprisionamento. Esse fallback específico não promove Struggle a golpe equipável nem encerra as demais pendências P2.
+- Auditoria reproduzível node scripts/audit-p6.js: **70 pilotos, 61 FULL, 8 PARTIAL apenas por P1/P7/P8, 1 BLOCKED por clima P7; zero pendências essenciais P6**. Componente de barreira de Aurora Veil pronto/testado, mas ativação continua bloqueada por clima; não foi inventado clima neste ciclo. Todas as definições utilizáveis auditadas estão na campanha.
+- Campanha: 524 espécies com extras / 147 definições curadas / 1.347 registros aptos. Quatro golpes fixos e 450 selecionáveis iniciais preservados. Pilotos novos ocuparam espaços livres; Anchor Shot substituiu o extra Surf de Dhelmise por ser seu único usuário canônico. Preferências antigas podem retornar ao padrão pela validação existente; nenhum save regravado diretamente.
+- Validação: **233 testes novos no fechamento; suíte completa com 2.139 aprovados, 38 suítes, zero falhas/cancelados/ignorados, saída 0**. Auditorias P4/P5/P6/draft aprovadas, regeneração offline idêntica e git diff --check aprovado. P4: 364 conhecidos, 318 FULL, 45 PARTIAL, zero pendências P4. P5: 60 pilotos, 57 FULL, 3 PARTIAL externos, zero pendências P5.
+- Próximo bloco: P7 (habilidades, itens, clima, terrenos). P1/P2/P3/P8 não foram declaradas concluídas. Publicação do fechamento P6 autorizada em 31/10/2026; consultar o histórico Git para o hash. Sem deploy manual; commit de proteção observado fb10f47. Alterações locais de carga do Antigravity preservadas e corrigidas.
+
+---
+
+## Atualização — 31/10/2026: P6 em andamento — Golpes de Carga em Dois Turnos e Semi-invulnerabilidade (Solar Beam, Fly, Dig, Dive e Bounce)
+
+- Implementados cinco golpes de carga em dois turnos e semi-invulnerabilidade com metadados canônicos oficiais e regras modernas (Gen VI+):
+  - **Solar Beam (#76)**: Grass/Special, Poder 120, Precisão 100, PP 10, Prioridade 0, sem semi-invulnerabilidade (`semiInvulnerable: null`, `prepReason: 'CHARGE_SOLAR'`). Suporte PARTIAL (`knownPending: ['WEATHER_PHASE_P7', 'ITEM_PHASE_P7']`).
+  - **Fly (#19)**: Flying/Physical, Poder 90, Precisão 95, PP 15, Prioridade 0, estado aéreo (`semiInvulnerable: 'airborne'`, `prepReason: 'FLY_UP'`). Suporte FULL (`knownPending: []`).
+  - **Dig (#91)**: Ground/Physical, Poder 80, Precisão 100, PP 10, Prioridade 0, estado subterrâneo (`semiInvulnerable: 'underground'`, `prepReason: 'DIG_UNDERGROUND'`). Suporte FULL (`knownPending: []`).
+  - **Dive (#291)**: Water/Physical, Poder 80, Precisão 100, PP 10, Prioridade 0, estado submerso (`semiInvulnerable: 'underwater'`, `prepReason: 'DIVE_UNDERWATER'`). Suporte FULL (`knownPending: []`).
+  - **Bounce (#340)**: Flying/Physical, Poder 85, Precisão 85, PP 5, Prioridade 0, estado aéreo (`semiInvulnerable: 'airborne'`, `prepReason: 'BOUNCE_UP'`). Suporte FULL (`knownPending: []`). Efeito secundário canônico de 30% de chance de paralisia no alvo ao acertar.
+- Ciclo de carga e resolução em dois turnos:
+  - Turno 1: Consome 1 PP (`PP_CHANGED`), emite `MOVE_PREPARED` com motivo canônico e estado de semi-invulnerabilidade, registra `attacker.twoTurnMove = { id, name, state }`, reseta `stallCount = 0` e bloqueia troca voluntária do usuário.
+  - Turno 2: Limpa `attacker.twoTurnMove = null`, reseta `stallCount = 0`, executa o ataque com `MOVE_USED` e `DAMAGE_APPLIED`, sem consumir PP adicional (não emite `PP_CHANGED`), mesmo se o PP restante tiver chegado a 0. Força a continuação do golpe mesmo se comando alternativo for submetido.
+  - Se o defensor realizar troca voluntária no turno 2, o ataque de carga atinge o Pokémon recém-entrado.
+- Defesa e exceções da semi-invulnerabilidade:
+  - Golpes comuns contra alvos em estado aéreo, subterrâneo ou submerso erram com evento `MOVE_MISSED` e `reason: 'SEMI_INVULNERABLE'`, marcando `attacker.lastMoveFailed = true`. Golpes que nunca erram (Swift #129, Aerial Ace #332) e Hyper Drill (#887) NÃO ultrapassam a semi-invulnerabilidade.
+  - **Airborne (Fly e Bounce)**: Gust (#16) e Twister (#239) acertam causando o dobro de dano (multiplicador 2x); Thunder (#87), Hurricane (#542) e Sky Uppercut (#327) acertam com dano normal (1x); Toxic (#92) usado por Pokémon do tipo Venenoso acerta; Toxic de não-Venenoso erra.
+  - **Underground (Dig)**: Earthquake (#89) acerta causando o dobro de dano (2x); Fissure (#90) acerta e aplica nocaute (OHKO); Toxic (#92) de tipo Venenoso acerta; Toxic de não-Venenoso erra.
+  - **Underwater (Dive)**: Surf (#57) acerta causando o dobro de dano (2x); Toxic (#92) de tipo Venenoso acerta; Toxic de não-Venenoso erra.
+  - **Solar Beam**: sem semi-invulnerabilidade, usuário pode ser atingido normalmente durante o turno de carga.
+- Impedimentos e cancelamentos:
+  - Imobilização pré-ataque no Turno 1 (sono, congelamento, hesitação, paralisia plena ou autoagressão por confusão) impede o início da carga e preserva o PP.
+  - Imobilização no Turno 2 (congelamento, sono, paralisia plena ou autoagressão por confusão) cancela a execução e limpa `twoTurnMove = null`.
+  - Nocaute, troca forçada ou saída de campo limpam `twoTurnMove = null`.
+  - Sleep Talk exclui estritamente os cinco golpes de dois turnos (`!constants.isTwoTurnMove(m)`).
+- IA e Avaliador:
+  - `BattleEvaluator`: no turno de carga reporta `expectedDamage = 0`, `isTwoTurnMove = true`, `chargingTurn = true`, `projectedDamage > 0` e `guaranteedKo / possibleKo = false`. Contra defensor em semi-invulnerabilidade, zera dano esperado de golpes que não atingem o estado e calcula bônus canônico (2x) para exceções válidas.
+  - `BattleAI`: bloqueia a seleção no turno 2 forçando a ação de continuação com `reason: 'TWO_TURN_LOCKED'`. Pontua golpes de carga com metade do dano projetado (`projectedDamage / 2`).
+- Interface e Apresentação:
+  - `BattlePresentationMapper` mapeia eventos `MOVE_PREPARED` e `MOVE_MISSED` com `reason: 'SEMI_INVULNERABLE'`.
+  - `BattleUiDomAdapter` renderiza descrições narrativas para cada anúncio de preparação e exibe "O alvo está fora de alcance!" ao errar contra semi-invulnerabilidade.
+  - `BattleView` renderiza botão de continuação obrigatória (`btnTwoTurnContinue`) com rótulo "Executar [GOLPE]" e desativa botão e modal de troca voluntária durante a carga.
+- Customização da Campanha:
+  - Dugtrio (#51): recebe `["dig"]`; total de espécies com extras aumenta de 489 para 491.
+  - Spoink (#325): recebe `["bounce"]`.
+  - Pidgeot (#18): substitui `swift` por `fly` (`["wing-attack", "fly"]`).
+  - Wailord (#321): substitui `hyper-voice` por `dive` (`["hydro-pump", "dive"]`).
+  - Exeggutor (#103): substitui `strength` por `solar-beam` (`["power-whip", "solar-beam"]`).
+  - Catálogo offline regenerado: **491 espécies com extras (+2), 97 definições seguras (+5), 1.347 combatentes aptos, 4 golpes fixos preservados e 450 draft species intactas**.
+- Validação:
+  - 25 testes novos em `tests/battle/p6-two-turn.test.js`.
+  - Suíte completa: **1.906 testes aprovados, 38 suítes, zero falhas/cancelados/ignorados; saída 0**.
+  - Auditoria P4: 330 conhecidos, 274 FULL (+4), 56 PARTIAL (-1), zero pendências P4.
+  - Auditoria P5: 60 pilotos, 57 FULL, 3 PARTIAL com dependências externas.
+  - Auditoria draft da campanha aprovada (450 espécies íntegras); `git diff --check` aprovado com código 0.
+- **P6 permanece em andamento**: aprisionamento/persistência, armadilhas de entrada, barreiras e trocas especiais continuam pendentes. Nenhum commit, push ou deploy realizado.
+
+---
+
 ## Atualização — 31/10/2026: P6 em andamento — Protect (#182) e Detect (#197) — Revisão e Correções Canônicas
 
 - Implementados Protect (#182, Normal/Status, PP 10) e Detect (#197, Fighting/Status, PP 5), ambos com precisão null, prioridade +4, alvo 'self', volatile 'protect' e suporte FULL.

@@ -104,8 +104,7 @@
     'prismatic-laser': Object.freeze({ name: 'prismatic-laser', category: 'UNSUPPORTED_RECHARGE', reason: 'RECHARGE_TURN_REQUIRED' }),
     'eternabeam': Object.freeze({ name: 'eternabeam', category: 'UNSUPPORTED_RECHARGE', reason: 'RECHARGE_TURN_REQUIRED' }),
 
-    // Two-turn charge or semi-invulnerability
-    'solar-beam': Object.freeze({ name: 'solar-beam', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
+    // Two-turn charge or semi-invulnerability (Remaining unimplemented moves)
     'solar-blade': Object.freeze({ name: 'solar-blade', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
     'sky-attack': Object.freeze({ name: 'sky-attack', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
     'razor-wind': Object.freeze({ name: 'razor-wind', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
@@ -115,10 +114,6 @@
     'geomancy': Object.freeze({ name: 'geomancy', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
     'meteor-beam': Object.freeze({ name: 'meteor-beam', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
     'electro-shot': Object.freeze({ name: 'electro-shot', category: 'UNSUPPORTED_TWO_TURN', reason: 'CHARGE_TURN_REQUIRED' }),
-    'fly': Object.freeze({ name: 'fly', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
-    'dig': Object.freeze({ name: 'dig', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
-    'dive': Object.freeze({ name: 'dive', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
-    'bounce': Object.freeze({ name: 'bounce', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
     'phantom-force': Object.freeze({ name: 'phantom-force', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
     'shadow-force': Object.freeze({ name: 'shadow-force', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
     'sky-drop': Object.freeze({ name: 'sky-drop', category: 'UNSUPPORTED_TWO_TURN', reason: 'SEMI_INVULNERABLE_TURN' }),
@@ -351,6 +346,12 @@
     isProtectMove: battleConstants.isProtectMove,
     PROTECT_BYPASSING_MOVES: battleConstants.PROTECT_BYPASSING_MOVES,
     isProtectBypassingMove: battleConstants.isProtectBypassingMove,
+    TWO_TURN_MOVES: battleConstants.TWO_TURN_MOVES,
+    SEMI_INVULNERABLE_STATES: battleConstants.SEMI_INVULNERABLE_STATES,
+    isTwoTurnMove: battleConstants.isTwoTurnMove,
+    getTwoTurnMove: battleConstants.getTwoTurnMove,
+    canHitSemiInvulnerable: battleConstants.canHitSemiInvulnerable,
+    getSemiInvulnerableDamageMultiplier: battleConstants.getSemiInvulnerableDamageMultiplier,
     getSecondaryEffect: battleConstants.getSecondaryEffect,
     isStatusConditionImmune: battleConstants.isStatusConditionImmune,
     isEligibleForStatusCondition: battleConstants.isEligibleForStatusCondition

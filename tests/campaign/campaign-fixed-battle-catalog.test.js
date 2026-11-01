@@ -203,6 +203,7 @@ test('browser script order exposes fixed moves to a campaign battle started afte
   const scripts = [
     'expanded-pokemon-catalog.js',
     'battle/p5-mechanics.js',
+    'battle/p6-mechanics.js',
     'battle/battle-constants.js',
     'battle/type-chart.js',
     'battle/type-effectiveness.js',

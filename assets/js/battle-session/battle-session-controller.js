@@ -149,10 +149,15 @@
   }
 
   function prepareMultiHit(active, action, rng) {
+    if(active.lockedMove)action.moveId=active.lockedMove.id;
+    if(active.twoTurnMove)action.moveId=active.twoTurnMove.id;
+    const p6move=active.moves.find(m=>m.id===action.moveId);
+    if(battleConstants.P6.binding.includes(p6move?.id))action.bindingDuration=rng.rollBindingDuration?.()??4;
+    if(battleConstants.P6.rampage.includes(p6move?.id)){action.lockedDuration=rng.rollLockedDuration?.()??2;action.confusionDuration=rng.rollConfusionDuration?.()??3;}
     if(active.rechargeMoveId)return;
     let move = active.moves.find(m => m.id === action.moveId);
     if (move?.id === 214) {
-      const candidates = active.moves.filter(m => m.id !== 214 && ![117,690,704].includes(m.id) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
+      const candidates = active.moves.filter(m => m.id !== 214 && ![117,264,690,704].includes(m.id) && !battleConstants.isTwoTurnMove(m) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
       move = candidates[action.sleepTalkChoice ?? 0];
     }
     if(move?.id===149)action.psywaveRoll=rng.rollPsywave?.()??100;
@@ -168,7 +173,7 @@
 
   function prepareSleepCall(active, action, targetAction, rng){
     if(active.rechargeMoveId || action?.moveId!==214)return;
-    const candidates=active.moves.filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
+    const candidates=active.moves.filter(m=>m.id!==214&&![117,264,690,704].includes(m.id)&&!battleConstants.isTwoTurnMove(m)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
     if(!candidates.length)return;
     if (action.sleepTalkChoice === undefined) {
       action.sleepTalkChoice = rng.rollCalledMove?.(candidates.length) ?? 0;
@@ -183,6 +188,8 @@
         action.protectRoll = rng.rollProtect ? rng.rollProtect(denom) : 1;
       }
     }
+    if(battleConstants.P6.binding.includes(move.id))action.bindingDuration=rng.rollBindingDuration?.()??4;
+    if(battleConstants.P6.rampage.includes(move.id)){action.lockedDuration=rng.rollLockedDuration?.()??2;action.confusionDuration=rng.rollConfusionDuration?.()??3;}
     prepareCompoundSecondary(move,action,rng);
     if(canInflict(move,'paralysis'))targetAction.statusRoll??=rng.rollStatus?.()??100;
     if(canInflict(move,'freeze'))targetAction.thawRoll??=rng.rollThaw?.()??100;
@@ -649,7 +656,7 @@
      * @param {number} targetPokemonId - ID do Pokémon da reserva a entrar em campo.
      */
     async submitPlayerSwitch(targetPokemonId) {
-      if(this.battleState && this.engine.getActiveCombatant(this.battleState,'player').rechargeMoveId)return;
+      if(this.battleState && battleConstants.P6.switchBlocked(this.battleState,'player'))return;
       if (this.isResolving) return;
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
 
@@ -761,7 +768,7 @@
 
         // Se o oponente também estiver com o ativo nocauteado, resolve ambos
         const enemyActive = this.battleState.enemy.team[this.battleState.enemy.activeIndex];
-        if (enemyActive.currentHp === 0) {
+        if (enemyActive.currentHp === 0 || this.battleState.pendingPivot?.role==='enemy') {
           const aiRepl = this.ai.chooseReplacement(this.battleState, 'enemy', { strategy: 'SMART' });
           replacementActions.enemy = { targetPokemonId: aiRepl.targetPokemonId };
         }
@@ -834,13 +841,13 @@
         const playerActive = this.battleState.player.team[this.battleState.player.activeIndex];
         const enemyActive = this.battleState.enemy.team[this.battleState.enemy.activeIndex];
 
-        if (playerActive.currentHp === 0) {
+        if (playerActive.currentHp === 0 || this.battleState.pendingPivot?.role==='player') {
           // Jogador precisa escolher substituto
           this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_REPLACEMENT, { battleState: this.battleState });
           return;
         }
 
-        if (enemyActive.currentHp === 0) {
+        if (enemyActive.currentHp === 0 || this.battleState.pendingPivot?.role==='enemy') {
           // Inimigo precisa de substituto (automático via SMART AI)
           await this.handleEnemyReplacement();
           return;
