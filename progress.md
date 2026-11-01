@@ -2,6 +2,16 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: equipes do Super e Shadow atualizadas
+
+- Ambos os chefes passam a usar Eternatus Eternamax, Calyrex Cavaleiro Espectral e Zacian Coroado, selecionados pela análise do motor atual; SUPER_TEAM e SHADOW_TEAM são definições independentes.
+- Configuração exclusiva por encontro: Black Sludge, Choice Specs, Choice Band e Behemoth Blade no Zacian. Pokémon do jogador, Mewtwo e demais provas mantêm seus próprios conjuntos.
+- Prévias do mapa/picker e leitura tática alinhadas ao time e aos golpes reais; Shadow mantém aura e Final Stand.
+- Migração aditiva preserva Arceus/Eternatus/Mewtwo recrutados, recompensas pendentes antigas, preferências e formas dos novos chefes capturadas antes da alteração. Quem já possui as três opções pode continuar após vencer sem duplicar o elenco.
+- Criado `docs/roadmap-boss-abilities.md`: Pressure, Intrepid Sword e As One (Unnerve + Grim Neigh) permanecem pendentes; o roteiro define comportamento, integração e regressões.
+- Validação: 2.743 testes aprovados em 39 suítes, zero falhas, incluindo 13 novas regressões; auditorias de learnsets e conclusão do roadmap aprovadas. Prévia da nova equipe conferida em navegador.
+- Alterações locais, ainda sem commit ou publicação.
+
 ## Atualização — 01/11/2026: Desafio Mewtwo após Shadow
 
 - Novo desafio 3x3 com Mewtwo (150), Mega Mewtwo X (10043) e Mega Mewtwo Y (10044), disponível somente após derrotar Shadow.

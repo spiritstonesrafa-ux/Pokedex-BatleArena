@@ -46,19 +46,6 @@
     description: `Enfrente ${trainerName}, ${trainerTitle}.`, team: Object.freeze(team.map(record))
   })));
   const MASTER_SPECIES = Object.freeze(MASTERS.flatMap(master => master.team));
-  const SUPER_TEAM = Object.freeze([493,890,150].map(record));
-  const SUPER_AUDIT = Object.freeze([
-    {id:493,name:'arceus',bst:720,attack:120,specialAttack:120,speed:120,selected:true,reason:'GLOBAL_RANK_1'},
-    {id:890,name:'eternatus',bst:690,attack:85,specialAttack:145,speed:130,selected:true,reason:'GLOBAL_RANK_2'},
-    {id:150,name:'mewtwo',bst:680,attack:110,specialAttack:154,speed:130,selected:true,reason:'GLOBAL_RANK_3'},
-    {id:384,name:'rayquaza',bst:680,attack:150,specialAttack:150,speed:95,selected:false,reason:'LOWER_TIEBREAK'},
-    {id:249,name:'lugia',bst:680,attack:90,specialAttack:90,speed:110,selected:false,reason:'LOWER_TIEBREAK'},
-    {id:250,name:'ho-oh',bst:680,attack:130,specialAttack:110,speed:90,selected:false,reason:'LOWER_TIEBREAK'},
-    {id:382,name:'kyogre',bst:670,attack:100,specialAttack:150,speed:90,selected:false,reason:'LOWER_BST'},
-    {id:383,name:'groudon',bst:670,attack:150,specialAttack:100,speed:90,selected:false,reason:'LOWER_BST'},
-    {id:289,name:'slaking',bst:670,attack:160,specialAttack:95,speed:100,selected:false,reason:'LOWER_BST'},
-    {id:635,name:'hydreigon',bst:600,attack:105,specialAttack:125,speed:98,selected:false,reason:'LOWER_BST'}
-  ].map(Object.freeze));
   const trialRecords = Object.freeze([
     {id:145,name:'zapdos',types:['electric','flying'],bst:580,generation:1,sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/145.png',legendary:true,mythical:false},
     {id:245,name:'suicune',types:['water'],bst:580,generation:2,sprite:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/245.png',legendary:true,mythical:false},
@@ -77,6 +64,14 @@
   const originalById = {...Static.byId,...WildSpecial.byId,...trialById};
   const EXPANSION_SPECIES = Object.freeze(Expanded.entries.filter(entry => !originalById[entry.id]));
   const allById = Object.freeze({...Expanded.byId,...originalById});
+  const SUPER_TEAM = Object.freeze([10190,10194,10188].map(id => allById[id]));
+  const SHADOW_TEAM = Object.freeze([10190,10194,10188].map(id => allById[id]));
+  // Preserve recruited Pokémon and pending rewards from the original boss.
+  const LEGACY_SUPER_REWARD_IDS = Object.freeze([493,890,150]);
+  const SUPER_REWARD_IDS = Object.freeze([...LEGACY_SUPER_REWARD_IDS,...SUPER_TEAM.map(p => p.id)]);
+  const SUPER_AUDIT = Object.freeze(SUPER_TEAM.map(p => Object.freeze({
+    id:p.id,name:p.name,bst:p.bst,selected:true,reason:'CAMPAIGN_ENGINE_TEAM_BENCHMARK'
+  })));
   const draftSet = new Set(DRAFT.map(entry => entry.id));
   const EXPLORATION_SPECIES = Object.freeze(Object.values(allById).filter(entry =>
     !draftSet.has(entry.id)));
@@ -86,7 +81,7 @@
   const MEWTWO_TRIAL_TEAM = Object.freeze([150,10043,10044].map(id => allById[id]));
   const CELESTIAL_TRIAL_TEAM = Object.freeze([889,791,487].map(id => allById[id]));
   const api = Object.freeze({
-    DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
+    DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SHADOW_TEAM, SUPER_REWARD_IDS, LEGACY_SUPER_REWARD_IDS, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
     EXPANSION_SPECIES, EXPLORATION_SPECIES,
     WILD_SPECIAL_SPECIES: Object.freeze([...WildSpecial.entries, ...Expanded.entries.filter(entry =>
       (entry.legendary || entry.mythical) && !WildSpecial.byId[entry.id])]),

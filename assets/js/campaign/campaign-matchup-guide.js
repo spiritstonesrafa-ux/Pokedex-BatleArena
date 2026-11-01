@@ -4,7 +4,7 @@
     ? require('../battle/type-effectiveness.js') : window.PBABattle.TypeEffectiveness;
   const Battle = typeof module !== 'undefined' && module.exports
     ? require('../battle/battle-constants.js') : window.PBABattle;
-  const TEAMS = { MEWTWO_TRIAL:'MEWTWO_TRIAL_TEAM', SUPER: 'SUPER_TEAM', SHADOW: 'SUPER_TEAM',
+  const TEAMS = { MEWTWO_TRIAL:'MEWTWO_TRIAL_TEAM', SUPER: 'SUPER_TEAM', SHADOW: 'SHADOW_TEAM',
     LEGENDARY_TRIAL: 'LEGENDARY_TRIAL_TEAM', MYTHICAL_TRIAL: 'MYTHICAL_TRIAL_TEAM',
     TITANS_TRIAL: 'TITANS_TRIAL_TEAM', CELESTIAL_TRIAL: 'CELESTIAL_TRIAL_TEAM' };
   const cap = value => String(value || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -26,7 +26,7 @@
     if(Battle.isLevelDamageMove?.(move)||Battle.isConstantDamageMove?.(move)||Battle.isFractionalDamageMove?.(move)||(Battle.P5?.get(move)&&Battle.P5.fixed(move)))return value===0?0:1;
     return value;
   }
-  function buildReport({ selected = [], opponents = [], fallbackById = {}, shadow = false }) {
+  function buildReport({ selected = [], opponents = [], fallbackById = {}, opponentById = fallbackById, shadow = false }) {
     const entries = selected.map(pokemon => {
       const source = fallbackById[pokemon.id];
       const moves = (source && Array.isArray(source.moves) ? source.moves : [])
@@ -38,7 +38,7 @@
         const attacks = offensiveMoves.map(move => ({ name: move.name, type: move.type,
           multiplier: moveMultiplier(move,pokemon,opponent.types) })).filter(x => x.multiplier !== null)
           .sort((a, b) => b.multiplier - a.multiplier || a.name.localeCompare(b.name));
-        const enemySource = fallbackById[opponent.id];
+        const enemySource = opponentById[opponent.id];
         const enemyMoves = enemySource && Array.isArray(enemySource.moves) ? enemySource.moves : [];
         const incomingCandidates = enemyMoves.length
           ? enemyMoves.filter(move => move.damageClass !== 'status')
@@ -63,7 +63,7 @@
         (a.first.incoming ? a.first.incoming.multiplier : Infinity) -
         (b.first.incoming ? b.first.incoming.multiplier : Infinity));
     const fullyFixed = entries.length > 0 && entries.every(entry => entry.moves.length >= 1 && entry.moves.length <= 4) &&
-      opponents.every(opponent => fallbackById[opponent.id]?.moves?.length === 4);
+      opponents.every(opponent => opponentById[opponent.id]?.moves?.length === 4);
     return { entries, opponents, covered, shadow, fullyFixed,
       suggestedLeader: selected.length > 1 && ranked.length ? ranked[0].entry.pokemon : null };
   }
@@ -129,6 +129,8 @@
         ...(kind === 'SHADOW' && this.manager.getShadowGuests ? this.manager.getShadowGuests() : [])];
       const selected = (this.pick || []).map(id => available.find(pokemon => pokemon.id === id)).filter(Boolean);
       const previewById = { ...fallbackById };
+      const fixed=typeof module!=='undefined'&&module.exports?require('./campaign-fixed-battle-catalog.js'):window.PBACampaign.CampaignFixedBattleCatalog;
+      const opponentById={...fallbackById,...fixed?.bossByKind?.[kind]};
       if (typeof this.manager.getEffectiveMoves === 'function') {
         for (const pokemon of selected) {
           if (previewById[pokemon.id]) previewById[pokemon.id] = {
@@ -139,7 +141,7 @@
       const anchor = this.container.querySelector('#pickerActionBar') || this.container.querySelector('#startCampaignBattle');
       if (anchor && anchor.insertAdjacentHTML) {
         anchor.insertAdjacentHTML('beforebegin', renderReport(buildReport({
-          selected, opponents, fallbackById: previewById, shadow: kind === 'SHADOW' })));
+          selected, opponents, fallbackById: previewById, opponentById, shadow: kind === 'SHADOW' })));
       }
       return result;
     }

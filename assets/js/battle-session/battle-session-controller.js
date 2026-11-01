@@ -346,7 +346,7 @@
           : null;
         const campaignInput = (ids, player = false) => (campaignMode||doublesMode)
           ? ids.map(id => fixedCatalog.byId[id]
-            ? { ...fixedCatalog.byId[id],
+            ? { ...(campaignMode&&!player?fixedCatalog.getOpponentSpecies(id,options.metadata?.kind):fixedCatalog.byId[id]),
               ...(doublesMode&&moveOptions&&fixedCatalog.byId[id].moves.length===4?{moves:[...new Map([...moveOptions.getPool(id).filter(m=>battleConstants.Completion.ids.includes(m.id)),...fixedCatalog.byId[id].moves].map(m=>[m.id,m])).values()].slice(0,4),campaignCustomMoves:true}:{}),
               ...(player&&options.playerBattlePreferences?.[id]?{battlePreference:options.playerBattlePreferences[id]}:{}),
               ...(player && moveOptions && options.playerMovePreferences?.[id]

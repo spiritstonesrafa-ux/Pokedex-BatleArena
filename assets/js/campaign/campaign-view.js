@@ -349,7 +349,7 @@
   if (!View) return;
   const C = window.PBACampaign;
   const cap = value => String(value).replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-  const team = C.SUPER_TEAM;
+  const team = C.SHADOW_TEAM;
   const preview = `<section class="opponent-team-preview shadow-team-preview" aria-label="Equipe adversária Shadow"><p class="eyebrow">EQUIPE ADVERSÁRIA</p><div class="opponent-team-preview__grid">${team.map(pokemon => `<article class="opponent-preview-card"><img src="${pokemon.sprite}" alt="${cap(pokemon.name)}"><strong>${cap(pokemon.name)}</strong><span>${pokemon.types.map(type => `<i class="type-chip type-${type}">${type}</i>`).join('')}</span><small>BST ${pokemon.bst}</small></article>`).join('')}</div></section>`;
   const portrait = () => C.renderTrainerAvatar(C.getSpecialTrainerVisual('SHADOW'), { size: 'LARGE', shape: 'PORTRAIT', decorative: true });
   const aura = '<aside class="shadow-aura-callout" role="note"><strong>AURA SOMBRIA</strong><span>Todos os ataques inimigos são no mínimo Super Efetivos.</span></aside>';
@@ -374,7 +374,7 @@
   const cap = value => String(value).replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
   const portrait = () => C.renderTrainerAvatar(C.getSpecialTrainerVisual('SHADOW'), { size: 'LARGE', shape: 'PORTRAIT', decorative: true });
   const aura = '<aside class="shadow-aura-callout" role="note"><strong>AURA SOMBRIA</strong><span>Todos os ataques inimigos são no mínimo Super Efetivos.</span></aside>';
-  const enemyPreview = () => `<section class="opponent-team-preview shadow-team-preview" aria-label="Equipe adversária Shadow"><p class="eyebrow">EQUIPE ADVERSÁRIA</p><div class="opponent-team-preview__grid">${C.SUPER_TEAM.map(pokemon => `<article class="opponent-preview-card"><img src="${pokemon.sprite}" alt="${cap(pokemon.name)}"><strong>${cap(pokemon.name)}</strong><span>${pokemon.types.map(type => `<i class="type-chip type-${type}">${type}</i>`).join('')}</span></article>`).join('')}</div></section>`;
+  const enemyPreview = () => `<section class="opponent-team-preview shadow-team-preview" aria-label="Equipe adversária Shadow"><p class="eyebrow">EQUIPE ADVERSÁRIA</p><div class="opponent-team-preview__grid">${C.SHADOW_TEAM.map(pokemon => `<article class="opponent-preview-card"><img src="${pokemon.sprite}" alt="${cap(pokemon.name)}"><strong>${cap(pokemon.name)}</strong><span>${pokemon.types.map(type => `<i class="type-chip type-${type}">${type}</i>`).join('')}</span></article>`).join('')}</div></section>`;
   const render = View.prototype.render;
   View.prototype.render = function () {
     const state = this.manager.getState();
@@ -761,5 +761,17 @@ if (typeof window !== 'undefined') {
    this.container.insertAdjacentHTML?.('beforeend',`<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">PÓS-SHADOW · NOVO DESAFIO</p><h2>As Três Faces de Mewtwo</h2><p>Enfrente Mewtwo, Mega Mewtwo X e Mega Mewtwo Y em uma batalha de equipe. Escolha uma das formas para seu elenco na primeira vitória.</p><strong>${progress.rewardClaimed?'Desafio concluído · Revanche disponível':'O Núcleo Psíquico está aberto.'}</strong></div><button id="postgameMewtwo" class="campaign-primary">${progress.rewardClaimed?'Reenfrentar Mewtwo':'Enfrentar Mewtwo'}</button><button id="postgameMap" class="campaign-secondary">Explorar a Região Final</button></section>`);
    const challenge=this.container.querySelector('#postgameMewtwo');if(challenge)challenge.onclick=()=>{this.pending={kind:'MEWTWO_TRIAL',id:'mewtwo'};this.pick=[];this.render();};
    const map=this.container.querySelector('#postgameMap');if(map)map.onclick=()=>{this.postgameMap=true;this.render();if(this.mapView){this.mapView.activeRegionId='region-endgame';this.mapView.selectedNodeId='node-mewtwo';this.mapView.render();}};
+ };
+})();
+
+/* Old exploration saves may already own every new Super reward. */
+(function(){
+ const View=window.PBACampaign?.CampaignView;if(!View)return;
+ const previous=View.prototype.renderReward;
+ View.prototype.renderReward=function(reward){
+   const candidates=this.manager.getRewardCandidates();
+   if(reward.kind!=='SUPER'||!candidates.length||candidates.some(c=>!c.owned))return previous.call(this,reward);
+   this.container.innerHTML='<section class="campaign-shell"><div class="campaign-hero"><p class="eyebrow">VITÓRIA RECONHECIDA</p><h2>Seu elenco já reúne os três campeões</h2><p>Você já possui todas as opções de recompensa. Seu elenco será preservado e o próximo desafio será liberado.</p></div><button id="superOwnedContinue" class="campaign-primary">Continuar jornada</button></section>';
+   this.container.querySelector('#superOwnedContinue').onclick=()=>this.manager.claimReward(candidates[0].id);
  };
 })();

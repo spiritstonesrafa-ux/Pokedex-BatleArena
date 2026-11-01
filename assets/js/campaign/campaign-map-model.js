@@ -387,7 +387,7 @@
       const badgeName = 'True Ending';
       const difficulty = 5;
       const difficultyLabel = 'EXTREMA';
-      const team = Catalog.SUPER_TEAM || [];
+      const team = Catalog.SHADOW_TEAM || [];
       const thumbnailSrc = visual?.thumbnailSrc || 'assets/images/trainers/thumbs/trainer-shadow.webp';
       const avatarSrc = visual?.avatarSrc || 'assets/images/trainers/trainer-shadow.png';
 

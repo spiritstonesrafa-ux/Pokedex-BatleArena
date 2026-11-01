@@ -92,7 +92,16 @@
     cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/' + species.id + '.ogg'
   })]));
   const byId = Object.freeze({ ...Object.fromEntries(Expanded.entries.filter(entry => entry.battleSupported).map(entry => [entry.id, entry])), ...Draft.byId, ...extras, ...wildSpecialBattle, ...statusOverrides });
-  const api = Object.freeze({ byId, extras: Object.freeze(extras) });
+  const bossTeams = {SUPER:Campaign.SUPER_TEAM,SHADOW:Campaign.SHADOW_TEAM};
+  const bossItems = {10190:'black-sludge',10194:'choice-specs',10188:'choice-band'};
+  const bossByKind = Object.freeze(Object.fromEntries(Object.entries(bossTeams).map(([kind,team]) =>
+    [kind,Object.freeze(Object.fromEntries(team.map(p => {
+      const species=byId[p.id];
+      const moves=p.id===10188?[Battle.P8.moves[781],...species.moves.slice(1)]:species.moves;
+      return [p.id,Object.freeze({...species,item:bossItems[p.id],moves:Object.freeze(moves.map(m=>Object.freeze({...m})) )})];
+    })))])));
+  const getOpponentSpecies=(id,kind)=>bossByKind[kind]?.[Number(id)]||byId[Number(id)];
+  const api = Object.freeze({ byId, extras: Object.freeze(extras), bossByKind, getOpponentSpecies });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
     window.PBACampaign = window.PBACampaign || {};

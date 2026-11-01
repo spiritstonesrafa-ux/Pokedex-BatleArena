@@ -586,8 +586,8 @@ test('Wild special encounters — expanded legendary and mythical candidates exc
   ].map(pokemon => pokemon.id));
   assert.equal(Wild.SPECIAL_POOL.length, 143);
   assert.equal(new Set(Wild.SPECIAL_POOL).size, 143);
-  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).legendary).length, 109);
-  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).mythical).length, 34);
+  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).legendary).length, 108);
+  assert.equal(Wild.SPECIAL_POOL.filter(id => Catalog.byId(id).mythical).length, 35);
   for (const id of Wild.SPECIAL_POOL) {
     const pokemon = Catalog.byId(id);
     assert.ok(!reserved.has(id), `${pokemon.name} cannot replace a final reward`);

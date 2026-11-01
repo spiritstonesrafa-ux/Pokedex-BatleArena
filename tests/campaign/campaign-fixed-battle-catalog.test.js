@@ -123,7 +123,7 @@ test('all 18 Masters, Super, Shadow and four Trials have fixed opposing teams', 
   }
 });
 
-test('campaign preparation uses identical fixed moves for both sides with zero API calls', async () => {
+test('campaign preparation uses fixed player presets and boss-specific opposing moves with zero API calls', async () => {
   let apiCalls = 0;
   const api = { getPokemonDetail: async () => { apiCalls++; throw Error('offline'); },
     getMoveDetail: async () => { apiCalls++; throw Error('offline'); } };
@@ -140,7 +140,7 @@ test('campaign preparation uses identical fixed moves for both sides with zero A
   for (const combatant of [...session.playerTeam, ...session.enemyTeam]) {
     assert.equal(combatant.moveLoadoutSource, MOVESET_LOADOUT_SOURCE.CAMPAIGN_FIXED_MOVESET);
     assert.deepEqual(combatant.moves.map(move => move.name),
-      Fixed.byId[combatant.id].moves.map(move => move.name));
+      (session.enemyTeam.includes(combatant)?Fixed.getOpponentSpecies(combatant.id,'SUPER'):Fixed.byId[combatant.id]).moves.map(move => move.name));
   }
   const report = Guide.buildReport({
     selected: playerIds.map(Campaign.byId), opponents: Campaign.SUPER_TEAM,

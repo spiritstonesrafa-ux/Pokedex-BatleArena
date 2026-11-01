@@ -215,6 +215,9 @@
 
   function sanitize(raw, campaign) {
     const clean = getDefaultState();
+    // These forms were valid wild encounters before becoming boss rewards.
+    const validSavedPoint=(pointId,id)=>allowedAtPoint(campaign,pointId,id)||
+      [10190,10194,10188].includes(id)&&Catalog.byId(id)?.types.some(type=>POINTS[pointId]?.types.includes(type));
     if (!raw || typeof raw !== 'object' || !Array.isArray(campaign?.startingRosterIds)
       || campaign.startingRosterIds.length !== 6) return clean;
     const coreOwned = new Set([
@@ -229,7 +232,7 @@
         const id = Number(value);
         const regionId = raw.captureRegions?.[id] || 'region-1';
         const pointId = raw.capturePoints?.[id] || defaultPointId(regionId);
-        if (isPointId(regionId, pointId) && allowedAtPoint(campaign, pointId, id)
+        if (isPointId(regionId, pointId) && validSavedPoint(pointId, id)
           && !coreOwned.has(id) && !seen.has(id)
           && getPointCaptureCount(clean, regionId, pointId) < getCaptureLimit(campaign, regionId, pointId)) {
           clean.capturedIds.push(id);
@@ -240,7 +243,7 @@
       }
     }
     const validPokemon = (regionId, pointId, value) => isPointId(regionId, pointId)
-      && allowedAtPoint(campaign, pointId, Number(value))
+      && validSavedPoint(pointId, Number(value))
       && !coreOwned.has(Number(value)) && !seen.has(Number(value));
     const validEncounterId = value => typeof value === 'string' && value.length > 0 && value.length < 100;
     const pending = raw.pendingCapture;
@@ -261,7 +264,7 @@
       const regionId = raw.result.regionId || 'region-1';
       const pointId = raw.result.pointId || defaultPointId(regionId);
       const id = Number(raw.result.pokemonId);
-      if (isPointId(regionId, pointId) && allowedAtPoint(campaign, pointId, id)
+      if (isPointId(regionId, pointId) && validSavedPoint(pointId, id)
         && (raw.result.status !== 'CAUGHT'
           || (seen.has(id) && clean.captureRegions[id] === regionId && clean.capturePoints[id] === pointId))) {
         clean.result = { status: raw.result.status, pokemonId: id, regionId, pointId };
