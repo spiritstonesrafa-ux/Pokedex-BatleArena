@@ -685,8 +685,8 @@ test('P6 Campaign: Dugtrio, Spoink, Pidgeot, Wailord and Exeggutor receive curat
   const extras = CampaignOptionsCatalog.byId;
   const fixed = CampaignFixedCatalog.byId;
 
-  // Species count after P6 closure is 538
-  assert.equal(Object.keys(extras).length, 538);
+  // Species count after P6 closure is 542
+  assert.equal(Object.keys(extras).length, 542);
 
   // Dugtrio (#51) receives dig
   assert.ok(extras[51].some(m => m.id === 91 && m.name === 'dig'));

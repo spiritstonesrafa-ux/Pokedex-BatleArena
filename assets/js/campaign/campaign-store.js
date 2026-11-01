@@ -37,3 +37,15 @@
  Store.sanitize=raw=>{const clean=previous(raw);clean.battlePreferences={};const owned=new Set([...clean.startingRosterIds,...Object.values(clean.challenges).map(x=>x.rewardPokemonId),clean.superTrainer.rewardPokemonId,...Object.values(clean.endgameTrials).map(x=>x.rewardPokemonId),...(clean.wild?.capturedIds||[])].filter(Boolean));
  if(raw?.battlePreferences&&typeof raw.battlePreferences==='object'&&!Array.isArray(raw.battlePreferences))for(const [id,value]of Object.entries(raw.battlePreferences)){if(!owned.has(Number(id)))continue;const pref=Rules.P7.validatePreference(+id,value);if(pref)clean.battlePreferences[id]=pref;}return clean;};
 })();
+
+/* P8: only a canonical, sketchable move belonging to owned Smeargle is persisted. */
+(function(){
+const Store=typeof module!=='undefined'&&module.exports?module.exports:window.PBACampaign.CampaignStore;
+const Rules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+const Options=typeof module!=='undefined'&&module.exports?require('./campaign-move-options.js'):window.PBACampaign.CampaignMoveOptions;
+const previous=Store.sanitize,defaults=Store.getDefaultState;
+Store.getDefaultState=()=>({...defaults(),sketchMoves:{}});
+Store.sanitize=raw=>{const clean=previous(raw);clean.sketchMoves={};const owned=[...clean.startingRosterIds,...Object.values(clean.challenges).map(n=>n.rewardPokemonId),clean.superTrainer.rewardPokemonId,...Object.values(clean.endgameTrials).map(n=>n.rewardPokemonId),...(clean.wild?.capturedIds||[])].filter(Boolean);
+if(owned.includes(235)&&Number.isInteger(raw?.sketchMoves?.[235])&&Rules.P8.canSketch(Rules,raw.sketchMoves[235]))clean.sketchMoves[235]=raw.sketchMoves[235];
+clean.movePreferences=Options?.sanitizePreferences?.(raw?.movePreferences,owned,clean.sketchMoves)||clean.movePreferences;return clean;};
+})();

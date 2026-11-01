@@ -17,6 +17,7 @@
 
     async start(kind, id, teamIds, options) {
       const config = this.manager.getBattleConfig(kind, id, teamIds, options);
+      config.playerSketchMoves=this.manager.getSketchMovesForTeam?.(config.playerTeamIds)||{};
       config.playerBattlePreferences = this.manager.getBattlePreferencesForTeam?.(config.playerTeamIds)||{};
       config.playerMovePreferences = this.manager.getMovePreferencesForTeam?.(config.playerTeamIds) || {};
       await this.session.prepareBattle(config);

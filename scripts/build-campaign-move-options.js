@@ -23,6 +23,7 @@ const SIMPLE_MOVES = new Set([
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
   ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
+  ...Object.values(BattleConstants.P8.moves).filter(m=>m.id!==723).map(m=>m.name),
   ...Object.values(BattleConstants.P7.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>m.name),
   ...Object.values(BattleConstants.P6.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>m.name),
   ...Object.values(BattleConstants.RECHARGE_MOVES).map(m=>m.name),
@@ -66,6 +67,7 @@ const PILOT_P3_MOVES = new Set([
 ]);
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
+  ...Object.fromEntries(Object.values(BattleConstants.P8.moves).filter(m=>m.id!==723).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P7.moves).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P6.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>[m.name,m])),
@@ -456,6 +458,11 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   649: ["techno-blast"],
   773: ["multi-attack"],
   10172: ["chilly-reception"],
+  // P8: legal learnsets and crowned signature replacements; Z exists only at activation.
+  53: ["tera-blast"],
+  10187: ["aura-wheel"],
+  10188: ["behemoth-blade"],
+  10189: ["behemoth-bash"],
 
 });
 

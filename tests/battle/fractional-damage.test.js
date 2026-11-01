@@ -82,7 +82,7 @@ for(const [species,id] of [[20,162],[785,717],[1003,877]])test(`Fractional ${id}
 });
 test('Fractional: aliases, fixed damage and other null-power mechanics remain distinct',()=>{
  assert.equal(C.getMoveCapability('nature-s-madness').id,717);for(const id of [49,82,69,101])assert.equal(C.isFractionalDamageMove(move(id)),false);
- assert.equal(C.getMoveCapability(449).supportLevel,'FULL');assert.equal(C.getMoveCapability(851).supportLevel,'BLOCKED');
+ assert.equal(C.getMoveCapability(449).supportLevel,'FULL');assert.equal(C.getMoveCapability(851).supportLevel,'FULL');
 });
 for(const id of ids)for(const called of [false,true])test(`Fractional ${id}: real session ${called?'Sleep Talk':'enemy attack during player switch'}`,async()=>{
  const p=[mon(1,called?[move(214),move(id)]:[move(14)]),mon(3),mon(5)],e=[mon(2,[move(called?14:id)]),mon(4),mon(6)],events=[];

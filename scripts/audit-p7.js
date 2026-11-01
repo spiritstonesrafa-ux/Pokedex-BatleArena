@@ -8,7 +8,7 @@ for(const [id,abilities]of Object.entries(P.Data.byPokemon)){assert.ok(Number(id
 const available=new Set(Object.keys(Fixed.byId).flatMap(id=>{const pool=Options.getPool(+id);assert.ok(pool.length<=6);return pool.map(m=>m.id)}));
 for(const m of Object.values(P.moves)){assert.ok(C.validateMoveData(m),m.name);assert.ok(available.has(m.id),m.name);assert.ok(['FULL','PARTIAL'].includes(C.getMoveCapability(m).supportLevel));}
 const unresolved=Object.values(C.CANONICAL_MOVE_DEFINITIONS).filter(m=>m.knownPending.some(p=>p.includes('PHASE_P7')));assert.deepEqual(unresolved,[]);
-for(const id of [723,851])assert.equal(C.getMoveCapability(id).supportLevel,'BLOCKED');
+for(const id of [723,851])assert.equal(C.getMoveCapability(id).supportLevel,'FULL','P8 delivered '+id);
 assert.ok(C.getMoveCapability(856).knownPending.includes('COMMANDER_DOUBLES_OUT_OF_SCOPE'));
 const partial=Object.values(P.moves).filter(m=>C.getMoveCapability(m).supportLevel==='PARTIAL').map(m=>m.id);
 assert.deepEqual(partial,[13,143,856]);

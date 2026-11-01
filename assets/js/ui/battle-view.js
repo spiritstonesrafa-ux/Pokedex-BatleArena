@@ -36,6 +36,7 @@
     156: { short: 'RECUPERAÇÃO', move: 'recupera HP e adormece o usuário' },
     214: { short: 'DURANTE O SONO', move: 'usa outro golpe enquanto dorme' },
     281: { short: 'SONOLÊNCIA', move: 'adormece o alvo ao fim do próximo turno' },
+    743: { short: 'PROTEÇÃO MAX', move: 'bloqueia ataques neste turno' },
     182: { short: 'PROTEÇÃO', move: 'bloqueia ataques recebidos neste turno' },
     197: { short: 'PROTEÇÃO', move: 'bloqueia ataques recebidos neste turno' }
   };
@@ -516,15 +517,19 @@
 
       const fieldNames={spikes:'Espinhos',toxicSpikes:'Espinhos venenosos',stealthRock:'Pedras de entrada',stickyWeb:'Teia pegajosa',reflect:'Barreira física',lightScreen:'Barreira especial',safeguard:'Proteção contra condições',mist:'Névoa protetora',auroraVeil:'Véu protetor'};
       const fieldSummary=role=>Object.entries(battleState.p6Sides?.[role]||{}).filter(([key,value])=>value&&fieldNames[key]).map(([key,value])=>fieldNames[key]+(key==='spikes'||key==='toxicSpikes'?' ×'+value:'')).join(' · ');
-      const p7Names={sun:'Sol intenso',rain:'Chuva',sand:'Tempestade de areia',snow:'Neve',electric:'Terreno elétrico',grassy:'Terreno de grama',misty:'Terreno de névoa',psychic:'Terreno psíquico'};
+      const p7Names={sun:'Sol intenso',rain:'Chuva',sand:'Tempestade de areia',snow:'Neve',hail:'Granizo',electric:'Terreno elétrico',grassy:'Terreno de grama',misty:'Terreno de névoa',psychic:'Terreno psíquico'};
       const p7Field=['weather','terrain'].filter(k=>battleState[k]).map(k=>p7Names[battleState[k].id]+(k==='weather'&&!PowerRules.P7.fieldWeather(battleState)?' (efeito suspenso)':'')+' · '+battleState[k].turns+' turnos').join(' / ');
-      const p7Loadout=[playerActive,enemyActive].map(m=>m.name+': '+(m.ability||'sem habilidade')+(m.ability&&!PowerRules.P7.abilityNames.includes(m.ability)?' (efeito pendente)':'')+(m.abilitySuppressed?' (suprimida)':'')+' · '+(m.item||'sem item')).join(' / ');
+      const p7Loadout=[playerActive,enemyActive].map(m=>m.name+(m.dynamax?' [Dynamax · '+m.dynamax.turns+' turnos]':m.tera?' [Tera '+m.tera+']':'')+(m.transformedName?' → '+m.transformedName:'')+': '+(m.ability||'sem habilidade')+(m.ability&&![...PowerRules.P7.abilityNames,...PowerRules.P8.abilityNames].includes(m.ability)?' (efeito pendente)':'')+(m.abilitySuppressed?' (suprimida)':'')+' · '+(m.item||'sem item')).join(' / ');
       const fieldHtml='<p role="status">'+p7Field+'</p><p>'+p7Loadout+'</p>'+['player','enemy'].map(role=>fieldSummary(role)?`<p role="status">${role==='player'?'Seu campo':'Campo adversário'}: ${fieldSummary(role)}</p>`:'').join('');
       // Botões de golpes do Pokémon ativo do jogador
-      const movesHtml = (PowerRules.P6.mustStruggle(playerActive)||PowerRules.P7.mustStruggle(playerActive)) ? `<button id="btnConsecutiveFallback" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(165);">Struggle · sem golpe disponível</button>` : playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.twoTurnMove ? `<button id="btnTwoTurnContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.twoTurnMove.id});"><span class="move-btn-name">Executar ${(playerActive.twoTurnMove.name || 'GOLPE').toUpperCase()}</span><span>Continuação obrigatória · sem gasto de PP</span></button>` : playerActive.lockedMove ? `<button id="btnRampageContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.lockedMove.id});">Continuar sequência</button>` : playerActive.moves.map(m => {
+      const activationOptions=['dynamax','tera'].filter(kind=>PowerRules.P8.canActivate(battleState,'player',kind));
+      const p8Activation=activationOptions.length?'<label>Mecânica especial <select id="p8Activation"><option value="">Batalhar normalmente</option>'+activationOptions.map(kind=>'<option value="'+kind+'" '+(kind===playerActive.specialMechanic?'selected':'')+'>'+(kind==='dynamax'?'Dynamax · três turnos':'Terastallizar · '+playerActive.teraType)+'</option>').join('')+'</select></label><p>Uma mecânica especial por equipe nesta batalha.</p>':'';
+      const zAvailable=PowerRules.P8.canActivate(battleState,'player','z');
+      const zButton=zAvailable?'<button class="move-action-btn" '+(isResolving?'disabled':'')+' onclick="window.battleSessionController.submitPlayerMove(722,{special: &quot;z&quot;});">Golpe Z · Light That Burns the Sky</button>':'';
+      const movesHtml = (PowerRules.P6.mustStruggle(playerActive)||PowerRules.P7.mustStruggle(playerActive)||PowerRules.P8.mustStruggle(playerActive)) ? `<button id="btnConsecutiveFallback" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(165);">Struggle · sem golpe disponível</button>` : playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.twoTurnMove ? `<button id="btnTwoTurnContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.twoTurnMove.id});"><span class="move-btn-name">Executar ${(playerActive.twoTurnMove.name || 'GOLPE').toUpperCase()}</span><span>Continuação obrigatória · sem gasto de PP</span></button>` : playerActive.lockedMove ? `<button id="btnRampageContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.lockedMove.id});">Continuar sequência</button>` : playerActive.moves.map(m => {
         const isZeroPp = m.currentPp === 0 && !(playerActive.bideState && m.id===117);
         const isDisabled = isResolving || isZeroPp || !PowerRules.P7.legalMove(playerActive,m) || Boolean(PowerRules.P6.consecutive.includes(m.id)&&playerActive.lastP6Move===m.id) || Boolean(playerActive.bideState && m.id!==117);
-        const displayType=PowerRules.P7.moveType(battleState,playerActive,m,PowerRules.P5.type(m,playerActive))||m.type;
+        const shown=PowerRules.P8.activeMove(playerActive,m,PowerRules);const displayType=PowerRules.P8.moveType(playerActive,shown,PowerRules.P7.moveType(battleState,playerActive,shown,PowerRules.P5.type(shown,playerActive)))||shown.type;
         const typeColor = `var(--type-${displayType}, #38bdf8)`;
 
         return `
@@ -533,17 +538,17 @@
             class="move-action-btn"
             style="--move-accent-color: ${typeColor};"
             ${isDisabled ? 'disabled' : ''}
-            onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${m.id});"
-            aria-label="${m.name}, Tipo ${displayType}, ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id])?.move || powerLabel(m) || `Poder ${m.power}`}, PP ${m.currentPp} de ${m.maxPp}"
+            onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${m.id},{special:document.getElementById('p8Activation')?.value||undefined});"
+            aria-label="${(playerActive.dynamax?PowerRules.P8.activeMove(playerActive,m,PowerRules):m).name}, Tipo ${displayType}, ${(statusBadge(shown.statusEffect) || SUPPORT_MOVE_LABELS[shown.id])?.move || powerLabel(shown) || `Poder ${shown.power}`}, PP ${m.currentPp} de ${m.maxPp}"
           >
             <div class="move-btn-top-row">
-              <span class="move-btn-name">${m.name}</span>
+              <span class="move-btn-name">${shown.name}</span>
               <span class="move-btn-type" style="background: ${typeColor};">${displayType}</span>
             </div>
             <div class="move-btn-bottom-row">
               <span class="move-btn-category">
-                <i class="${m.damageClass === 'special' ? 'fa-solid fa-burst' : 'fa-solid fa-fist-raised'}"></i>
-                ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]) ? `STATUS · ${(statusBadge(m.statusEffect) || SUPPORT_MOVE_LABELS[m.id]).short}` : powerLabel(m) || `${m.damageClass} (Pwr ${m.power})`}
+                <i class="${shown.damageClass === 'special' ? 'fa-solid fa-burst' : 'fa-solid fa-fist-raised'}"></i>
+                ${(statusBadge(shown.statusEffect) || SUPPORT_MOVE_LABELS[shown.id]) ? `STATUS · ${(statusBadge(shown.statusEffect) || SUPPORT_MOVE_LABELS[shown.id]).short}` : powerLabel(shown) || `${shown.damageClass} (Pwr ${shown.power})`}
               </span>
               <span id="ppLabel_${m.id}" class="move-btn-pp">PP ${m.currentPp}/${m.maxPp}</span>
             </div>
@@ -698,7 +703,7 @@
               </div>
 
               <div class="moves-action-grid" id="movesGrid">
-                ${movesHtml}
+                ${p8Activation}${zButton}${movesHtml}
               </div>
             </div>
           </div>

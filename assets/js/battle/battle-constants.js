@@ -191,6 +191,7 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const P8 = typeof module !== 'undefined' && module.exports ? require('./p8-mechanics.js') : window.PBAP8Mechanics;
   const P7 = typeof module !== 'undefined' && module.exports ? require('./p7-mechanics.js') : window.PBAP7Mechanics;
   const P6 = typeof module !== 'undefined' && module.exports ? require('./p6-mechanics.js') : window.PBAP6Mechanics;
   const P5 = typeof module !== 'undefined' && module.exports ? require('./p5-mechanics.js') : window.PBAP5Mechanics;
@@ -645,7 +646,7 @@
     182: Object.freeze({ id: 182, name: 'protect', type: 'normal', power: null, accuracy: null, pp: 10, damageClass: 'status', priority: 4, target: 'self' }),
     197: Object.freeze({ id: 197, name: 'detect', type: 'fighting', power: null, accuracy: null, pp: 5, damageClass: 'status', priority: 4, target: 'self' })
   });
-  const isProtectMove = move => Boolean(PROTECT_MOVES[Number(move?.id)] && (!move.name || move.name === PROTECT_MOVES[Number(move.id)].name)) || (typeof move?.name === 'string' && ['protect', 'detect'].includes(move.name.trim().toLowerCase()));
+  const isProtectMove = move => Boolean(move?.p8MaxGuard)||Boolean(PROTECT_MOVES[Number(move?.id)] && (!move.name || move.name === PROTECT_MOVES[Number(move.id)].name)) || (typeof move?.name === 'string' && ['protect', 'detect'].includes(move.name.trim().toLowerCase()));
 
   // Moves that bypass protection without breaking it (Hyper Drill #887)
   const PROTECT_BYPASSING_MOVES = Object.freeze([887]);
@@ -904,7 +905,8 @@
     291: Object.freeze({ id: 291, name: 'dive', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE'], knownPending: [], blockedReason: null, priority: 0 }),
     340: Object.freeze({ id: 340, name: 'bounce', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bounce'] }),
     ...P6.definitions,
-    ...P7.definitions
+    ...P7.definitions,
+    ...P8.definitions
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -1193,7 +1195,8 @@
     ...RECHARGE_MOVES,
     ...PROTECT_MOVES,
     ...P6.moves,
-    ...P7.moves
+    ...P7.moves,
+    ...P8.moves
   });
 
   const KNOWN_CATALOG_MOVES_BY_NAME = Object.freeze(
@@ -1591,7 +1594,8 @@
     'protect': PROTECT_MOVES[182],
     'detect': PROTECT_MOVES[197],
     ...P6.statusMoves,
-    ...P7.statusMoves
+    ...P7.statusMoves,
+    ...P8.statusMoves
   });
 
   function getSupportedStatusMove(move) {
@@ -1820,6 +1824,7 @@
     P5,
     P6,
     P7,
+    P8,
     RECHARGE_MOVES,
     isRechargeMove,
     PROTECT_MOVES,

@@ -278,6 +278,7 @@
         isProtected: false, stallCount: 0,
         ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,abilityIgnored:false,choiceLock:null,flashFire:false,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
+        lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
         types: normalizedTypes,
         maxHp: Math.floor(hp),
@@ -311,6 +312,7 @@
       if (raw.animatedPhoto && typeof raw.animatedPhoto === 'string') combatant.animatedPhoto = raw.animatedPhoto;
       if (raw.cry && typeof raw.cry === 'string') combatant.cry = raw.cry;
 
+      constants.P8.initMon(combatant,raw);
       return combatant;
     }
 
@@ -495,6 +497,7 @@
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
           previousActive.entryMoveAttempts = 0;
           constants.P7.leave(state,role,previousActive,constants,events);
+          constants.P8.restore(previousActive);
           constants.P6.leave(state,role,previousActive);
           previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.isProtected = false;
@@ -530,6 +533,7 @@
         if (constants.resetStatStages) {
           constants.resetStatStages(pokemon);
         }
+        constants.P8.restore(pokemon);
         constants.P6.leave(state,role,pokemon);
         pokemon.rechargeMoveId=null;pokemon.bideState=null;pokemon.twoTurnMove=null;pokemon.beakBlastReady=false;pokemon.shellTrapReady=false;pokemon.lastDirectHit=null;
         pokemon.isProtected = false;
@@ -555,7 +559,7 @@
           }
         }
         delete state.pendingPivot;delete state.pendingTurn;delete state.turnActions;
-        for(const role of ['player','enemy'])for(const mon of (state.version===2?state[role].team:[state[role]])){mon.twoTurnMove=null;mon.lockedMove=null;mon.bound=null;mon.trapped=null;mon.leechSeed=null;mon.isProtected=false;}
+        for(const role of ['player','enemy'])for(const mon of (state.version===2?state[role].team:[state[role]])){constants.P8.restore(mon,true);mon.twoTurnMove=null;mon.lockedMove=null;mon.bound=null;mon.trapped=null;mon.leechSeed=null;mon.isProtected=false;}
         state.winner = winner;
         state.status = winner === 'player' ? BATTLE_STATUS.PLAYER_WIN : BATTLE_STATUS.ENEMY_WIN;
         events.push({ type: BATTLE_EVENTS.BATTLE_ENDED, winner,
@@ -602,8 +606,8 @@
           pokemon.toxicStage = Math.min(15, Math.max(0, previousStage) + 1);
         }
         const residual = pokemon.statusCondition === 'toxic'
-          ? Math.max(1, Math.floor(pokemon.maxHp / 16)) * pokemon.toxicStage
-          : Math.max(1, Math.floor(pokemon.maxHp / (pokemon.statusCondition === 'poison' ? 8 : 16)));
+          ? Math.max(1, Math.floor(constants.P8.baseMaxHp(pokemon) / 16)) * pokemon.toxicStage
+          : Math.max(1, Math.floor(constants.P8.baseMaxHp(pokemon) / (pokemon.statusCondition === 'poison' ? 8 : 16)));
         const damage = Math.min(previousHp, residual);
         pokemon.currentHp -= damage;
         events.push({ type: BATTLE_EVENTS.STATUS_DAMAGE, target: role,
@@ -631,12 +635,13 @@
 
       constants.P6.endField(state,events);
       constants.P7.endTurn(state,constants,events);
+      constants.P8.endTurn(state,constants,events);
       // Limpeza de estados temporários de turno (Flinch: P4 & Protect: P6)
       for (const role of ['player', 'enemy']) {
         const mon = getActiveCombatant(state, role);
         if (mon) {
           mon.isFlinched = false;
-          mon.isProtected = false;
+          mon.isProtected = false;mon.maxGuard=false;
         }
       }
 
@@ -674,12 +679,13 @@
       actions=cloneData({...actions});
       for(const role of ['player','enemy'])if(actions[role])delete actions[role].pursuitIntercept;
       for(const role of ['player','enemy']){
-        if((constants.P6.mustStruggle(getActiveCombatant(nextState,role))||constants.P7.mustStruggle(getActiveCombatant(nextState,role))))actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:165,moveName:undefined};
+        if(actions[role]?.special!=='dynamax'&&(constants.P6.mustStruggle(getActiveCombatant(nextState,role))||constants.P7.mustStruggle(getActiveCombatant(nextState,role))||constants.P8.mustStruggle(getActiveCombatant(nextState,role))))actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:165,moveName:undefined};
         if(getActiveCombatant(nextState,role).rechargeMoveId)actions[role]={type:BATTLE_ACTIONS.RECHARGE};
         if(getActiveCombatant(nextState,role).bideState && actions[role]?.type!=='SWITCH')actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:117,moveName:undefined};
         if(getActiveCombatant(nextState,role).lockedMove)actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:getActiveCombatant(nextState,role).lockedMove.id,moveName:undefined};
         if(getActiveCombatant(nextState,role).twoTurnMove)actions[role]={...actions[role],type:BATTLE_ACTIONS.MOVE,moveId:getActiveCombatant(nextState,role).twoTurnMove.id,moveName:getActiveCombatant(nextState,role).twoTurnMove.name};
       }
+      for(const role of ['player','enemy'])constants.P8.prepare(nextState,role,actions[role],constants,events);
       nextState.turnActions = actions;
       for(const role of ['player','enemy'])for(const mon of (nextState.version===2?nextState[role].team:[nextState[role]])){
         mon.actedThisTurn=false;mon.damagedThisTurn=false;mon.lastDirectHit=null;mon.beakBlastReady=false;mon.shellTrapReady=false;mon.shellTrapTriggered=false;mon.focusLost=false;
@@ -825,6 +831,8 @@
       if(attacker.currentHp<=0&&!events.slice(start).some(e=>e.type===BATTLE_EVENTS.POKEMON_FAINTED&&e.target===attackerRole))resolveFaints(state,events,[attackerRole],'item');
       if(attacker.pivotAfterHit){const id=attacker.pivotAfterHit;delete attacker.pivotAfterHit;if(attacker.currentHp>0&&!['PLAYER_WIN','ENEMY_WIN'].includes(state.status))constants.P6.requestPivot(state,attackerRole,id,events);}
       const batch=events.slice(start);
+      constants.P8.remember(attacker,batch,attackerRole);
+      const lastSpecial=batch.findLast(e=>e.type==='MOVE_USED'&&e.actor===attackerRole&&e.damageClass!=='status')||batch.find(e=>e.type==='MOVE_USED'&&e.actor===attackerRole),specialMove=lastSpecial&&{...constants.KNOWN_CATALOG_MOVES[lastSpecial.moveId],id:lastSpecial.moveId,type:lastSpecial.moveType,damageClass:lastSpecial.damageClass};if(!calledMove)constants.P8.finishMove(attacker,specialMove||{},Boolean(specialMove&&!constants.P5.fixed(specialMove)&&!constants.isFractionalDamageMove(specialMove)&&!constants.isConstantDamageMove(specialMove)&&!constants.isLevelDamageMove(specialMove)&&batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.source===attackerRole&&e.damage>0)));
       const used=batch.find(e=>e.type===BATTLE_EVENTS.MOVE_USED && constants.isRechargeMove({id:e.moveId,name:e.moveName}));
       if(used && attacker.currentHp>0 && batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED && e.source===attackerRole && e.moveName===used.moveName && e.damage>0)){
         attacker.rechargeMoveId=used.moveId;
@@ -843,6 +851,7 @@
       const aborted=batch.some(e=>[BATTLE_EVENTS.STATUS_IMMOBILIZED,BATTLE_EVENTS.FLINCH_IMMOBILIZED,BATTLE_EVENTS.CONFUSION_DAMAGE].includes(e.type));
       const changes=batch.filter(e=>e.type===BATTLE_EVENTS.STAT_STAGE_CHANGED);
       if(attempted||aborted)attacker.lastMoveFailed=aborted||batch.some(e=>[BATTLE_EVENTS.MOVE_FAILED,BATTLE_EVENTS.MOVE_MISSED,BATTLE_EVENTS.STATUS_BLOCKED,BATTLE_EVENTS.CONFUSION_BLOCKED].includes(e.type))||batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.multiplier===0)||(changes.length>0&&changes.every(e=>e.appliedDelta===0)&&!batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED));
+      if(batch.some(e=>['TRANSFORMED','SKETCHED'].includes(e.reason)))attacker.lastMoveFailed=false;
       const usedP6=batch.find(e=>e.type===BATTLE_EVENTS.MOVE_USED&&e.actor===attackerRole);
       if(usedP6)attacker.lastP6Move=usedP6.moveId;
       if(usedP6&&constants.P6.rampage.includes(usedP6.moveId)&&attacker.currentHp>0&&batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.source===attackerRole&&e.damage>0)){
@@ -883,7 +892,7 @@
 
       // 1. Seleciona o golpe a ser executado
       let selectedMove;
-      const isStruggle=(constants.P6.mustStruggle(attacker)||constants.P7.mustStruggle(attacker));
+      const isStruggle=(constants.P6.mustStruggle(attacker)||constants.P7.mustStruggle(attacker)||constants.P8.mustStruggle(attacker));
       if(isStruggle)selectedMove={...constants.P6.struggle};
       else if (action && (action.moveId !== undefined || action.moveName !== undefined)) {
         selectedMove = attacker.moves.find(m =>
@@ -902,13 +911,15 @@
         throw new Error(`NO_USABLE_MOVES: "${attacker.name}" não possui golpes utilizáveis com PP disponível.`);
       }
 
+      const ppMove=selectedMove;
+      selectedMove=constants.P8.activeMove(attacker,selectedMove,constants);
       if(!calledMove && constants.P6.consecutive.includes(selectedMove.id)&&attacker.lastP6Move===selectedMove.id)throw new Error('ACTION_REJECTED: este golpe não pode ser usado consecutivamente.');
-      if(!calledMove && attacker.choiceLock && ['choice-band','choice-specs','choice-scarf'].includes(attacker.item)&&selectedMove.id!==attacker.choiceLock&&!isStruggle)throw new Error('ACTION_REJECTED: item Choice bloqueia outro golpe.');
+      if(!calledMove && !attacker.dynamax && attacker.choiceLock && ['choice-band','choice-specs','choice-scarf'].includes(attacker.item)&&selectedMove.id!==attacker.choiceLock&&!isStruggle)throw new Error('ACTION_REJECTED: item Choice bloqueia outro golpe.');
       if(!calledMove && attacker.item==='assault-vest'&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
-      const actualDamageClass = selectedMove.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')?'physical':selectedMove.damageClass;
+      const actualDamageClass = constants.P8.damageClass(attacker,selectedMove,constants);
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
       attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';
-      const actualDamageType=constants.P7.moveType(state,attacker,selectedMove,constants.P5.type(selectedMove,attacker));
+      const actualDamageType=constants.P8.moveType(attacker,selectedMove,constants.P7.moveType(state,attacker,selectedMove,constants.P5.type(selectedMove,attacker)));
       const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType};
       const continuingBide=Boolean(attacker.bideState);
       // Validação de PP
@@ -1226,17 +1237,17 @@
 
       // Consumo de PP (ocorre antes da resolução de dano, em hits e em misses)
       if(!calledMove && !continuingBide && !continuingTwoTurn && !continuingLocked && !isStruggle){
-      const previousPp = selectedMove.currentPp;
-      selectedMove.currentPp = Math.max(0, selectedMove.currentPp - 1);
+      const previousPp = ppMove.currentPp;
+      ppMove.currentPp = Math.max(0, ppMove.currentPp - 1);
 
       events.push({
         type: BATTLE_EVENTS.PP_CHANGED,
         actor: attackerRole,
-        moveId: selectedMove.id,
-        moveName: selectedMove.name,
+        moveId: ppMove.id,
+        moveName: ppMove.name,
         previousPp,
-        currentPp: selectedMove.currentPp,
-        maxPp: selectedMove.maxPp
+        currentPp: ppMove.currentPp,
+        maxPp: ppMove.maxPp
       });
 
       }
@@ -1299,7 +1310,7 @@
           return;
         }
 
-        attacker.isProtected = true;
+        attacker.isProtected = true;attacker.maxGuard=Boolean(selectedMove.p8MaxGuard);
         attacker.stallCount = Math.min(6, currentStallCount + 1);
         events.push({
           type: BATTLE_EVENTS.MOVE_PREPARED,
@@ -1324,8 +1335,8 @@
       }
 
       const isSelfTarget = selectedMove.target === 'self' || selectedMove.damageClass === 'status_self' || [14, 156, 214, 347, 182, 197].includes(selectedMove.id);
-      const bypassesProtect = constants.isProtectBypassingMove?.(selectedMove)||(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(selectedMove.id));
-      if (defender.isProtected && !isSelfTarget && selectedMove.target!=='foeSide' && !bypassesProtect) {
+      const bypassesProtect = Boolean([144,166].includes(selectedMove.id)||selectedMove.p8Max||selectedMove.p8Z)||constants.isProtectBypassingMove?.(selectedMove)||(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(selectedMove.id));
+      if ((defender.maxGuard&&!isSelfTarget&&selectedMove.target!=='foeSide') || (defender.isProtected && !isSelfTarget && selectedMove.target!=='foeSide' && !bypassesProtect)) {
         attacker.lastMoveFailed = true;
         events.push({
           type: BATTLE_EVENTS.MOVE_FAILED,
@@ -1361,6 +1372,7 @@
       const targetAction=state.turnActions?.[defenderRole];
       const targetMove=plannedMove(defender,targetAction);
       const p5Context={turn:state.turn,executing:true,targetAction,targetMove,faintCount:state.version===2?state[attackerRole].team.filter(m=>m.currentHp<=0).length:0};
+      const specialFailure=constants.P8.failure(attacker,defender,selectedMove,constants);if(specialFailure){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:specialFailure});return;}
       const p5Failure=constants.P5.get(selectedMove)?constants.P5.failure(selectedMove,attacker,defender,p5Context):null;
       if(p5Failure){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:p5Failure});return;}
       const fail = reason => events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveId:selectedMove.id,moveName:selectedMove.name,reason});
@@ -1374,7 +1386,7 @@
       }
       if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){attacker.stallCount=0;fail('REQUIRES_SLEEP');return;}
       if(selectedMove.id===214){
-        const candidates=attacker.moves.filter(m=>m.id!==214&&![117,264,690,704].includes(m.id)&&!constants.isTwoTurnMove(m)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
+        const candidates=attacker.moves.filter(m=>m.id!==214&&![117,166,264,690,704].includes(m.id)&&!constants.isTwoTurnMove(m)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
         if(!candidates.length){attacker.stallCount=0;fail('NO_CALLABLE_MOVE');return;}
         const index=action.sleepTalkChoice??0;
         if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
@@ -1416,6 +1428,7 @@
         return;
       }
 
+      if(constants.P8.action(state,attackerRole,selectedMove,constants,events))return;
       if(constants.P7.statusAction(state,attackerRole,selectedMove,constants,events))return;
       if(constants.P6.statusAction(state,attackerRole,selectedMove,action||{},constants,events))return;
       if(selectedMove.id===599&&state.p6Sides[defenderRole].mist){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,moveId:599,moveName:selectedMove.name,reason:'MIST'});return;}
@@ -1534,7 +1547,7 @@
       const isP5Fixed = Boolean(constants.P5.get(selectedMove) && constants.P5.fixed(selectedMove));
       const isFixedDamage = isLevelDamage || isConstantDamage || isFractionalDamage || isP5Fixed;
       const hasStab = attacker.types.includes(actualDamageType);
-      const stabMultiplier = (hasStab && !isFixedDamage && !isStruggle) ? (constants.P7.ability(attacker)==='adaptability'?2:constants.BATTLE_CONFIG.STAB_MULTIPLIER) : 1;
+      const stabMultiplier = !isFixedDamage&&!isStruggle?constants.P8.stab(attacker,actualDamageType,constants):1;
 
       events.push({
         type: BATTLE_EVENTS.STAB_RESOLVED,
@@ -1551,9 +1564,9 @@
       let defenderTypesList = defender.types;
 
       if (constants.isDualTypeEffectiveness?.(selectedMove)) {
-        const primaryEff = TypeEffectiveness.calculate('fighting', defender.types);
-        const secondaryEff = TypeEffectiveness.calculate('flying', defender.types);
-        const combinedMultiplier = primaryEff.multiplier * secondaryEff.multiplier;
+        const primaryEff = constants.P8.effectiveness('fighting',defender,TypeEffectiveness,attacker,null,constants);
+        const secondaryEff = constants.P8.effectiveness('flying',defender,TypeEffectiveness,attacker,null,constants);
+        const combinedMultiplier = constants.P8.adjustEffectiveness(primaryEff.multiplier * secondaryEff.multiplier,attacker,defender,damageMove,constants);
         effectiveMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(combinedMultiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
           : combinedMultiplier;
@@ -1570,7 +1583,7 @@
           classification: effectivenessClassification
         });
       } else {
-        const effectiveness = TypeEffectiveness.calculate(actualDamageType, defender.types);
+        const effectiveness = constants.P8.effectiveness(actualDamageType,defender,TypeEffectiveness,attacker,damageMove,constants);
         const rawMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(isStruggle?1:effectiveness.multiplier, { attackerSide: attackerRole, modifiers: state.modifiers || {} })
           : (isStruggle?1:effectiveness.multiplier);
@@ -1617,12 +1630,13 @@
 
       let resolvedPower=constants.P5.get(selectedMove)?constants.P5.power(selectedMove,attacker,defender,constants,p5Context):selectedMove.power;
       resolvedPower=constants.P7.power(state,attacker,defender,damageMove,resolvedPower);
+      resolvedPower=constants.P8.power(attacker,defender,damageMove,resolvedPower,constants);
       const semiInvulnerableMultiplier = (defender.twoTurnMove?.state && constants.getSemiInvulnerableDamageMultiplier)
         ? constants.getSemiInvulnerableDamageMultiplier(selectedMove, defender.twoTurnMove.state)
         : 1;
       const minimizeMultiplier=defender.minimized&&constants.P6.minimizeHits.includes(selectedMove.id)?2:1;
       const effectivePower = action?.pursuitIntercept&&selectedMove.id===228?resolvedPower*2:resolvedPower;
-      if(selectedMove.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')){
+      if([722,723].includes(selectedMove.id) && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack')){
         attackStat=constants.getEffectiveStat(attacker,'attack');defenseStat=constants.getEffectiveStat(defender,'defense');
       }
       // Validação do roll de dano determinístico (85..100)
@@ -1673,11 +1687,12 @@
           let totalDamage = 0;
           for (let index = 0; index < plannedHits && defender.currentHp > 0 && effectiveMultiplier > 0; index++) {
             if(index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
+          const hitEff=constants.P8.effectiveness(actualDamageType,defender,TypeEffectiveness,attacker,damageMove,constants);const hitMultiplier=BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(hitEff.multiplier,{attackerSide:attackerRole,modifiers:state.modifiers||{}}):hitEff.multiplier;
           const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
           const critical=Boolean(multiHit.critical);
           const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?Math.max(attacker.attack,attackStat):attackStat,critical?Math.min(defender.defense,defenseStat):defenseStat,hitPower);
-          let hitDamage = Math.max(effectiveMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), effectiveMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
-            hitDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(hitDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,effectiveMultiplier)));
+          let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
+            hitDamage=Math.max(hitMultiplier===0?0:1,Math.floor(hitDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,hitMultiplier)));
             hitDamage=constants.P7.survive(state,attackerRole,damageMove,hitDamage,constants,events);
             const previousHp = defender.currentHp;
             defender.currentHp = Math.max(0, previousHp - hitDamage);
@@ -1687,7 +1702,7 @@
             events.push({ type: BATTLE_EVENTS.DAMAGE_APPLIED, source: attackerRole, target: defenderRole,
               attackType: actualDamageType, damageClass: actualDamageClass, defenderTypes: defenderTypesList,
               moveName: selectedMove.name, power: hitPower, baseDamage:hitBaseDamage, critical, criticalMultiplier:critical?1.5:1, damageRoll: damageRolls[index],
-              stabMultiplier, typeMultiplier: effectiveMultiplier, multiplier: effectiveMultiplier,
+              stabMultiplier, typeMultiplier: hitMultiplier, multiplier: hitMultiplier,
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
             constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp);
             if (poisonRolls && poisonRolls[index] <= 20 && constants.isEligibleForStatusCondition(defender, 'poison')) {
@@ -1710,6 +1725,7 @@
 
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,effectiveMultiplier)));
+      if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P8.finalMultiplier(attacker,defender,damageMove)));
       finalDamage=constants.P7.survive(state,attackerRole,damageMove,finalDamage,constants,events);
       // 7. Aplicação do dano ao HP
       const previousHp = defender.currentHp;
@@ -1739,6 +1755,7 @@
       });
 
       constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,actualDamageDealt);
+      constants.P8.afterHit(state,attackerRole,damageMove,constants,events,actualDamageDealt);
       // 8B. Descongelamento do alvo por golpe de dano Fire (onDamagingHit: P4)
       // Conforme Pokémon Showdown data/conditions.ts (frz.onDamagingHit): golpes de dano Fire
       // descongelam o alvo sobrevivente imediatamente ao aplicar o dano.
@@ -1860,7 +1877,7 @@
           if (secEffect.flinch) {
             const flinchRoll=secEffect.flinchChance?(action?.secondaryEffectRoll2 ?? 100):secondaryEffectRoll;
             if(!Number.isInteger(flinchRoll)||flinchRoll<1||flinchRoll>100)throw new Error('Rolagem secundária independente inválida.');
-            if (constants.P7.defenderAbility(attacker,defender,selectedMove)!=='inner-focus' && flinchRoll <= (secEffect.flinchChance || secEffect.chance)) {
+            if (!defender.dynamax && constants.P7.defenderAbility(attacker,defender,selectedMove)!=='inner-focus' && flinchRoll <= (secEffect.flinchChance || secEffect.chance)) {
               defender.isFlinched = true;
               events.push({
                 type: BATTLE_EVENTS.FLINCH_APPLIED,
@@ -1980,7 +1997,7 @@
       }
 
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)
-      if (currentHp > 0 && finalDamage > 0 && state.version === 2 && constants.isForcedSwitchMove?.(selectedMove)) {
+      if (currentHp > 0 && finalDamage > 0 && state.version === 2 && !defender.dynamax && constants.isForcedSwitchMove?.(selectedMove)) {
         const defenderSide = state[defenderRole];
         const eligibleBench = defenderSide.team
           .map((p, idx) => ({ pokemon: p, index: idx }))
@@ -2019,6 +2036,7 @@
             reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FORCED : 'FORCED'
           });
           constants.P7.leave(state,defenderRole,previousActive,constants,events);
+          constants.P8.restore(previousActive);
           constants.P6.leave(state,defenderRole,previousActive);
           constants.P7.sync(state);
           constants.P6.entry(state,defenderRole,constants,TypeEffectiveness,events);
@@ -2132,6 +2150,7 @@
             reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FAINT_REPLACEMENT : 'FAINT_REPLACEMENT'
           });
           constants.P7.leave(nextState,role,previousActive,constants,events);
+          constants.P8.restore(previousActive);
           constants.P6.leave(nextState,role,previousActive);
           constants.P7.sync(nextState);
           constants.P6.entry(nextState,role,constants,TypeEffectiveness,events);

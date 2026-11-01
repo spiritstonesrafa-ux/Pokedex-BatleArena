@@ -1,5 +1,8 @@
 # P5 — Dano especial, múltiplos acertos e histórico: conclusão
 
+> Atualização em 01/11/2026: as dependências P6/P7/P8 descritas abaixo registram o estado no fechamento original desta fase. Agora estão resolvidas no escopo individual dos pilotos: ver docs/roadmap-p8.md e as auditorias atuais. Pendências de P1 e duplas continuam explícitas.
+
+
 Atualização: 31/10/2026. A P5 está concluída no escopo do motor atual de batalhas individuais. A auditoria cobre 60 golpes-piloto disponíveis na campanha: 57 FULL e 3 PARTIAL exclusivamente por dependências explícitas de outras fases. Nenhum desses pilotos mantém pendência essencial de P5. Isso não significa suporte a todos os golpes da PokéAPI, batalhas duplas, habilidades ou itens.
 
 ## Mecânicas entregues

@@ -52,6 +52,7 @@
           move = combatant.moves.find(m => m.currentPp > 0) || combatant.moves[0];
         }
       }
+      if(combatant?.dynamax&&move){move=constants.P8.activeMove(combatant,move,constants);return move.p8MaxGuard?4:0;}
       return constants.P7?constants.P7.priority(combatant,move,constants):constants.getMovePriority ? constants.getMovePriority(move) : 0;
     }
 

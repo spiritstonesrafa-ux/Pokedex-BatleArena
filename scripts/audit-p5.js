@@ -20,12 +20,8 @@ for(const id of pilots){
  assert.ok(available.has(id),'P5 pilot unavailable in campaign '+id);
  if(cap.supportLevel==='FULL')full++;else partial++;
 }
-const futureDependencies={723:'PHASE_P8',851:'PHASE_P8'};
-for(const [id,phase]of Object.entries(futureDependencies)){
- const cap=C.getMoveCapability(+id);
- assert.notEqual(cap.supportLevel,'FULL','Future mechanics must not be marked delivered');
- assert.ok(cap.knownPending.some(p=>p.includes(phase)),'Missing future dependency '+id);
-}
+const futureDependencies={};
+for(const id of [723,851])assert.equal(C.getMoveCapability(id).supportLevel,'FULL','P8 delivered '+id);
 for(const id of [449,546,718,881])assert.equal(C.getMoveCapability(id).supportLevel,'FULL','P7 delivered '+id);
 assert.equal(C.getMoveCapability(677).supportLevel,'FULL','Anchor Shot trapping delivered in P6');
 assert.ok(C.P6.trapping.includes(677));
@@ -35,7 +31,7 @@ for(const id of [201,202,360,771]){
  assert.ok(species.moves.length>=1&&species.moves.length<=2);
  assert.ok(species.moves.every(m=>C.validateMoveData(m)));
 }
-assert.deepEqual(Expanded.entries.filter(p=>p.collectionOnly).map(p=>p.id),[132,235,789,790]);
+assert.deepEqual(Expanded.entries.filter(p=>p.collectionOnly).map(p=>p.id),[789,790]);
 for(const id of Object.keys(Fixed.byId)){const pool=Options.getPool(+id);assert.ok(pool.length>=1&&pool.length<=6,'Pool size '+id);}
 const missingWeightIds=Expanded.entries.filter(mon=>!C.P5.weight(mon)).map(mon=>mon.id);
-console.log(JSON.stringify({p5CoreComplete:true,pilots:pilots.length,full,partialWithOtherPhaseDependencies:partial,unresolvedP5:unresolved.length,knownMoves:Object.keys(C.KNOWN_CATALOG_MOVES).length,battleReadySpecies:Object.keys(Fixed.byId).length,collectionOnlySpecies:4,missingWeightIds,futureDependencies},null,2));
+console.log(JSON.stringify({p5CoreComplete:true,pilots:pilots.length,full,partialWithOtherPhaseDependencies:partial,unresolvedP5:unresolved.length,knownMoves:Object.keys(C.KNOWN_CATALOG_MOVES).length,battleReadySpecies:Object.keys(Fixed.byId).length,collectionOnlySpecies:2,missingWeightIds,futureDependencies},null,2));

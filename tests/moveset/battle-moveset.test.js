@@ -644,20 +644,20 @@ describe('PHASE PBA-014C — GATES MQ01–MQ40 (BATTLE MOVESET QUALITY)', () => 
   });
 
   it('ZERO-SUPPORTED-01 — Zero-Supported Engine Moves: API OK with 100% unsupported moves yields moves=[], UNSUPPORTED_ENGINE_MOVESET, ZERO_SUPPORTED_ENGINE_MOVES, zero fake moves', async () => {
-    // Fixture: API responde normalmente com candidatos Transform, Growl, Protect
+    // Fixture: API responde normalmente com candidatos Harden, Growl, String Shot
     // Todos resolvidos com sucesso pela API. Todos incompatíveis com o Engine.
     const mockApi = createMockApi();
     const hydrator = new BattleTeamHydrator({ api: mockApi });
 
     const zeroSupportedMon = {
-      id: 132,
-      name: 'ditto',
+      id: 789,
+      name: 'cosmog',
       types: ['normal'],
       stats: { hp: 48, attack: 48, defense: 48, specialAttack: 48, specialDefense: 48, speed: 48 },
       moves: [
-        { name: 'transform' }, // status move
+        { name: 'harden' }, // status move
         { name: 'growl' },     // status move
-        { name: 'protect' }    // status move
+        { name: 'string-shot' }    // status move
       ]
     };
 

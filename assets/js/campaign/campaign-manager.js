@@ -148,19 +148,19 @@
   Manager.prototype.getEffectiveMoveIds = function (pokemonId) {
     const id = Number(pokemonId);
     const saved = this.data.movePreferences?.[id];
-    return Options.resolveLoadout(id, saved).map(move => move.id);
+    return Options.resolveLoadout(id, saved,this.data.sketchMoves?.[id]).map(move => move.id);
   };
   Manager.prototype.getEffectiveMoves = function (pokemonId) {
     const id = Number(pokemonId);
-    return Options.resolveLoadout(id, this.data.movePreferences?.[id]);
+    return Options.resolveLoadout(id, this.data.movePreferences?.[id],this.data.sketchMoves?.[id]);
   };
   Manager.prototype.getMovePreferencesForTeam = function (teamIds) {
     const owned = new Set(this.getRosterIds());
     const result = {};
     for (const value of teamIds || []) {
       const id = Number(value);
-      if (owned.has(id) && this.data.movePreferences?.[id]) {
-        result[id] = [...this.data.movePreferences[id]];
+      if (owned.has(id) && (this.data.movePreferences?.[id]||this.data.sketchMoves?.[id])) {
+        result[id] = this.getEffectiveMoveIds(id);
       }
     }
     return result;
@@ -168,11 +168,11 @@
   Manager.prototype.setMovePreference = function (pokemonId, moveIds) {
     const id = Number(pokemonId);
     if (!this.getRosterIds().includes(id)) return { ok: false, reason: 'NOT_OWNED' };
-    const moves = Options.validateSelection(id, moveIds);
+    const moves = Options.validateSelection(id, moveIds,this.data.sketchMoves?.[id]);
     if (!moves) return { ok: false, reason: 'INVALID_MOVESET' };
     this.data.movePreferences = this.data.movePreferences || {};
     const ids = moves.map(move => move.id);
-    if (JSON.stringify(ids) === JSON.stringify(Options.getDefaultMoveIds(id))) {
+    if (JSON.stringify(ids) === JSON.stringify(Options.getDefaultMoveIds(id,this.data.sketchMoves?.[id]))) {
       delete this.data.movePreferences[id];
     } else {
       this.data.movePreferences[id] = ids;
@@ -198,4 +198,16 @@
  Manager.prototype.getBattlePreferencesForTeam=function(ids){const owned=new Set(this.getRosterIds()),result={};for(const id of ids||[])if(owned.has(id)&&this.data.battlePreferences?.[id])result[id]={...this.getBattlePreference(id)};return result;};
  Manager.prototype.setBattlePreference=function(id,raw){id=Number(id);if(!this.getRosterIds().includes(id))return {ok:false,reason:'NOT_OWNED'};const pref=Rules.P7.validatePreference(id,raw);if(!pref)return {ok:false,reason:'INVALID_BATTLE_LOADOUT'};this.data.battlePreferences||={};this.data.battlePreferences[id]=pref;this.save('BATTLE_LOADOUT_SAVED');return {ok:true};};
  Manager.prototype.resetBattlePreference=function(id){id=Number(id);if(!this.getRosterIds().includes(id))return {ok:false,reason:'NOT_OWNED'};delete this.data.battlePreferences?.[id];this.save('BATTLE_LOADOUT_RESET');return {ok:true};};
+})();
+
+/* Sketch commits only once through the normal completed-battle receipt. */
+(function(){
+const Manager=typeof module!=='undefined'&&module.exports?module.exports.CampaignManager:window.PBACampaign.CampaignManager;
+const Rules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+const previous=Manager.prototype.recordBattle;
+Manager.prototype.getSketchMovesForTeam=function(ids){const result={};if((ids||[]).includes(235)&&this.getRosterIds().includes(235)&&Rules.P8.canSketch(Rules,this.data.sketchMoves?.[235]))result[235]=this.data.sketchMoves[235];return result;};
+Manager.prototype.applySketchChanges=function(receipt){if(this.data.processedBattleIds.includes(receipt.battleId)&&['player','enemy'].includes(receipt.winner)&&Array.isArray(receipt.sketchChanges)&&this.getRosterIds().includes(235)){
+const learned=receipt.sketchChanges.filter(n=>n.role==='player'&&n.pokemonId===235&&Number.isInteger(n.moveId)&&Rules.P8.canSketch(Rules,n.moveId)).at(-1);
+if(learned){this.data.sketchMoves||={};this.data.sketchMoves[235]=learned.moveId;delete this.data.movePreferences?.[235];return true;}}return false;};
+Manager.prototype.recordBattle=function(receipt){const result=previous.call(this,receipt);if(result?.processed&&this.applySketchChanges(receipt))this.save('SKETCH_LEARNED');return result;};
 })();

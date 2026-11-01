@@ -159,7 +159,7 @@
     if(active.rechargeMoveId)return;
     let move = active.moves.find(m => m.id === action.moveId);
     if (move?.id === 214) {
-      const candidates = active.moves.filter(m => m.id !== 214 && ![117,264,690,704].includes(m.id) && !battleConstants.isTwoTurnMove(m) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
+      const candidates = active.moves.filter(m => m.id !== 214 && ![117,166,264,690,704].includes(m.id) && !battleConstants.isTwoTurnMove(m) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
       move = candidates[action.sleepTalkChoice ?? 0];
     }
     if(move?.id===290&&active.envTerrain==='grassy')action.sleepDuration=rng.rollSleepDuration?.()??2;
@@ -176,7 +176,7 @@
 
   function prepareSleepCall(active, action, targetAction, rng){
     if(active.rechargeMoveId || action?.moveId!==214)return;
-    const candidates=active.moves.filter(m=>m.id!==214&&![117,264,690,704].includes(m.id)&&!battleConstants.isTwoTurnMove(m)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
+    const candidates=active.moves.filter(m=>m.id!==214&&![117,166,264,690,704].includes(m.id)&&!battleConstants.isTwoTurnMove(m)&&battleConstants.getMoveCapability(m)?.supportLevel==='FULL');
     if(!candidates.length)return;
     if (action.sleepTalkChoice === undefined) {
       action.sleepTalkChoice = rng.rollCalledMove?.(candidates.length) ?? 0;
@@ -345,7 +345,7 @@
             ? { ...fixedCatalog.byId[id],
               ...(player&&options.playerBattlePreferences?.[id]?{battlePreference:options.playerBattlePreferences[id]}:{}),
               ...(player && moveOptions && options.playerMovePreferences?.[id]
-                ? { moves: moveOptions.resolveLoadout(id, options.playerMovePreferences[id]), campaignCustomMoves: true }
+                ? { moves: moveOptions.resolveLoadout(id, options.playerMovePreferences[id],options.playerSketchMoves?.[id]), campaignCustomMoves: true }
                 : {}), campaignFixedMoves: true } : id)
           : ids;
 
@@ -466,7 +466,7 @@
      * Executa a ação de golpe selecionada pelo jogador.
      * @param {number|string} moveId - ID do golpe escolhido.
      */
-    async submitPlayerMove(moveId) {
+    async submitPlayerMove(moveId, specialOptions={}) {
       if (this.isResolving) return;
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
 
@@ -486,6 +486,7 @@
         // 2. Consulta ação da SMART AI para o adversário
         const aiDecision = this.ai.chooseAction(this.battleState, 'enemy', { strategy: 'SMART' });
         let enemyAction = aiDecision.action;
+        if(enemyAction?.type==='MOVE'&&battleConstants.P8.canActivate(this.battleState,'enemy',this.engine.getActiveCombatant(this.battleState,'enemy').specialMechanic)&&(this.engine.getActiveCombatant(this.battleState,'enemy').specialMechanic!=='z'||Number(enemyAction.moveId)===722))enemyAction={...enemyAction,special:this.engine.getActiveCombatant(this.battleState,'enemy').specialMechanic};
 
         // Se a IA escolheu atacar, gera rolls externos independentes para ela
         if (enemyAction && enemyAction.type === 'MOVE') {
@@ -600,6 +601,7 @@
           player: {
             type: 'MOVE',
             moveId: Number(moveId),
+            ...(specialOptions.special?{special:specialOptions.special}:{}),
             accuracyRoll: playerAccuracyRoll,
             damageRoll: playerDamageRoll,
             secondaryEffectRoll: playerSecondaryEffectRoll,
@@ -617,7 +619,7 @@
         if(enemyAction?.type==='MOVE')prepareSleepCall(activeEnemy,enemyAction,turnActions.player,this.randomSource);
         prepareCompoundSecondary(playerMove,turnActions.player,this.randomSource);
         if(enemyAction?.type==='MOVE')prepareCompoundSecondary(enemyMove,enemyAction,this.randomSource);
-        if (battleConstants.isProtectMove(playerMove)) {
+        if (battleConstants.isProtectMove(playerMove)||playerMove?.damageClass==='status'&&(activePlayer.dynamax||specialOptions.special==='dynamax')) {
           const stall = Number(activePlayer.stallCount || 0);
           const denom = Math.min(729, Math.pow(3, stall));
           if (turnActions.player.protectRoll === undefined) {
@@ -671,6 +673,7 @@
         // Ação da SMART AI para o adversário
         const aiDecision = this.ai.chooseAction(this.battleState, 'enemy', { strategy: 'SMART' });
         let enemyAction = aiDecision.action;
+        if(enemyAction?.type==='MOVE'&&battleConstants.P8.canActivate(this.battleState,'enemy',this.engine.getActiveCombatant(this.battleState,'enemy').specialMechanic)&&(this.engine.getActiveCombatant(this.battleState,'enemy').specialMechanic!=='z'||Number(enemyAction.moveId)===722))enemyAction={...enemyAction,special:this.engine.getActiveCombatant(this.battleState,'enemy').specialMechanic};
 
         if (enemyAction && enemyAction.type === 'MOVE') {
           const enemyAccuracyRoll = this.randomSource.rollAccuracy();
@@ -692,7 +695,7 @@
           }
 
           const enemyMove = activeEnemy?.moves?.find(move => move.id === Number(enemyAction.moveId));
-          if (battleConstants.isProtectMove(enemyMove)) {
+          if (battleConstants.isProtectMove(enemyMove)||enemyMove?.damageClass==='status'&&(activeEnemy.dynamax||enemyAction?.special==='dynamax')) {
             const stall = Number(activeEnemy.stallCount || 0);
             const denom = Math.min(729, Math.pow(3, stall));
             if (enemyAction.protectRoll === undefined) {
@@ -829,7 +832,7 @@
           const meta = this.sessionOptions?.metadata;
           if (campaign && meta?.mode === 'CAMPAIGN') {
             const opponentPokemonId = meta.opponentPokemonId || (meta.id && Number.isInteger(Number(meta.id)) ? Number(meta.id) : null) || (Array.isArray(this.sessionOptions?.enemyTeamIds) && this.sessionOptions.enemyTeamIds.length === 1 ? Number(this.sessionOptions.enemyTeamIds[0]) : null);
-            campaign.recordBattle({ battleId: this.currentBattleId, kind: meta.kind, id: meta.id, opponentPokemonId, winner: isVictory ? 'player' : 'enemy' });
+            campaign.recordBattle({ battleId: this.currentBattleId, kind: meta.kind, id: meta.id, opponentPokemonId, sketchChanges:this.battleState.sketchChanges||[], winner: isVictory ? 'player' : 'enemy' });
           }
         } catch (err) { console.warn('Não foi possível registrar a progressão da campanha:', err); }
 

@@ -9,7 +9,7 @@ const {DeterministicRandomSource}=require('../../assets/js/battle-session/battle
 const m=id=>C.KNOWN_CATALOG_MOVES[id];
 function mon(id,moves=[m(33)],types=['water'],speed=50,hp=5000){return{id,name:'mon-'+id,types,hp,attack:100,defense:100,specialAttack:100,specialDefense:100,speed,moves};}
 const a=(id,extra={})=>({type:'MOVE',moveId:id,accuracyRoll:1,damageRoll:100,statusRoll:100,thawRoll:100,confusionHitRoll:100,secondaryEffectRoll:1,...extra});
-function battle(move){return E.createBattle(mon(1,[move],['normal'],200),mon(2));}
+function battle(move){return E.createBattle(mon(move.id===783?877:1,[move],['normal'],200),mon(2));}
 function stage(target,key){return ['accuracy','evasion'].includes(key)?target[key+'Stage']:target.statStages[key];}
 
 for(const effect of Object.values(P4.effects))test(`P4 expansion: ${effect.name} applies its registered secondary to the proper combatant`,()=>{

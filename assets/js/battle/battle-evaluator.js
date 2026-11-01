@@ -53,9 +53,18 @@
         throw new Error('Golpe inválido fornecido para evaluateMove.');
       }
 
+      // Preview activation on a private state: never spend the live team's budget or mutate its forms.
+      if(context.special && context.battleState && constants.P8.canActivate(context.battleState,context.attackerSide,context.special) && (context.special!=='z'||move.id===722)) {
+        const preview=JSON.parse(JSON.stringify(context.battleState)),role=context.attackerSide;
+        constants.P8.prepare(preview,role,{type:'MOVE',moveId:move.id,special:context.special},constants,[]);
+        const active=preview[role]?.team?preview[role].team[preview[role].activeIndex||0]:preview[role];
+        return evaluateMove(active,defender,move,{...context,battleState:preview,special:null});
+      }
       if(attacker.rechargeMoveId)return {moveId:move.id,moveName:move.name,currentPp:move.currentPp,expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,averageDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:0,statusChance:0,isEligibleForSecondary:false,priority:0,recharging:true,requiresRecharge:false};
 
       attacker={...attacker};defender={...defender,abilityIgnored:constants.P7.ignored(attacker,defender,move)};
+      if(attacker.dynamax||attacker.zMovePending)move=constants.P8.activeMove(attacker,move,constants);
+      if([144,166].includes(move.id)){const eligible=move.id===144?constants.P8.canTransform(attacker,defender):!attacker.transformOriginal&&constants.P8.canSketch(constants,defender.lastUsedMoveId)&&!attacker.moves.some(m=>m.id===defender.lastUsedMoveId);const unable=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0||attacker.statusCondition==='freeze';const benefit=unable?0:eligible?40:move.id===166&&!attacker.transformOriginal&&!defender.lastUsedMoveId?10:0;return {moveId:move.id,moveName:move.name,damageClass:'status',currentPp:move.currentPp,expectedDamage:0,minDamage:0,maxDamage:0,damageIfHit:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:benefit,statusChance:eligible?1:0,priority:0};}
       if(constants.P6.statusMoves[move.name]||constants.P7.statusMoves[move.name]){
         const own=context.battleState?.p6Sides?.[context.attackerSide]||{},foe=context.battleState?.p6Sides?.[context.attackerSide==='enemy'?'player':'enemy']||{};
         const id=move.id,shield=constants.P6.screens[id],hazard=constants.P6.hazards[id];let benefit=0;
@@ -144,10 +153,11 @@
         }
       }
       const p5 = constants.P5.get(move);
-      const damageClass = move.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack') ? 'physical' : (move.damageClass || 'physical');
-      const moveType = constants.P7.moveType(context.battleState,attacker,move,constants.P5.type(move,attacker)) || 'normal';
+      const damageClass = constants.P8.damageClass(attacker,move,constants);
+      const moveType = constants.P8.moveType(attacker,move,constants.P7.moveType(context.battleState,attacker,move,constants.P5.type(move,attacker))) || 'normal';
       let power = p5 ? constants.P5.power(move,attacker,defender,constants,{...context,faintCount:context.faintCount??context.attackerTeam?.filter(m=>m.currentHp<=0).length??0}) : Number(move.power) || 0;
       power=constants.P7.power(context.battleState,attacker,defender,{...move,type:moveType},power,constants);
+      power=constants.P8.power(attacker,defender,{...move,type:moveType},power,constants);
       const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
       const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(move));
@@ -279,22 +289,22 @@
       // 2. STAB (Same-Type Attack Bonus)
       const attackerTypes = Array.isArray(attacker.types) ? attacker.types : [];
       const hasStab = attackerTypes.includes(moveType);
-      const stabMultiplier = (hasStab && !isFixedDamage) ? (constants.P7.ability(attacker)==='adaptability'?2:constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
+      const stabMultiplier = !isFixedDamage?constants.P8.stab(attacker,moveType,constants):1;
 
       // 3. Efetividade de Tipos (Type Effectiveness)
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];
       let typeMultiplier;
       let typeClassification;
       if (constants?.isDualTypeEffectiveness?.(move)) {
-        const primaryEff = TypeEffectiveness.calculate('fighting', defenderTypes);
-        const secondaryEff = TypeEffectiveness.calculate('flying', defenderTypes);
-        const combinedMultiplier = primaryEff.multiplier * secondaryEff.multiplier;
+        const primaryEff = constants.P8.effectiveness('fighting',defender,TypeEffectiveness,attacker,null,constants);
+        const secondaryEff = constants.P8.effectiveness('flying',defender,TypeEffectiveness,attacker,null,constants);
+        const combinedMultiplier = constants.P8.adjustEffectiveness(primaryEff.multiplier * secondaryEff.multiplier,attacker,defender,move,constants);
         typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(combinedMultiplier, context)
           : combinedMultiplier;
         typeClassification = TypeEffectiveness.getClassification(typeMultiplier);
       } else {
-        const effectiveness = TypeEffectiveness.calculate(moveType, defenderTypes);
+        const effectiveness = constants.P8.effectiveness(moveType,defender,TypeEffectiveness,attacker,move,constants);
         typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, context)
           : effectiveness.multiplier;
@@ -305,7 +315,7 @@
       // 4. Faixa e Média de Dano (PBA-014B: Level 50 e Variância 85..100)
       const simLevel = (constants && constants.BATTLE_CONFIG && constants.BATTLE_CONFIG.SIMULATION_LEVEL) || 50;
       const p5Failure = p5 ? constants.P5.failure(move,attacker,defender,{...context,targetMove:context.targetMove||(defender.moves||[]).find(m=>m.damageClass!=='status')}) : null;
-      const entryRestricted = Boolean(p5Failure) || (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
+      const entryRestricted = Boolean(constants.P8.failure(attacker,defender,move,constants)) || Boolean(p5Failure) || (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
       const multiHit = constants.getMultiHitMove(move);
       const expectedHits = multiHit ? (multiHit.minHits!==multiHit.maxHits ? 3.1 : multiHit.maxHits) : 1;
       let baseDamage;
@@ -408,10 +418,11 @@
       if (attacker.confusionTurns > 1) actionFactor *= 0.67;
       if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
       if (entryRestricted || attacker.rechargeMoveId) actionFactor = 0;
-      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !constants.isProtectBypassingMove?.(move) && !(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(move.id))) {
+      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !move.p8Max&&!move.p8Z && !constants.isProtectBypassingMove?.(move) && !(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(move.id))) {
         actionFactor = 0;
         baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
       }
+      if(defender.maxGuard&&move.target!=='self'){actionFactor=0;baseDamage=minDamage=maxDamage=averageDamage=damageIfHit=0;}
       if (defender.twoTurnMove?.state && move.target !== 'self' && move.damageClass !== 'status_self') {
         const canHit = constants.canHitSemiInvulnerable?.(move, defender.twoTurnMove.state, attacker);
         if (!canHit) {
@@ -421,6 +432,7 @@
       }
       if(context.battleState && !isFixedDamage){const role=context.attackerSide==='enemy'?'player':'enemy';const f=constants.P6.barrierMultiplier(context.battleState,role,{...move,damageClass},Boolean(multiHit?.critical));minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
       if(!isFixedDamage){const f=constants.P7.damageMultiplier(context.battleState,attacker,defender,{...move,type:moveType},typeMultiplier);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
+      if(!isFixedDamage){const f=constants.P8.finalMultiplier(attacker,defender,move);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
       const ab=constants.P7.defenderAbility(attacker,defender,move),absorbs={'water-absorb':'water','volt-absorb':'electric','flash-fire':'fire','sap-sipper':'grass','lightning-rod':'electric','storm-drain':'water'};
       if(absorbs[ab]===moveType||ab==='levitate'&&moveType==='ground'||ab==='sturdy'&&constants.P5.ohko(move)||defender.envTerrain==='psychic'&&constants.P7.grounded(defender)&&constants.P7.priority(attacker,move,constants)>0){minDamage=maxDamage=averageDamage=damageIfHit=0;}
       if(!multiHit&&defender.currentHp===defender.maxHp&&(ab==='sturdy'||defender.item==='focus-sash')){minDamage=Math.min(minDamage,defender.currentHp-1);maxDamage=Math.min(maxDamage,defender.currentHp-1);averageDamage=Math.min(averageDamage,defender.currentHp-1);damageIfHit=averageDamage;}

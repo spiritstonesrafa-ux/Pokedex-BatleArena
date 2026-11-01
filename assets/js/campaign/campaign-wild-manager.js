@@ -112,6 +112,7 @@
       };
     }
     wild.active = null;
+    this.applySketchChanges?.(result);
     this.save('WILD_BATTLE_RECORDED');
     return { processed: true, pendingCapture: this.data.wild.pendingCapture };
   };

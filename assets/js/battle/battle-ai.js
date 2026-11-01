@@ -102,14 +102,14 @@
         throw new Error(`Pokémon ativo de "${side}" está nocauteado ou inexistente.`);
       }
 
-      if((constants.P6.mustStruggle(myActive)||constants.P7.mustStruggle(myActive)))return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:165},diagnostics:{strategy,reason:'CONSECUTIVE_FALLBACK',candidateCount:1,selectedScore:0}};
+      if((constants.P6.mustStruggle(myActive)||constants.P7.mustStruggle(myActive)||constants.P8.mustStruggle(myActive)))return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:165},diagnostics:{strategy,reason:'CONSECUTIVE_FALLBACK',candidateCount:1,selectedScore:0}};
       if(myActive.rechargeMoveId)return {action:{type:constants.BATTLE_ACTIONS.RECHARGE},diagnostics:{strategy,reason:'RECHARGE_REQUIRED',candidateCount:1,selectedScore:0}};
       if(myActive.bideState)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:117},diagnostics:{strategy,reason:'BIDE_LOCKED',candidateCount:1,selectedScore:0}};
       if(myActive.lockedMove)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:myActive.lockedMove.id},diagnostics:{strategy,reason:'RAMPAGE_LOCKED',candidateCount:1,selectedScore:0}};
       if(myActive.twoTurnMove)return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:myActive.twoTurnMove.id},diagnostics:{strategy,reason:'TWO_TURN_LOCKED',candidateCount:1,selectedScore:0}};
       // 1. Golpes utilizáveis do ativo (somente status curados)
       const isUsableStatusMove = (m) => {
-        if(constants.isProtectMove(m)||constants.P6.statusMoves[m.name]||constants.P7.statusMoves[m.name])return true;
+        if(constants.isProtectMove(m)||constants.P6.statusMoves[m.name]||constants.P7.statusMoves[m.name]||constants.P8.statusMoves[m.name])return true;
         if (m.damageClass !== 'status') return true;
         if ([156,214,281,599].includes(m.id)) return true;
         if (['poison', 'toxic', 'burn', 'paralysis', 'sleep','confusion'].includes(m.statusEffect)) return true;
@@ -222,7 +222,7 @@
 
       // Avaliação detalhada de cada golpe utilizável do ativo
       const evaluatedMoves = usableMoves.map(m => {
-        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { battleState:state, attackerSide: side, attackerTeam: myTeam, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} });
+        const evalData = BattleEvaluator.evaluateMove(myActive, oppActive, m, { battleState:state, special:myActive.specialMechanic, attackerSide: side, attackerTeam: myTeam, turn: state.turn, planningTurn: true, modifiers: state.modifiers || {} });
         let score = evalData.expectedDamage;
         // Account for the forced idle turn without hiding the immediate KO prediction.
         if(evalData.requiresRecharge && !evalData.guaranteedKo)score=Math.floor(score/2);
@@ -238,7 +238,7 @@
             } else {
               score = evalData.expectedStatusBenefit;
             }
-          } else if ([156,214,281].includes(m.id)||['toxic','confusion'].includes(m.statusEffect)) {
+          } else if ([144,166].includes(m.id)||[156,214,281].includes(m.id)||['toxic','confusion'].includes(m.statusEffect)) {
             score = evalData.expectedStatusBenefit;
           } else if (m.statusEffect) {
             const immune = constants.isStatusMoveImmune(m, oppActive.types);
@@ -351,6 +351,9 @@
         };
       });
 
+      // Copy-only starters need their setup move before their borrowed attack set exists.
+      const copySetup=evaluatedMoves.find(m=>[144,166].includes(m.moveId)&&m.score>0);
+      if(copySetup&&!evaluatedMoves.some(m=>m.expectedDamage>0))return {action:{type:constants.BATTLE_ACTIONS.MOVE,moveId:copySetup.moveId},diagnostics:{strategy,reason:REASON.STATUS_PRESSURE,candidateCount:evaluatedMoves.length,selectedScore:copySetup.score}};
       // 4. Verificação de Troca Voluntária (Voluntary Switch)
       if (livingBench.length > 0) {
         // Regra SW1: Imunidade Total do Ativo

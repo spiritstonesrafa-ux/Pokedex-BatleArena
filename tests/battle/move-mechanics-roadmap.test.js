@@ -663,12 +663,12 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.equal(isMechanicallySupportedMove({ name: 'nature-s-madness' }), false);
     assert.equal(isMechanicallySupportedMove({ name: 'natures-madness' }), false);
 
-    // Confirma que ID 723 pertence ao golpe canônico Light That Burns the Sky (BLOCKED)
+    // Confirma que ID 723 pertence ao golpe canônico Light That Burns the Sky (P8, ativação Z obrigatória)
     const zMove723 = getMoveCapability(723);
     assert.ok(zMove723);
     assert.equal(zMove723.id, 723);
     assert.equal(zMove723.name, 'light-that-burns-the-sky');
-    assert.equal(zMove723.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(zMove723.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
   });
 
   test('CANON-06: Integração no fluxo real — Validação de customização e opções de campanha', () => {
@@ -752,7 +752,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(lightThatBurns);
     assert.equal(lightThatBurns.id, 723);
     assert.equal(lightThatBurns.name, 'light-that-burns-the-sky');
-    assert.equal(lightThatBurns.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(lightThatBurns.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
 
     // 5. Last Respects (854), Lumina Crash (855), Ruination (877), Chilly Reception (881)
     const lastRespects = getMoveCapability(854);
@@ -1039,7 +1039,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
 
     // 21. Golpes bloqueados
     assert.equal(
-      validateMoveData({ id: 851, name: 'tera-blast', type: 'normal', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
+      validateMoveData({ id: 374, name: 'fling', type: 'dark', power: null, accuracy: 100, pp: 10, damageClass: 'physical' }),
       false,
       'Golpe bloqueado deve ser rejeitado'
     );

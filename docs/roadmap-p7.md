@@ -28,7 +28,7 @@ Judgment, Techno Blast e Multi-Attack usam o item; Weather Ball e Terrain Pulse 
 
 Todos os 36 pilotos estão em opções legais da campanha, com limite de seis opções por espécie. Arceus troca o extra redundante Strength por Judgment; mantém Surf e os quatro golpes fixos. Slowking de Galar recebe Chilly Reception. Draft de 450 espécies e as quatro espécies apenas de coleção permanecem preservados.
 
-33 pilotos FULL. Razor Wind e Sky Attack permanecem PARTIAL por críticos de P1; Order Up permanece PARTIAL porque Commander exige duplas, fora do motor atual. Transform/Sketch, Hidden Power, formas dinâmicas, Terastallization e demais dependências de P8 seguem pendentes.
+33 pilotos FULL. Razor Wind e Sky Attack permanecem PARTIAL por críticos de P1; Order Up permanece PARTIAL porque Commander exige duplas, fora do motor atual. No fechamento da P7, Transform/Sketch, formas dinâmicas e Terastallization continuavam pendentes. Hidden Power já estava FULL na P5; a menção anterior como pendente foi corrigida. Estado posterior de toda a P8: docs/roadmap-p8.md.
 
 ## Validação e limites
 
@@ -40,7 +40,7 @@ Todos os 36 pilotos estão em opções legais da campanha, com limite de seis op
 
 ## Próximos ciclos
 
-P8: definir pilotos de Transform e Sketch, cópia/retorno de estados e golpes; depois Hidden Power com IVs e formas dinâmicas. Expandir habilidades/itens fora dos pilotos em ciclos próprios, com testes e classificação explícita. Batalhas duplas/Commander exigem mudança de formato e não estão liberadas.
+P8 concluída posteriormente no escopo individual explícito: cópia, formas/tipos dinâmicos, Dynamax padrão, Tera e golpe Z piloto. Consultar docs/roadmap-p8.md. Hidden Power com IVs já estava implementado na P5. Expandir habilidades/itens fora dos pilotos em ciclos próprios, com testes e classificação explícita. Batalhas duplas/Commander exigem mudança de formato e não estão liberadas.
 
 ## Fontes primárias
 

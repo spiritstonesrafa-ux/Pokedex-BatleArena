@@ -35,16 +35,16 @@
       if (id) {
         const pokemon = selected.find(item => item.id === id);
         const ids = this.moveDraft || this.manager.getEffectiveMoveIds(id);
-        const choices = Options.getPool(id).map(move => {
+        const choices = Options.getPool(id,this.manager.getState().sketchMoves?.[id]).map(move => {
           const selectedMove = ids.includes(move.id);
           const effect = move.statusEffect
             ? `Status: ${move.statusEffect === 'poison' ? 'veneno' : move.statusEffect === 'burn' ? 'queimadura' : 'paralisia'}`
             : (PowerRules?.describeMovePower?.(move) || (move.damageClass === 'status' || move.power === 0 ? 'Status' : `Poder ${move.power}`));
           return `<label class="campaign-move-editor__option"><input type="checkbox" data-move-id="${move.id}" ${selectedMove ? 'checked' : ''}><span><strong>${escape(cap(move.name))}</strong><small>${escape(cap(move.type))} · ${effect} · ${move.accuracy === null ? 'sempre acerta' : `${move.accuracy}% precisão`} · PP ${move.pp}</small></span></label>`;
         }).join('');
-        editor = `<div class="campaign-move-editor__form"><fieldset><legend>Golpes de ${escape(cap(pokemon.name))}</legend><p>Escolha de 1 a 4 golpes. A ordem em que selecionar será mantida na batalha.</p><div class="campaign-move-editor__options">${choices}</div></fieldset><p id="moveChoiceCount" aria-live="polite">${ids.length}/4 golpes escolhidos</p><p id="moveChoiceError" class="campaign-move-editor__error" role="alert"></p><div class="campaign-move-editor__actions"><button type="button" id="saveCampaignMoves" class="campaign-primary" ${ids.length ? '' : 'disabled'}>Salvar golpes</button><button type="button" id="resetCampaignMoves" class="campaign-secondary">Restaurar padrão</button><button type="button" id="cancelCampaignMoves" class="campaign-secondary">Fechar</button></div></div>`;
+        editor = `<div class="campaign-move-editor__form"><fieldset><legend>Golpes de ${escape(cap(pokemon.name))}</legend><p>${id===235?'Smeargle usa um golpe neste ciclo: mantenha a cópia aprendida ou selecione Sketch para aprender outro.':'Escolha de 1 a 4 golpes. A ordem em que selecionar será mantida na batalha.'}</p><div class="campaign-move-editor__options">${choices}</div></fieldset><p id="moveChoiceCount" aria-live="polite">${ids.length}/${id===235?1:4} golpes escolhidos</p><p id="moveChoiceError" class="campaign-move-editor__error" role="alert"></p><div class="campaign-move-editor__actions"><button type="button" id="saveCampaignMoves" class="campaign-primary" ${ids.length ? '' : 'disabled'}>Salvar golpes</button><button type="button" id="resetCampaignMoves" class="campaign-secondary">Restaurar padrão</button><button type="button" id="cancelCampaignMoves" class="campaign-secondary">Fechar</button></div></div>`;
       }
-      anchor.insertAdjacentHTML('beforebegin', `<section class="campaign-move-editor" aria-label="Personalizar golpes da equipe"><h3>Golpes da equipe</h3><p>Se não alterar, os quatro golpes atuais continuam. As escolhas salvas valem para os próximos desafios.</p><div class="campaign-move-editor__pokemon-list">${selector}</div>${editor}</section>`);
+      anchor.insertAdjacentHTML('beforebegin', `<section class="campaign-move-editor" aria-label="Personalizar golpes da equipe"><h3>Golpes da equipe</h3><p>Sem alterações, o conjunto padrão será mantido. As escolhas salvas valem para os próximos desafios. ${selected.some(p=>p.id===235)?'Sketch substitui o próprio golpe e só é salvo ao concluir a batalha. Você pode voltar a Sketch aqui para aprender outro golpe.':''}</p><div class="campaign-move-editor__pokemon-list">${selector}</div>${editor}</section>`);
       this.container.querySelectorAll('[data-edit-moves]').forEach(button => {
         button.onclick = () => {
           this.editingMovePokemonId = Number(button.dataset.editMoves);
@@ -57,9 +57,9 @@
         input.onchange = () => {
           const moveId = Number(input.dataset.moveId);
           if (input.checked) {
-            if (this.moveDraft.length >= 4) {
+            if (this.moveDraft.length >= (id===235?1:4)) {
               input.checked = false;
-              this.container.querySelector('#moveChoiceError').textContent = 'Escolha no máximo quatro golpes.';
+              this.container.querySelector('#moveChoiceError').textContent = id===235?'Escolha apenas um golpe para Smeargle.':'Escolha no máximo quatro golpes.';
               return;
             }
             if (!this.moveDraft.includes(moveId)) this.moveDraft.push(moveId);
@@ -67,12 +67,12 @@
             this.moveDraft = this.moveDraft.filter(value => value !== moveId);
           }
           this.container.querySelector('#moveChoiceError').textContent = '';
-          this.container.querySelector('#moveChoiceCount').textContent = `${this.moveDraft.length}/4 golpes escolhidos`;
+          this.container.querySelector('#moveChoiceCount').textContent = `${this.moveDraft.length}/${id===235?1:4} golpes escolhidos`;
           this.container.querySelector('#saveCampaignMoves').disabled = this.moveDraft.length === 0;
         };
       });
       this.container.querySelector('#saveCampaignMoves').onclick = () => {
-        const valid = Options.validateSelection(id, this.moveDraft);
+        const valid = Options.validateSelection(id, this.moveDraft,this.manager.getState().sketchMoves?.[id]);
         if (!valid) {
           this.container.querySelector('#moveChoiceError').textContent = 'Escolha de um a quatro golpes válidos.';
           return;

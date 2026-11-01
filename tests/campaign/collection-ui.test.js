@@ -22,15 +22,15 @@ function setup() {
 }
 test('Collection encounter UI offers ball capture without team selection and labels unselectable roster cards', () => {
   const {manager,view,container} = setup();
-  manager.data.wild.active = { pokemonId: 132, regionId: 'region-1', pointId: 'r1-meadow', encounterId: 'collection-ui' };
-  view.pending = { kind: 'WILD', id: 132 };
+  manager.data.wild.active = { pokemonId: 789, regionId: 'region-3', pointId: 'r3-grove', encounterId: 'collection-ui' };
+  view.pending = { kind: 'WILD', id: 789 };
   view.renderPicker();
   assert.ok(container.innerHTML.includes('ENCONTRO DE COLEÇÃO'));
   assert.ok(!container.innerHTML.includes('startCampaignBattle'));
   assert.ok(!container.innerHTML.includes('Escolha exatamente 3'));
   container.querySelector('#collectionCapture').onclick();
-  assert.equal(manager.getState().wild.pendingCapture.pokemonId, 132);
-  const card = view.card(Catalog.byId(132));
+  assert.equal(manager.getState().wild.pendingCapture.pokemonId, 789);
+  const card = view.card(Catalog.byId(789));
   assert.ok(card.includes('disabled'));
   assert.ok(card.includes('Somente coleção'));
 });

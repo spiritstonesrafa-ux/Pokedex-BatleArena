@@ -7,45 +7,49 @@
   const Support = typeof module !== 'undefined' && module.exports
     ? require('../battle-session/battle-session-constants.js') : window.PBABattleSession;
 
-  function getPool(id) {
+  const Rules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+  function getPool(id,sketchMoveId) {
     const species = Fixed.byId[Number(id)];
     if (!species) return [];
-    return [...species.moves, ...(Extras.byId[Number(id)] || [])]
+    const learned=Number(id)===235&&Rules.P8.canSketch(Rules,sketchMoveId)?Rules.P8.canonical(Rules,sketchMoveId):null;
+    return [...species.moves, ...(Extras.byId[Number(id)] || []),...(learned&&!species.moves.some(m=>m.id===learned.id)?[learned]:[])]
       .map(move => Object.freeze({ ...move }));
   }
 
-  function getDefaultMoveIds(id) {
+  function getDefaultMoveIds(id,sketchMoveId) {
+    if(Number(id)===235&&Rules.P8.canSketch(Rules,sketchMoveId))return [Number(sketchMoveId)];
     return (Fixed.byId[Number(id)]?.moves || []).map(move => move.id);
   }
 
-  function validateSelection(id, moveIds) {
+  function validateSelection(id, moveIds,sketchMoveId) {
     const species = Fixed.byId[Number(id)];
     if (!species || !Array.isArray(moveIds) || moveIds.length < 1 || moveIds.length > 4) return null;
+    if(Number(id)===235&&moveIds.length!==1)return null;
     const ids = moveIds.map(Number);
     if (ids.some(moveId => !Number.isInteger(moveId) || moveId <= 0) ||
         new Set(ids).size !== ids.length) return null;
-    const available = new Map(getPool(id).map(move => [move.id, move]));
+    const available = new Map(getPool(id,sketchMoveId).map(move => [move.id, move]));
     const moves = ids.map(moveId => available.get(moveId));
     if (moves.some(move => !move || !Support.isMechanicallySupportedMove(move))) return null;
     return moves;
   }
 
-  function resolveLoadout(id, moveIds) {
-    return (validateSelection(id, moveIds) || Fixed.byId[Number(id)]?.moves || [])
+  function resolveLoadout(id, moveIds,sketchMoveId) {
+    return (validateSelection(id, moveIds,sketchMoveId) || validateSelection(id,getDefaultMoveIds(id,sketchMoveId),sketchMoveId) || [])
       .map(move => ({ ...move }));
   }
 
-  function sanitizePreferences(raw, allowedIds) {
+  function sanitizePreferences(raw, allowedIds,sketchMoves={}) {
     const result = {};
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return result;
     const allowed = new Set(allowedIds || []);
     for (const [key, moveIds] of Object.entries(raw)) {
       const id = Number(key);
       if (!Number.isInteger(id) || !allowed.has(id)) continue;
-      const moves = validateSelection(id, moveIds);
+      const moves = validateSelection(id, moveIds,sketchMoves[id]);
       if (!moves) continue;
       const ids = moves.map(move => move.id);
-      if (JSON.stringify(ids) !== JSON.stringify(getDefaultMoveIds(id))) result[id] = ids;
+      if (JSON.stringify(ids) !== JSON.stringify(getDefaultMoveIds(id,sketchMoves[id]))) result[id] = ids;
     }
     return result;
   }

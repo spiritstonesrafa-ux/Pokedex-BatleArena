@@ -2,6 +2,18 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: P8 concluída no escopo individual dos pilotos
+
+- Entregues **Transform/Sketch, formas e tipos dinâmicos, Dynamax padrão (18 ataques Max + Max Guard), Terastallization (19 tipos, incluindo Stellar), Terapagos/Ogerpon e o golpe Z de Necrozma Ultra**. Relatório e limites: docs/roadmap-p8.md.
+- **Uma mecânica especial por equipe por batalha: Dynamax OU Tera OU golpe Z piloto**. Preparação permite salvar tipo Tera e preferência; controles na batalha confirmam a ativação. IA, interface, PP originais e sessões de ambos os lados integrados.
+- Imposter/Hunger Switch/Tera Shift/Tera Shell/Teraform Zero/Embody Aspect implementadas. Corrigidos HP/retorno de Dynamax e Terapagos, interações de proteção, múltiplos acertos, Stellar/Sleep Talk e restauração sem reviver nocauteados.
+- Sketch mantém **um slot persistente** para Smeargle na conclusão normal de campanha; abandono/Quick/inimigo/convidado não persistem. Ditto/Smeargle liberados: **1.349 registros aptos; Cosmog/Cosmoem apenas coleção**. Hidden Power já era FULL na P5.
+- **13 pilotos P8 FULL; zero dependências essenciais PHASE_P8**. Catálogo: 384 golpes, 364 FULL, 20 PARTIAL com dependências preservadas. P5: 60/60 FULL; P6: 68 FULL e dois PARTIAL por P1.
+- **542 espécies com extras**, até seis opções; draft de 450 (50/geração) e saves preservados. Gerador offline reproduzido sem mudanças adicionais.
+- **2.522 testes aprovados / 38 suítes**, zero falhas/cancelados/ignorados. Auditorias P4/P5/P6/P7/P8/draft aprovadas. Interface validada automaticamente; sem homologação visual manual.
+- Fora deste escopo: outros golpes Z, assinaturas Gigantamax, ativação dinâmica Mega/Primal/Ultra Burst, quatro slots persistentes de Sketch e duplas/Commander. Pendências próprias de P1/P2/P3 e habilidades/itens fora dos pilotos continuam explícitas.
+- P7 publicada como 8b37729. **P8 local, sem novo commit/push/deploy**. Registros abaixo descrevem o fechamento histórico de cada fase; o estado vigente é esta atualização e as auditorias atuais.
+
 ## Atualização — 31/10/2026: P6 publicada e catálogo P7 implementado
 
 - Commit/push da P6: **a58a9e9d54965a1b13d6c0ab8bf7319d96ae1654**, confirmado em origin/main. Publicação da P7 autorizada pelo usuário; consultar o histórico Git para o commit correspondente.

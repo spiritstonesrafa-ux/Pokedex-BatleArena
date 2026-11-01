@@ -294,7 +294,9 @@
       const candidateMoves = Array.isArray(pokeData.moves) ? pokeData.moves : [];
       const loadoutResult = pokeData.campaignFixedMoves
         ? this.createCampaignFixedLoadout(candidateMoves, Boolean(pokeData.campaignCustomMoves), Boolean(pokeData.campaignLimitedMoves))
-        : await this.selectDeterministicLoadout(candidateMoves, types, stats);
+        : [132,235].includes(id)
+          ? {...this.createCampaignFixedLoadout([battleConstants.P8.moves[id===132?144:166]],false,true),source:MOVESET_LOADOUT_SOURCE.API_MOVESET}
+          : await this.selectDeterministicLoadout(candidateMoves, types, stats);
       if(pokemonOrId&&typeof pokemonOrId==='object'&&pokemonOrId.battlePreference)pokeData={...pokeData,battlePreference:pokemonOrId.battlePreference};
       const pref=pokeData.battlePreference?battleConstants.P7.validatePreference(id,pokeData.battlePreference):null;
       if(pokeData.battlePreference&&!pref)throw new Error('Preferência de habilidade/item inválida.');
@@ -309,6 +311,7 @@
         name,
         ...(pokeData.ivs?{ivs:{...pokeData.ivs}}:{}),
         ability,item,
+        specialMechanic:pref?.specialMechanic||pokeData.specialMechanic||'none',teraType:pref?.teraType||pokeData.teraType||(battleConstants.P8.requiredTera(id)||types[0]),dynamaxLevel:pokeData.dynamaxLevel??10,
         weightKg: Number(pokeData.weightKg)>0?Number(pokeData.weightKg):Number(pokeData.weight)>0?Number(pokeData.weight)/10:battleConstants.P5?.weightKgById[id],
         ...(pokeData.level !== undefined ? { level: pokeData.level } : {}),
         types,
