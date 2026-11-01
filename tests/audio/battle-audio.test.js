@@ -698,7 +698,7 @@ test('Dialogue play — mounted scene starts its score and skip stops it before 
 
 test('Four trial scores have distinct original families and obey the existing music mute channel',async()=>{
  const audio=new BattleAudioController();await audio.unlock();
- try{for(const [kind,family]of [['LEGENDARY_TRIAL','legendary'],['MYTHICAL_TRIAL','mythical'],['TITANS_TRIAL','titans'],['CELESTIAL_TRIAL','celestial']]){assert.equal(audio.startDialogueMusic({challengeKind:kind,moment:'INTRO'}),true);assert.equal(audio._dialogueTheme.family,family);assert.ok(audio._dialogueIntervalId);audio.mixer.setMute(true);assert.equal(audio.getSettings().isMuted,true);audio.cancel();assert.equal(audio._dialogueIntervalId,null);assert.equal(audio._dialogueNodes.size,0);audio.mixer.setMute(false);}}finally{audio.cancel();}
+ try{for(const [kind,family]of [['LEGENDARY_TRIAL','legendary'],['MYTHICAL_TRIAL','mythical'],['TITANS_TRIAL','titans'],['CELESTIAL_TRIAL','celestial'],['MEWTWO_TRIAL','mewtwo']]){assert.equal(audio.startDialogueMusic({challengeKind:kind,moment:'INTRO'}),true);assert.equal(audio._dialogueTheme.family,family);assert.ok(audio._dialogueIntervalId);audio.mixer.setMute(true);assert.equal(audio.getSettings().isMuted,true);audio.cancel();assert.equal(audio._dialogueIntervalId,null);assert.equal(audio._dialogueNodes.size,0);audio.mixer.setMute(false);}}finally{audio.cancel();}
 });
 test('Shadow dialogue has an audible midrange melody and remains under the user mixer settings',async()=>{
  const audio=new BattleAudioController();await audio.unlock();audio.mixer.setMusicVolume(.3);audio.mixer.setMute(true);

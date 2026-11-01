@@ -253,6 +253,7 @@
         { routeId: 'rend-celestial-super', from: 'node-celestial', to: 'node-super', pathD: 'M 780 203 C 700 230, 600 270, 500 315' },
         { routeId: 'rend-legendary-super', from: 'node-legendary', to: 'node-super', pathD: 'M 200 394 C 290 380, 390 360, 500 315' },
         { routeId: 'rend-mythical-super', from: 'node-mythical', to: 'node-super', pathD: 'M 800 394 C 710 380, 610 360, 500 315' },
+        { routeId: 'rend-shadow-mewtwo', from: 'node-shadow', to: 'node-mewtwo', pathD: 'M 500 113 C 625 180, 625 450, 500 495' },
         { routeId: 'rend-super-shadow', from: 'node-super', to: 'node-shadow', pathD: 'M 500 315 L 500 113' }
       ].map(Object.freeze),
       nodes: [
@@ -315,6 +316,11 @@
           biomeLabel: 'Trono do Eclipse',
           visibilityPolicy: 'SHADOW_REVEALED',
           ariaLabelBase: 'Shadow Super Trainer — O Desafio Final'
+        },
+        {
+          nodeId: 'node-mewtwo', challengeKind: 'MEWTWO_TRIAL', challengeId: 'mewtwo', type: 'special',
+          position: Object.freeze({ x:50, y:88 }), biomeLabel: 'Núcleo Psíquico', visibilityPolicy: 'ALWAYS_IN_REGION',
+          ariaLabelBase: 'Desafio Mewtwo — As Três Faces do Poder',
         }
       ].map(Object.freeze)
     }

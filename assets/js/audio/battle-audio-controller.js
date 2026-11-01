@@ -415,9 +415,10 @@
       this.stopBattleMusic();
       this.stopShadowBossTheme();
       const ctx = this.contextManager.getContext();
-      const trialFamilies = {LEGENDARY_TRIAL:'legendary',MYTHICAL_TRIAL:'mythical',TITANS_TRIAL:'titans',CELESTIAL_TRIAL:'celestial'};
+      const trialFamilies = {MEWTWO_TRIAL:'mewtwo',LEGENDARY_TRIAL:'legendary',MYTHICAL_TRIAL:'mythical',TITANS_TRIAL:'titans',CELESTIAL_TRIAL:'celestial'};
       const family = trialFamilies[scene.challengeKind] || (scene.challengeKind === 'SHADOW' ? 'shadow' : scene.challengeKind === 'SUPER' ? 'super' : 'master');
       const themes = {
+        mewtwo: {notes:[220,233.08,293.66,440,415.3,293.66,261.63,233.08],bass:55,beat:640,wave:'triangle'},
         legendary: { notes:[146.83,220,293.66,261.63,220,174.61,164.81,220],bass:73.42,beat:650,wave:'triangle' },
         mythical: { notes:[196,293.66,311.13,392,369.99,293.66,233.08,293.66],bass:98,beat:710,wave:'sine' },
         titans: { notes:[130.81,138.59,196,174.61,130.81,155.56,146.83,130.81],bass:65.41,beat:740,wave:'triangle' },

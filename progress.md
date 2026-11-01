@@ -2,6 +2,16 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: Desafio Mewtwo após Shadow
+
+- Novo desafio 3x3 com Mewtwo (150), Mega Mewtwo X (10043) e Mega Mewtwo Y (10044), disponível somente após derrotar Shadow.
+- Acesso pelo encerramento da campanha e pelo Núcleo Psíquico na Região Final, preservando campanhas antigas já concluídas.
+- Abertura cinematográfica em seis cenas, revelando o time real do confronto, com arena psíquica, identidade visual e tema musical próprios.
+- Na primeira vitória, o jogador escolhe uma das três formas ainda não possuídas para o elenco permanente. Derrotas permitem nova tentativa; revanches não duplicam recompensas. Se todas as formas já forem possuídas, a vitória conclui o desafio sem bloquear o fluxo.
+- Progresso, tentativas e recompensa persistidos no salvamento existente; entradas inconsistentes antes de vencer Shadow são descartadas.
+- Validação: 2.730 testes aprovados, 39 suítes, zero falhas; auditorias de learnsets e conclusão do roadmap aprovadas. Conferência visual da abertura, entrada na arena e ponto do mapa em navegador.
+- Alterações locais, sem commit, push ou deploy nesta etapa.
+
 ## Atualização — 01/11/2026: correção de persistência contínua dos efeitos visuais de status (PBA-020)
 
 - **Correção da Persistência Contínua dos Efeitos Visuais:**

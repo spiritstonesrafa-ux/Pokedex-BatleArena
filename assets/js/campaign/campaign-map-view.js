@@ -27,6 +27,7 @@
   });
 
   const TRIAL_ICONS = Object.freeze({
+    MEWTWO_TRIAL: '🧬',
     LEGENDARY_TRIAL: '👑',
     MYTHICAL_TRIAL: '🔮',
     TITANS_TRIAL: '🛡️',
@@ -45,7 +46,7 @@
     if (Model && typeof Model.isTrial === 'function') {
       return Model.isTrial(kind);
     }
-    return ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL'].includes(kind);
+    return ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL', 'MEWTWO_TRIAL'].includes(kind);
   }
 
   function getTrialKey(node) {
@@ -1834,7 +1835,7 @@
         payload = { kind: 'SHADOW', id: null };
       } else if (trialKey || isTrialKind(node.challengeKind)) {
         const kind = trialKey || node.challengeKind;
-        const validTrials = ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL'];
+        const validTrials = ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL', 'MEWTWO_TRIAL'];
         if (validTrials.includes(kind)) {
           payload = { kind, id: null };
         }

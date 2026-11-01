@@ -4,7 +4,7 @@
     ? require('../battle/type-effectiveness.js') : window.PBABattle.TypeEffectiveness;
   const Battle = typeof module !== 'undefined' && module.exports
     ? require('../battle/battle-constants.js') : window.PBABattle;
-  const TEAMS = { SUPER: 'SUPER_TEAM', SHADOW: 'SUPER_TEAM',
+  const TEAMS = { MEWTWO_TRIAL:'MEWTWO_TRIAL_TEAM', SUPER: 'SUPER_TEAM', SHADOW: 'SUPER_TEAM',
     LEGENDARY_TRIAL: 'LEGENDARY_TRIAL_TEAM', MYTHICAL_TRIAL: 'MYTHICAL_TRIAL_TEAM',
     TITANS_TRIAL: 'TITANS_TRIAL_TEAM', CELESTIAL_TRIAL: 'CELESTIAL_TRIAL_TEAM' };
   const cap = value => String(value || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());

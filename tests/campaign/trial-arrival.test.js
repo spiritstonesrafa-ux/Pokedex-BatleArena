@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const {CampaignBattleCoordinator}=require('../../assets/js/campaign/campaign-battle-coordinator'),Catalog=require('../../assets/js/campaign/campaign-catalog');
 const source=fs.readFileSync(path.join(__dirname,'../../assets/js/campaign/trial-arrival.js'),'utf8');
-const definitions={LEGENDARY_TRIAL:'LEGENDARY_TRIAL_TEAM',MYTHICAL_TRIAL:'MYTHICAL_TRIAL_TEAM',TITANS_TRIAL:'TITANS_TRIAL_TEAM',CELESTIAL_TRIAL:'CELESTIAL_TRIAL_TEAM'};
+const definitions={MEWTWO_TRIAL:'MEWTWO_TRIAL_TEAM',LEGENDARY_TRIAL:'LEGENDARY_TRIAL_TEAM',MYTHICAL_TRIAL:'MYTHICAL_TRIAL_TEAM',TITANS_TRIAL:'TITANS_TRIAL_TEAM',CELESTIAL_TRIAL:'CELESTIAL_TRIAL_TEAM'};
 function setup(reduced=true){
  const timers=new Map(),listeners=new Map(),nodes=new Map();let serial=0;
  const node=()=>({textContent:'',dataset:{},hidden:false,isConnected:true,attributes:{},classList:{values:new Set(),toggle(k,v){if(v)this.values.add(k);else this.values.delete(k);}},setAttribute(k,v){this.attributes[k]=v;},focus(){doc.activeElement=this;}});
@@ -14,7 +14,7 @@ function setup(reduced=true){
 }
 for(const [kind,key]of Object.entries(definitions))test(kind+' reveals the actual canonical team and waits for confirmation without modifying it',async()=>{
  const env=setup(),team=Catalog[key],before=JSON.stringify(team),scene=new env.Scene(),focus=env.doc.activeElement;let resolved=false;
- const p=scene.play(kind,team).then(v=>{resolved=v;});assert.equal(scene.index,0);assert.equal(scene.timer,null);assert.match(env.layer.innerHTML,new RegExp('arena-trial-'+env.themes[kind].arena));
+ const p=scene.play(kind,team).then(v=>{resolved=v;});assert.equal(scene.index,0);assert.equal(scene.timer,null);assert.match(env.layer.innerHTML,new RegExp(env.themes[kind].backgroundSrc||'arena-trial-'+env.themes[kind].arena));
  scene.advance();scene.advance();assert.equal(scene.index,2);assert.equal(env.images[0].alt,team[0].name.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));assert.equal(env.members[1].attributes['aria-hidden'],'true');
  scene.advance();scene.advance();scene.advance();assert.equal(scene.index,5);assert.equal(resolved,false);assert.ok(env.labels.every(x=>x.hidden===false));assert.equal(env.layer.querySelector('.trial-arrival__next').textContent,'Entrar na arena →');
  scene.advance();await p;assert.equal(resolved,true);assert.equal(JSON.stringify(team),before);assert.equal(env.doc.body.style.overflow,'auto');assert.equal(env.doc.activeElement,focus);assert.equal(env.listeners.size,0);assert.equal(env.timers.size,0);

@@ -13,6 +13,7 @@
   }
 
   const TRIAL_DEFINITIONS = Object.freeze({
+    MEWTWO_TRIAL: Object.freeze({key:'mewtwo',title:'Desafio Mewtwo',trainerName:'Desafio Mewtwo',trainerTitle:'As Três Faces do Poder',badgeName:'Aliado Mewtwo',difficulty:5,getTeam:()=>Catalog.MEWTWO_TRIAL_TEAM||[]}),
     LEGENDARY_TRIAL: Object.freeze({
       key: 'legendary',
       title: 'Prova Lendária',
@@ -52,6 +53,7 @@
   });
 
   const TRIAL_KEYS = Object.freeze({
+    MEWTWO_TRIAL: 'mewtwo',
     LEGENDARY_TRIAL: 'legendary',
     MYTHICAL_TRIAL: 'mythical',
     TITANS_TRIAL: 'titans',
@@ -217,7 +219,7 @@
       const isDefeated = isCompleted;
       const isVictoryPending = Boolean(trialProgress.completed && !trialProgress.rewardClaimed);
       const attempts = Math.max(0, Math.floor(Number(trialProgress.attempts) || 0));
-      const isRegionUnlocked = badgeCount >= 18;
+      const isRegionUnlocked = trialKind === 'MEWTWO_TRIAL' ? Boolean(shadowTrainer.defeated) : badgeCount >= 18;
 
       let state = 'LOCKED';
       if (!isRegionUnlocked) {
@@ -231,15 +233,15 @@
       }
 
       const statusText = !isRegionUnlocked
-        ? 'Bloqueada. Conquiste as 18 insígnias para desbloquear.'
+        ? (trialKind === 'MEWTWO_TRIAL' ? 'Bloqueado. Derrote o Shadow para desbloquear o Desafio Mewtwo.' : 'Bloqueada. Conquiste as 18 insígnias para desbloquear.')
         : (isCompleted
-          ? 'Concluída. Aliado recrutado. Revanche disponível.'
+          ? (trialKind === 'MEWTWO_TRIAL' ? 'Desafio Mewtwo concluído. Revanche disponível.' : 'Concluída. Aliado recrutado. Revanche disponível.')
           : (isVictoryPending ? 'Vitória conquistada! Escolha de recompensa pendente.' : 'Disponível para desafio de elite.'));
 
       const ariaLabel = `${node.ariaLabelBase}. Estado: ${statusText}`;
       const canChallenge = isRegionUnlocked && !hasPendingReward;
       const cannotChallengeReason = !isRegionUnlocked
-        ? 'Bloqueada. Conquiste as 18 insígnias para desbloquear.'
+        ? (trialKind === 'MEWTWO_TRIAL' ? 'Bloqueado. Derrote o Shadow para desbloquear o Desafio Mewtwo.' : 'Bloqueada. Conquiste as 18 insígnias para desbloquear.')
         : (hasPendingReward ? 'Resgate a recompensa pendente antes de iniciar uma nova batalha.' : null);
 
       const trainerName = trialDef.trainerName;

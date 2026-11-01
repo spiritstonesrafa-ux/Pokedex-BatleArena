@@ -83,9 +83,10 @@
   const LEGENDARY_TRIAL_TEAM = Object.freeze([145,245,381].map(id => allById[id]));
   const MYTHICAL_TRIAL_TEAM = Object.freeze([151,385,494].map(id => allById[id]));
   const TITANS_TRIAL_TEAM = Object.freeze([1007,383,717].map(id => allById[id]));
+  const MEWTWO_TRIAL_TEAM = Object.freeze([150,10043,10044].map(id => allById[id]));
   const CELESTIAL_TRIAL_TEAM = Object.freeze([889,791,487].map(id => allById[id]));
   const api = Object.freeze({
-    DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SUPER_AUDIT, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
+    DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
     EXPANSION_SPECIES, EXPLORATION_SPECIES,
     WILD_SPECIAL_SPECIES: Object.freeze([...WildSpecial.entries, ...Expanded.entries.filter(entry =>
       (entry.legendary || entry.mythical) && !WildSpecial.byId[entry.id])]),

@@ -575,6 +575,8 @@
           return ARENA_CATALOG[ARENA_THEME_KEYS.SUPER] || DEFAULT_ARENA_THEME;
         }
 
+        if (context.kind === 'MEWTWO_TRIAL') return ARENA_CATALOG[ARENA_THEME_KEYS.PSYCHIC] || DEFAULT_ARENA_THEME;
+
         // 3. Trial Arenas
         const trialKey = context.trialKind || context.trialId || context.id || '';
         const kindUpper = (context.kind || '').toUpperCase();
