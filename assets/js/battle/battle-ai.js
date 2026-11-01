@@ -176,7 +176,7 @@
 
         // Sem ações legais possíveis na equipe inteira
         return {
-          action: null,
+          action: myActive.moves.length&&myActive.moves.every(m=>m.currentPp<=0)?{type:constants.BATTLE_ACTIONS.MOVE,moveId:165}:null,
           diagnostics: {
             strategy: STRATEGY.SIMPLE,
             reason: REASON.NO_USABLE_ACTION,
@@ -208,7 +208,7 @@
         }
 
         return {
-          action: null,
+          action: myActive.moves.length&&myActive.moves.every(m=>m.currentPp<=0)?{type:constants.BATTLE_ACTIONS.MOVE,moveId:165}:null,
           diagnostics: {
             strategy: STRATEGY.SMART,
             reason: REASON.NO_USABLE_ACTION,

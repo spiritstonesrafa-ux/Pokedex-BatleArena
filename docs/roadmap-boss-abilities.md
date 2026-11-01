@@ -1,6 +1,6 @@
 # Habilidades dos novos chefes — roteiro de implementação
 
-Estado em 01/11/2026: equipes e conjuntos dos chefes implementados; habilidades abaixo ainda pendentes. Este roteiro estende o suporte de habilidades e não reabre as fases já concluídas de golpes.
+Estado em 01/11/2026: equipes, conjuntos e habilidades dos chefes implementados e validados no escopo dos formatos e golpes disponíveis. Este documento registra o contrato das habilidades e seus testes.
 
 ## Equipes já integradas
 
@@ -52,4 +52,18 @@ Implementação de referência do próprio Pokémon Showdown, consultada em 01/1
 https://github.com/smogon/pokemon-showdown/blob/master/data/abilities.ts
 Seções pressure, intrepidsword e asonespectrier. Regras modernas de Intrepid Sword; a versão de geração VIII fica em data/mods/gen8/abilities.ts.
 
-Nenhuma dessas habilidades foi implementada nesta mudança das equipes. Itens e Behemoth Blade já têm suporte funcional.
+## Entrega das habilidades — 01/11/2026
+
+- Implementados Pressure, Intrepid Sword e As One (Spectrier), além de Unnerve e Grim Neigh como habilidades independentes para espécies que as possuem.
+- Pressure respeita o conjunto real de alvos, inclusive redirecionamento de duplas, golpes de área, golpes Max/Z, PP do chamador Sleep Talk, múltiplos acertos e exceções canônicas de hazards/clima/terreno. Não drena PP de reservas ou aliados.
+- Intrepid Sword usa marca local por Pokémon, não herdada de entradas brutas e preservada nas trocas; Transform usa a marca do próprio transformador. Bônus combina com Choice Band e respeita o limite de estágios.
+- As One não é anulada por Core Enforcer; Unnerve normal continua passível de supressão. Consumo automático de berries considera todos os adversários ativos e é reavaliado após saída ou nocaute. Remoção de berries por Knock Off/Incinerate e consumo forçado de Bug Bite mantêm suas regras próprias.
+- Grim Neigh contabiliza cada vítima de dano direto, inclusive alvo aliado em duplas, conforme o evento canônico de nocaute. Não recompensa dano residual e não duplica o bônus por múltiplos acertos.
+- IA usa Struggle quando nenhum golpe da equipe tem PP; o avaliador considera berries bloqueadas por Unnerve. As ativações são exibidas em português na apresentação.
+- Validação: 2.803 testes, 39 suítes, zero falhas; 60 regressões novas dedicadas às habilidades. Auditorias P7, P8, learnsets e conclusão do roadmap aprovadas. Conferência em navegador real: Psychic passou de 10 para 8 PP após um uso contra Eternatus Eternamax com Pressure.
+- Ações de troca/cópia de habilidades que o jogo ainda não oferece não foram adicionadas. As regras acima são aplicadas às interações já suportadas (Core Enforcer e Transform incluídos).
+
+Referências adicionais para alvos e PP:
+https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts
+https://github.com/smogon/pokemon-showdown/blob/master/sim/battle-actions.ts
+https://github.com/smogon/pokemon-showdown/blob/master/data/moves.ts

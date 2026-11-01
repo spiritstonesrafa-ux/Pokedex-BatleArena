@@ -276,7 +276,7 @@
         })),
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
-        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,abilityIgnored:false,choiceLock:null,flashFire:false,
+        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,abilityIgnored:false,intrepidSwordUsed:false,choiceLock:null,flashFire:false,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
@@ -822,10 +822,10 @@
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,source:defenderRole,target:attackerRole,pokemonName:attacker.name,statusCondition:'burn',moveId:690,moveName:'beak-blast',chance:100});
       }
     }
-    function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false) {
+    function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
       const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
       if(attacker.currentHp<=0 || state.status!=='IN_PROGRESS')return;
-      executeActionCore(attackerRole,defenderRole,state,events,action,calledMove);
+      executeActionCore(attackerRole,defenderRole,state,events,action,calledMove,pressureCallerId);
       attacker.abilityIgnored=false;originalTarget.abilityIgnored=false;attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;originalTarget.p7BlockDrop=false;originalTarget.p7BlockAttackDrop=false;
       constants.Completion.crash(state,attackerRole,attacker,action,events.slice(start),constants,events);
       if(!calledMove&&!state.doublesSpread)constants.P7.afterMove(state,attackerRole,events,constants,events.slice(start));
@@ -866,7 +866,7 @@
       if(batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED&&e.moveId===690))attacker.beakBlastReady=false;
       if(attacker.bideState && !batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED))attacker.bideState=null;
     }
-    function executeActionCore(attackerRole, defenderRole, state, events, action, calledMove = false) {
+    function executeActionCore(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
       const attacker = getActiveCombatant(state, attackerRole);
       const defender = getActiveCombatant(state, defenderRole);
       constants.P6.init(state);
@@ -1239,7 +1239,8 @@
       // Consumo de PP (ocorre antes da resolução de dano, em hits e em misses)
       if(!calledMove && !continuingBide && !continuingTwoTurn && !continuingLocked && !isStruggle){
       const previousPp = ppMove.currentPp;
-      ppMove.currentPp = Math.max(0, ppMove.currentPp - 1);
+      const extraPp=immobilized?0:constants.P7.pressureCost(state,attackerRole,selectedMove);
+      ppMove.currentPp = Math.max(0, ppMove.currentPp - 1 - extraPp);
 
       events.push({
         type: BATTLE_EVENTS.PP_CHANGED,
@@ -1247,12 +1248,18 @@
         moveId: ppMove.id,
         moveName: ppMove.name,
         previousPp,
+        pressureCost: extraPp,
         currentPp: ppMove.currentPp,
         maxPp: ppMove.maxPp
       });
+      if(extraPp)events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,reason:'PRESSURE_PP',label:String(extraPp)});
 
       }
 
+      if(calledMove&&pressureCallerId){
+        const caller=attacker.moves.find(m=>m.id===pressureCallerId),extra=constants.P7.pressureCost(state,attackerRole,selectedMove);
+        if(caller&&extra){const previousPp=caller.currentPp;caller.currentPp=Math.max(0,previousPp-extra);events.push({type:BATTLE_EVENTS.PP_CHANGED,actor:attackerRole,moveId:caller.id,moveName:caller.name,previousPp,currentPp:caller.currentPp,maxPp:caller.maxPp,pressureCost:extra});events.push({type:BATTLE_EVENTS.MOVE_PREPARED,actor:attackerRole,pokemonName:attacker.name,reason:'PRESSURE_PP',label:String(extra)});}
+      }
       if (immobilized) {
         attacker.stallCount = 0;
         if (attacker.twoTurnMove) attacker.twoTurnMove = null;
@@ -1392,7 +1399,7 @@
         if(!candidates.length){attacker.stallCount=0;fail('NO_CALLABLE_MOVE');return;}
         const index=action.sleepTalkChoice??0;
         if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
-        executeAction(attackerRole,defenderRole,state,events,{...action,moveId:candidates[index].id,moveName:undefined},true);return;
+        executeAction(attackerRole,defenderRole,state,events,{...action,moveId:candidates[index].id,moveName:undefined},true,calledMove?null:214);return;
       }
       if(selectedMove.id===138&&defender.statusCondition!=='sleep'){fail('TARGET_NOT_ASLEEP');return;}
       if(selectedMove.id===281 && (defender.safeguarded||constants.P7.statusImmune(defender,'sleep'))){fail('SAFEGUARD');return;}
@@ -1724,7 +1731,7 @@
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
             moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical)});
-          if (defender.currentHp === 0) resolveFaints(state, events, [defenderRole]);
+          if (defender.currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events);resolveFaints(state, events, [defenderRole]);}
           return;
         }
         finalDamage = constants.applyBurnPenalty(
@@ -2060,7 +2067,7 @@
       constants.P6.afterDamage(state,attackerRole,selectedMove,action||{},constants,events,actualDamageDealt);
       // 12. Nocaute (Faint Detection - defensor e/ou atacante por recuo)
       const faintedRoles = [];
-      if (currentHp === 0) faintedRoles.push(defenderRole);
+      if (currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events);faintedRoles.push(defenderRole);}
       if (attackerFaintedFromRecoil) faintedRoles.push(attackerRole);
       if (faintedRoles.length > 0) {
         resolveFaints(state, events, faintedRoles, attackerFaintedFromRecoil && currentHp > 0 ? 'recoil' : 'move');

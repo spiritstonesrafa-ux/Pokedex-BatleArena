@@ -2,6 +2,15 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: habilidades funcionais dos novos chefes
+
+- Equipes publicadas no commit `3008f41`. Implementados Pressure, Intrepid Sword, As One (Spectrier), Unnerve e Grim Neigh no motor, válidos para jogador e IA nos formatos individuais, equipes, Final Stand e duplas.
+- Pressure desconta PP adicional dos alvos corretos, com cobertura de Sleep Talk, múltiplos acertos, hazards/clima/terreno e Max/Z. Intrepid Sword ativa uma vez por Pokémon por batalha. As One bloqueia berries inimigas e concede Special Attack por nocaute direto, sem recompensa por dano residual.
+- Bloqueio de berries considera ambos os slots de duplas, sai quando o último portador deixa o campo e não anula itens comuns. Transform e Core Enforcer seguem as regras das habilidades envolvidas.
+- Corrigido fallback da IA quando toda a equipe está sem PP: usa Struggle. Apresentação exibe as ativações e o custo adicional de Pressure; habilidades entregues deixam de aparecer como efeito pendente.
+- `docs/roadmap-boss-abilities.md` atualizado como contrato entregue. Auditoria P7 atualizada de 66 para 71 habilidades suportadas.
+- Validação: **2.803 testes aprovados em 39 suítes, zero falhas**, incluindo 60 novas regressões. Auditorias de learnsets, P7, P8 e conclusão do roadmap aprovadas. Conferência em navegador confirmou Psychic de 10 para 8 PP após atacar Eternatus Eternamax uma vez.
+
 ## Atualização — 01/11/2026: equipes do Super e Shadow atualizadas
 
 - Ambos os chefes passam a usar Eternatus Eternamax, Calyrex Cavaleiro Espectral e Zacian Coroado, selecionados pela análise do motor atual; SUPER_TEAM e SHADOW_TEAM são definições independentes.

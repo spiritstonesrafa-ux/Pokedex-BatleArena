@@ -478,7 +478,8 @@
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const guaranteedKo = !(multiHit&&(defender.item?.endsWith('-berry')||ab==='multiscale')) && !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
+      const berryBlocked=context.battleState?constants.P7.berriesBlocked(context.battleState,context.attackerSide==='enemy'?'player':'enemy'):['unnerve','as-one-spectrier'].includes(constants.P7.ability(attacker));
+      const guaranteedKo = !(multiHit&&(defender.item?.endsWith('-berry')&&!berryBlocked||ab==='multiscale')) && !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
       const possibleKo = !isTwoTurnCharging && !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 

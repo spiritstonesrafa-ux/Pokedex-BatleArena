@@ -806,7 +806,7 @@ describe('PHASE PBA-007 — BATTLE AI SUITE (AI-01–AI-43)', () => {
     assert.equal(decision.diagnostics.reason, BattleConstants.AI_DECISION_REASON.NO_PP_SWITCH);
   });
 
-  test('AI-36 — No Usable Action: se toda a equipe estiver sem PP, retorna estado controlado sem travar', () => {
+  test('AI-36 — No Usable Action: se toda a equipe estiver sem PP, usa Struggle sem travar', () => {
     const noPp1 = {
       ...BulbasaurFixture,
       currentHp: 45,
@@ -825,7 +825,7 @@ describe('PHASE PBA-007 — BATTLE AI SUITE (AI-01–AI-43)', () => {
     };
 
     const decision = BattleAI.chooseAction(state, 'enemy', { strategy: 'SMART' });
-    assert.equal(decision.action, null);
+    assert.equal(decision.action.moveId, 165);
     assert.equal(decision.diagnostics.reason, BattleConstants.AI_DECISION_REASON.NO_USABLE_ACTION);
   });
 
