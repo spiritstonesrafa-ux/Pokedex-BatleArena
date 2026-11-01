@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PBA-020 — Visual Homologation Harness: Condições de Status</title>
+  <link rel="stylesheet" href="../../assets/css/reset.css">
+  <link rel="stylesheet" href="../../assets/css/global.css">
+  <link rel="stylesheet" href="../../assets/css/battle-animations.css">
+  <link rel="stylesheet" href="../../assets/css/battle-arena.css">
+  <link rel="stylesheet" href="../../assets/css/status-vfx.css?v=20261101-status1">
+  <link rel="stylesheet" href="../../assets/css/doubles-battle.css">
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 24px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .harness-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .harness-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      text-align: center;
+      letter-spacing: -0.02em;
+    }
+
+    .harness-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    /* Section Styling */
+    .harness-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .status-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-card-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .status-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .badge-burn {
+      background: #ea580c;
+      color: #fff;
+    }
+
+    .badge-poison {
+      background: #9333ea;
+      color: #fff;
+    }
+
+    .badge-toxic {
+      background: #701a75;
+      color: #f5d0fe;
+      border: 1px solid #d946ef;
+    }
+
+    .badge-paralysis {
+      background: #ca8a04;
+      color: #fef08a;
+    }
+
+    .badge-sleep {
+      background: #2563eb;
+      color: #dbeafe;
+    }
+
+    .badge-freeze {
+      background: #0284c7;
+      color: #e0f2fe;
+    }
+
+    .badge-confusion {
+      background: #d97706;
+      color: #fef3c7;
+    }
+
+    .badge-combo {
+      background: #4f46e5;
+      color: #e0e7ff;
+    }
+
+    .pokemon-frame {
+      width: 130px;
+      height: 130px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      background: radial-gradient(circle at center, rgba(51, 65, 85, 0.4) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .pokemon-frame img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+    }
+
+    .status-card-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+
+    .status-card-desc {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      text-align: center;
+      min-height: 40px;
+      margin-bottom: 8px;
+    }
+
+    .status-card-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .status-card-actions button {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #e2e8f0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .status-card-actions button:hover {
+      background: #334155;
+      border-color: #64748b;
+    }
+
+    /* Live Battle Arena Section */
+    .arena-showcase {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: radial-gradient(circle at 50% 40%, #1e3a5f 0%, #0c1b2f 60%, #060d17 100%);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 40px;
+    }
+
+    .arena-combatant-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 160px;
+      position: relative;
+    }
+
+    .combatant-hud {
+      width: 190px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .hud-hp-bar {
+      width: 100%;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .hud-hp-fill {
+      height: 100%;
+      background: #22c55e;
+      border-radius: 3px;
+      width: 78%;
+      transition: width 0.3s ease;
+    }
+
+    .arena-slot-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .arena-slot-container img {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6));
+    }
+
+    .arena-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+
+    .arena-controls button {
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .arena-controls button:hover {
+      background: #0369a1;
+    }
+
+    .arena-controls button.btn-secondary {
+      background: #334155;
+      color: #e2e8f0;
+    }
+
+    .arena-controls button.btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* Doubles Showcase */
+    .doubles-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 800px) {
+      .doubles-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="harness-wrapper">
+    <h1 class="harness-title">Pokémon Battle Arena — Identidade Visual de Status</h1>
+    <p class="harness-subtitle">Homologação Visual de Efeitos de Batalha: Queimadura, Veneno, Veneno Grave, Paralisia,
+      Sono, Congelamento e Confusão.</p>
+
+    <!-- SECTION 1: GALERIA DE IDENTIDADES VISUAIS -->
+    <div class="harness-section">
+      <div class="section-header">
+        <div class="section-title">1. Galeria de Identidades Visuais Canônicas</div>
+        <button id="toggleMotionBtn" class="arena-controls"
+          style="margin:0; background:#475569; padding:5px 12px; border-radius:6px; font-size:0.75rem; border:none; color:#fff; cursor:pointer;">
+          Alternar Reduced Motion
+        </button>
+      </div>
+      <div class="gallery-grid" id="galleryGrid">
+        <!-- Card 1: Queimadura -->
+        <div class="status-card" id="card_burn">
+          <div class="status-card-header">
+            <span class="status-badge badge-burn">Queimadura</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#006</span>
+          </div>
+          <div class="pokemon-frame" id="frame_burn">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png"
+              alt="Charizard">
+          </div>
+          <div class="status-card-name">Charizard</div>
+          <div class="status-card-desc">Chamas e brasas alaranjadas na base, pulso de combustão evidente no dano
+            residual.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('burn', 'damage')">Pulso Dano</button>
+            <button onclick="toggleCardStatus('burn')">Alternar</button>
+          </div>
+        </div>
+
+        <!-- Card 2: Veneno -->
+        <div class="status-card" id="card_poison">
+          <div class="status-card-header">
+            <span class="status-badge badge-poison">Veneno</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#034</span>
+          </div>
+          <div class="pokemon-frame" id="frame_poison">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/34.png"
+              alt="Nidoking">
+          </div>
+          <div class="status-card-name">Nidoking</div>
+          <div class="status-card-desc">Bolhas e partículas roxas ascendentes com névoa leve e pulso cáustico
+            borbulhante.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('poison', 'damage')">Pulso Dano</button>
+            <button onclick="toggleCardStatus('poison')">Alternar</button>
+          </div>
+        </div>
+
+        <!-- Card 3: Veneno Grave -->
+        <div class="status-card" id="card_toxic">
+          <div class="status-card-header">
+            <span class="status-badge badge-toxic">Veneno Grave</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#169</span>
+          </div>
+          <div class="pokemon-frame" id="frame_toxic">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/169.png"
+              alt="Crobat">
+          </div>
+          <div class="status-card-name">Crobat</div>
+          <div class="status-card-desc">Miasma violeta-escuro denso, glifos tóxicos em losango e surto cáustico
+            agressivo.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('toxic', 'damage')">Surto Dano</button>
+            <button onclick="toggleCardStatus('toxic')">Alternar</button>
+          </div>
+        </div>
+
+        <!-- Card 4: Paralisia -->
+        <div class="status-card" id="card_paralysis">
+          <div class="status-card-header">
+            <span class="status-badge badge-paralysis">Paralisia</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#025</span>
+          </div>
+          <div class="pokemon-frame" id="frame_paralysis">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+              alt="Pikachu">
+          </div>
+          <div class="status-card-name">Pikachu</div>
+          <div class="status-card-desc">Arcos elétricos amarelos intermitentes e descarga violenta quando impedido de
+            agir.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('paralysis', 'immobilized')">Bloqueio</button>
+            <button onclick="toggleCardStatus('paralysis')">Alternar</button>
+          </div>
+        </div>
+
+        <!-- Card 5: Sono -->
+        <div class="status-card" id="card_sleep">
+          <div class="status-card-header">
+            <span class="status-badge badge-sleep">Sono</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#143</span>
+          </div>
+          <div class="pokemon-frame" id="frame_sleep">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png"
+              alt="Snorlax">
+          </div>
+          <div class="status-card-name">Snorlax</div>
+          <div class="status-card-desc">Respiração suave azul-céu e símbolos "Z" flutuantes serenos sem simular dano.
+          </div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('sleep', 'immobilized')">Dormindo</button>
+            <button onclick="toggleCardStatus('sleep')">Alternar</button>
+          </div>
+        </div>
+
+        <!-- Card 6: Congelamento -->
+        <div class="status-card" id="card_freeze">
+          <div class="status-card-header">
+            <span class="status-badge badge-freeze">Congelamento</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#144</span>
+          </div>
+          <div class="pokemon-frame" id="frame_freeze">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/144.png"
+              alt="Articuno">
+          </div>
+          <div class="status-card-name">Articuno</div>
+          <div class="status-card-desc">Camada translúcida facetada de gelo e cristais, preservando visibilidade do
+            Pokémon.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('freeze', 'immobilized')">Estalo Gelo</button>
+            <button onclick="toggleCardStatus('freeze')">Alternar</button>
+          </div>
+        </div>
+
+        <!-- Card 7: Confusão -->
+        <div class="status-card" id="card_confusion">
+          <div class="status-card-header">
+            <span class="status-badge badge-confusion">Confusão</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">#054</span>
+          </div>
+          <div class="pokemon-frame" id="frame_confusion">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/54.png"
+              alt="Psyduck">
+          </div>
+          <div class="status-card-name">Psyduck</div>
+          <div class="status-card-desc">Estrelas e espirais douradas girando em órbita elíptica no topo da cabeça.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerConfusionPulse('confusion', 'check')">Checagem</button>
+            <button onclick="triggerConfusionPulse('confusion', 'damage')">Auto-dano</button>
+          </div>
+        </div>
+
+        <!-- Card 8: Coexistência Sono + Confusão -->
+        <div class="status-card" id="card_sleep_conf">
+          <div class="status-card-header">
+            <span class="status-badge badge-combo">Sono + Confusão</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">Coexistência</span>
+          </div>
+          <div class="pokemon-frame" id="frame_sleep_conf">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png"
+              alt="Snorlax Asleep & Confused">
+          </div>
+          <div class="status-card-name">Snorlax</div>
+          <div class="status-card-desc">Sono (camada primária: Zs + respiração) coexistindo com órbita de confusão
+            independente.</div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('sleep_conf', 'immobilized')">Ronco</button>
+            <button onclick="triggerConfusionPulse('sleep_conf', 'damage')">Conf. Dano</button>
+          </div>
+        </div>
+
+        <!-- Card 9: Coexistência Queimadura + Confusão -->
+        <div class="status-card" id="card_burn_conf">
+          <div class="status-card-header">
+            <span class="status-badge badge-combo">Fogo + Confusão</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">Coexistência</span>
+          </div>
+          <div class="pokemon-frame" id="frame_burn_conf">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png"
+              alt="Charizard Burn & Confused">
+          </div>
+          <div class="status-card-name">Charizard</div>
+          <div class="status-card-desc">Chamas e brasas de Queimadura simultâneas com estrelas de Confusão em órbita.
+          </div>
+          <div class="status-card-actions">
+            <button onclick="triggerPulse('burn_conf', 'damage')">Combustão</button>
+            <button onclick="triggerConfusionPulse('burn_conf', 'check')">Giro Conf.</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: ARENA DE BATALHA AO VIVO -->
+    <div class="harness-section">
+      <div class="section-header">
+        <div class="section-title">2. Arena de Batalha em Tempo Real</div>
+        <div style="font-size:0.85rem; color:#38bdf8;">Visualização Dinâmica e Sequência de Turnos</div>
+      </div>
+      <div class="arena-showcase" id="battleStage">
+        <!-- Player Zone -->
+        <div class="arena-combatant-zone">
+          <div class="combatant-hud">
+            <div class="hud-row">
+              <span style="color:#f8fafc;">Pikachu Lv.50</span>
+              <span id="playerBadgeSpan" class="status-badge badge-burn">QUE</span>
+            </div>
+            <div class="hud-hp-bar">
+              <div class="hud-hp-fill" id="playerHpBar"></div>
+            </div>
+          </div>
+          <div class="arena-slot-container" id="playerSlotContainer">
+            <img id="playerSpriteImg"
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+              alt="Player Pikachu">
+          </div>
+        </div>
+
+        <!-- Enemy Zone -->
+        <div class="arena-combatant-zone">
+          <div class="combatant-hud">
+            <div class="hud-row">
+              <span style="color:#f8fafc;">Gengar Lv.50</span>
+              <span id="enemyBadgeSpan" class="status-badge badge-toxic">TOX</span>
+            </div>
+            <div class="hud-hp-bar">
+              <div class="hud-hp-fill" id="enemyHpBar" style="background:#e11d48; width:52%;"></div>
+            </div>
+          </div>
+          <div class="arena-slot-container" id="enemySlotContainer">
+            <img id="enemySpriteImg"
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+              alt="Enemy Gengar">
+          </div>
+        </div>
+      </div>
+
+      <div class="arena-controls">
+        <button onclick="applyArenaStatus('player', 'burn')">Player: Queimadura</button>
+        <button onclick="applyArenaStatus('player', 'paralysis')">Player: Paralisia</button>
+        <button onclick="applyArenaStatus('player', 'sleep')">Player: Sono</button>
+        <button onclick="applyArenaConfusion('player')">Player: Confusão</button>
+        <button class="btn-secondary" onclick="cureArenaStatus('player')">Player: Curar</button>
+        <span style="border-left:1px solid #475569; margin: 0 4px;"></span>
+        <button onclick="applyArenaStatus('enemy', 'toxic')">Enemy: Veneno Grave</button>
+        <button onclick="applyArenaStatus('enemy', 'freeze')">Enemy: Congelamento</button>
+        <button onclick="applyArenaConfusion('enemy')">Enemy: Confusão</button>
+        <button class="btn-secondary" onclick="cureArenaStatus('enemy')">Enemy: Curar</button>
+      </div>
+    </div>
+
+    <!-- SECTION 3: DUPLAS (4 POSIÇÕES SIMULTÂNEAS) -->
+    <div class="harness-section">
+      <div class="section-header">
+        <div class="section-title">3. Batalha em Duplas — Isolamento de 4 Posições Ativas</div>
+        <div style="font-size:0.85rem; color:#facc15;">player:0, player:1, enemy:0, enemy:1</div>
+      </div>
+      <div class="doubles-grid">
+        <div class="status-card">
+          <div class="status-card-header">
+            <span class="status-badge badge-burn">player:0</span>
+            <span style="font-size:0.75rem; color:#ea580c;">Queimadura</span>
+          </div>
+          <div class="pokemon-frame" id="frame_duo_p0">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png"
+              alt="Charizard">
+          </div>
+          <div class="status-card-name">Charizard (P0)</div>
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-header">
+            <span class="status-badge badge-paralysis">player:1</span>
+            <span style="font-size:0.75rem; color:#ca8a04;">Paralisia</span>
+          </div>
+          <div class="pokemon-frame" id="frame_duo_p1">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+              alt="Pikachu">
+          </div>
+          <div class="status-card-name">Pikachu (P1)</div>
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-header">
+            <span class="status-badge badge-toxic">enemy:0</span>
+            <span style="font-size:0.75rem; color:#d946ef;">Veneno Grave</span>
+          </div>
+          <div class="pokemon-frame" id="frame_duo_e0">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+              alt="Gengar">
+          </div>
+          <div class="status-card-name">Gengar (E0)</div>
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-header">
+            <span class="status-badge badge-freeze">enemy:1</span>
+            <span style="font-size:0.75rem; color:#38bdf8;">Gelo + Confusão</span>
+          </div>
+          <div class="pokemon-frame" id="frame_duo_e1">
+            <img
+              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/144.png"
+              alt="Articuno">
+          </div>
+          <div class="status-card-name">Articuno (E1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/presentation/status-vfx/pokemon-status-vfx-constants.js"></script>
+  <script src="../../assets/js/presentation/status-vfx/pokemon-status-vfx-controller.js"></script>
+  <script>
+    const controller = window.PBAStatusVfx.createStatusVfxController();
+
+    // Registra e inicializa os cards da galeria
+    function initGallery() {
+      const cards = [
+        { id: 'burn', cond: 'burn' },
+        { id: 'poison', cond: 'poison' },
+        { id: 'toxic', cond: 'toxic' },
+        { id: 'paralysis', cond: 'paralysis' },
+        { id: 'sleep', cond: 'sleep' },
+        { id: 'freeze', cond: 'freeze' },
+        { id: 'confusion', conf: true },
+        { id: 'sleep_conf', cond: 'sleep', conf: true },
+        { id: 'burn_conf', cond: 'burn', conf: true }
+      ];
+
+      for (const card of cards) {
+        const frame = document.getElementById(`frame_${card.id}`);
+        if (!frame) continue;
+
+        // Custom container resolver injection for gallery frames
+        const sideKey = `gallery_${card.id}`;
+        controller.activeStatuses.set(sideKey, {
+          primary: null,
+          confusion: false,
+          primaryState: 'idle',
+          confusionState: 'idle',
+          timers: new Set()
+        });
+
+        // Monta o root diretamente no frame
+        let root = frame.querySelector('.pba-status-vfx-root');
+        if (!root) {
+          root = document.createElement('div');
+          root.className = 'pba-status-vfx-root';
+          root.setAttribute('data-status-vfx-side', sideKey);
+          frame.appendChild(root);
+        }
+
+        if (card.cond) {
+          controller.applyStatus(sideKey, card.cond, { immediate: true });
+          const primary = root.querySelector('.pba-status-primary');
+          if (!primary) {
+            const p = document.createElement('div');
+            p.className = `pba-status-primary pba-status-${card.cond}`;
+            p.innerHTML = getTemplateFor(card.cond);
+            root.appendChild(p);
+          }
+        }
+
+        if (card.conf) {
+          const conf = root.querySelector('.pba-status-confusion');
+          if (!conf) {
+            const c = document.createElement('div');
+            c.className = 'pba-status-confusion';
+            c.innerHTML = getTemplateFor('confusion');
+            root.appendChild(c);
+          }
+        }
+      }
+    }
+
+    // Inicializa as duplas
+    function initDoubles() {
+      const duoFrames = [
+        { id: 'duo_p0', cond: 'burn' },
+        { id: 'duo_p1', cond: 'paralysis' },
+        { id: 'duo_e0', cond: 'toxic' },
+        { id: 'duo_e1', cond: 'freeze', conf: true }
+      ];
+
+      for (const item of duoFrames) {
+        const frame = document.getElementById(`frame_${item.id}`);
+        if (!frame) continue;
+        let root = frame.querySelector('.pba-status-vfx-root');
+        if (!root) {
+          root = document.createElement('div');
+          root.className = 'pba-status-vfx-root';
+          frame.appendChild(root);
+        }
+        if (item.cond) {
+          const p = document.createElement('div');
+          p.className = `pba-status-primary pba-status-${item.cond}`;
+          p.innerHTML = getTemplateFor(item.cond);
+          root.appendChild(p);
+        }
+        if (item.conf) {
+          const c = document.createElement('div');
+          c.className = 'pba-status-confusion';
+          c.innerHTML = getTemplateFor('confusion');
+          root.appendChild(c);
+        }
+      }
+    }
+
+    // Inicializa a arena de batalha ao vivo
+    function initLiveArena() {
+      const pSlot = document.getElementById('playerSlotContainer');
+      const eSlot = document.getElementById('enemySlotContainer');
+
+      if (pSlot) {
+        let rootP = document.createElement('div');
+        rootP.className = 'pba-status-vfx-root';
+        rootP.innerHTML = `<div class="pba-status-primary pba-status-burn">${getTemplateFor('burn')}</div>`;
+        pSlot.appendChild(rootP);
+      }
+
+      if (eSlot) {
+        let rootE = document.createElement('div');
+        rootE.className = 'pba-status-vfx-root';
+        rootE.innerHTML = `
+          <div class="pba-status-primary pba-status-toxic">${getTemplateFor('toxic')}</div>
+          <div class="pba-status-confusion">${getTemplateFor('confusion')}</div>
+        `;
+        eSlot.appendChild(rootE);
+      }
+    }
+
+    function getTemplateFor(cond) {
+      if (cond === 'burn') {
+        return `
+          <div class="pba-burn-glow"></div>
+          <div class="pba-burn-flames">
+            <div class="pba-flame pba-flame-1"></div>
+            <div class="pba-flame pba-flame-2"></div>
+            <div class="pba-flame pba-flame-3"></div>
+          </div>
+          <div class="pba-burn-embers">
+            <div class="pba-ember pba-ember-1"></div>
+            <div class="pba-ember pba-ember-2"></div>
+            <div class="pba-ember pba-ember-3"></div>
+          </div>
+        `;
+      }
+      if (cond === 'poison') {
+        return `
+          <div class="pba-poison-haze"></div>
+          <div class="pba-poison-bubbles">
+            <div class="pba-poison-bubble pba-bubble-1"></div>
+            <div class="pba-poison-bubble pba-bubble-2"></div>
+            <div class="pba-poison-bubble pba-bubble-3"></div>
+            <div class="pba-poison-bubble pba-bubble-4"></div>
+          </div>
+        `;
+      }
+      if (cond === 'toxic') {
+        return `
+          <div class="pba-toxic-miasma"></div>
+          <div class="pba-toxic-spikes">
+            <div class="pba-toxic-spike pba-spike-1"></div>
+            <div class="pba-toxic-spike pba-spike-2"></div>
+            <div class="pba-toxic-spike pba-spike-3"></div>
+            <div class="pba-toxic-spike pba-spike-4"></div>
+          </div>
+          <div class="pba-toxic-bubbles">
+            <div class="pba-toxic-bubble pba-tbubble-1"></div>
+            <div class="pba-toxic-bubble pba-tbubble-2"></div>
+            <div class="pba-toxic-bubble pba-tbubble-3"></div>
+          </div>
+        `;
+      }
+      if (cond === 'paralysis') {
+        return `
+          <div class="pba-paralysis-arcs">
+            <div class="pba-spark pba-spark-1"></div>
+            <div class="pba-spark pba-spark-2"></div>
+            <div class="pba-spark pba-spark-3"></div>
+            <div class="pba-spark pba-spark-4"></div>
+          </div>
+        `;
+      }
+      if (cond === 'sleep') {
+        return `
+          <div class="pba-sleep-breath"></div>
+          <div class="pba-sleep-zs">
+            <span class="pba-sleep-z pba-z-1">Z</span>
+            <span class="pba-sleep-z pba-z-2">z</span>
+            <span class="pba-sleep-z pba-z-3">Z</span>
+          </div>
+        `;
+      }
+      if (cond === 'freeze') {
+        return `
+          <div class="pba-freeze-shell"></div>
+          <div class="pba-freeze-crystals">
+            <div class="pba-crystal pba-crystal-1"></div>
+            <div class="pba-crystal pba-crystal-2"></div>
+            <div class="pba-crystal pba-crystal-3"></div>
+            <div class="pba-crystal pba-crystal-4"></div>
+          </div>
+        `;
+      }
+      if (cond === 'confusion') {
+        return `
+          <div class="pba-confusion-halo">
+            <div class="pba-confusion-orbit">
+              <span class="pba-confusion-star pba-cstar-1">★</span>
+              <span class="pba-confusion-star pba-cstar-2">★</span>
+              <span class="pba-confusion-star pba-cstar-3">★</span>
+            </div>
+            <div class="pba-confusion-swirl">🌀</div>
+          </div>
+        `;
+      }
+      return '';
+    }
+
+    function triggerPulse(cardId, type) {
+      const frame = document.getElementById(`frame_${cardId}`);
+      if (!frame) return;
+      const primary = frame.querySelector('.pba-status-primary');
+      if (!primary) return;
+      const cls = type === 'damage' ? 'pba-pulse-damage' : 'pba-pulse-immobilized';
+      primary.classList.add(cls);
+      setTimeout(() => primary.classList.remove(cls), 450);
+    }
+
+    function triggerConfusionPulse(cardId, type) {
+      const frame = document.getElementById(`frame_${cardId}`);
+      if (!frame) return;
+      const conf = frame.querySelector('.pba-status-confusion');
+      if (!conf) return;
+      const cls = type === 'damage' ? 'pba-pulse-confusion-damage' : 'pba-pulse-confusion-check';
+      conf.classList.add(cls);
+      setTimeout(() => conf.classList.remove(cls), 450);
+    }
+
+    // Toggle reduced motion
+    document.getElementById('toggleMotionBtn')?.addEventListener('click', () => {
+      document.body.classList.toggle('pba-reduced-motion');
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initGallery();
+      initLiveArena();
+      initDoubles();
+    });
+  </script>
+</body>
+
+</html>

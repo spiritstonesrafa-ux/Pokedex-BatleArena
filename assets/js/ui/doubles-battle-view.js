@@ -145,6 +145,7 @@
       camera?.registerCamera(query('#battleCameraWrapper'));
       camera?.registerStage(stage);
       camera?.registerFlashOverlay(query('#battleHitFlash'));
+      adapter.statusController?.syncFromBattleState(state);
     };
     View.prototype.updateDoublesHpBar = function (role, slot, hp, max) {
       if (typeof document === 'undefined') return;

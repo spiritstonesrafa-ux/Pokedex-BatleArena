@@ -1,0 +1,1068 @@
+/**
+ * ====================================================================
+ * FOLHA DE ESTILOS: EFEITOS VISUAIS DE CONDIÇÕES (status-vfx.css)
+ * ====================================================================
+ * Identidade visual canônica para condições de batalha nos Pokémon:
+ * - Queimadura: chamas e brasas alaranjadas com pulso de combustão.
+ * - Veneno: bolhas e névoa roxas com pulso cáustico borbulhante.
+ * - Veneno Grave (Toxic): miasma violeta-escuro, glifos tóxicos e surto cáustico.
+ * - Paralisia: arcos elétricos amarelos e destaque de imobilização.
+ * - Sono: respiração serena e símbolos "Z" flutuantes sem simular dano.
+ * - Congelamento: camada translúcida de gelo e cristais azulados.
+ * - Confusão: estrelas e espirais douradas em órbita elíptica sobre a cabeça.
+ *
+ * Princípios Arquiteturais:
+ * - Não toca no transform/opacity/filter do elemento sprite (usado por animações);
+ * - Camada overlay absoluta e desacoplada (.pba-status-vfx-root);
+ * - Camada primária (.pba-status-primary) e volátil (.pba-status-confusion) independentes;
+ * - Respeita prefers-reduced-motion e classe .pba-reduced-motion.
+ */
+
+/* Root overlay container inside combatant-slot / duo-combatant */
+.pba-status-vfx-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pba-status-primary,
+.pba-status-confusion {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ====================================================================
+ * ENTRADA GERAL (ENTRANCE)
+ * ==================================================================== */
+.pba-status-entrance {
+  animation: pbaStatusEntrance 450ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pbaStatusEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ====================================================================
+ * 1. QUEIMADURA (BURN)
+ * Identidade: brasas, chamas alaranjadas e pulso de combustão no dano.
+ * ==================================================================== */
+.pba-status-burn {
+  --burn-color-primary: #f97316;
+  --burn-color-hot: #fef08a;
+  --burn-color-dark: #ea580c;
+}
+
+.pba-burn-glow {
+  position: absolute;
+  bottom: 6%;
+  left: 20%;
+  right: 20%;
+  height: 35%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at bottom, rgba(249, 115, 22, 0.38) 0%, rgba(234, 88, 12, 0.15) 60%, transparent 80%);
+  filter: blur(4px);
+  animation: pbaBurnGlowPulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes pbaBurnGlowPulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.pba-burn-flames {
+  position: absolute;
+  bottom: 8%;
+  left: 0;
+  right: 0;
+  height: 48%;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  padding: 0 16%;
+}
+
+.pba-flame {
+  width: 14px;
+  height: 26px;
+  border-radius: 50% 50% 20% 20% / 80% 80% 20% 20%;
+  background: linear-gradient(to top, var(--burn-color-dark), var(--burn-color-primary) 65%, var(--burn-color-hot));
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
+  transform-origin: center bottom;
+  animation: pbaFlameFlicker 1.2s ease-in-out infinite alternate;
+}
+
+.pba-flame-1 {
+  height: 22px;
+  width: 11px;
+  animation-delay: 0.15s;
+  animation-duration: 0.95s;
+}
+
+.pba-flame-2 {
+  height: 32px;
+  width: 16px;
+  animation-delay: 0s;
+  animation-duration: 1.15s;
+}
+
+.pba-flame-3 {
+  height: 20px;
+  width: 12px;
+  animation-delay: 0.3s;
+  animation-duration: 1.05s;
+}
+
+@keyframes pbaFlameFlicker {
+  0% {
+    transform: scaleY(0.85) scaleX(0.9) skewX(-2deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleY(1.15) scaleX(1.05) skewX(3deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scaleY(0.95) scaleX(0.92) skewX(-3deg);
+    opacity: 0.85;
+  }
+}
+
+.pba-burn-embers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.pba-ember {
+  position: absolute;
+  bottom: 12%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fef08a;
+  box-shadow: 0 0 6px #f97316;
+  animation: pbaEmberRise 1.6s ease-out infinite;
+}
+
+.pba-ember-1 { left: 32%; animation-delay: 0.2s; animation-duration: 1.4s; }
+.pba-ember-2 { left: 52%; animation-delay: 0.7s; animation-duration: 1.7s; }
+.pba-ember-3 { left: 68%; animation-delay: 1.1s; animation-duration: 1.5s; }
+
+@keyframes pbaEmberRise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-48px) translateX(6px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Pulso de dano residual por queimadura (combustão evidente) */
+.pba-status-burn.pba-pulse-damage .pba-flame {
+  animation: pbaBurnDamagePulse 450ms cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+.pba-status-burn.pba-pulse-damage .pba-burn-glow {
+  animation: pbaBurnGlowExplode 450ms ease-out forwards;
+}
+
+@keyframes pbaBurnDamagePulse {
+  0% {
+    transform: scaleY(1) scaleX(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: scaleY(1.6) scaleX(1.35);
+    filter: brightness(1.8) drop-shadow(0 0 14px #f97316);
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes pbaBurnGlowExplode {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.4);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+    filter: blur(4px);
+  }
+}
+
+/* ====================================================================
+ * 2. VENENO (POISON)
+ * Identidade: bolhas e partículas roxas ascendentes, névoa discreta,
+ * pulso cáustico borbulhante e gotejante distinto de fogo.
+ * ==================================================================== */
+.pba-status-poison {
+  --poison-color-primary: #a855f7;
+  --poison-color-deep: #7e22ce;
+  --poison-color-light: #e9d5ff;
+}
+
+.pba-poison-haze {
+  position: absolute;
+  bottom: 4%;
+  left: 15%;
+  right: 15%;
+  height: 30%;
+  border-radius: 40%;
+  background: radial-gradient(ellipse at bottom, rgba(168, 85, 247, 0.32) 0%, rgba(126, 34, 206, 0.12) 60%, transparent 80%);
+  filter: blur(5px);
+  animation: pbaPoisonHazeDrift 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes pbaPoisonHazeDrift {
+  0% {
+    transform: translateX(-4px) scaleY(0.9);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(4px) scaleY(1.1);
+    opacity: 0.9;
+  }
+}
+
+.pba-poison-bubbles {
+  position: absolute;
+  inset: 0;
+}
+
+.pba-poison-bubble {
+  position: absolute;
+  bottom: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--poison-color-light) 0%, var(--poison-color-primary) 60%, var(--poison-color-deep) 100%);
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.6), inset 0 0 3px rgba(255, 255, 255, 0.5);
+  animation: pbaPoisonBubbleAscend 2s ease-in infinite;
+}
+
+.pba-bubble-1 {
+  width: 9px;
+  height: 9px;
+  left: 30%;
+  animation-delay: 0.1s;
+  animation-duration: 1.8s;
+}
+
+.pba-bubble-2 {
+  width: 14px;
+  height: 14px;
+  left: 48%;
+  animation-delay: 0.6s;
+  animation-duration: 2.2s;
+}
+
+.pba-bubble-3 {
+  width: 8px;
+  height: 8px;
+  left: 65%;
+  animation-delay: 1.1s;
+  animation-duration: 1.7s;
+}
+
+.pba-bubble-4 {
+  width: 11px;
+  height: 11px;
+  left: 40%;
+  animation-delay: 1.5s;
+  animation-duration: 2s;
+}
+
+@keyframes pbaPoisonBubbleAscend {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+    transform: translateY(-12px) scale(1) translateX(2px);
+  }
+  70% {
+    opacity: 0.8;
+    transform: translateY(-38px) scale(1.1) translateX(-3px);
+  }
+  95% {
+    opacity: 0.6;
+    transform: translateY(-52px) scale(1.25) translateX(1px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-56px) scale(1.4);
+  }
+}
+
+/* Pulso de dano de veneno (ruptura de bolhas e borbulhamento cáustico) */
+.pba-status-poison.pba-pulse-damage .pba-poison-bubble {
+  animation: pbaPoisonDamagePulse 450ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.pba-status-poison.pba-pulse-damage .pba-poison-haze {
+  animation: pbaPoisonHazeBurst 450ms ease-out forwards;
+}
+
+@keyframes pbaPoisonDamagePulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  35% {
+    transform: scale(1.7) translateY(-8px);
+    filter: brightness(1.7) drop-shadow(0 0 10px #c084fc);
+  }
+  60% {
+    transform: scale(1.9) translateY(-14px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.2) translateY(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes pbaPoisonHazeBurst {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  40% {
+    transform: scale(1.35);
+    opacity: 1;
+    filter: blur(8px) saturate(1.8);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+    filter: blur(5px);
+  }
+}
+
+/* ====================================================================
+ * 3. VENENO GRAVE (TOXIC / BAD POISON)
+ * Identidade: mantém base de veneno, acrescentando miasma violeta-escuro,
+ * glifos/espinhos pontiagudos de perigo e pulso cáustico mais agressivo.
+ * ==================================================================== */
+.pba-status-toxic {
+  --toxic-color-dark: #3b0764;
+  --toxic-color-purple: #701a75;
+  --toxic-color-vivid: #d946ef;
+  --toxic-color-hazard: #f43f5e;
+}
+
+.pba-toxic-miasma {
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(112, 26, 117, 0.42) 0%, rgba(59, 7, 100, 0.28) 50%, transparent 75%);
+  filter: blur(7px);
+  animation: pbaToxicMiasmaTwist 3s ease-in-out infinite alternate;
+}
+
+@keyframes pbaToxicMiasmaTwist {
+  0% {
+    transform: rotate(0deg) scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+    opacity: 0.95;
+  }
+  100% {
+    transform: rotate(360deg) scale(0.97);
+    opacity: 0.75;
+  }
+}
+
+.pba-toxic-spikes {
+  position: absolute;
+  inset: 5%;
+}
+
+.pba-toxic-spike {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, var(--toxic-color-vivid), var(--toxic-color-dark));
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  box-shadow: 0 0 6px var(--toxic-color-hazard);
+  animation: pbaToxicSpikeHover 2s ease-in-out infinite alternate;
+}
+
+.pba-spike-1 {
+  top: 15%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.pba-spike-2 {
+  top: 18%;
+  right: 20%;
+  animation-delay: 0.4s;
+}
+
+.pba-spike-3 {
+  bottom: 25%;
+  left: 15%;
+  animation-delay: 0.8s;
+}
+
+.pba-spike-4 {
+  bottom: 22%;
+  right: 15%;
+  animation-delay: 1.2s;
+}
+
+@keyframes pbaToxicSpikeHover {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(0.9);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-8px) rotate(45deg) scale(1.15);
+    opacity: 1;
+  }
+}
+
+.pba-toxic-bubbles {
+  position: absolute;
+  inset: 0;
+}
+
+.pba-toxic-bubble {
+  position: absolute;
+  bottom: 15%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f5d0fe 0%, var(--toxic-color-purple) 60%, var(--toxic-color-dark) 100%);
+  box-shadow: 0 0 8px rgba(217, 70, 239, 0.7);
+  animation: pbaToxicBubbleAscend 1.8s ease-in infinite;
+}
+
+.pba-tbubble-1 { width: 12px; height: 12px; left: 36%; animation-delay: 0.2s; }
+.pba-tbubble-2 { width: 16px; height: 16px; left: 54%; animation-delay: 0.7s; }
+.pba-tbubble-3 { width: 10px; height: 10px; left: 66%; animation-delay: 1.2s; }
+
+@keyframes pbaToxicBubbleAscend {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.95;
+    transform: translateY(-16px) scale(1);
+  }
+  80% {
+    opacity: 0.8;
+    transform: translateY(-44px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-58px) scale(1.4);
+  }
+}
+
+/* Pulso de dano cáustico severo do Toxic */
+.pba-status-toxic.pba-pulse-damage .pba-toxic-spike {
+  animation: pbaToxicDamagePulse 450ms cubic-bezier(0.18, 0.9, 0.32, 1) forwards;
+}
+
+.pba-status-toxic.pba-pulse-damage .pba-toxic-miasma {
+  animation: pbaToxicMiasmaSurge 450ms ease-out forwards;
+}
+
+@keyframes pbaToxicDamagePulse {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  40% {
+    transform: scale(1.8) rotate(90deg);
+    filter: brightness(2) drop-shadow(0 0 16px #f43f5e);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+}
+
+@keyframes pbaToxicMiasmaSurge {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  40% {
+    transform: scale(1.45);
+    opacity: 1;
+    filter: blur(10px) drop-shadow(0 0 18px #701a75);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: blur(7px);
+  }
+}
+
+/* ====================================================================
+ * 4. PARALISIA (PARALYSIS)
+ * Identidade: pequenos arcos elétricos amarelos intermitentes,
+ * destaque elétrico violento quando a paralisia impede a ação.
+ * ==================================================================== */
+.pba-status-paralysis {
+  --paralysis-yellow: #facc15;
+  --paralysis-light: #fef08a;
+  --paralysis-white: #ffffff;
+}
+
+.pba-paralysis-arcs {
+  position: absolute;
+  inset: 8%;
+}
+
+.pba-spark {
+  position: absolute;
+  background: var(--paralysis-yellow);
+  box-shadow: 0 0 8px var(--paralysis-yellow), 0 0 14px var(--paralysis-white);
+  border-radius: 2px;
+  opacity: 0;
+}
+
+.pba-spark-1 {
+  top: 25%;
+  left: 20%;
+  width: 14px;
+  height: 3px;
+  transform: rotate(35deg);
+  animation: pbaSparkFlicker 1.4s steps(2, start) infinite;
+  animation-delay: 0.1s;
+}
+
+.pba-spark-2 {
+  top: 45%;
+  right: 22%;
+  width: 18px;
+  height: 3px;
+  transform: rotate(-40deg);
+  animation: pbaSparkFlicker 1.6s steps(2, start) infinite;
+  animation-delay: 0.5s;
+}
+
+.pba-spark-3 {
+  bottom: 28%;
+  left: 35%;
+  width: 16px;
+  height: 3px;
+  transform: rotate(20deg);
+  animation: pbaSparkFlicker 1.2s steps(2, start) infinite;
+  animation-delay: 0.8s;
+}
+
+.pba-spark-4 {
+  top: 60%;
+  right: 32%;
+  width: 12px;
+  height: 2px;
+  transform: rotate(-15deg);
+  animation: pbaSparkFlicker 1.5s steps(2, start) infinite;
+  animation-delay: 1.1s;
+}
+
+@keyframes pbaSparkFlicker {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  20%, 25% {
+    opacity: 0.95;
+    transform: scale(1.1);
+  }
+  45%, 50% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  70%, 78% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Destaque de imobilização por paralisia (STATUS_IMMOBILIZED) */
+.pba-status-paralysis.pba-pulse-immobilized {
+  animation: pbaParalysisSurge 450ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.pba-status-paralysis.pba-pulse-immobilized .pba-spark {
+  opacity: 1 !important;
+  transform: scale(1.6) !important;
+  filter: brightness(2) drop-shadow(0 0 16px #facc15) !important;
+}
+
+@keyframes pbaParalysisSurge {
+  0% {
+    box-shadow: inset 0 0 0 rgba(250, 204, 21, 0);
+    filter: brightness(1);
+  }
+  25% {
+    box-shadow: inset 0 0 25px rgba(250, 204, 21, 0.8), 0 0 30px rgba(250, 204, 21, 0.9);
+    filter: brightness(1.9);
+  }
+  50% {
+    box-shadow: inset 0 0 15px rgba(250, 204, 21, 0.5);
+    filter: brightness(1.3);
+  }
+  75% {
+    box-shadow: inset 0 0 28px rgba(254, 240, 138, 0.9), 0 0 35px rgba(250, 204, 21, 1);
+    filter: brightness(2);
+  }
+  100% {
+    box-shadow: inset 0 0 0 rgba(250, 204, 21, 0);
+    filter: brightness(1);
+  }
+}
+
+/* ====================================================================
+ * 5. SONO (SLEEP)
+ * Identidade: respiração serena, símbolos "Z" flutuantes, sem simular dano.
+ * Destaque de imobilização tranquilo com bocejo/onda de sono.
+ * ==================================================================== */
+.pba-status-sleep {
+  --sleep-blue-soft: #93c5fd;
+  --sleep-blue-glow: rgba(147, 197, 253, 0.35);
+  --sleep-blue-text: #bfdbfe;
+}
+
+.pba-sleep-breath {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sleep-blue-glow) 0%, transparent 70%);
+  filter: blur(6px);
+  animation: pbaSleepBreathing 2.8s ease-in-out infinite;
+}
+
+@keyframes pbaSleepBreathing {
+  0%, 100% {
+    transform: scale(0.88);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.8;
+  }
+}
+
+.pba-sleep-zs {
+  position: absolute;
+  top: 5%;
+  right: 18%;
+  width: 44px;
+  height: 60px;
+}
+
+.pba-sleep-z {
+  position: absolute;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 900;
+  color: var(--sleep-blue-text);
+  text-shadow: 0 0 6px #60a5fa, 0 0 12px rgba(147, 197, 253, 0.8);
+  user-select: none;
+  animation: pbaSleepZFloat 2.6s ease-out infinite;
+}
+
+.pba-z-1 {
+  font-size: 14px;
+  animation-delay: 0s;
+}
+
+.pba-z-2 {
+  font-size: 19px;
+  animation-delay: 0.85s;
+}
+
+.pba-z-3 {
+  font-size: 25px;
+  animation-delay: 1.7s;
+}
+
+@keyframes pbaSleepZFloat {
+  0% {
+    transform: translate(0, 30px) rotate(-10deg) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.95;
+    transform: translate(4px, 18px) rotate(-4deg) scale(0.85);
+  }
+  70% {
+    opacity: 0.85;
+    transform: translate(-6px, 0px) rotate(6deg) scale(1.1);
+  }
+  100% {
+    transform: translate(8px, -18px) rotate(12deg) scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* Destaque de imobilização por sono (STATUS_IMMOBILIZED - sono tranquilo, sem dor) */
+.pba-status-sleep.pba-pulse-immobilized .pba-sleep-breath {
+  animation: pbaSleepSnorePulse 450ms cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+}
+
+.pba-status-sleep.pba-pulse-immobilized .pba-sleep-z {
+  animation: pbaSleepZSurge 450ms ease-out forwards;
+}
+
+@keyframes pbaSleepSnorePulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.95;
+    background: radial-gradient(circle, rgba(147, 197, 253, 0.6) 0%, transparent 75%);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes pbaSleepZSurge {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4) translateY(-10px);
+    filter: brightness(1.5) drop-shadow(0 0 10px #93c5fd);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ====================================================================
+ * 6. CONGELAMENTO (FREEZE)
+ * Identidade: cristais azulados, camada translúcida de gelo facetada,
+ * mantendo o Pokémon reconhecível.
+ * Destaque de imobilização com brilho gélido (glint).
+ * ==================================================================== */
+.pba-status-freeze {
+  --freeze-cyan: #38bdf8;
+  --freeze-ice: #bae6fd;
+  --freeze-frost: rgba(224, 242, 254, 0.45);
+}
+
+.pba-freeze-shell {
+  position: absolute;
+  inset: 8%;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, rgba(186, 230, 253, 0.28) 45%, rgba(56, 189, 248, 0.14) 100%);
+  border: 1.5px solid rgba(186, 230, 253, 0.65);
+  box-shadow: inset 0 0 14px rgba(56, 189, 248, 0.35), 0 0 10px rgba(56, 189, 248, 0.3);
+  backdrop-filter: blur(0.6px);
+  animation: pbaFreezeShellShimmer 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes pbaFreezeShellShimmer {
+  0% {
+    border-color: rgba(186, 230, 253, 0.5);
+    box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.28), 0 0 8px rgba(56, 189, 248, 0.25);
+  }
+  100% {
+    border-color: rgba(240, 249, 255, 0.9);
+    box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.5), 0 0 14px rgba(186, 230, 253, 0.5);
+  }
+}
+
+.pba-freeze-crystals {
+  position: absolute;
+  inset: 4%;
+}
+
+.pba-crystal {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #ffffff, var(--freeze-cyan));
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  animation: pbaCrystalGlint 2s ease-in-out infinite alternate;
+}
+
+.pba-crystal-1 { top: 6%; left: 16%; animation-delay: 0.1s; }
+.pba-crystal-2 { top: 12%; right: 14%; animation-delay: 0.6s; transform: rotate(15deg); }
+.pba-crystal-3 { bottom: 10%; left: 22%; animation-delay: 1.1s; transform: rotate(-20deg); }
+.pba-crystal-4 { bottom: 14%; right: 18%; animation-delay: 1.6s; }
+
+@keyframes pbaCrystalGlint {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Destaque de imobilização por gelo (STATUS_IMMOBILIZED - estalo gélido) */
+.pba-status-freeze.pba-pulse-immobilized .pba-freeze-shell {
+  animation: pbaFreezeGlintPulse 450ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes pbaFreezeGlintPulse {
+  0% {
+    filter: brightness(1);
+    box-shadow: inset 0 0 14px rgba(56, 189, 248, 0.35);
+  }
+  30% {
+    filter: brightness(2.2);
+    box-shadow: inset 0 0 30px rgba(240, 249, 255, 0.95), 0 0 25px rgba(56, 189, 248, 0.9);
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: inset 0 0 14px rgba(56, 189, 248, 0.35);
+  }
+}
+
+/* ====================================================================
+ * 7. CONFUSÃO (CONFUSION - VOLÁTIL)
+ * Identidade: estrelas e espirais douradas girando em órbita elíptica
+ * ao redor da cabeça, sem parecer paralisia. Coexiste com qualquer primário.
+ * ==================================================================== */
+.pba-status-confusion {
+  --conf-gold: #fbbf24;
+  --conf-amber: #f59e0b;
+  --conf-light: #fef08a;
+}
+
+.pba-confusion-halo {
+  position: absolute;
+  top: -8%;
+  left: 15%;
+  right: 15%;
+  height: 38px;
+  transform-style: preserve-3d;
+  perspective: 250px;
+}
+
+.pba-confusion-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(251, 191, 36, 0.4);
+  transform: rotateX(68deg);
+  animation: pbaOrbitRotate 2.2s linear infinite;
+}
+
+@keyframes pbaOrbitRotate {
+  0% {
+    transform: rotateX(68deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(68deg) rotateZ(360deg);
+  }
+}
+
+.pba-confusion-star {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  color: var(--conf-gold);
+  text-shadow: 0 0 6px var(--conf-amber), 0 0 12px var(--conf-light);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.pba-cstar-1 {
+  top: -6px;
+  left: calc(50% - 8px);
+}
+
+.pba-cstar-2 {
+  bottom: -6px;
+  left: 10%;
+}
+
+.pba-cstar-3 {
+  bottom: -6px;
+  right: 10%;
+}
+
+.pba-confusion-swirl {
+  position: absolute;
+  top: 15%;
+  left: calc(50% - 10px);
+  width: 20px;
+  height: 20px;
+  color: var(--conf-light);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pbaSwirlSpin 1.8s linear infinite reverse;
+}
+
+@keyframes pbaSwirlSpin {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(0.9); }
+}
+
+/* Pulso de checagem de confusão (CONFUSION_CHECK - oscilação acelerada) */
+.pba-status-confusion.pba-pulse-confusion-check .pba-confusion-orbit {
+  animation: pbaOrbitCheckWobble 350ms ease-in-out;
+}
+
+@keyframes pbaOrbitCheckWobble {
+  0% {
+    transform: rotateX(68deg) rotateZ(0deg) scale(1);
+  }
+  50% {
+    transform: rotateX(55deg) rotateZ(280deg) scale(1.25);
+    filter: brightness(1.7);
+  }
+  100% {
+    transform: rotateX(68deg) rotateZ(360deg) scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Pulso de dano por confusão (CONFUSION_DAMAGE - impacto cômico e dispersão de estrelas) */
+.pba-status-confusion.pba-pulse-confusion-damage .pba-confusion-star {
+  animation: pbaConfusionDamageBurst 450ms cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes pbaConfusionDamageBurst {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.8) translateY(-14px);
+    color: #fef08a;
+    filter: drop-shadow(0 0 12px #f59e0b) brightness(2);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    color: var(--conf-gold);
+    filter: none;
+  }
+}
+
+/* ====================================================================
+ * ACESSIBILIDADE E PREFERS-REDUCED-MOTION
+ * ==================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .pba-status-vfx-root *,
+  .pba-status-entrance,
+  .pba-burn-glow,
+  .pba-flame,
+  .pba-ember,
+  .pba-poison-haze,
+  .pba-poison-bubble,
+  .pba-toxic-miasma,
+  .pba-toxic-spike,
+  .pba-toxic-bubble,
+  .pba-spark,
+  .pba-sleep-breath,
+  .pba-sleep-z,
+  .pba-freeze-shell,
+  .pba-crystal,
+  .pba-confusion-orbit,
+  .pba-confusion-swirl {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Versões estáticas identificáveis */
+  .pba-status-burn .pba-flame {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  .pba-status-poison .pba-poison-bubble {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  .pba-status-toxic .pba-toxic-spike {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  .pba-status-paralysis .pba-spark {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  .pba-status-sleep .pba-sleep-z {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  .pba-status-freeze .pba-freeze-shell {
+    opacity: 0.85;
+  }
+  .pba-status-confusion .pba-confusion-star {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+
+.pba-reduced-motion .pba-status-vfx-root *,
+.pba-reduced-motion .pba-status-entrance,
+.pba-reduced-motion .pba-burn-glow,
+.pba-reduced-motion .pba-flame,
+.pba-reduced-motion .pba-ember,
+.pba-reduced-motion .pba-poison-haze,
+.pba-reduced-motion .pba-poison-bubble,
+.pba-reduced-motion .pba-toxic-miasma,
+.pba-reduced-motion .pba-toxic-spike,
+.pba-reduced-motion .pba-toxic-bubble,
+.pba-reduced-motion .pba-spark,
+.pba-reduced-motion .pba-sleep-breath,
+.pba-reduced-motion .pba-sleep-z,
+.pba-reduced-motion .pba-freeze-shell,
+.pba-reduced-motion .pba-crystal,
+.pba-reduced-motion .pba-confusion-orbit,
+.pba-reduced-motion .pba-confusion-swirl {
+  animation: none !important;
+  transition: none !important;
+}

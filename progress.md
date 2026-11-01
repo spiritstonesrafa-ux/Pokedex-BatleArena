@@ -2,6 +2,49 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: efeitos visuais de condições de status nos Pokémon (PBA-020)
+
+- Implementada a identidade visual canônica das condições de batalha nos Pokémon, reproduzindo a experiência visual dos jogos da franquia sem depender unicamente de texto:
+  - **Queimadura (Burn):** brasas e chamas alaranjadas na base do corpo (`#f97316`), com pulso de combustão evidente e aumento de chamas no evento de dano residual (`STATUS_DAMAGE`).
+  - **Veneno (Poison):** bolhas e partículas roxas translúcidas ascendentes (`#a855f7`) com névoa leve na base e pulso cáustico borbulhante e gotejante no dano residual, visualmente distinto do fogo.
+  - **Veneno Grave (Toxic):** mantém base de veneno com acréscimo de miasma violeta-escuro denso (`#701a75`), glifos pontiagudos de perigo em losango e surto cáustico violento no dano residual progressivo.
+  - **Paralisia (Paralysis):** arcos elétricos amarelos intermitentes (`#facc15`) com descarga de imobilização em gaiola elétrica quando a ação é impedida (`STATUS_IMMOBILIZED`).
+  - **Sono (Sleep):** respiração serena em ritmo suave azul-céu (`#93c5fd`) e símbolos "Z" flutuantes ascendentes, sem simular dano, dor ou oscilação violenta.
+  - **Congelamento (Freeze):** cristais azulados facetados e camada translúcida de gelo (`#38bdf8`), mantendo o Pokémon totalmente reconhecível sob o gelo e emitindo brilho gélido (glint) quando impedido de agir.
+  - **Confusão (Confusion):** estrelas e espirais douradas girando em órbita elíptica 3D ao redor da cabeça (`#fbbf24`), em ritmo perceptível, sem parecer paralisia. Camada volátil totalmente independente que coexiste visualmente com qualquer condição primária (ex: Snorlax dormindo com Zs + estrelas orbitando, ou Charizard queimando com chamas + estrelas).
+- **Arquitetura Visual e DOM Desacoplada:**
+  - O motor de combate (`BattleEngine`) permanece como única fonte de verdade; nenhum cálculo de dano ou RNG ocorre na apresentação.
+  - Não altera `transform`, `opacity` ou `filter` do elemento sprite do Pokémon (preservando integralmente as animações corporais de ataque, recuo de dano, respiração idle e desmaio do `PokemonAnimationController`).
+  - Camada visual montada em overlay absoluto desacoplado (`.pba-status-vfx-root`) com `pointer-events: none` e subcamadas independentes `.pba-status-primary` e `.pba-status-confusion`.
+  - Reação imediata aos eventos do motor: entrada suave breve (450ms) que transita para indicação persistente, pulso reforçado apenas no dano/imobilização/confusão e remoção instantânea na cura, despertar, descongelamento ou término de confusão.
+  - Trocas (`SWITCH_OUT_SEQUENCE` e `SWITCH_IN_SEQUENCE`): o Pokémon que sai tem seus efeitos limpos imediatamente; o Pokémon que entra recebe seu status persistente diretamente sem disparar animação de entrada; nenhum efeito é transferido indevidamente.
+  - Reconstrução de tela / renderização entre turnos: `syncFromBattleState` e `syncFromCombatant` restauram os efeitos persistentes sem re-executar animação de entrada.
+  - Nocaute (`FAINT_SEQUENCE`) e fim de combate (`BATTLE_RESULT`): desalocação e limpeza completa de todas as camadas e timers.
+- **Suporte Abrangente a Todos os Formatos:**
+  - Batalhas individuais (1x1), equipes (3x3), campanha (treinadores, mestres elementais, selvagens), Final Stand de Shadow e duplas.
+  - Em duplas, mapeamento por slot (`player:0`, `player:1`, `enemy:0`, `enemy:1`) garante isolamento visual estrito entre os 4 combatentes ativos simultâneos.
+- **Acessibilidade e Desempenho:**
+  - Suporte total a `prefers-reduced-motion: reduce` e classe `.pba-reduced-motion`, substituindo animações infinitas por representações estáticas legíveis e de alto contraste.
+  - Implementação pura em CSS acelerado por GPU (hardware-accelerated transforms e opacities) sem loops pesados de partículas na CPU.
+- **Catalogação de Outros Estados do Motor (Candidatos Futuros):**
+  - Sonolência transitória (Yawn/Drowsy), Hesitação (Flinch), Proteção Ativa (Protect/Detect), Recarga Obrigatória (Hyper Beam, etc.), Carga em Dois Turnos e Semi-invulnerabilidade (Solar Beam, Fly, Dig, Dive, Bounce), Armazenamento de Bide, Preparação Ofensiva Condicional (Beak Blast/Shell Trap), Modificadores de Atributos (Stat Stages) e Vínculo de Commander em duplas.
+- **Validação e Homologação:**
+  - 40 testes automatizados novos em `tests/presentation/pokemon-status-vfx.test.js` cobrindo constantes, identidades, independência de DOM, aplicação, persistência, pulsos de dano/imobilização, coexistência de confusão, trocas, nocautes, duplas e integração com o adaptador composto.
+  - Execução completa da suíte: **2.704 testes aprovados em 39 suítes, zero falhas**, zero cancelados, zero ignorados.
+  - Homologação visual em navegador real (Edge headless via CDP) no harness `tests/visual/pokemon-status-vfx-harness.html`, registrando evidências nos viewports desktop (1280x850) e mobile (390x844):
+    - `evidence_status_vfx_gallery_desktop.png`: galeria completa com as 7 condições e coexistências (sono+confusão e fogo+confusão).
+    - `evidence_status_vfx_gallery_mobile.png`: responsividade dos cards em dispositivo móvel.
+    - `evidence_status_vfx_battle_live_desktop.png`: arena em tempo real com Pikachu (Queimadura) vs Gengar (Veneno Grave + Confusão).
+    - `evidence_status_vfx_doubles_isolation.png`: batalha em duplas com 4 posições isoladas ativas (`player:0` queimadura, `player:1` paralisia, `enemy:0` veneno grave, `enemy:1` congelamento + confusão).
+    - `evidence_status_vfx_reduced_motion.png`: modo com movimento reduzido ativado.
+  - **Homologação Final em Jogo Real (Fases 1 a 4 — 18/18 asserções aprovadas, 100% verde):**
+    - **Fase 1 (Batalha Real):** Aplicação, persistência, pulso de dano residual (queimadura, veneno, toxic) e imobilização (paralisia, sono, congelamento) verificados em combate vivo na interface normal (`index.html`). Coexistência simultânea de confusão com condições primárias validada em combate.
+    - **Fase 2 (Ciclo de Vida):** Troca de Pokémon (`SWITCH_OUT_SEQUENCE` e `SWITCH_IN_SEQUENCE`) com limpeza no mon que sai e restauração imediata sem animação de entrada no mon que entra; cura/despertar/descongelamento removendo apenas a camada específica; nocaute (`FAINT_SEQUENCE`) desalocando o slot; fim de batalha (`BATTLE_RESULT`), reinício (`rematch`) e saída (`leaveBattle`) com zero overlays e zero timers órfãos no DOM.
+    - **Fase 3 (Responsividade e Desempenho):** Execução com 4 Pokémon ativos em batalha de duplas sem cross-contamination; ausência de conflitos entre animações de ataque (`MOVE_ANNOUNCEMENT`) e overlays de status; responsividade mobile (390x844) sem overflow horizontal; desativação de animações infinitas sob `prefers-reduced-motion: reduce` mantendo identificação visual.
+    - **Fase 4 (Regressão Total):** 2.704 testes aprovados em 39 suítes, zero alterações no motor de regras de combate, RNG ou fórmulas de dano.
+    - Evidências reais geradas: `evidence_phase1_burn_live.png`, `evidence_phase1_poison_live.png`, `evidence_phase1_toxic_live.png`, `evidence_phase1_paralysis_live.png`, `evidence_phase1_sleep_live.png`, `evidence_phase1_freeze_live.png`, `evidence_phase1_confusion_live.png`, `evidence_phase1_coexistence_sleep_burn_confusion.png`, `evidence_phase2_switch_sequence.png`, `evidence_phase2_faint_cleanup.png`, `evidence_phase3_doubles_4mon_live.png`, `evidence_phase3_doubles_mobile.png`, `evidence_phase3_reduced_motion_live.png`, e relatório estruturado `visual_homologation_status_results.json`.
+- Alterações locais preservadas diretamente no projeto em `C:\pokemon`, sem commit, push ou deploy.
+
 ## Atualização — 01/11/2026: aberturas das quatro provas finais e áudio Shadow
 
 - Auditoria de aprendizado publicada em 154b38b9c77855769602ac7dacad00ab33efac9f, hash confirmado em origin/main, sem deploy manual.

@@ -22,6 +22,7 @@
   let vfxResolverModule;
   let audioControllerModule;
   let cameraControllerModule;
+  let statusVfxControllerModule;
 
   if (typeof module !== 'undefined' && module.exports) {
     presentationConstants = require('./battle-presentation-constants.js');
@@ -31,6 +32,7 @@
     vfxResolverModule = require('../vfx/move-vfx-resolver.js');
     audioControllerModule = require('../audio/battle-audio-controller.js');
     cameraControllerModule = require('../camera/battle-camera-controller.js');
+    statusVfxControllerModule = require('./status-vfx/pokemon-status-vfx-controller.js');
   } else if (typeof window !== 'undefined') {
     presentationConstants = window.PBABattlePresentation || {};
     adapterBase = window.PBABattlePresentation || {};
@@ -39,6 +41,7 @@
     vfxResolverModule = (window.PBABattleVfx && window.PBABattleVfx.MoveVfxResolver) || window.PBABattleVfx || {};
     audioControllerModule = window.PBABattleAudio || {};
     cameraControllerModule = window.PBABattleCamera || {};
+    statusVfxControllerModule = window.PBAStatusVfx || {};
   } else {
     presentationConstants = { PRESENTATION_COMMANDS: {} };
     adapterBase = { BattlePresentationAdapter: class {} };
@@ -47,6 +50,7 @@
     vfxResolverModule = {};
     audioControllerModule = {};
     cameraControllerModule = {};
+    statusVfxControllerModule = {};
   }
 
   const { PRESENTATION_COMMANDS } = presentationConstants;
@@ -75,6 +79,12 @@
       );
       this.cameraController = options.cameraController !== undefined ? options.cameraController : (
         cameraControllerModule.createCameraController ? cameraControllerModule.createCameraController(options) : null
+      );
+      this.statusController = options.statusController !== undefined ? options.statusController : (
+        statusVfxControllerModule.createStatusVfxController ? statusVfxControllerModule.createStatusVfxController({
+          registry: options.registry || (this.pokemonController && this.pokemonController.registry),
+          ...options
+        }) : null
       );
       this.executedCommands = [];
     }
@@ -238,8 +248,79 @@
           break;
         }
 
+        case PRESENTATION_COMMANDS.STATUS_FEEDBACK: {
+
+          if (this.statusController) {
+
+            const side = visualKey(command.target || command.side || command.actor, command.targetSlot ?? command.actorSlot);
+
+            const outcome = command.outcome;
+
+            if (outcome === 'APPLIED') {
+
+              await this.statusController.applyStatus(side, command.statusCondition);
+
+            } else if (outcome === 'DAMAGE') {
+
+              await this.statusController.pulseDamage(side, command.statusCondition);
+
+            } else if (outcome === 'IMMOBILIZED') {
+
+              await this.statusController.pulseImmobilized(side, command.statusCondition);
+
+            } else if (['CURED', 'WOKE_UP', 'THAWED'].includes(outcome)) {
+
+              this.statusController.removeStatus(side);
+
+            }
+
+          }
+
+          break;
+
+        }
+
+
+
+        case PRESENTATION_COMMANDS.CONFUSION_FEEDBACK: {
+
+          if (this.statusController) {
+
+            const side = visualKey(command.target || command.side || command.actor, command.targetSlot ?? command.actorSlot);
+
+            const outcome = command.outcome;
+
+            if (outcome === 'APPLIED') {
+
+              await this.statusController.applyConfusion(side);
+
+            } else if (outcome === 'CHECK') {
+
+              await this.statusController.pulseConfusionCheck(side);
+
+            } else if (outcome === 'DAMAGE') {
+
+              await this.statusController.pulseConfusionDamage(side);
+
+            } else if (['ENDED', 'SNAPPED_OUT'].includes(outcome)) {
+
+              this.statusController.removeConfusion(side);
+
+            }
+
+          }
+
+          break;
+
+        }
+
+
+
         case PRESENTATION_COMMANDS.FAINT_SEQUENCE: {
           const side = visualKey(command.side || command.target,command.targetSlot);
+          if (this.statusController && side) {
+            this.statusController.clear(side);
+          }
           if (side && this.pokemonController) {
             await this.pokemonController.playFaint(side);
           }
@@ -248,6 +329,9 @@
 
         case PRESENTATION_COMMANDS.SWITCH_OUT_SEQUENCE: {
           const side = visualKey(command.side || command.actor,command.actorSlot ?? command.targetSlot);
+          if (this.statusController && side) {
+            this.statusController.clear(side);
+          }
           if (side && this.pokemonController) {
             await this.pokemonController.playSwitchOut(side);
           }
@@ -286,11 +370,17 @@
               }
             }
             await Promise.all(switchTasks);
+            if (this.statusController && pokemonData) {
+              this.statusController.syncFromCombatant(side, pokemonData, { immediate: true });
+            }
           }
           break;
         }
 
         case PRESENTATION_COMMANDS.BATTLE_RESULT: {
+          if (this.statusController) {
+            this.statusController.clearAll();
+          }
           if (this.audioController && typeof this.audioController.stopShadowBossTheme === 'function') {
             await this.audioController.stopShadowBossTheme();
           }
@@ -353,6 +443,9 @@
       if (this.cameraController) {
         this.cameraController.cancel();
       }
+      if (this.statusController) {
+        this.statusController.cancel();
+      }
     }
 
     /**
@@ -368,6 +461,9 @@
       }
       if (this.vfxController) {
         this.vfxController.reset();
+      }
+      if (this.statusController) {
+        this.statusController.reset();
       }
       if (this.audioController) {
         this.audioController.reset();
