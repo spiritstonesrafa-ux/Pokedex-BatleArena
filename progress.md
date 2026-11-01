@@ -2,13 +2,21 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: aberturas das quatro provas finais e áudio Shadow
+
+- Auditoria de aprendizado publicada em 154b38b9c77855769602ac7dacad00ab33efac9f, hash confirmado em origin/main, sem deploy manual.
+- Criadas aberturas de seis planos para Lendária, Mítica, Titãs e Celestial: suspense ambiental, revelações individuais e formação completa com o time efetivamente preparado. Cenários existentes, identidades próprias, trilhas procedurais e cries nas revelações.
+- Integração entre preparação e início do combate, confirmação final, skip/Escape, foco/rolagem, movimento reduzido, pausa em aba oculta e prevenção de clique duplicado. Sem escrita no progresso ou mudança de equipes/recompensas.
+- Shadow: desbloqueio no clique antes das esperas, controlador de áudio compartilhado explicitamente, melodia mais perceptível e versão do arquivo renovada. Tema de batalha retoma o contexto e invalida inícios cancelados; mute/volume preservados.
+- Treze regressões novas; 2.664 testes / 38 suítes aprovados. Quatro cenas verificadas em navegador, Celestial em viewport móvel e transição real ao combate. Sinal de áudio confirmado no diálogo e na batalha Shadow. Relatório: docs/endgame-trial-cinematics.md.
+- Novas cenas e ajustes de áudio locais, ainda sem novo commit/push. Registros abaixo são históricos.
 ## Atualização — 01/11/2026: auditoria de golpes por espécie e forma
 
 - Conferidos os 1.351 registros / 1.349 aptos contra snapshot versionado da PokéAPI: 30.713 atribuições entre oito fontes, zero incompatibilidades restantes. Relatório: docs/pokemon-learnset-audit.md e .json.
 - Zamazenta deixou de receber Earthquake; Stone Edge substitui o golpe nos conjuntos fixo e legado. Corrigido Vine Whip para ID 22 e removida sua equivalência indevida com Absorb 71; sua mecânica é dano físico sem drenagem.
 - Contingência de rede usa somente golpes comprovados da espécie/forma; retiradas as concessões genéricas por tipo e o Tackle artificial para espécies desconhecidas. Identidades conflitantes são descartadas; IDs ausentes são resolvidos pelo nome oficial.
 - Referência local imutável de aprendizado, filtro das opções da campanha e auditoria reproduzível sem rede. Preservados aprendizado histórico, herança de formas sem lista própria e exceções explícitas das formas coroadas/Sketch.
-- Nove regressões novas; 2.651 testes / 38 suítes aprovados, zero falhas/cancelados/ignorados. Auditoria do roadmap preserva 384 FULL, zero PARTIAL. Alterações locais, sem novo commit/push.
+- Nove regressões novas; 2.651 testes / 38 suítes aprovados, zero falhas/cancelados/ignorados. Auditoria do roadmap preserva 384 FULL, zero PARTIAL. Publicado em 154b38b, confirmado em origin/main.
 ## Atualização — 01/11/2026: efeitos de ataque nas quatro posições de duplas
 
 - Corrigida a causa da ausência de efeitos: o palco de duplas não registrava seus sprites nos controladores de animação, VFX e câmera. Agora as quatro posições têm âncoras independentes, usando os efeitos já existentes da batalha comum.

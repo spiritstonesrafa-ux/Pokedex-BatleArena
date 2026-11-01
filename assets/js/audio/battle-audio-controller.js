@@ -415,11 +415,16 @@
       this.stopBattleMusic();
       this.stopShadowBossTheme();
       const ctx = this.contextManager.getContext();
-      const family = scene.challengeKind === 'SHADOW' ? 'shadow' : scene.challengeKind === 'SUPER' ? 'super' : 'master';
+      const trialFamilies = {LEGENDARY_TRIAL:'legendary',MYTHICAL_TRIAL:'mythical',TITANS_TRIAL:'titans',CELESTIAL_TRIAL:'celestial'};
+      const family = trialFamilies[scene.challengeKind] || (scene.challengeKind === 'SHADOW' ? 'shadow' : scene.challengeKind === 'SUPER' ? 'super' : 'master');
       const themes = {
+        legendary: { notes:[146.83,220,293.66,261.63,220,174.61,164.81,220],bass:73.42,beat:650,wave:'triangle' },
+        mythical: { notes:[196,293.66,311.13,392,369.99,293.66,233.08,293.66],bass:98,beat:710,wave:'sine' },
+        titans: { notes:[130.81,138.59,196,174.61,130.81,155.56,146.83,130.81],bass:65.41,beat:740,wave:'triangle' },
+        celestial: { notes:[174.61,261.63,349.23,329.63,293.66,261.63,220,261.63],bass:87.31,beat:690,wave:'sine' },
         master: { notes: [261.63, 329.63, 392, 440, 392, 329.63, 293.66, 329.63], bass: 130.81, beat: 560, wave: 'triangle' },
         super: { notes: [196, 293.66, 392, 369.99, 329.63, 293.66, 246.94, 293.66], bass: 98, beat: 620, wave: 'triangle' },
-        shadow: { notes: [146.83, 155.56, 174.61, 146.83, 130.81, 138.59, 155.56, 130.81], bass: 73.42, beat: 680, wave: 'sine' }
+        shadow: { notes: [293.66, 311.13, 349.23, 293.66, 261.63, 277.18, 311.13, 261.63], bass: 73.42, beat: 680, wave: 'triangle' }
       };
       const theme = themes[family];
       const moment = scene.moment || 'INTRO';
@@ -432,7 +437,7 @@
       this._dialogueCleanupTimers = new Set();
       const output = ctx.createGain();
       output.gain.setValueAtTime(0.001, ctx.currentTime);
-      output.gain.linearRampToValueAtTime(moment === 'INTRO' ? 0.18 : 0.13, ctx.currentTime + 0.3);
+      output.gain.linearRampToValueAtTime(family === 'shadow' ? (moment === 'INTRO' ? .42 : .3) : (moment === 'INTRO' ? .18 : .13), ctx.currentTime + .3);
       output.connect(this.mixer ? this.mixer.getChannelNode('MUSIC') : ctx.destination);
       this._dialogueOutput = output;
       let step = 0;
@@ -451,7 +456,7 @@
       };
       const tick = () => {
         if (!this._dialogueTheme) return;
-        note(notes[step % notes.length] * (defeat ? 0.5 : 1), beat / 1000 * 1.5, 0.24, theme.wave);
+        note(notes[step % notes.length] * (defeat ? 0.5 : 1), beat / 1000 * 1.5, family === 'shadow' ? .32 : .24, theme.wave);
         if (step % 4 === 0) note(victory ? 130.81 : defeat ? 110 : theme.bass, beat / 1000 * 3.7, 0.16, 'sine');
         step++;
       };
@@ -574,14 +579,17 @@
   const Controller = typeof module !== 'undefined' && module.exports ? module.exports.BattleAudioController : window.PBABattleAudio?.BattleAudioController;
   if (!Controller) return;
   Controller.prototype.startShadowBossTheme = async function () {
-    if (this._shadowThemeActive || !this.isUnlocked()) return;
+    if (this._shadowThemeActive) return true;
+    const version = this._shadowStartVersion = (this._shadowStartVersion || 0) + 1;
+    await this.unlock();
     await this.stopBattleMusic();
+    if (version !== this._shadowStartVersion || !this.isUnlocked()) return false;
     const ctx = this.contextManager.getContext();
     const channel = this.mixer ? this.mixer.getChannelNode("MUSIC") : ctx.destination;
     const master = ctx.createGain();
     const now = ctx.currentTime;
     master.gain.setValueAtTime(0.001, now);
-    master.gain.linearRampToValueAtTime(0.18, now + 2);
+    master.gain.linearRampToValueAtTime(0.26, now + .8);
     master.connect(channel);
     const nodes = [master];
     const layer = (frequency, type, volume, filterFrequency) => {
@@ -593,20 +601,22 @@
       nodes.push(osc, filter, gain);
     };
     layer(55, 'sine', 0.42, 180);       // drone grave
-    layer(82.41, 'triangle', 0.11, 520); // pad dissonante
+    layer(164.81, 'triangle', 0.11, 820); // pad dissonante
     this._shadowThemeActive = true;
     let step = 0;
     const pulse = () => {
       if (!this._shadowThemeActive) return;
       const start = ctx.currentTime, osc = ctx.createOscillator(), gain = ctx.createGain();
       osc.type = step % 4 === 3 ? 'square' : 'sawtooth';
-      osc.frequency.setValueAtTime([73.42, 77.78, 65.41, 58.27][step++ % 4], start);
+      osc.frequency.setValueAtTime([146.83, 155.56, 130.81, 116.54][step++ % 4], start);
       gain.gain.setValueAtTime(0.001, start); gain.gain.exponentialRampToValueAtTime(0.075, start + 0.03); gain.gain.exponentialRampToValueAtTime(0.001, start + 0.42);
       osc.connect(gain); gain.connect(master); osc.start(start); osc.stop(start + 0.45); nodes.push(osc, gain);
+      osc.onended = () => { osc.disconnect(); gain.disconnect(); for (const node of [osc,gain]) { const index=nodes.indexOf(node); if(index!==-1)nodes.splice(index,1); } };
     };
     pulse(); this._shadowThemeNodes = nodes; this._shadowThemeIntervalId = setInterval(pulse, 780); // ~77 BPM
   };
   Controller.prototype.stopShadowBossTheme = async function () {
+    this._shadowStartVersion = (this._shadowStartVersion || 0) + 1;
     if (!this._shadowThemeActive) return;
     this._shadowThemeActive = false;
     if (this._shadowThemeIntervalId) { clearInterval(this._shadowThemeIntervalId); this._shadowThemeIntervalId = null; }

@@ -43,4 +43,4 @@ Transform, Sketch, Sleep Talk, Struggle e conversões Max/Z possuem regras próp
 - Resultado estruturado: `docs/pokemon-learnset-audit.json`.
 - Validação final: **2.651 testes / 38 suítes aprovados**, zero falhas, cancelados ou ignorados; auditoria de conclusão mantém **384 FULL e zero PARTIAL**.
 
-Alterações locais, ainda sem novo commit ou publicação.
+Publicado no commit 154b38b9c77855769602ac7dacad00ab33efac9f, confirmado em origin/main em 01/11/2026.

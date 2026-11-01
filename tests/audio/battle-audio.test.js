@@ -695,3 +695,16 @@ test('Dialogue play — mounted scene starts its score and skip stops it before 
   assert.equal(await dialogue.play('WILD', 'INTRO', { audioController: audio }), false);
   assert.deepEqual(calls, []);
 });
+
+test('Four trial scores have distinct original families and obey the existing music mute channel',async()=>{
+ const audio=new BattleAudioController();await audio.unlock();
+ try{for(const [kind,family]of [['LEGENDARY_TRIAL','legendary'],['MYTHICAL_TRIAL','mythical'],['TITANS_TRIAL','titans'],['CELESTIAL_TRIAL','celestial']]){assert.equal(audio.startDialogueMusic({challengeKind:kind,moment:'INTRO'}),true);assert.equal(audio._dialogueTheme.family,family);assert.ok(audio._dialogueIntervalId);audio.mixer.setMute(true);assert.equal(audio.getSettings().isMuted,true);audio.cancel();assert.equal(audio._dialogueIntervalId,null);assert.equal(audio._dialogueNodes.size,0);audio.mixer.setMute(false);}}finally{audio.cancel();}
+});
+test('Shadow dialogue has an audible midrange melody and remains under the user mixer settings',async()=>{
+ const audio=new BattleAudioController();await audio.unlock();audio.mixer.setMusicVolume(.3);audio.mixer.setMute(true);
+ try{audio.startDialogueMusic({challengeKind:'SHADOW',moment:'INTRO'});assert.equal(audio._dialogueTheme.family,'shadow');const melody=[...audio._dialogueNodes][0];assert.ok(melody.osc.frequency.value>=260);assert.equal(melody.osc.type,'triangle');assert.equal(audio.getSettings().isMuted,true);assert.equal(audio.getSettings().musicVolume,.3);}finally{audio.cancel();}
+});
+test('Shadow boss resumes locked audio itself and cancellation invalidates a pending resume',async()=>{
+ const audio=new BattleAudioController();assert.equal(audio.isUnlocked(),false);await audio.startShadowBossTheme();assert.equal(audio.isUnlocked(),true);assert.equal(audio._shadowThemeActive,true);audio.cancel();
+ const pending=new BattleAudioController();let resume;pending.unlock=()=>new Promise(r=>resume=r);const start=pending.startShadowBossTheme();pending.cancel();resume();await start;assert.equal(Boolean(pending._shadowThemeActive),false);assert.ok(!pending._shadowThemeIntervalId);
+});
