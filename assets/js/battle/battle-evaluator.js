@@ -55,10 +55,15 @@
 
       if(attacker.rechargeMoveId)return {moveId:move.id,moveName:move.name,currentPp:move.currentPp,expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,averageDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:0,statusChance:0,isEligibleForSecondary:false,priority:0,recharging:true,requiresRecharge:false};
 
-      if(constants.P6.statusMoves[move.name]){
+      attacker={...attacker};defender={...defender,abilityIgnored:constants.P7.ignored(attacker,defender,move)};
+      if(constants.P6.statusMoves[move.name]||constants.P7.statusMoves[move.name]){
         const own=context.battleState?.p6Sides?.[context.attackerSide]||{},foe=context.battleState?.p6Sides?.[context.attackerSide==='enemy'?'player':'enemy']||{};
         const id=move.id,shield=constants.P6.screens[id],hazard=constants.P6.hazards[id];let benefit=0;
         if(shield)benefit=own[shield]?0:35;
+        if(constants.P7.weatherMoves[id])benefit=context.battleState?.weather?.id===constants.P7.weatherMoves[id]?0:25;
+        if(constants.P7.terrainMoves[id])benefit=context.battleState?.terrain?.id===constants.P7.terrainMoves[id]?0:25;
+        if(id===694)benefit=attacker.envWeather==='snow'&&!own.auroraVeil?40:0;
+        if(id===881)benefit=20;
         if(hazard)benefit=(foe[hazard]||0)>=(id===191?3:id===390?2:1)?0:35;
         if(id===73)benefit=defender.leechSeed||defender.types.includes('grass')?0:Math.floor(defender.maxHp/8);
         if([169,212,335].includes(id))benefit=defender.trapped||defender.types.includes('ghost')?0:15;
@@ -140,8 +145,9 @@
       }
       const p5 = constants.P5.get(move);
       const damageClass = move.id===722 && constants.getEffectiveStat(attacker,'attack')>constants.getEffectiveStat(attacker,'specialAttack') ? 'physical' : (move.damageClass || 'physical');
-      const moveType = constants.P5.type(move,attacker) || 'normal';
-      const power = p5 ? constants.P5.power(move,attacker,defender,constants,{...context,faintCount:context.faintCount??context.attackerTeam?.filter(m=>m.currentHp<=0).length??0}) : Number(move.power) || 0;
+      const moveType = constants.P7.moveType(context.battleState,attacker,move,constants.P5.type(move,attacker)) || 'normal';
+      let power = p5 ? constants.P5.power(move,attacker,defender,constants,{...context,faintCount:context.faintCount??context.attackerTeam?.filter(m=>m.currentHp<=0).length??0}) : Number(move.power) || 0;
+      power=constants.P7.power(context.battleState,attacker,defender,{...move,type:moveType},power,constants);
       const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
       const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(move));
@@ -273,7 +279,7 @@
       // 2. STAB (Same-Type Attack Bonus)
       const attackerTypes = Array.isArray(attacker.types) ? attacker.types : [];
       const hasStab = attackerTypes.includes(moveType);
-      const stabMultiplier = (hasStab && !isFixedDamage) ? (constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
+      const stabMultiplier = (hasStab && !isFixedDamage) ? (constants.P7.ability(attacker)==='adaptability'?2:constants && constants.BATTLE_CONFIG ? constants.BATTLE_CONFIG.STAB_MULTIPLIER : 1.5) : 1.0;
 
       // 3. Efetividade de Tipos (Type Effectiveness)
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];
@@ -402,7 +408,7 @@
       if (attacker.confusionTurns > 1) actionFactor *= 0.67;
       if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
       if (entryRestricted || attacker.rechargeMoveId) actionFactor = 0;
-      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !constants.isProtectBypassingMove?.(move)) {
+      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !constants.isProtectBypassingMove?.(move) && !(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(move.id))) {
         actionFactor = 0;
         baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
       }
@@ -414,10 +420,14 @@
         }
       }
       if(context.battleState && !isFixedDamage){const role=context.attackerSide==='enemy'?'player':'enemy';const f=constants.P6.barrierMultiplier(context.battleState,role,{...move,damageClass},Boolean(multiHit?.critical));minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
+      if(!isFixedDamage){const f=constants.P7.damageMultiplier(context.battleState,attacker,defender,{...move,type:moveType},typeMultiplier);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
+      const ab=constants.P7.defenderAbility(attacker,defender,move),absorbs={'water-absorb':'water','volt-absorb':'electric','flash-fire':'fire','sap-sipper':'grass','lightning-rod':'electric','storm-drain':'water'};
+      if(absorbs[ab]===moveType||ab==='levitate'&&moveType==='ground'||ab==='sturdy'&&constants.P5.ohko(move)||defender.envTerrain==='psychic'&&constants.P7.grounded(defender)&&constants.P7.priority(attacker,move,constants)>0){minDamage=maxDamage=averageDamage=damageIfHit=0;}
+      if(!multiHit&&defender.currentHp===defender.maxHp&&(ab==='sturdy'||defender.item==='focus-sash')){minDamage=Math.min(minDamage,defender.currentHp-1);maxDamage=Math.min(maxDamage,defender.currentHp-1);averageDamage=Math.min(averageDamage,defender.currentHp-1);damageIfHit=averageDamage;}
       if(defender.minimized&&constants.P6.minimizeHits.includes(move.id)){minDamage*=2;maxDamage*=2;averageDamage*=2;damageIfHit=averageDamage;accuracyFactor=1;}
       if(constants.P6.consecutive.includes(move.id)&&attacker.lastP6Move===move.id){actionFactor=0;minDamage=maxDamage=averageDamage=damageIfHit=0;}
       const isTwoTurn = Boolean(constants?.isTwoTurnMove?.(move));
-      const isTwoTurnCharging = isTwoTurn && !attacker.twoTurnMove;
+      const isTwoTurnCharging = isTwoTurn && !attacker.twoTurnMove && !constants.P7.instantCharge(context.battleState,attacker,move);
       let projectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
       let expectedDamage = projectedDamage;
       if (isTwoTurnCharging) {
@@ -426,7 +436,7 @@
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const guaranteedKo = !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
+      const guaranteedKo = !(multiHit&&(defender.item?.endsWith('-berry')||ab==='multiscale')) && !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
       const possibleKo = !isTwoTurnCharging && !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 
@@ -447,10 +457,10 @@
         ? Math.max(1, Math.floor(cappedExpectedDamage * recoilRatio))
         : 0;
       const wouldRecoilKo = recoilRatio > 0 && expectedRecoil >= (Number(attacker.currentHp) || 0);
-      const priority = constants?.getMovePriority?.(move) || 0;
+      const priority = constants.P7.priority(attacker,move,constants);
 
       // 8. Avaliação de Efeito Secundário Canônico (Secondary Effects: P4)
-      const secEffect = constants?.getSecondaryEffect ? constants.getSecondaryEffect(move) : null;
+      const secEffect = constants.P7.secondary(context.battleState||{},move,constants.getSecondaryEffect(move));
       let expectedStatusChance = 0;
       let expectedStatusBenefit = 0;
       let isEligibleForSecondary = false;

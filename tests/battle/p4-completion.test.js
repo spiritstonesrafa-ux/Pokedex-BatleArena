@@ -193,7 +193,7 @@ test('Healing feedback clears the primary badge once and never says already affe
 test('P4 registry is immutable and legacy generic P4 placeholders are resolved to support or specific dependencies',()=>{
  for(const effect of Object.values(P4.effects))assert.equal(Object.isFrozen(effect),true);
  for(const move of Object.values(C.KNOWN_CATALOG_MOVES))assert.equal(C.getMoveCapability(move)?.knownPending.includes('SECONDARY_EFFECTS_PHASE_P4'),false,move.name);
- assert.ok(C.getMoveCapability(87).knownPending.includes('WEATHER_ACCURACY_PHASE_P7'));
+ assert.equal(C.getMoveCapability(87).supportLevel,'FULL');
  assert.ok(C.getMoveCapability(299).knownPending.includes('HIGH_CRITICAL_PHASE_P1'));
 });
 

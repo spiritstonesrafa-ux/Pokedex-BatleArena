@@ -191,6 +191,7 @@
     return SELF_STAT_DROP_MOVES[name] || move.selfStatDrops || null;
   }
 
+  const P7 = typeof module !== 'undefined' && module.exports ? require('./p7-mechanics.js') : window.PBAP7Mechanics;
   const P6 = typeof module !== 'undefined' && module.exports ? require('./p6-mechanics.js') : window.PBAP6Mechanics;
   const P5 = typeof module !== 'undefined' && module.exports ? require('./p5-mechanics.js') : window.PBAP5Mechanics;
   const P4Catalog = typeof module !== 'undefined' && module.exports ? require('./p4-secondary-catalog.js') : (window.PBAP4SecondaryCatalog || {effects:{},definitions:{},moves:{},defrost:[]});
@@ -400,15 +401,16 @@
   function getEffectiveAccuracy(move, attacker, defender) {
     if (P5.ohko(move)) return P5.accuracy(move,attacker,defender);
     if(defender?.minimized&&P6.minimizeHits.includes(Number(move.id)))return null;
-    if(move.accuracy===null||move.accuracy==='ALWAYS_HIT')return null;
+    const weatherAccuracy=P7.accuracy(move,attacker,defender,move.accuracy);
+    if(weatherAccuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
     const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Number(defender.evasionStage)||0)));
-    return Math.min(100,Math.floor(Number(move.accuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
+    return Math.min(100,Math.floor(Number(weatherAccuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
   }
 
   function getEffectiveStat(combatant, statKey) {
     if (!combatant || typeof combatant !== 'object') return 1;
-    const base = Number(combatant[statKey]);
+    const base = Number(combatant[statKey])*P7.stat(combatant,statKey);
     if (!Number.isFinite(base) || base <= 0) return 1;
     if (!STAT_STAGE_KEYS.includes(statKey)) return Math.max(1, Math.floor(base));
 
@@ -425,6 +427,7 @@
   }
 
   function applyStatStageChange(combatant, statKey, delta) {
+    if(delta<0&&(combatant.p7BlockDrop||statKey==='attack'&&combatant.p7BlockAttackDrop)){const previousStage=['accuracy','evasion'].includes(statKey)?combatant[statKey+'Stage']||0:combatant.statStages?.[statKey]||0;return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};}
     if (['accuracy','evasion'].includes(statKey)) {
       const key=statKey+'Stage', previousStage=Math.max(-6,Math.min(6,Number(combatant[key])||0)), requestedDelta=Math.trunc(Number(delta)||0);
       const finalStage=Math.max(-6,Math.min(6,previousStage+requestedDelta));combatant[key]=finalStage;if(finalStage>previousStage)combatant.statsRaisedThisTurn=true;
@@ -900,7 +903,8 @@
     91: Object.freeze({ id: 91, name: 'dig', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE'], knownPending: [], blockedReason: null, priority: 0 }),
     291: Object.freeze({ id: 291, name: 'dive', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE'], knownPending: [], blockedReason: null, priority: 0 }),
     340: Object.freeze({ id: 340, name: 'bounce', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'TWO_TURN_SEMI_INVULNERABLE', 'SECONDARY_STATUS_CHANCE'], knownPending: [], blockedReason: null, priority: 0, secondaryEffect: SECONDARY_EFFECT_MOVES['bounce'] }),
-    ...P6.definitions
+    ...P6.definitions,
+    ...P7.definitions
   });
 
   const CANONICAL_MOVE_DEFINITIONS_BY_NAME = Object.freeze(
@@ -1188,7 +1192,8 @@
     ...P5.moves,
     ...RECHARGE_MOVES,
     ...PROTECT_MOVES,
-    ...P6.moves
+    ...P6.moves,
+    ...P7.moves
   });
 
   const KNOWN_CATALOG_MOVES_BY_NAME = Object.freeze(
@@ -1585,7 +1590,8 @@
       power: 0, accuracy: 90, pp: 20, damageClass: 'status', statusEffect: 'paralysis' }),
     'protect': PROTECT_MOVES[182],
     'detect': PROTECT_MOVES[197],
-    ...P6.statusMoves
+    ...P6.statusMoves,
+    ...P7.statusMoves
   });
 
   function getSupportedStatusMove(move) {
@@ -1649,7 +1655,7 @@
     if (Number(target.currentHp) <= 0) return false;
     if (target.statusCondition) return false;
     const types = Array.isArray(target.types) ? target.types : (target.type ? [target.type] : []);
-    return !isStatusConditionImmune(statusCondition, types);
+    return !P7.statusImmune(target,statusCondition) && !isStatusConditionImmune(statusCondition, types);
   }
 
   function isConfused(combatant) {
@@ -1695,7 +1701,7 @@
   }
 
   function applyBurnPenalty(damage, attacker, move) {
-    return attacker?.statusCondition === 'burn' && move?.damageClass === 'physical' && damage > 0
+    return attacker?.statusCondition === 'burn' && P7.ability(attacker)!=='guts' && move?.damageClass === 'physical' && damage > 0
       ? Math.max(1, Math.floor(damage / 2)) : damage;
   }
 
@@ -1813,6 +1819,7 @@
     getFractionalDamageAmount,
     P5,
     P6,
+    P7,
     RECHARGE_MOVES,
     isRechargeMove,
     PROTECT_MOVES,

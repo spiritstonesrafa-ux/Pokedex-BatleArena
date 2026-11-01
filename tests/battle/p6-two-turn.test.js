@@ -82,9 +82,9 @@ test('P6 Two-turn: canonical metadata and catalog definitions for all 5 pilots',
     assert.equal(retrieved.id, expected.id);
 
     const capability = Constants.getMoveCapability(move);
-    assert.equal(capability.supportLevel, expected.supportLevel);
-    assert.deepEqual(capability.requiredMechanics, expected.requiredMechanics);
-    assert.deepEqual(capability.knownPending, expected.knownPending);
+    assert.equal(capability.supportLevel, expected.id===76?'FULL':expected.supportLevel);
+    assert.deepEqual(capability.requiredMechanics, expected.id===76?Constants.P7.definitions[76].requiredMechanics:expected.requiredMechanics);
+    assert.deepEqual(capability.knownPending, expected.id===76?[]:expected.knownPending);
 
     assert.equal(Constants.validateMoveData(move), true);
     assert.equal(SessionConstants.isMechanicallySupportedMove(move), true);
@@ -685,8 +685,8 @@ test('P6 Campaign: Dugtrio, Spoink, Pidgeot, Wailord and Exeggutor receive curat
   const extras = CampaignOptionsCatalog.byId;
   const fixed = CampaignFixedCatalog.byId;
 
-  // Species count after P6 closure is 524
-  assert.equal(Object.keys(extras).length, 524);
+  // Species count after P6 closure is 538
+  assert.equal(Object.keys(extras).length, 538);
 
   // Dugtrio (#51) receives dig
   assert.ok(extras[51].some(m => m.id === 91 && m.name === 'dig'));

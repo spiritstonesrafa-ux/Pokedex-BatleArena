@@ -23,6 +23,7 @@ const SIMPLE_MOVES = new Set([
 // Phase P3/P4 pilot moves: explicitly supported stat stage boosts and status conditions
 const PILOT_P3_MOVES = new Set([
   ...Object.values(BattleConstants.P5.moves).map(m=>m.name),
+  ...Object.values(BattleConstants.P7.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>m.name),
   ...Object.values(BattleConstants.P6.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>m.name),
   ...Object.values(BattleConstants.RECHARGE_MOVES).map(m=>m.name),
   'super-fang',
@@ -66,6 +67,7 @@ const PILOT_P3_MOVES = new Set([
 
 const CANONICAL_PILOT_MOVES = Object.freeze({
   ...Object.fromEntries(Object.values(BattleConstants.P5.moves).map(m=>[m.name,m])),
+  ...Object.fromEntries(Object.values(BattleConstants.P7.moves).map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.P6.moves).filter(m=>BattleConstants.getMoveCapability(m).supportLevel!=='BLOCKED').map(m=>[m.name,m])),
   ...Object.fromEntries(Object.values(BattleConstants.RECHARGE_MOVES).map(m=>[m.name,m])),
   'super-fang': Object.freeze({"id":162,"name":"super-fang","type":"normal","damageClass":"physical","power":null,"accuracy":90,"pp":10}),
@@ -438,6 +440,22 @@ const CANONICAL_PILOT_SPECIES_EXTRAS = Object.freeze({
   283: ["sticky-web"],
   725: ["parting-shot"],
   781: ["body-press","anchor-shot"],
+  // P7: legal learnsets in free extra slots; existing options preserved.
+  46: ["sunny-day"],
+  52: ["rain-dance"],
+  61: ["weather-ball"],
+  63: ["psychic-terrain"],
+  79: ["snowscape"],
+  88: ["sandstorm"],
+  100: ["electric-terrain"],
+  102: ["grassy-terrain"],
+  108: ["terrain-pulse"],
+  122: ["misty-terrain"],
+  124: ["aurora-veil"],
+  493: ["surf","judgment"],
+  649: ["techno-blast"],
+  773: ["multi-attack"],
+  10172: ["chilly-reception"],
 
 });
 

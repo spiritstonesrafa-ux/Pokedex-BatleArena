@@ -2,6 +2,16 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 31/10/2026: P6 publicada e catálogo P7 implementado
+
+- Commit/push da P6: **a58a9e9d54965a1b13d6c0ab8bf7319d96ae1654**, confirmado em origin/main. Publicação da P7 autorizada pelo usuário; consultar o histórico Git para o commit correspondente.
+- P7 no escopo explícito de batalhas individuais: **66 habilidades, 66 itens, quatro climas, quatro terrenos e 36 golpes pilotos** (33 FULL; 13/143 PARTIAL por P1 e 856 por Commander/duplas).
+- Preparação da campanha: habilidade natural e item por Pokémon, preferências sanitizadas/persistidas e restauração dos itens na batalha seguinte. Habilidades fora dos pilotos continuam inativas e rotuladas como pendentes.
+- Todos os pilotos disponíveis em opções legais da campanha. **538 espécies com extras**, máximo de seis opções; 450 espécies do draft e quatro apenas de coleção preservadas.
+- Suíte completa: **2.366 testes / 38 suítes**, zero falhas, cancelados ou ignorados. Testes de interface com DOM simulado; sem homologação visual manual.
+- Auditorias P4/P5/P6 preservadas. P7: node scripts/audit-p7.js, zero pendências essenciais PHASE_P7 nos golpes conhecidos. Relatório completo: docs/roadmap-p7.md.
+- Próximo bloco: P8. Outros itens/habilidades fora dos pilotos e pendências específicas de P1/P2/P3 continuam explícitos. Commit e push da P7 autorizados pelo usuário; sem deploy manual.
+
 ## Atualização — 31/10/2026: P6 concluída no motor atual de batalhas individuais
 
 - Fechamento das famílias de proteção/recarga/carga, semi-invulnerabilidade, aprisionamento, semente, armadilhas de entrada, remoção, barreiras, pivôs/interceptação, sequências obrigatórias, Minimize, Focus Punch e restrição de uso consecutivo. Estado vigente e limites em docs/roadmap-p6.md; registros anteriores abaixo são históricos.

@@ -340,9 +340,9 @@
         case BATTLE_EVENTS.MULTI_HIT_COMPLETE:
           return [{type:PRESENTATION_COMMANDS.MULTI_HIT_FEEDBACK,hitCount:event.hitCount,moveName:event.moveName,critical:Boolean(event.critical)}];
         case BATTLE_EVENTS.MOVE_PREPARED:
-          return [{type:PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK,pokemonName:event.pokemonName,moveName:event.moveName,reason:event.reason}];
+          return [{type:PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK,pokemonName:event.pokemonName,moveName:event.moveName,label:event.label,reason:event.reason}];
         case BATTLE_EVENTS.MOVE_FAILED:
-          return [{ type: PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK, actor: event.actor, pokemonName: event.pokemonName, moveName: event.moveName, reason: event.reason }];
+          return [{ type: PRESENTATION_COMMANDS.MOVE_FAIL_FEEDBACK, actor: event.actor, pokemonName: event.pokemonName, moveName: event.moveName, label:event.label, reason: event.reason }];
 
         case BATTLE_EVENTS.MOVE_MISSED:
           return [

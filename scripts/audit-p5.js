@@ -20,12 +20,13 @@ for(const id of pilots){
  assert.ok(available.has(id),'P5 pilot unavailable in campaign '+id);
  if(cap.supportLevel==='FULL')full++;else partial++;
 }
-const futureDependencies={449:'PHASE_P7',546:'PHASE_P7',718:'PHASE_P7',723:'PHASE_P8',851:'PHASE_P8',881:'PHASE_P7'};
+const futureDependencies={723:'PHASE_P8',851:'PHASE_P8'};
 for(const [id,phase]of Object.entries(futureDependencies)){
  const cap=C.getMoveCapability(+id);
  assert.notEqual(cap.supportLevel,'FULL','Future mechanics must not be marked delivered');
  assert.ok(cap.knownPending.some(p=>p.includes(phase)),'Missing future dependency '+id);
 }
+for(const id of [449,546,718,881])assert.equal(C.getMoveCapability(id).supportLevel,'FULL','P7 delivered '+id);
 assert.equal(C.getMoveCapability(677).supportLevel,'FULL','Anchor Shot trapping delivered in P6');
 assert.ok(C.P6.trapping.includes(677));
 for(const id of [201,202,360,771]){

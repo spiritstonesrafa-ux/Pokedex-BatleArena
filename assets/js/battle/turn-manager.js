@@ -52,7 +52,7 @@
           move = combatant.moves.find(m => m.currentPp > 0) || combatant.moves[0];
         }
       }
-      return constants.getMovePriority ? constants.getMovePriority(move) : 0;
+      return constants.P7?constants.P7.priority(combatant,move,constants):constants.getMovePriority ? constants.getMovePriority(move) : 0;
     }
 
     /**

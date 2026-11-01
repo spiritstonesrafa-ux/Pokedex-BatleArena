@@ -777,7 +777,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
     assert.ok(chillyReception);
     assert.equal(chillyReception.id, 881);
     assert.equal(chillyReception.name, 'chilly-reception');
-    assert.equal(chillyReception.supportLevel, MOVE_SUPPORT_LEVEL.BLOCKED);
+    assert.equal(chillyReception.supportLevel, MOVE_SUPPORT_LEVEL.FULL);
   });
 
   test('CANON-08: Classificação estrita de Poison Jab e Invariante de Suporte FULL', () => {
@@ -850,9 +850,9 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
 
     // 5. Rejeição de golpes de status não suportados mesmo que bem formados
     const unsupportedStatus = {
-      id: 694,
-      name: 'aurora-veil',
-      type: 'ice',
+      id: 166,
+      name: 'sketch',
+      type: 'normal',
       power: 0,
       accuracy: null,
       pp: 20,
@@ -1039,7 +1039,7 @@ describe('AUDITORIA CANÔNICA — Identidades, Contradições, Desconhecidos e F
 
     // 21. Golpes bloqueados
     assert.equal(
-      validateMoveData({ id: 449, name: 'judgment', type: 'normal', power: 100, accuracy: 100, pp: 10, damageClass: 'special' }),
+      validateMoveData({ id: 851, name: 'tera-blast', type: 'normal', power: 80, accuracy: 100, pp: 10, damageClass: 'special' }),
       false,
       'Golpe bloqueado deve ser rejeitado'
     );

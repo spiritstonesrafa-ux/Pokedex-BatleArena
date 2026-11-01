@@ -28,3 +28,12 @@
  Store.reset=()=>{try{localStorage.removeItem(C.STORAGE_KEY)}catch{}return Store.getDefaultState()};
  if(typeof module!=='undefined'&&module.exports)module.exports=Store;else{window.PBACampaign=window.PBACampaign||{};window.PBACampaign.CampaignStore=Store}
 })();
+/* P7 equipment sanitization extends the existing save contract without a save-version migration. */
+(function(){
+ const Store=typeof module!=='undefined'&&module.exports?module.exports:window.PBACampaign?.CampaignStore;
+ const Rules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+ if(!Store||!Rules?.P7)return;const previous=Store.sanitize,defaults=Store.getDefaultState;
+ Store.getDefaultState=()=>({...defaults(),battlePreferences:{}});
+ Store.sanitize=raw=>{const clean=previous(raw);clean.battlePreferences={};const owned=new Set([...clean.startingRosterIds,...Object.values(clean.challenges).map(x=>x.rewardPokemonId),clean.superTrainer.rewardPokemonId,...Object.values(clean.endgameTrials).map(x=>x.rewardPokemonId),...(clean.wild?.capturedIds||[])].filter(Boolean));
+ if(raw?.battlePreferences&&typeof raw.battlePreferences==='object'&&!Array.isArray(raw.battlePreferences))for(const [id,value]of Object.entries(raw.battlePreferences)){if(!owned.has(Number(id)))continue;const pref=Rules.P7.validatePreference(+id,value);if(pref)clean.battlePreferences[id]=pref;}return clean;};
+})();

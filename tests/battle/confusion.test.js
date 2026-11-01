@@ -106,7 +106,7 @@ test('P4-CF-01: Dados canônicos e suporte FULL dos pilotos Confuse Ray (109) e 
 
   // Blizzard alinhamento de roadmap (Phase P7)
   const blzCap = getMoveCapability({ id: 59 });
-  assert.deepEqual(blzCap.knownPending, ['WEATHER_ACCURACY_PHASE_P7']);
+  assert.deepEqual(blzCap.knownPending, []);
 
   // Helpers
   assert.equal(DEFAULT_CONFUSION_TURNS.MIN, 2);

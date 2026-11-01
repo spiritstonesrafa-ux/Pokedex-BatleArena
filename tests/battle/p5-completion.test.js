@@ -51,9 +51,9 @@ for(const m of Object.values(C.P5.moves))for(const side of ['player','enemy'])te
  if(m.id===283)source.currentHp=100;if(m.id===599)other.statusCondition='poison';
  const p=[side==='player'?source:other,mon(3),mon(5)],e=[side==='enemy'?source:other,mon(4),mon(6)],events=[];
  const enemyId=side==='enemy'?m.id:(m.id===243?53:33),playerId=side==='player'?m.id:(m.id===243?53:33);
- const session=new BattleSessionController({teamStore:{load:()=>[1,3,5]},hydrator:{hydrateTeam:async ids=>ids.map(id=>p.find(x=>x.id===id))},opponentFactory:{createOpponentTeam:async()=>e},ai:{chooseAction:()=>({action:act(enemyId)})},randomSource:new DeterministicRandomSource({accuracySequence:[1,1],secondaryEffectSequence:[1,1],psywaveSequence:[50]}),presentationEngine:{play:async batch=>events.push(...batch),playCommands:async()=>{}}});
+ const session=new BattleSessionController({teamStore:{load:()=>[1,3,5]},hydrator:{hydrateTeam:async ids=>ids.map(id=>p.find(x=>x.id===id))},opponentFactory:{createOpponentTeam:async()=>e},ai:{chooseAction:()=>({action:act(enemyId)}),chooseReplacement:()=>({targetPokemonId:4})},randomSource:new DeterministicRandomSource({accuracySequence:[1,1],secondaryEffectSequence:[1,1],psywaveSequence:[50]}),presentationEngine:{play:async batch=>events.push(...batch),playCommands:async()=>{}}});
  await session.prepareBattle({playerTeamIds:[1,3,5]});await session.startBattle();await session.submitPlayerMove(playerId);
- const active=E.getActiveCombatant(session.battleState,side);assert.equal(active.moves[0].currentPp,m.pp-1);
+ assert.notEqual(session.uiState,'ERROR');const active=session.battleState[side].team.find(p=>p.id===source.id);assert.equal(active.moves[0].currentPp,m.pp-1);
  assert.ok(!events.some(e=>e.type==='MOVE_FAILED'&&e.actor===side));assert.doesNotThrow(()=>Mapper.mapEvents(events));
  if(m.id===149)assert.equal(events.find(e=>e.type==='DAMAGE_APPLIED'&&e.source===side).damage,25);
 });

@@ -1,3 +1,5 @@
+Atualização posterior: P6 publicada como a58a9e9; as dependências de P7 citadas abaixo foram entregues no catálogo de docs/roadmap-p7.md. A auditoria atual conta 65 FULL, 5 PARTIAL por outras fases e zero bloqueados por P7. O texto seguinte preserva o fechamento original da P6.
+
 # P6 — Conclusão no motor atual de batalhas individuais
 
 Atualização: 31/10/2026. **P6 concluída no escopo dos pilotos e das famílias previstas para o motor atual.** Não equivale a suportar todos os golpes da PokéAPI, habilidades, itens, clima, terrenos, transformações ou batalhas duplas.

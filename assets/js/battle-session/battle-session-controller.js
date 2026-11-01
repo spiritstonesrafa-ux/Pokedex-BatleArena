@@ -149,6 +149,8 @@
   }
 
   function prepareMultiHit(active, action, rng) {
+    action.abilityRoll=rng.rollAbility?.()??100;
+    if(action.moveId===290&&active.envTerrain==='grassy')action.sleepDuration=rng.rollSleepDuration?.()??2;
     if(active.lockedMove)action.moveId=active.lockedMove.id;
     if(active.twoTurnMove)action.moveId=active.twoTurnMove.id;
     const p6move=active.moves.find(m=>m.id===action.moveId);
@@ -160,6 +162,7 @@
       const candidates = active.moves.filter(m => m.id !== 214 && ![117,264,690,704].includes(m.id) && !battleConstants.isTwoTurnMove(m) && battleConstants.getMoveCapability(m)?.supportLevel === 'FULL');
       move = candidates[action.sleepTalkChoice ?? 0];
     }
+    if(move?.id===290&&active.envTerrain==='grassy')action.sleepDuration=rng.rollSleepDuration?.()??2;
     if(move?.id===149)action.psywaveRoll=rng.rollPsywave?.()??100;
     const config = battleConstants.getMultiHitMove(move);
     if (!config) return;
@@ -340,6 +343,7 @@
         const campaignInput = (ids, player = false) => campaignMode
           ? ids.map(id => fixedCatalog.byId[id]
             ? { ...fixedCatalog.byId[id],
+              ...(player&&options.playerBattlePreferences?.[id]?{battlePreference:options.playerBattlePreferences[id]}:{}),
               ...(player && moveOptions && options.playerMovePreferences?.[id]
                 ? { moves: moveOptions.resolveLoadout(id, options.playerMovePreferences[id]), campaignCustomMoves: true }
                 : {}), campaignFixedMoves: true } : id)

@@ -189,3 +189,13 @@
     return { ok: true };
   };
 })();
+/* P7 campaign loadout preferences. Equipped items are restored per battle, not inventory rewards. */
+(function(){
+ const Manager=typeof module!=='undefined'&&module.exports?module.exports.CampaignManager:window.PBACampaign?.CampaignManager;
+ const Rules=typeof module!=='undefined'&&module.exports?require('../battle/battle-constants.js'):window.PBABattle;
+ if(!Manager||!Rules?.P7)return;
+ Manager.prototype.getBattlePreference=function(id){return Rules.P7.validatePreference(id,this.data.battlePreferences?.[id]||{})||{ability:Rules.P7.defaultAbility(id),item:null};};
+ Manager.prototype.getBattlePreferencesForTeam=function(ids){const owned=new Set(this.getRosterIds()),result={};for(const id of ids||[])if(owned.has(id)&&this.data.battlePreferences?.[id])result[id]={...this.getBattlePreference(id)};return result;};
+ Manager.prototype.setBattlePreference=function(id,raw){id=Number(id);if(!this.getRosterIds().includes(id))return {ok:false,reason:'NOT_OWNED'};const pref=Rules.P7.validatePreference(id,raw);if(!pref)return {ok:false,reason:'INVALID_BATTLE_LOADOUT'};this.data.battlePreferences||={};this.data.battlePreferences[id]=pref;this.save('BATTLE_LOADOUT_SAVED');return {ok:true};};
+ Manager.prototype.resetBattlePreference=function(id){id=Number(id);if(!this.getRosterIds().includes(id))return {ok:false,reason:'NOT_OWNED'};delete this.data.battlePreferences?.[id];this.save('BATTLE_LOADOUT_RESET');return {ok:true};};
+})();
