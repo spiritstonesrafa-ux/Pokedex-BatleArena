@@ -2,6 +2,14 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: retomada segura após nocaute
+
+- startBattle agora respeita a fase real do motor ao retomar: substituições obrigatórias vão para a seleção de reserva e não para chooseAction.
+- Início/introdução protegido contra chamadas simultâneas; callbacks da introdução não reabrem controles de uma sessão substituída.
+- Cliques atrasados em ataque ou troca voluntária durante AWAITING_REPLACEMENT recuperam a etapa correta sem consultar a IA de ataques.
+- Sete regressões com sessão e motor reais: nocaute, retry, troca inimiga automática, cliques atrasados, partida em andamento e introduções sobrepostas.
+- Validação: **2.840 testes aprovados em 39 suítes, zero falhas**; git diff --check aprovado. Alterações locais, ainda sem publicação desta correção.
+
 ## Atualização — 01/11/2026: publicação dos desafios e recompensas exclusivas
 
 - Jornada pós-Shadow concluída: Zygarde, Kyurem, Necrozma e Criação, com aberturas, música e progressão aprovadas.

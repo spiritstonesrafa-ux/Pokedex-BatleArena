@@ -559,6 +559,7 @@ test('Session music — real session and composite start normal and Shadow music
       const session = new BattleSessionController({ compositeAdapter: composite, presentationEngine: presentation });
       session.battleState = BattleEngine.createTeamBattle(JSON.parse(JSON.stringify([PikachuFixture, CharmanderFixture, SquirtleFixture])), JSON.parse(JSON.stringify([BulbasaurFixture, CharmanderFixture, SquirtleFixture])));
       session.sessionOptions = { metadata: { battleFormat: shadowFinalStand ? 'FINAL_STAND' : 'STANDARD' } };
+      session.uiState = 'READY'; // The injected engine fixture represents a prepared session.
       try {
         assert.equal(audio.isUnlocked(), false);
         await session.startBattle();

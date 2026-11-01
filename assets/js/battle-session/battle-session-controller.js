@@ -433,6 +433,15 @@
      * Inicia o combate ativo, tocando introdução e abrindo o painel de ações.
      */
     async startBattle() {
+      if(this.isResolving)return;
+      this.isResolving=true;
+      try {
+      // Retry/resume must respect the engine phase instead of reopening attack controls.
+      if(this.battleState&&(this.battleState.status!=='IN_PROGRESS'||this.uiState!==BATTLE_UI_STATES.READY)){
+        if(this.battleState.battleFormat==='DOUBLES')await this.finishDoublesStep();
+        else await this.handlePostResolutionState();
+        return;
+      }
       if (!this.battleState) {
         await this.prepareBattle(this.sessionOptions || {});
       }
@@ -442,6 +451,7 @@
         return;
       }
 
+      const startingState=this.battleState;
       // Tenta desbloquear áudio se disponível no navegador
       if (this.compositeAdapter && this.compositeAdapter.audioController) {
         try {
@@ -451,6 +461,7 @@
         }
       }
 
+      if(this.battleState!==startingState)return;
       this.notifyState(BATTLE_UI_STATES.BATTLE, { battleState: this.battleState });
 
       // Dispara comando BATTLE_INTRO via timeline
@@ -464,7 +475,10 @@
         await this.presentationEngine.playCommands([introCmd], { battleState: this.battleState });
       }
 
-      this.notifyState(BATTLE_UI_STATES.AWAITING_PLAYER_ACTION, { battleState: this.battleState });
+      if(this.battleState!==startingState)return;
+      if(this.battleState.battleFormat==='DOUBLES')await this.finishDoublesStep();
+      else await this.handlePostResolutionState();
+      } finally {this.isResolving=false;}
     }
 
     /**
@@ -509,6 +523,7 @@
 
     async submitPlayerMove(moveId, specialOptions={}) {
       if (this.isResolving) return;
+      if(this.battleState&&this.battleState.status!=='IN_PROGRESS'){await this.handlePostResolutionState();return;}
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
 
       this.isResolving = true;
@@ -703,8 +718,9 @@
      * @param {number} targetPokemonId - ID do Pokémon da reserva a entrar em campo.
      */
     async submitPlayerSwitch(targetPokemonId) {
-      if(this.battleState && battleConstants.P6.switchBlocked(this.battleState,'player'))return;
       if (this.isResolving) return;
+      if(this.battleState&&this.battleState.status!=='IN_PROGRESS'){await this.handlePostResolutionState();return;}
+      if(this.battleState && battleConstants.P6.switchBlocked(this.battleState,'player'))return;
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
 
       this.isResolving = true;
