@@ -16,6 +16,7 @@ const assert = require('node:assert/strict');
 const StatusConstants = require('../../assets/js/presentation/status-vfx/pokemon-status-vfx-constants.js');
 const { PokemonStatusVfxController, createStatusVfxController } = require('../../assets/js/presentation/status-vfx/pokemon-status-vfx-controller.js');
 const { PokemonAnimationRegistry } = require('../../assets/js/presentation/animation/pokemon-animation-registry.js');
+const { PokemonAnimationController } = require('../../assets/js/presentation/animation/pokemon-animation-controller.js');
 const { CompositeBattleDomAdapter } = require('../../assets/js/presentation/composite-battle-dom-adapter.js');
 const PresentationConstants = require('../../assets/js/presentation/battle-presentation-constants.js');
 
@@ -117,6 +118,7 @@ function createMockDomElement(tagName = 'div') {
       return child;
     },
 
+    hasChildNodes: () => children.length > 0,
     remove: function () {
       if (this.parentElement && typeof this.parentElement.removeChild === 'function') {
         this.parentElement.removeChild(this);
@@ -206,7 +208,7 @@ function createTestHarness() {
   };
 }
 
-describe('PHASE PBA-020 — STATUS CONDITIONS VISUAL EFFECTS SUITE (ST01–ST40)', () => {
+describe('PHASE PBA-020 — STATUS CONDITIONS VISUAL EFFECTS SUITE (ST01–ST55)', () => {
 
   // ====================================================================
   // 1. CATÁLOGO, CONSTANTES E IDENTIDADES VISUAIS (ST01–ST13)
@@ -702,4 +704,361 @@ describe('PHASE PBA-020 — STATUS CONDITIONS VISUAL EFFECTS SUITE (ST01–ST40)
     });
     assert.equal(playerContainer.querySelector('.pba-status-confusion'), null);
   });
+
+  // ====================================================================
+  // 5. PERSISTÊNCIA MULTI-TURNO E CICLO DE VIDA (ST41–ST55)
+  // ====================================================================
+
+  test('ST41 — Immediate Persistence: efeito está presente imediatamente após aplicação', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    await controller.applyStatus('player', 'burn', { immediate: false });
+
+    const root = playerContainer.querySelector('.pba-status-vfx-root');
+    assert.ok(root, 'Root container deve existir imediatamente');
+    const burn = playerContainer.querySelector('.pba-status-burn');
+    assert.ok(burn, 'Elemento de burn deve existir imediatamente');
+    assert.ok(playerContainer.querySelector('.pba-burn-flames'), 'Chamas devem estar renderizadas imediatamente');
+  });
+
+  test('ST42 — Post-Entrance Persistence: efeito permanece ativo após término da animação de entrada', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    await controller.applyStatus('player', 'burn', { immediate: false });
+
+    const burnEl = playerContainer.querySelector('.pba-status-burn');
+    assert.ok(burnEl, 'Burn deve existir');
+    assert.equal(controller.getStatus('player'), 'burn');
+    assert.equal(controller.getState('player'), STATUS_VFX_STATES.IDLE);
+    assert.ok(playerContainer.querySelector('.pba-status-burn'), 'Efeito contínuo de burn deve permanecer visível após entrada');
+    assert.equal(burnEl.classList.contains('pba-status-entrance'), false, 'Classe de entrada temporária deve ter sido removida');
+  });
+
+  test('ST43 — Turn Transition Persistence: syncFromBattleState restaura o efeito contínuo após reconstrução do DOM', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    await controller.applyStatus('player', 'burn', { immediate: true });
+    assert.ok(playerContainer.querySelector('.pba-status-burn'));
+
+    // Simula reconstrução de tela no final do turno: container anterior é desconectado
+    playerContainer.isConnected = false;
+    const newPlayerContainer = createMockDomElement('div');
+    newPlayerContainer.setAttribute('id', 'playerCombatantTarget');
+    newPlayerContainer.isConnected = true;
+
+    global.document.getElementById = (id) => {
+      if (id === 'playerCombatantTarget') return newPlayerContainer;
+      return null;
+    };
+
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: {
+        activeIndex: 0,
+        team: [{ id: 25, currentHp: 75, statusCondition: 'burn' }]
+      },
+      enemy: {
+        activeIndex: 0,
+        team: [{ id: 6, currentHp: 100, statusCondition: null }]
+      }
+    };
+
+    controller.syncFromBattleState(battleState);
+
+    assert.ok(newPlayerContainer.querySelector('.pba-status-burn'), 'Novo nó do DOM deve conter o efeito contínuo de burn');
+    assert.equal(controller.getStatus('player'), 'burn');
+
+    global.document.getElementById = () => null;
+  });
+
+  test('ST44 — Multi-turn Continuity: efeito persiste intacto por múltiplos turnos consecutivos', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: {
+        activeIndex: 0,
+        team: [{ id: 25, currentHp: 100, statusCondition: 'poison' }]
+      },
+      enemy: {
+        activeIndex: 0,
+        team: [{ id: 6, currentHp: 100, statusCondition: null }]
+      }
+    };
+
+    for (let turn = 1; turn <= 5; turn++) {
+      battleState.player.team[0].currentHp -= 6;
+      controller.syncFromBattleState(battleState);
+
+      const poisonEl = playerContainer.querySelector('.pba-status-poison');
+      assert.ok(poisonEl, 'Poison deve permanecer visível no turno ' + turn);
+      assert.equal(controller.getStatus('player'), 'poison');
+      assert.equal(controller.getState('player'), STATUS_VFX_STATES.IDLE);
+    }
+  });
+
+  test('ST45 — Persistence Through Physical Attack: efeito contínuo não é afetado por playAttack', async () => {
+    const { registry, playerContainer } = createTestHarness();
+    const animController = new PokemonAnimationController({ registry });
+    const statusController = new PokemonStatusVfxController({ registry });
+
+    await statusController.applyStatus('player', 'paralysis', { immediate: true });
+    assert.ok(playerContainer.querySelector('.pba-status-paralysis'));
+
+    await animController.playAttack('player');
+
+    const paralysisEl = playerContainer.querySelector('.pba-status-paralysis');
+    assert.ok(paralysisEl, 'Paralisia deve permanecer visível após ataque');
+    assert.equal(statusController.getStatus('player'), 'paralysis');
+  });
+
+  test('ST46 — Persistence Through Damage Reaction: efeito contínuo sobrevive à animação de hit', async () => {
+    const { registry, enemyContainer } = createTestHarness();
+    const animController = new PokemonAnimationController({ registry });
+    const statusController = new PokemonStatusVfxController({ registry });
+
+    await statusController.applyStatus('enemy', 'burn', { immediate: true });
+    assert.ok(enemyContainer.querySelector('.pba-status-burn'));
+
+    await animController.playDamageReaction('enemy');
+
+    assert.ok(enemyContainer.querySelector('.pba-status-burn'), 'Chamas devem permanecer visíveis após reação de dano');
+    assert.equal(statusController.getStatus('enemy'), 'burn');
+  });
+
+  test('ST47 — Residual Damage Pulse & Return to Idle: pulso temporário não destrói efeito contínuo', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    await controller.applyStatus('player', 'burn', { immediate: true });
+    const primaryEl = playerContainer.querySelector('.pba-status-primary');
+
+    await controller.pulseDamage('player');
+
+    assert.equal(primaryEl.classList.contains('pba-pulse-damage'), false, 'Classe de pulso deve ser removida');
+    assert.ok(playerContainer.querySelector('.pba-status-burn'), 'Efeito contínuo de burn deve continuar ativo');
+    assert.equal(controller.getState('player'), STATUS_VFX_STATES.IDLE);
+  });
+
+  test('ST48 — Immobilization Pulse & Continuous State: pulso elétrico temporário mantém paralisia contínua', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    await controller.applyStatus('player', 'paralysis', { immediate: true });
+    const primaryEl = playerContainer.querySelector('.pba-status-primary');
+
+    await controller.pulseImmobilized('player');
+
+    assert.equal(primaryEl.classList.contains('pba-pulse-immobilized'), false, 'Classe de imobilização deve ser removida');
+    assert.ok(playerContainer.querySelector('.pba-status-paralysis'), 'Faíscas contínua devem permanecer');
+    assert.equal(controller.getState('player'), STATUS_VFX_STATES.IDLE);
+  });
+
+  test('ST49 — Removal Only On True Cure: condição só é removida quando a engine informa cura', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: {
+        activeIndex: 0,
+        team: [{ id: 25, currentHp: 80, statusCondition: 'toxic' }]
+      },
+      enemy: {
+        activeIndex: 0,
+        team: [{ id: 6, currentHp: 100, statusCondition: null }]
+      }
+    };
+
+    controller.syncFromBattleState(battleState);
+    assert.ok(playerContainer.querySelector('.pba-status-toxic'), 'Toxic ativo');
+
+    controller.syncFromBattleState(battleState);
+    assert.ok(playerContainer.querySelector('.pba-status-toxic'), 'Toxic ainda ativo no turno seguinte');
+
+    battleState.player.team[0].statusCondition = null;
+    controller.syncFromBattleState(battleState);
+
+    assert.equal(playerContainer.querySelector('.pba-status-toxic'), null, 'Toxic removido somente após cura na engine');
+    assert.equal(controller.getStatus('player'), null);
+  });
+
+  test('ST50 — Restoration On Switch-In: Pokémon com status trocado para reserva restaura efeito ao retornar ao campo', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: {
+        activeIndex: 0,
+        team: [
+          { id: 25, currentHp: 50, statusCondition: 'sleep' },
+          { id: 133, currentHp: 100, statusCondition: null }
+        ]
+      },
+      enemy: {
+        activeIndex: 0,
+        team: [{ id: 6, currentHp: 100, statusCondition: null }]
+      }
+    };
+
+    controller.syncFromBattleState(battleState);
+    assert.ok(playerContainer.querySelector('.pba-status-sleep'), 'Pikachu deve mostrar efeito de sono');
+
+    battleState.player.activeIndex = 1;
+    controller.syncFromBattleState(battleState);
+    assert.equal(playerContainer.querySelector('.pba-status-sleep'), null, 'Eevee saudável não tem sono');
+    assert.equal(playerContainer.querySelector('.pba-status-primary'), null);
+
+    battleState.player.activeIndex = 0;
+    controller.syncFromBattleState(battleState);
+    assert.ok(playerContainer.querySelector('.pba-status-sleep'), 'Pikachu restaura o efeito contínuo de sono');
+    assert.equal(controller.getStatus('player'), 'sleep');
+  });
+
+  test('ST51 — Confusion Coexistence & Independent Lifecycles: confusão e primário persistem e expiram de forma independente', async () => {
+    const { controller, enemyContainer } = createTestHarness();
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: { activeIndex: 0, team: [{ id: 25, currentHp: 100, statusCondition: null }] },
+      enemy: {
+        activeIndex: 0,
+        team: [{ id: 6, currentHp: 100, statusCondition: 'burn', confusionTurns: 3 }]
+      }
+    };
+
+    controller.syncFromBattleState(battleState);
+    assert.ok(enemyContainer.querySelector('.pba-status-burn'), 'Burn deve estar presente');
+    assert.ok(enemyContainer.querySelector('.pba-status-confusion'), 'Confusão deve estar presente');
+
+    battleState.enemy.team[0].confusionTurns = 1;
+    controller.syncFromBattleState(battleState);
+    assert.ok(enemyContainer.querySelector('.pba-status-burn'), 'Burn persiste');
+    assert.ok(enemyContainer.querySelector('.pba-status-confusion'), 'Confusão persiste');
+
+    battleState.enemy.team[0].confusionTurns = 0;
+    controller.syncFromBattleState(battleState);
+    assert.ok(enemyContainer.querySelector('.pba-status-burn'), 'Burn deve permanecer contínuo');
+    assert.equal(enemyContainer.querySelector('.pba-status-confusion'), null, 'Confusão deve ser removida');
+
+    battleState.enemy.team[0].statusCondition = null;
+    controller.syncFromBattleState(battleState);
+    assert.equal(enemyContainer.querySelector('.pba-status-burn'), null, 'Burn removido após cura');
+  });
+
+  test('ST52 — Doubles Multi-Turn Independence: 4 combatentes mantêm estados persistentes independentes através dos turnos', async () => {
+    const registry = new PokemonAnimationRegistry();
+    const cP0 = createMockDomElement('div');
+    const cP1 = createMockDomElement('div');
+    const cE0 = createMockDomElement('div');
+    const cE1 = createMockDomElement('div');
+
+    registry.register('player:0', { container: cP0 });
+    registry.register('player:1', { container: cP1 });
+    registry.register('enemy:0', { container: cE0 });
+    registry.register('enemy:1', { container: cE1 });
+
+    const controller = new PokemonStatusVfxController({ registry });
+
+    const doublesState = {
+      battleFormat: 'DOUBLES',
+      player: {
+        activeIndices: [0, 1],
+        team: [
+          { id: 1, currentHp: 50, statusCondition: 'burn' },
+          { id: 2, currentHp: 60, statusCondition: null }
+        ]
+      },
+      enemy: {
+        activeIndices: [0, 1],
+        team: [
+          { id: 3, currentHp: 70, statusCondition: 'paralysis', confusionTurns: 2 },
+          { id: 4, currentHp: 80, statusCondition: 'freeze' }
+        ]
+      }
+    };
+
+    controller.syncFromBattleState(doublesState);
+    assert.ok(cP0.querySelector('.pba-status-burn'), 'P0 deve ter burn');
+    assert.equal(cP1.querySelector('.pba-status-vfx-root'), null, 'P1 limpo');
+    assert.ok(cE0.querySelector('.pba-status-paralysis'), 'E0 deve ter paralysis');
+    assert.ok(cE0.querySelector('.pba-status-confusion'), 'E0 deve ter confusion');
+    assert.ok(cE1.querySelector('.pba-status-freeze'), 'E1 deve ter freeze');
+
+    doublesState.enemy.team[1].statusCondition = null;
+    controller.syncFromBattleState(doublesState);
+
+    assert.ok(cP0.querySelector('.pba-status-burn'), 'P0 continua com burn');
+    assert.equal(cP1.querySelector('.pba-status-vfx-root'), null, 'P1 permanece limpo');
+    assert.ok(cE0.querySelector('.pba-status-paralysis'), 'E0 continua com paralysis');
+    assert.ok(cE0.querySelector('.pba-status-confusion'), 'E0 continua com confusion');
+    assert.equal(cE1.querySelector('.pba-status-freeze'), null, 'E1 não tem mais freeze');
+  });
+
+  test('ST53 — Complete Cleanup on Knockout or Reset: nocaute e encerramento limpam nós DOM sem deixar órfãos', async () => {
+    const { controller, playerContainer, enemyContainer } = createTestHarness();
+    await controller.applyStatus('player', 'burn', { immediate: true });
+    await controller.applyConfusion('player', { immediate: true });
+    await controller.applyStatus('enemy', 'freeze', { immediate: true });
+
+    assert.ok(playerContainer.querySelector('.pba-status-burn'));
+    assert.ok(playerContainer.querySelector('.pba-status-confusion'));
+    assert.ok(enemyContainer.querySelector('.pba-status-freeze'));
+
+    controller.clear('player');
+    assert.equal(playerContainer.querySelector('.pba-status-vfx-root'), null, 'Root do player deve ser completamente removido no nocaute');
+    assert.equal(controller.getStatus('player'), null);
+    assert.equal(controller.hasConfusion('player'), false);
+
+    assert.ok(enemyContainer.querySelector('.pba-status-freeze'));
+
+    controller.reset();
+    assert.equal(enemyContainer.querySelector('.pba-status-vfx-root'), null, 'Root do enemy deve ser removido no reset geral');
+    assert.equal(controller.getStatus('enemy'), null);
+  });
+
+  test('ST54 — Idempotent Multi-Turn Rerender: re-renderizações sucessivas não duplicam elementos nem reiniciam o template', async () => {
+    const { controller, playerContainer } = createTestHarness();
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: { activeIndex: 0, team: [{ id: 25, currentHp: 50, statusCondition: 'burn' }] },
+      enemy: { activeIndex: 0, team: [{ id: 6, currentHp: 100, statusCondition: null }] }
+    };
+
+    controller.syncFromBattleState(battleState);
+    const root1 = playerContainer.querySelector('.pba-status-vfx-root');
+    const primary1 = playerContainer.querySelector('.pba-status-primary');
+    assert.ok(root1);
+    assert.ok(primary1);
+
+    for (let i = 0; i < 4; i++) {
+      controller.syncFromBattleState(battleState);
+    }
+
+    const roots = playerContainer.querySelectorAll('.pba-status-vfx-root');
+    assert.equal(roots.length, 1, 'Deve existir exatamente 1 root');
+    const primaries = playerContainer.querySelectorAll('.pba-status-primary');
+    assert.equal(primaries.length, 1, 'Deve existir exatamente 1 primary');
+    assert.equal(playerContainer.querySelector('.pba-status-primary'), primary1);
+  });
+
+  test('ST55 — Reduced Motion Persistence: representação visual persiste estática em modo de movimento reduzido', async () => {
+    const { registry, playerContainer } = createTestHarness();
+    const controller = new PokemonStatusVfxController({
+      registry,
+      reducedMotion: true
+    });
+
+    const battleState = {
+      battleFormat: 'SINGLES',
+      player: {
+        activeIndex: 0,
+        team: [{ id: 25, currentHp: 80, statusCondition: 'paralysis', confusionTurns: 2 }]
+      },
+      enemy: {
+        activeIndex: 0,
+        team: [{ id: 6, currentHp: 100, statusCondition: null }]
+      }
+    };
+
+    controller.syncFromBattleState(battleState);
+
+    const root = playerContainer.querySelector('.pba-status-vfx-root');
+    assert.ok(root, 'Root deve existir');
+    assert.ok(root.classList.contains('pba-status-reduced-motion'), 'Deve conter classe pba-status-reduced-motion');
+    assert.ok(playerContainer.querySelector('.pba-status-paralysis'), 'Indicador de paralisia persiste');
+    assert.ok(playerContainer.querySelector('.pba-status-confusion'), 'Indicador de confusão persiste');
+
+    controller.syncFromBattleState(battleState);
+    assert.ok(playerContainer.querySelector('.pba-status-paralysis'), 'Indicador persiste através do turno em reduced motion');
+  });
+
 });

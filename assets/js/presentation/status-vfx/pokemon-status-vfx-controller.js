@@ -195,16 +195,41 @@
     resolveContainer(sideKey) {
       if (this.registry && typeof this.registry.hasTarget === 'function' && this.registry.hasTarget(sideKey)) {
         const target = this.registry.getTarget(sideKey);
-        if (target && target.container) return target.container;
+        if (target && target.container) {
+          const isConnected = typeof target.container.isConnected === 'boolean'
+            ? target.container.isConnected
+            : (typeof document !== 'undefined' && document.body && document.body.contains(target.container));
+          if (isConnected !== false) return target.container;
+        }
       }
 
-      if (typeof document === 'undefined') return null;
+      const doc = this.options?.document || (typeof document !== 'undefined' ? document : null);
+      if (!doc || typeof doc.getElementById !== 'function') return null;
 
-      if (sideKey === 'player') return document.getElementById('playerCombatantTarget');
-      if (sideKey === 'enemy') return document.getElementById('enemyCombatantTarget');
+      if (sideKey === 'player') {
+        const el = doc.getElementById('playerCombatantTarget');
+        if (el && this.registry?.hasTarget?.(sideKey)) {
+          const t = this.registry.getTarget(sideKey);
+          if (t) t.container = el;
+        }
+        return el;
+      }
+      if (sideKey === 'enemy') {
+        const el = doc.getElementById('enemyCombatantTarget');
+        if (el && this.registry?.hasTarget?.(sideKey)) {
+          const t = this.registry.getTarget(sideKey);
+          if (t) t.container = el;
+        }
+        return el;
+      }
       if (typeof sideKey === 'string' && sideKey.includes(':')) {
         const [role, slot] = sideKey.split(':');
-        return document.getElementById(`duoCombatant_${role}_${slot}`);
+        const el = doc.getElementById(`duoCombatant_${role}_${slot}`);
+        if (el && this.registry?.hasTarget?.(sideKey)) {
+          const t = this.registry.getTarget(sideKey);
+          if (t) t.container = el;
+        }
+        return el;
       }
 
       return null;
@@ -223,8 +248,13 @@
         root = this._createElement('div');
         if (!root) return null;
         root.className = 'pba-status-vfx-root';
+        if (this.options && this.options.reducedMotion) {
+          root.classList.add('pba-status-reduced-motion');
+        }
         root.setAttribute('data-status-vfx-side', sideKey);
         container.appendChild(root);
+      } else if (this.options && this.options.reducedMotion && !root.classList.contains('pba-status-reduced-motion')) {
+        root.classList.add('pba-status-reduced-motion');
       }
       return root;
     }
@@ -270,13 +300,18 @@
       if (!primaryEl) {
         primaryEl = this._createElement('div');
         if (!primaryEl) return;
-        primaryEl.className = 'pba-status-primary';
+        primaryEl.className = `pba-status-primary pba-status-${condition}`;
+        primaryEl.innerHTML = TEMPLATES[condition] || '';
         root.appendChild(primaryEl);
+      } else {
+        const expectedClass = `pba-status-${condition}`;
+        if (!primaryEl.classList.contains(expectedClass)) {
+          primaryEl.className = `pba-status-primary ${expectedClass}`;
+          primaryEl.innerHTML = TEMPLATES[condition] || '';
+        } else if (typeof primaryEl.hasChildNodes === 'function' ? !primaryEl.hasChildNodes() : (!primaryEl.children || primaryEl.children.length === 0)) {
+          primaryEl.innerHTML = TEMPLATES[condition] || '';
+        }
       }
-
-      // Atualiza classes e template do status
-      primaryEl.className = `pba-status-primary pba-status-${condition}`;
-      primaryEl.innerHTML = TEMPLATES[condition] || '';
 
       if (opts.immediate || isAlreadyActive) {
         entry.primaryState = STATUS_VFX_STATES.IDLE;
@@ -333,15 +368,14 @@
       const targetCond = this.normalizeCondition(condition) || entry.primary;
       if (!targetCond) return;
 
-      // Garante montagem se necessário
-      if (entry.primary !== targetCond) {
-        await this.applyStatus(sideKey, targetCond, { immediate: true });
-      }
-
       const root = this._ensureRoot(sideKey);
       if (!root) return;
 
-      const primaryEl = root.querySelector('.pba-status-primary');
+      let primaryEl = root.querySelector('.pba-status-primary');
+      if (!primaryEl || entry.primary !== targetCond) {
+        await this.applyStatus(sideKey, targetCond, { immediate: true });
+        primaryEl = root.querySelector('.pba-status-primary');
+      }
       if (!primaryEl) return;
 
       primaryEl.classList.add('pba-pulse-damage');
@@ -371,14 +405,14 @@
       const targetCond = this.normalizeCondition(condition) || entry.primary;
       if (!targetCond) return;
 
-      if (entry.primary !== targetCond) {
-        await this.applyStatus(sideKey, targetCond, { immediate: true });
-      }
-
       const root = this._ensureRoot(sideKey);
       if (!root) return;
 
-      const primaryEl = root.querySelector('.pba-status-primary');
+      let primaryEl = root.querySelector('.pba-status-primary');
+      if (!primaryEl || entry.primary !== targetCond) {
+        await this.applyStatus(sideKey, targetCond, { immediate: true });
+        primaryEl = root.querySelector('.pba-status-primary');
+      }
       if (!primaryEl) return;
 
       primaryEl.classList.add('pba-pulse-immobilized');
@@ -417,11 +451,11 @@
         confusionEl = this._createElement('div');
         if (!confusionEl) return;
         confusionEl.className = 'pba-status-confusion';
+        confusionEl.innerHTML = TEMPLATES[VOLATILE_CONDITIONS.CONFUSION];
         root.appendChild(confusionEl);
+      } else if (typeof confusionEl.hasChildNodes === 'function' ? !confusionEl.hasChildNodes() : (!confusionEl.children || confusionEl.children.length === 0)) {
+        confusionEl.innerHTML = TEMPLATES[VOLATILE_CONDITIONS.CONFUSION];
       }
-
-      confusionEl.className = 'pba-status-confusion';
-      confusionEl.innerHTML = TEMPLATES[VOLATILE_CONDITIONS.CONFUSION];
 
       if (opts.immediate || isAlreadyActive) {
         entry.confusionState = STATUS_VFX_STATES.IDLE;
@@ -473,14 +507,14 @@
      */
     async pulseConfusionDamage(sideKey) {
       const entry = this._getOrCreateEntry(sideKey);
-      if (!entry.confusion) {
-        await this.applyConfusion(sideKey, { immediate: true });
-      }
-
       const root = this._ensureRoot(sideKey);
       if (!root) return;
 
-      const confusionEl = root.querySelector('.pba-status-confusion');
+      let confusionEl = root.querySelector('.pba-status-confusion');
+      if (!confusionEl || !entry.confusion) {
+        await this.applyConfusion(sideKey, { immediate: true });
+        confusionEl = root.querySelector('.pba-status-confusion');
+      }
       if (!confusionEl) return;
 
       confusionEl.classList.add('pba-pulse-confusion-damage');
@@ -506,14 +540,14 @@
      */
     async pulseConfusionCheck(sideKey) {
       const entry = this._getOrCreateEntry(sideKey);
-      if (!entry.confusion) {
-        await this.applyConfusion(sideKey, { immediate: true });
-      }
-
       const root = this._ensureRoot(sideKey);
       if (!root) return;
 
-      const confusionEl = root.querySelector('.pba-status-confusion');
+      let confusionEl = root.querySelector('.pba-status-confusion');
+      if (!confusionEl || !entry.confusion) {
+        await this.applyConfusion(sideKey, { immediate: true });
+        confusionEl = root.querySelector('.pba-status-confusion');
+      }
       if (!confusionEl) return;
 
       confusionEl.classList.add('pba-pulse-confusion-check');
@@ -593,6 +627,42 @@
           els.forEach(el => el.classList.remove(selector.slice(1)));
         });
       }
+    }
+
+    /**
+     * Retorna a condição primária ativa para uma posição.
+     * @param {string} sideKey
+     * @returns {string|null}
+     */
+    getStatus(sideKey) {
+      return this.activeStatuses.get(sideKey)?.primary || null;
+    }
+
+    /**
+     * Retorna se a posição possui confusão ativa.
+     * @param {string} sideKey
+     * @returns {boolean}
+     */
+    hasConfusion(sideKey) {
+      return Boolean(this.activeStatuses.get(sideKey)?.confusion);
+    }
+
+    /**
+     * Retorna o estado do ciclo de vida da condição primária.
+     * @param {string} sideKey
+     * @returns {string|null}
+     */
+    getState(sideKey) {
+      return this.activeStatuses.get(sideKey)?.primaryState || null;
+    }
+
+    /**
+     * Retorna o estado do ciclo de vida da confusão.
+     * @param {string} sideKey
+     * @returns {string|null}
+     */
+    getConfusionState(sideKey) {
+      return this.activeStatuses.get(sideKey)?.confusionState || null;
     }
 
     /**

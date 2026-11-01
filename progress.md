@@ -2,6 +2,25 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: correção de persistência contínua dos efeitos visuais de status (PBA-020)
+
+- **Correção da Persistência Contínua dos Efeitos Visuais:**
+  - Identificada e corrigida a causa raiz da desaparição precoce dos efeitos de status: a transição de turnos e resolução de ações em BattleView.renderActiveBattleView reconstruía o DOM via innerHTML sem re-sincronizar o controlador de status.
+  - Adicionada sincronização contínua obrigatória em ssets/js/ui/battle-view.js (syncRegistries()): invocação de compositeAdapter.statusController.syncFromBattleState(...) a cada mudança de estado da batalha.
+  - Fortalecido ssets/js/presentation/status-vfx/pokemon-status-vfx-controller.js:
+    -
+esolveContainer agora detecta nós desconectados (isConnected === false) e restaura a referência ativa a partir do DOM.
+    - pplyStatus e pplyConfusion agora são idempotentes: não redefinem innerHTML desnecessariamente quando a mesma condição já está ativa, preservando o relógio de animações CSS contínuas.
+    - Métodos de pulso temporário (pulseDamage, pulseImmobilized, pulseConfusionCheck, pulseConfusionDamage) restauram o status dinamicamente caso o nó tenha sido reconstruído.
+    - Implementados métodos públicos de consulta: getStatus, hasConfusion, getState e getConfusionState.
+    - Suporte persistente da classe .pba-status-reduced-motion no root overlay em modo de movimento reduzido.
+- **Ampliação da Cobertura de Testes Automatizados (ST41–ST55):**
+  - Implementados 15 novos testes em 	ests/presentation/pokemon-status-vfx.test.js cobrindo persistência imediata, pós-animação de entrada, passagem de turno com rebuild do DOM, múltiplos turnos contínuos, ataques corporais (playAttack), reações de dano (playDamageReaction), pulsos de dano residual e imobilização, remoção condicionada à cura real na engine, restauração em trocas de Pokémon no banco, coexistência com confusão, independência nos 4 slots em duplas, limpeza no nocaute/reset e acessibilidade em movimento reduzido.
+- **Validação e Regressão:**
+  - Suíte completa: **2.719 testes aprovados em 39 suítes, zero falhas** (+15 novos testes aprovados).
+  - Evidências em navegador real (Edge headless via CDP) comprovando persistência contínua através de múltiplos turnos: evidence_persistence_1_applied.png a evidence_persistence_7_mobile.png.
+  - Zero alterações no motor de combate, regras, IA ou cálculos matemáticos.
+
 ## Atualização — 01/11/2026: efeitos visuais de condições de status nos Pokémon (PBA-020)
 
 - Implementada a identidade visual canônica das condições de batalha nos Pokémon, reproduzindo a experiência visual dos jogos da franquia sem depender unicamente de texto:

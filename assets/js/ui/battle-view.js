@@ -767,6 +767,12 @@
           if (stage && typeof camReg.registerStage === 'function') camReg.registerStage(stage);
           if (flashOverlay && typeof camReg.registerFlashOverlay === 'function') camReg.registerFlashOverlay(flashOverlay);
         }
+
+        // 4. Registro e Sincronização Contínua de Efeitos de Status (PBA-020)
+        if (compositeAdapter.statusController) {
+          const battleState = this.sessionController && this.sessionController.battleState;
+          compositeAdapter.statusController.syncFromBattleState(battleState);
+        }
       }
     }
 
