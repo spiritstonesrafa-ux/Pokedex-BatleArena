@@ -70,3 +70,7 @@ O novo modo entrega batalhas de dois ativos e as interações descritas acima; n
 ## Polimento de duplas — 01/11/2026
 
 Implementada escolha manual da reserva nos pivôs, incluindo Baton Pass; comandos antigos e IA mantêm a primeira reserva como padrão. Reservas conflitantes são rejeitadas e reserva indisponível durante a resolução mantém o usuário em campo com mensagem. Interface compacta e responsiva, alvos automáticos indicados, escolhas mantidas e erros na tela. Homologação visual local com turno real (ataque em área e troca) e viewport móvel sem transbordamento horizontal. Esta seção atualiza os limites históricos descritos acima; não amplia o catálogo de golpes ou o regulamento competitivo.
+
+## Arena e efeitos de duplas — 01/11/2026
+
+A apresentação de cartões foi substituída por um palco compartilhado com cenário existente e quatro sprites. Animações, VFX e câmera agora registram as quatro posições individualmente; comandos levam os slots de atacante, alvo e troca. Efeitos seguem os alvos de ataques em área e aliados, com limpeza e renovação das referências entre renderizações. Trocas atualizam apenas sua posição durante a reprodução. Oito regressões de apresentação adicionadas; suíte completa com 2.642 testes e 38 suítes aprovada. Teste manual em navegador confirmou o efeito elemental e a animação corporal em batalha real, sem erros observados.

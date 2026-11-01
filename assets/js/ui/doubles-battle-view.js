@@ -7,6 +7,7 @@
   const fields = {sun:'Sol intenso',rain:'Chuva',sand:'Tempestade de areia',snow:'Neve',hail:'Granizo',electric:'Terreno elétrico',grassy:'Terreno de grama',misty:'Terreno de névoa',psychic:'Terreno psíquico'};
   function install(View, C) {
     const Engine = typeof module !== 'undefined' && module.exports ? require('../battle/battle-engine.js') : window.PBABattle.BattleEngine;
+    const Arenas = typeof module !== 'undefined' && module.exports ? require('../arena/type-arena-registry.js') : window.PBATypeArena;
     const ready = View.prototype.renderReadyView, active = View.prototype.renderActiveBattleView;
     View.prototype.renderReadyView = function (data = {}) {
       ready.call(this, data);
@@ -30,11 +31,20 @@
       this._duoDraftBattle = this.sessionController?.currentBattleId;
       this._duoDrafts ||= {};
       const option = (value, label, selected) => `<option value="${esc(value)}" ${value === selected ? 'selected' : ''}>${esc(label)}</option>`;
-      const card = (position, role) => {
-        const mon = position.mon, visual = this.resolveCombatantVisual(mon, role), hp = Math.max(0, mon.currentHp), percent = Math.round(hp / mon.maxHp * 100);
-        const condition = hp === 0 ? 'Fora de combate' : mon.commanding ? 'Commander · dentro de Dondozo' : mon.commanderSource ? 'Commander ativo' : statuses[mon.statusCondition] || 'Pronto';
-        return `<article class="doubles-card ${hp === 0 ? 'is-fainted' : ''}" data-doubles-position="${role}:${position.slot}"><img src="${esc(visual.spriteUrl)}" data-fallback-src="${esc(visual.artworkUrl)}" onerror="if(this.src!==this.dataset.fallbackSrc){this.src=this.dataset.fallbackSrc;}else{this.onerror=null;}" alt="${esc(mon.name)}"><div class="doubles-card-info"><span class="duo-position">Posição ${position.slot + 1}</span><h3>${esc(title(mon.name))}</h3><p class="doubles-types">${mon.types.map(type => `<span style="--duo-type:var(--type-${esc(type)},#475569)">${esc(type)}</span>`).join('')}</p><p class="duo-condition">${esc(condition)}${mon.dynamax ? ' · Dynamax: '+mon.dynamax.turns+' turnos' : mon.tera ? ' · Tera '+esc(mon.tera) : ''}</p></div><div class="doubles-vitals"><label for="doublesHp_${role}_${position.slot}">HP</label><progress id="doublesHp_${role}_${position.slot}" class="${percent <= 20 ? 'hp-danger' : percent <= 50 ? 'hp-warning' : ''}" value="${hp}" max="${mon.maxHp}"></progress><span id="doublesHpText_${role}_${position.slot}">${hp}/${mon.maxHp}</span></div></article>`;
+      const metadata = this.sessionController?.sessionOptions?.metadata || state.metadata;
+      const resolved = Arenas.resolveArenaTheme(metadata);
+      const theme = resolved.backgroundSrc ? resolved : Arenas.ARENA_CATALOG.normal;
+      this.currentArenaTheme = theme;
+      const hud = (position, role) => {
+        const mon = position.mon, hp = Math.max(0,mon.currentHp), percent = hp/mon.maxHp*100;
+        const condition = hp === 0 ? 'Fora de combate' : mon.commanding ? 'Dentro de Dondozo' : mon.commanderSource ? 'Commander' : statuses[mon.statusCondition] || '';
+        return `<article data-duo-hud="${role}:${position.slot}" class="duo-hud ${hp === 0 ? 'is-fainted' : ''}" aria-label="${role === 'player' ? 'Seu Pokémon' : 'Adversário'} ${position.slot+1}: ${esc(title(mon.name))}"><div class="duo-hud-title"><span class="duo-position">${position.slot+1}</span><h3>${esc(title(mon.name))}</h3><span class="duo-level">Nv. ${mon.level || 50}</span></div><div class="doubles-vitals"><label for="doublesHp_${role}_${position.slot}">HP</label><progress id="doublesHp_${role}_${position.slot}" class="${percent <= 20 ? 'hp-danger' : percent <= 50 ? 'hp-warning' : ''}" value="${hp}" max="${mon.maxHp}"></progress><span id="doublesHpText_${role}_${position.slot}">${hp}/${mon.maxHp}</span></div><p class="duo-condition" id="duoCondition_${role}_${position.slot}">${esc(condition)}${mon.dynamax ? ' · Dynamax '+mon.dynamax.turns : mon.tera ? ' · Tera '+esc(mon.tera) : ''}</p></article>`;
       };
+      const sprite = (position,role) => {
+        const mon = position.mon, visual = this.resolveCombatantVisual(mon,role);
+        return `<div class="duo-combatant duo-${role} duo-slot-${position.slot} ${mon.currentHp <= 0 ? 'is-fainted' : ''} ${mon.commanding ? 'is-commanding' : ''}" data-doubles-position="${role}:${position.slot}" data-semi-state="${esc(mon.twoTurnMove?.state || '')}" id="duoCombatant_${role}_${position.slot}"><span class="duo-ground" aria-hidden="true"></span><span class="duo-sprite-facing"><img class="combatant-sprite-img" src="${esc(visual.spriteUrl)}" data-fallback-src="${esc(visual.artworkUrl)}" data-static-src="${esc(visual.staticSprite)}" onerror="if(this.src!==this.dataset.fallbackSrc){this.src=this.dataset.fallbackSrc;}else if(this.src!==this.dataset.staticSrc){this.src=this.dataset.staticSrc;}else{this.onerror=null;}" alt="${esc(title(mon.name))}"></span><span class="duo-sprite-label">${position.slot+1} · ${esc(title(mon.name))}</span></div>`;
+      };
+      const arena = `<div class="duo-battlefield ${theme.themeClass}" id="battleCameraWrapper" data-battle-camera><div class="battle-stage duo-stage ${theme.themeClass}" id="battleStage" data-battle-stage role="group" aria-label="Arena de batalha em duplas"><div class="arena-backdrop" aria-hidden="true"></div><div class="arena-ambient-container" id="arenaAmbientContainer" aria-hidden="true"></div>${live('enemy').map(p=>sprite(p,'enemy')).join('')}${live('player').map(p=>sprite(p,'player')).join('')}<div class="battle-vfx-container" id="battleVfxContainer" data-vfx-container></div><div class="hit-flash-overlay" id="battleHitFlash" data-camera-flash></div></div><div class="duo-huds duo-enemy-huds" aria-label="Adversários">${live('enemy').map(p=>hud(p,'enemy')).join('')}</div><div class="duo-huds duo-player-huds" aria-label="Sua equipe">${live('player').map(p=>hud(p,'player')).join('')}</div><span class="duo-arena-label" aria-hidden="true">BATTLE ARENA · 2 × 2</span></div>`;
       const rows = live('player').filter(p => p.mon.currentHp > 0 && !p.mon.commanding).map(p => {
         const mon = p.mon, draft = this._duoDrafts[mon.id] || {}, forced = mon.twoTurnMove?.id || mon.lockedMove?.id || (mon.bideState ? 117 : null);
         const legalMoves = forced ? mon.moves.filter(m => m.id === forced) : mon.moves.filter(m => m.currentPp > 0 && C.P7.legalMove(mon, m));
@@ -48,8 +58,11 @@
       }).join('');
       const replacements = (state.pendingDoublesReplacements || []).filter(p => p.role === 'player').map(p => `<label>Substituir posição ${p.slot+1}<select data-duo-replacement="${p.slot}">${option('','Escolha uma reserva','')}${reserves.map(b => option(String(b.mon.id),title(b.mon.name)+' · HP '+b.mon.currentHp+'/'+b.mon.maxHp,'')).join('')}</select></label>`).join('');
       const fieldText = ['weather','terrain'].filter(key => state[key]).map(key => (fields[state[key].id] || state[key].id)+' · '+state[key].turns+' turnos').join(' / ');
-      this.container.innerHTML = `<section class="battle-view-container doubles-arena"><header class="doubles-header"><div><span class="duo-eyebrow">BATTLE ARENA · DUPLAS</span><h2>Batalha em duplas</h2><p>Escolha uma ação para cada Pokémon. Os alvos automáticos são indicados abaixo.</p></div><span class="duo-turn">Turno ${state.turn}</span></header><h3 class="duo-side-heading">Adversários</h3><div class="doubles-board">${live('enemy').map(p => card(p,'enemy')).join('')}</div><h3 class="duo-side-heading">Sua equipe</h3><div class="doubles-board">${live('player').map(p => card(p,'player')).join('')}</div>${fieldText ? `<p class="duo-field" role="status">${esc(fieldText)}</p>` : ''}<div class="doubles-controls">${pending ? replacements : rows}</div><p id="doublesError" role="alert" tabindex="-1" hidden></p><div class="doubles-actions"><button id="btnDoublesSubmit" class="btn-battle-action-primary" ${resolving ? 'disabled' : ''}>${resolving ? 'Resolvendo…' : pending ? 'Confirmar substituições' : 'Resolver turno'}</button><button class="btn-battle-action" id="btnDoublesLeave" ${resolving ? 'disabled' : ''}>Sair da batalha</button><p id="battleNarrativeBox" aria-live="polite">${resolving ? 'Resolvendo as ações…' : pending ? 'Escolha quem entrará na posição vazia.' : 'Aguardando suas escolhas.'}</p></div></section>`;
+      this.container.innerHTML = `<section class="battle-view-container doubles-arena"><header class="doubles-header"><div><span class="duo-eyebrow">BATTLE ARENA · DUPLAS</span><h2>Batalha em duplas</h2><p>Escolha uma ação para cada Pokémon. Os alvos automáticos são indicados abaixo.</p></div><span class="duo-turn">Turno ${state.turn}</span></header>${arena}${fieldText ? `<p class="duo-field" role="status">${esc(fieldText)}</p>` : ''}<div class="doubles-controls">${pending ? replacements : rows}</div><p id="doublesError" role="alert" tabindex="-1" hidden></p><div class="doubles-actions"><button id="btnDoublesSubmit" class="btn-battle-action-primary" ${resolving ? 'disabled' : ''}>${resolving ? 'Resolvendo…' : pending ? 'Confirmar substituições' : 'Resolver turno'}</button><button class="btn-battle-action" id="btnDoublesLeave" ${resolving ? 'disabled' : ''}>Sair da batalha</button><p id="battleNarrativeBox" aria-live="polite">${resolving ? 'Resolvendo as ações…' : pending ? 'Escolha quem entrará na posição vazia.' : 'Aguardando suas escolhas.'}</p></div></section>`;
       const query = selector => this.container.querySelector?.(selector);
+      const stage = query('#battleStage');
+      if (stage) this.arenaController?.mount(stage,theme);
+      this.syncDoublesRegistries(state);
       const elements = selector => Array.from(this.container.querySelectorAll?.(selector) || []);
       const read = select => { const [kind,id] = select.value.split(':'); return kind === 'switch' ? {type:'SWITCH',targetPokemonId:Number(id)} : kind === 'recharge' ? {type:'RECHARGE'} : {type:'MOVE',moveId:Number(id)}; };
       const update = select => {
@@ -106,10 +119,39 @@
       };
       const leave = query('#btnDoublesLeave'); if (leave) leave.onclick = () => { if (!resolving && !this.sessionController?.isResolving) this.sessionController.abandonBattle(); };
     };
+    View.prototype.updateDoublesCombatant = function (command) {
+      const role = command.side, slot = command.targetSlot, hud = this.container?.querySelector(`[data-duo-hud="${role}:${slot}"]`), target = this.container?.querySelector(`#duoCombatant_${role}_${slot}`);
+      if (target) { target.classList.remove('is-fainted','is-commanding'); const label = target.querySelector('.duo-sprite-label'); if (label) label.textContent = `${slot+1} · ${title(command.pokemonName)}`; }
+      if (hud) { hud.classList.remove('is-fainted'); const name = hud.querySelector('h3'),condition = hud.querySelector('.duo-condition'); if (name) name.textContent = title(command.pokemonName); if (condition) condition.textContent = ''; hud.setAttribute('aria-label',`${role === 'player' ? 'Seu Pokémon' : 'Adversário'} ${slot+1}: ${title(command.pokemonName)}`); }
+      if (command.currentHp !== undefined) this.updateDoublesHpBar(role,slot,command.currentHp,command.maxHp);
+    };
+    View.prototype.syncDoublesRegistries = function (state) {
+      const adapter = this.sessionController?.compositeAdapter;
+      if (!adapter || !this.container?.querySelector) return;
+      const query = selector => this.container.querySelector(selector), stage = query('#battleStage');
+      if (!stage) return;
+      adapter.pokemonController?.reset();
+      adapter.pokemonController?.registry?.clear();
+      adapter.vfxController?.reset();
+      adapter.vfxController?.registry?.registerStage(stage);
+      for (const role of ['player','enemy']) for (const [slot,index] of state[role].activeIndices.entries()) {
+        const mon = state[role].team[index], target = query(`#duoCombatant_${role}_${slot}`), sprite = target?.querySelector('img'), key = `${role}:${slot}`;
+        if (!target || !sprite) continue;
+        adapter.pokemonController?.registry?.register(key,{container:target,sprite,metadata:this.resolveCombatantVisual(mon,role)});
+        adapter.vfxController?.registry?.registerTarget(key,target);
+        if (mon.currentHp > 0 && !mon.commanding) adapter.pokemonController?.startIdle(key);
+      }
+      const camera = adapter.cameraController?.registry;
+      camera?.registerCamera(query('#battleCameraWrapper'));
+      camera?.registerStage(stage);
+      camera?.registerFlashOverlay(query('#battleHitFlash'));
+    };
     View.prototype.updateDoublesHpBar = function (role, slot, hp, max) {
       if (typeof document === 'undefined') return;
       const progress = document.getElementById(`doublesHp_${role}_${slot}`), label = document.getElementById(`doublesHpText_${role}_${slot}`);
-      if (progress) { progress.value = hp; if (max) progress.max = max; }
+      if (progress) { progress.value = hp; if (max) progress.max = max; progress.classList.toggle('hp-danger',hp/progress.max <= .2); progress.classList.toggle('hp-warning',hp/progress.max > .2 && hp/progress.max <= .5); }
+      const combatant = document.getElementById(`duoCombatant_${role}_${slot}`);
+      if (combatant) { combatant.classList.toggle('is-fainted',hp <= 0); }
       if (label) label.textContent = hp+'/'+(max || progress?.max || '');
     };
   }

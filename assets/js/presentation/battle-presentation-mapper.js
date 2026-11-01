@@ -543,7 +543,8 @@
               side: event.actor || event.side,
               actor: event.actor || event.side,
               previousPokemonId: event.previousPokemonId,
-              targetPokemonId: event.targetPokemonId
+              targetPokemonId: event.targetPokemonId,
+              pokemonName: event.pokemonName
             }
           ];
 
@@ -554,6 +555,8 @@
               side: event.side,
               previousPokemonId: event.previousPokemonId,
               newPokemonId: event.newPokemonId,
+              ...(event.pokemonName ? {pokemonName:event.pokemonName} : {}),
+              ...(event.currentHp !== undefined ? {currentHp:event.currentHp,maxHp:event.maxHp} : {}),
               reason: event.reason
             }
           ];
@@ -613,7 +616,7 @@
      * @param {Object} [context] - Contexto imutável opcional.
      * @returns {Array<Object>} Lista sequencial de comandos de apresentação.
      */
-    function mapEvent(event,context=null){return mapEventBase(event,context).map(command=>{const slot=event.targetSlot??event.combatantSlot??event.actorSlot;if(slot===undefined)return command;return {...command,targetSlot:slot,...(event.actorSlot!==undefined?{actorSlot:event.actorSlot}:{})};});}
+    function mapEvent(event,context=null){return mapEventBase(event,context).map(command=>{const slot=event.targetSlot??event.combatantSlot??event.actorSlot??event.sideSlot;if(slot===undefined)return command;return {...command,targetSlot:slot,...(event.actorSlot!==undefined?{actorSlot:event.actorSlot}:{}),...(event.sourceSlot!==undefined?{sourceSlot:event.sourceSlot}:{})};});}
 
     function mapEvents(events, context = null) {
       if (!Array.isArray(events)) {

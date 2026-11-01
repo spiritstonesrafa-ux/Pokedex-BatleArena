@@ -42,7 +42,7 @@
      * @returns {Object} Target registrado.
      */
     register(side, elements = {}) {
-      if (side !== 'player' && side !== 'enemy') {
+      if (!/^(player|enemy)(:[01])?$/.test(side)) {
         throw new Error(`INVALID_TARGET_SIDE: Lado inválido "${side}". Deve ser 'player' ou 'enemy'.`);
       }
 

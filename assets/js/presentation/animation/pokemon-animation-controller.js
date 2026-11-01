@@ -379,7 +379,7 @@
     reset() {
       this.cancel();
 
-      for (const side of ['player', 'enemy']) {
+      for (const side of ['player', 'enemy', 'player:0', 'player:1', 'enemy:0', 'enemy:1']) {
         if (this.registry.hasTarget(side)) {
           const target = this.registry.getTarget(side);
           target.isIdle = false;

@@ -96,6 +96,9 @@
         timestamp: Date.now()
       });
 
+      const visualKey = (side,slot) => slot === undefined ? side : `${side}:${slot}`;
+      const battle = context?.battleState || context;
+      const positions = role => battle?.battleFormat === 'DOUBLES' ? battle[role].activeIndices.map((index,slot)=>({index,slot})).filter(p=>battle[role].team[p.index]?.currentHp>0&&!battle[role].team[p.index]?.commanding).map(p=>visualKey(role,p.slot)) : [role];
       const uiTask = this.uiAdapter ? this.uiAdapter.execute(command, context) : Promise.resolve();
 
       switch (command.type) {
@@ -104,11 +107,9 @@
           if (this.pokemonController) {
             introTasks.push(
               Promise.all([
-                this.pokemonController.playEntrance('player'),
-                this.pokemonController.playEntrance('enemy')
+                ...[...positions('player'),...positions('enemy')].map(side=>this.pokemonController.playEntrance(side))
               ]).then(() => {
-                this.pokemonController.startIdle('player');
-                this.pokemonController.startIdle('enemy');
+                for(const side of [...positions('player'),...positions('enemy')])this.pokemonController.startIdle(side);
               })
             );
           }
@@ -122,8 +123,9 @@
         }
 
         case PRESENTATION_COMMANDS.MOVE_ANNOUNCEMENT: {
-          const attackerSide = command.actor || command.side || 'player';
-          const defenderSide = command.target || (attackerSide === 'player' ? 'enemy' : 'player');
+          const actor = command.actor || command.side || 'player';
+          const attackerSide = visualKey(actor,command.actorSlot);
+          const defenderSide = visualKey(command.target || (actor === 'player' ? 'enemy' : 'player'),command.targetSlot);
 
           const tasks = [];
 
@@ -153,6 +155,7 @@
                 attackerSide,
                 defenderSide,
                 isMiss: Boolean(command.isMiss),
+                isBlocked: Boolean(command.isBlocked),
                 isImmune: Boolean(command.isImmune || command.multiplier === 0),
                 multiplier: command.multiplier !== undefined ? Number(command.multiplier) : 1
               }));
@@ -179,7 +182,7 @@
           const hpTasks = [];
           // Reação corporal, impacto sonoro e impacto de câmera quando houver perda real de HP (> 0)
           if (!['poison', 'burn'].includes(command.cause) && command.damage !== undefined && Number(command.damage) > 0) {
-            const side = command.side || command.target;
+            const side = visualKey(command.side || command.target,command.targetSlot);
             if (side && this.pokemonController) {
               hpTasks.push(this.pokemonController.playDamageReaction(side));
             }
@@ -236,7 +239,7 @@
         }
 
         case PRESENTATION_COMMANDS.FAINT_SEQUENCE: {
-          const side = command.side || command.target;
+          const side = visualKey(command.side || command.target,command.targetSlot);
           if (side && this.pokemonController) {
             await this.pokemonController.playFaint(side);
           }
@@ -244,7 +247,7 @@
         }
 
         case PRESENTATION_COMMANDS.SWITCH_OUT_SEQUENCE: {
-          const side = command.side || command.actor;
+          const side = visualKey(command.side || command.actor,command.actorSlot ?? command.targetSlot);
           if (side && this.pokemonController) {
             await this.pokemonController.playSwitchOut(side);
           }
@@ -252,12 +255,13 @@
         }
 
         case PRESENTATION_COMMANDS.SWITCH_IN_SEQUENCE: {
-          const side = command.side;
+          const role = command.side;
+          const side = visualKey(role,command.targetSlot ?? command.actorSlot);
           if (side) {
             const switchTasks = [];
             let pokemonData = null;
-            if (context && context[side] && context[side].team) {
-              const activeMon = context[side].team.find(p => p.id === command.newPokemonId);
+            if (battle && battle[role] && battle[role].team) {
+              const activeMon = battle[role].team.find(p => p.id === command.newPokemonId);
               if (activeMon) {
                 const monId = Number(activeMon.id) || Number(command.newPokemonId) || 1;
                 pokemonData = {
@@ -293,7 +297,7 @@
           const resultTasks = [];
           if (command.winner && (command.winner === 'player' || command.winner === 'enemy')) {
             if (this.pokemonController) {
-              resultTasks.push(this.pokemonController.playVictory(command.winner));
+              resultTasks.push(...positions(command.winner).map(side=>this.pokemonController.playVictory(side)));
             }
             if (this.audioController) {
               if (command.winner === 'player') {

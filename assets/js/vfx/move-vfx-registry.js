@@ -40,7 +40,7 @@
      * @param {HTMLElement|string} targetElement
      */
     registerTarget(side, targetElement) {
-      if (side !== 'player' && side !== 'enemy') {
+      if (!/^(player|enemy)(:[01])?$/.test(side)) {
         throw new Error(`INVALID_SIDE: Lado inválido "${side}". Deve ser "player" ou "enemy".`);
       }
 
@@ -85,7 +85,7 @@
 
       // Fallback determinístico para ambiente virtual / Node.js
       if (!attElem || !defElem || !stageElem || typeof attElem.getBoundingClientRect !== 'function') {
-        const isPlayerAttacking = attackerSide === 'player';
+        const isPlayerAttacking = attackerSide === 'player' || attackerSide.startsWith('player:');
         const fromX = isPlayerAttacking ? 220 : 580;
         const fromY = isPlayerAttacking ? 280 : 160;
         const toX = isPlayerAttacking ? 580 : 220;

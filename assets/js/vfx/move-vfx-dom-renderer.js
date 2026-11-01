@@ -148,7 +148,7 @@
         : { fromX: 200, fromY: 260, toX: 600, toY: 140, deltaX: 400, deltaY: -120, distance: 417, angle: -16 };
 
       const duration = reducedMotion ? 0 : (descriptor.duration || 350);
-      const isPlayer = attackerSide === 'player';
+      const isPlayer = attackerSide === 'player' || attackerSide.startsWith('player:');
       const dir = isPlayer ? 1 : -1;
 
       return new Promise((resolve) => {

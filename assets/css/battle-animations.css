@@ -27,11 +27,13 @@
 
 /* Orientações base por lado de combate */
 [data-battle-side="player"],
+[data-battle-side^="player:"],
 .pba-side-player {
   --pba-dir: 1; /* Player ataca e avança para a direita (+X) */
 }
 
 [data-battle-side="enemy"],
+[data-battle-side^="enemy:"],
 .pba-side-enemy {
   --pba-dir: -1; /* Enemy ataca e avança para a esquerda (-X) */
 }

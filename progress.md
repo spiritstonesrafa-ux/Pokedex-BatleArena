@@ -2,6 +2,20 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 01/11/2026: efeitos de ataque nas quatro posições de duplas
+
+- Corrigida a causa da ausência de efeitos: o palco de duplas não registrava seus sprites nos controladores de animação, VFX e câmera. Agora as quatro posições têm âncoras independentes, usando os efeitos já existentes da batalha comum.
+- Eventos e comandos preservam atacante, alvo e posição de troca. Golpes em área apresentam efeitos para cada alvo, incluindo aliado; cura de aliado e golpes no próprio usuário mantêm seus destinos. Erros, imunidade e proteção preservam o feedback correspondente.
+- Entradas, ataques, reação ao dano, nocautes, trocas e vitória usam as posições corretas. A troca atualiza somente seu slot, sem reconstruir a arena no meio da sequência; referências dos efeitos são renovadas ao renderizar e os efeitos temporários são removidos no reset.
+- Validação: oito regressões novas de apresentação e 2.642 testes aprovados / 38 suítes, sem falhas/cancelados/ignorados. Teste real no navegador confirmou projétil de fogo, ataque corporal, término do turno e limpeza dos efeitos, sem erros observados.
+- Usuário autorizou commit e push deste conjunto, incluindo a arena refeita no ciclo anterior.
+## Atualização — 01/11/2026: duplas no palco da Battle Arena
+
+- Substituída a apresentação por cartões por um campo compartilhado com quatro sprites: dupla do jogador em primeiro plano e adversários ao fundo, no estilo da batalha comum.
+- Reutilizados cenários e controlador de ambiente existentes; arena de estádio no modo rápido e resolução temática preservada quando informada no contexto. HUDs separados com HP, nível e condição por posição.
+- Controles de ação/alvo/reserva preservados. Commander oculta o Pokémon incorporado; dano e nocautes têm feedback no sprite correspondente. Layout ajustado para celular.
+- Validação: 2.634 testes aprovados / 38 suítes; teste real no navegador com dano, nocaute e reserva na posição correta, conferência móvel e zero erros de console observados.
+- Alteração visual solicitada após a publicação fa0d555; este novo ajuste ainda não foi publicado.
 ## Atualização — 01/11/2026: controles e validação visual das duplas
 
 - Arena compacta e responsiva, identificação das posições, condições e HP. Alvos automáticos desativam a seleção e explicam golpes em área, inclusive risco ao aliado.

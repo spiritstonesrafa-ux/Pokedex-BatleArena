@@ -223,7 +223,9 @@
         }
 
         case PRESENTATION_COMMANDS.SWITCH_IN_SEQUENCE: {
-          if (typeof this.view.handleSwitchIn === 'function') {
+          if (command.targetSlot !== undefined && this.view.updateDoublesCombatant) {
+            this.view.updateDoublesCombatant(command);
+          } else if (typeof this.view.handleSwitchIn === 'function') {
             this.view.handleSwitchIn(command.side, command.pokemonId, command.pokemonName);
           }
           if (typeof this.view.updateStatStages === 'function' && context && context.battleState) {
