@@ -58,9 +58,9 @@ function unlock18Badges(mgr) {
 // CATÁLOGO DECLARATIVO
 // -----------------------------------------------------------------------------
 test('Map Catalog — Exatamente quatro regiões imutáveis', () => {
-  assert.equal(CAMPAIGN_MAP_CATALOG.regions.length, 4);
+  assert.equal(CAMPAIGN_MAP_CATALOG.regions.length, 5);
   const regionIds = CAMPAIGN_MAP_CATALOG.regions.map(r => r.id);
-  assert.deepEqual(regionIds, ['region-1', 'region-2', 'region-3', 'region-endgame']);
+  assert.deepEqual(regionIds, ['region-1', 'region-2', 'region-3', 'region-endgame','region-postgame']);
   assert.ok(Object.isFrozen(CAMPAIGN_MAP_CATALOG));
   assert.ok(Object.isFrozen(CAMPAIGN_MAP_CATALOG.regions));
 });
@@ -81,7 +81,7 @@ test('Map Catalog — Exatamente 18 nós MASTER sem duplicatas e sem ausências'
 
 test('Map Catalog — Quatro Provas, desafio Mewtwo pós-Shadow, Super e Shadow na Região Final (25 nós)', () => {
   const allNodes = CAMPAIGN_MAP_CATALOG.regions.flatMap(r => r.nodes);
-  assert.equal(allNodes.length, 25, 'Total inclui o desafio Mewtwo pós-Shadow');
+  assert.equal(allNodes.length, 29, 'Total inclui o desafio Mewtwo pós-Shadow');
 
   const endgameRegion = CAMPAIGN_MAP_CATALOG.regions.find(r => r.id === 'region-endgame');
   assert.ok(endgameRegion);
@@ -135,7 +135,8 @@ test('Map Catalog — Rotas referenciam nós válidos dentro da mesma região', 
 
 test('Map Catalog — Desbloqueio e ausência de estado mutável do jogador', () => {
   for (const region of CAMPAIGN_MAP_CATALOG.regions) {
-    if (region.id === 'region-endgame') {
+    if(region.id==='region-postgame'){assert.equal(region.unlockCondition.kind,'SHADOW_DEFEATED');}
+    else if (region.id === 'region-endgame') {
       assert.ok(['BADGE_COUNT', 'BADGES_COUNT'].includes(region.unlockCondition.kind));
       assert.equal(region.unlockCondition.count || region.unlockCondition.badgesRequired, 18);
     } else {
@@ -193,7 +194,7 @@ test('Map Model — Zero insígnias: todos os 18 Mestres disponíveis e recomend
 
   // All master nodes across regions 1-3 must be available
   const activeMasterNodes = viewModel.regions
-    .filter(r => r.id !== 'region-endgame')
+    .filter(r => ['region-1','region-2','region-3'].includes(r.id))
     .flatMap(r => r.nodes);
 
   assert.equal(activeMasterNodes.length, 18);
@@ -408,7 +409,7 @@ test('Map Model — Sanitized legacy save generates valid view model without mig
 
   assert.ok(vm);
   assert.equal(vm.badgeCount, 1);
-  assert.equal(vm.regions.length, 4);
+  assert.equal(vm.regions.length, 5);
 });
 
 // -----------------------------------------------------------------------------
@@ -654,7 +655,7 @@ test('View Model Contract — Contrato completo e consistente em todos os nós',
   });
 
   const allNodes = vm.regions.flatMap(r => r.nodes);
-  assert.equal(allNodes.length, 25);
+  assert.equal(allNodes.length, 29);
 
   for (const node of allNodes) {
     assert.ok(typeof node.nodeId === 'string' && node.nodeId.length > 0);
@@ -916,7 +917,7 @@ test('Map Catalog & CSS Themes — Todas as quatro themeClass declaradas no cat�
   const cssPath = path.resolve(__dirname, '../../assets/css/campaign-map.css');
   const cssContent = fs.readFileSync(cssPath, 'utf8');
 
-  assert.equal(CAMPAIGN_MAP_CATALOG.regions.length, 4);
+  assert.equal(CAMPAIGN_MAP_CATALOG.regions.length, 5);
   for (const region of CAMPAIGN_MAP_CATALOG.regions) {
     assert.ok(region.themeClass, `Região ${region.id} deve declarar themeClass`);
     const selectorRegex = new RegExp(`\\.${region.themeClass}\\b`);
@@ -1315,7 +1316,7 @@ test('Tabs WAI-ARIA — Painel estável único campaign-map-region-panel, aria-c
 
   // 2. Todo aria-controls aponta para campaign-map-region-panel (elemento existente)
   const ariaControlsMatches = [...capturedHtml.matchAll(/aria-controls="([^"]+)"/g)].map(m => m[1]);
-  assert.equal(ariaControlsMatches.length, 4, 'Todas as 4 abas devem ter aria-controls');
+  assert.equal(ariaControlsMatches.length, 5, 'Todas as 5 abas devem ter aria-controls');
   for (const targetId of ariaControlsMatches) {
     assert.equal(targetId, 'campaign-map-region-panel', 'aria-controls deve apontar para o painel estável existente');
     assert.ok(capturedHtml.includes(`id="${targetId}"`), `Painel alvo id="${targetId}" deve existir no HTML`);
@@ -1324,18 +1325,18 @@ test('Tabs WAI-ARIA — Painel estável único campaign-map-region-panel, aria-c
   // 3. Exatamente uma aba possui aria-selected="true"
   const tabRegex = /<button[^>]*role="tab"[^>]*>/g;
   const tabButtons = capturedHtml.match(tabRegex) || [];
-  assert.equal(tabButtons.length, 4, 'Devem existir 4 abas declaradas');
+  assert.equal(tabButtons.length, 5, 'Devem existir 5 abas declaradas');
 
   const selectedTrue = tabButtons.filter(t => t.includes('aria-selected="true"'));
   assert.equal(selectedTrue.length, 1, 'Exatamente uma aba deve ter aria-selected="true"');
   const selectedFalse = tabButtons.filter(t => t.includes('aria-selected="false"'));
-  assert.equal(selectedFalse.length, 3, 'As outras 3 abas devem ter aria-selected="false"');
+  assert.equal(selectedFalse.length, 4, 'As outras 4 abas devem ter aria-selected="false"');
 
   // 4. Exatamente uma aba possui tabindex="0"
   const tabIndexZero = tabButtons.filter(t => t.includes('tabindex="0"'));
   assert.equal(tabIndexZero.length, 1, 'Exatamente uma aba deve ter tabindex="0"');
   const tabIndexMinusOne = tabButtons.filter(t => t.includes('tabindex="-1"'));
-  assert.equal(tabIndexMinusOne.length, 3, 'As outras 3 abas devem ter tabindex="-1"');
+  assert.equal(tabIndexMinusOne.length, 4, 'As outras 4 abas devem ter tabindex="-1"');
 
   // 5. Aba bloqueada possui aria-disabled="true"
   assert.ok(capturedHtml.includes('id="tab-region-endgame"'));
@@ -1527,7 +1528,7 @@ test('Integração Real switchAppTab — Executa a implementação real de switc
 // FASE 3 — ARTE FINAL E INTEGRAÇÃO DOS MAPAS DE CAMPANHA
 // -----------------------------------------------------------------------------
 test('Map Phase 3 — Catálogo define bgImage local e único para todas as 4 regiões', () => {
-  assert.equal(CAMPAIGN_MAP_CATALOG.regions.length, 4);
+  assert.equal(CAMPAIGN_MAP_CATALOG.regions.length, 5);
   const bgImages = CAMPAIGN_MAP_CATALOG.regions.map(r => r.bgImage);
 
   // 1. Todas as regiões possuem bgImage
@@ -1546,7 +1547,7 @@ test('Map Phase 3 — Catálogo define bgImage local e único para todas as 4 re
 });
 
 test('Map Phase 3 — Arquivos WebP existem no disco e possuem cabeçalho RIFF/WEBP válido', () => {
-  for (const r of CAMPAIGN_MAP_CATALOG.regions) {
+  for (const r of CAMPAIGN_MAP_CATALOG.regions.filter((r,i,all)=>all.findIndex(n=>n.bgImage===r.bgImage)===i)) {
     const fullPath = path.resolve(__dirname, '../../', r.bgImage);
     // 3. Os quatro arquivos existem
     assert.ok(fs.existsSync(fullPath), `Arquivo de fundo não encontrado no disco: ${fullPath}`);
@@ -1586,7 +1587,7 @@ test('Map Phase 3 — Orçamento de peso e dimensões reais: <= 140 KB por fundo
     throw new Error('Tipo de chunk WebP desconhecido: ' + chunkType);
   }
 
-  for (const r of CAMPAIGN_MAP_CATALOG.regions) {
+  for (const r of CAMPAIGN_MAP_CATALOG.regions.filter((r,i,all)=>all.findIndex(n=>n.bgImage===r.bgImage)===i)) {
     const fullPath = path.resolve(__dirname, '../../', r.bgImage);
     const stats = fs.statSync(fullPath);
     const size = stats.size;
@@ -4035,7 +4036,7 @@ test('Avatar Phase 4 — ligações entre regiões usam saídas e entradas váli
   const links = CAMPAIGN_MAP_CATALOG.regionTravelLinks;
   assert.ok(Object.isFrozen(links));
   for (const source of CAMPAIGN_MAP_CATALOG.regions) {
-    assert.equal(Object.keys(links[source.id]).length, 3);
+    assert.equal(Object.keys(links[source.id]).length, 4);
     for (const target of CAMPAIGN_MAP_CATALOG.regions) {
       if (source.id === target.id) continue;
       const link = links[source.id][target.id];

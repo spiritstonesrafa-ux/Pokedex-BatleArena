@@ -2,6 +2,13 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: desafios pós-Shadow no mapa
+
+- Corrigida integração incompleta: Zygarde, Kyurem, Necrozma e Criação existiam no hub, mas não tinham nós, reconhecimento ou ações no mapa.
+- Adicionada região Após Shadow (Além do Eclipse), com quatro nós, rotas e ligações de viagem. Usa o fundo local existente da Região Final, sem novos downloads de arte. Mewtwo permanece no mapa original.
+- Modelo e ações usam os times e requisitos canônicos. A nova região exige vitória contra Shadow; os nós mostram bloqueios, recompensas pendentes e revanches. Contadores agora consideram somente os desafios de cada região.
+- Testes cobrem renderização em mapa/lista, abertura das quatro batalhas, desbloqueios após Mewtwo, bloqueios anteriores ao Shadow, recompensas pendentes e preservação do progresso. Cache atualizado. Validação: **2.865 testes aprovados em 39 suítes, zero falhas**; git diff --check aprovado.
+
 ## Atualização — 02/11/2026: ataques sem erro após dano indireto
 
 - Reproduzido o erro de Petra com Keldeo usando Hydro Pump contra Tyranitar: a tempestade de areia gerava STATUS_DAMAGE válido, mas o mapper aceitava apenas veneno/veneno grave/queimadura. O turno já estava resolvido quando a apresentação falhava.

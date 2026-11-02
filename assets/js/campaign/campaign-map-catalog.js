@@ -324,6 +324,25 @@
         }
       ].map(Object.freeze)
     }
+    ,{
+      id:'region-postgame', name:'Além do Eclipse', shortName:'Após Shadow',
+      subtitle:'Guardiões, fusões e a origem do mundo',
+      bgImage:'assets/images/campaign/maps/region-endgame.webp', themeClass:'theme-region-endgame',
+      fallbackTheme:{background:'radial-gradient(circle at 50% 30%, #243653, #15102a 55%, #0a0816)',accentColor:'#bc9cff'},
+      unlockCondition:Object.freeze({kind:'SHADOW_DEFEATED'}),
+      routes:[
+        {routeId:'rpost-zygarde-kyurem',from:'node-zygarde',to:'node-kyurem',pathD:'M 200 440 C 300 440, 400 370, 500 320'},
+        {routeId:'rpost-kyurem-necrozma',from:'node-kyurem',to:'node-necrozma',pathD:'M 500 320 C 620 330, 700 420, 800 440'},
+        {routeId:'rpost-necrozma-creation',from:'node-necrozma',to:'node-creation',pathD:'M 800 440 C 760 180, 650 100, 500 100'},
+        {routeId:'rpost-zygarde-creation',from:'node-zygarde',to:'node-creation',pathD:'M 200 440 C 240 180, 350 100, 500 100'}
+      ].map(Object.freeze),
+      nodes:[
+        ['zygarde','ZYGARDE_TRIAL',20,78,'Santuário das Células','Equilíbrio de Zygarde'],
+        ['kyurem','KYUREM_TRIAL',50,57,'Fenda Glacial','Zero Absoluto'],
+        ['necrozma','NECROZMA_TRIAL',80,78,'Prisma do Eclipse','Eclipse de Necrozma'],
+        ['creation','CREATION_TRIAL',50,18,'Portal da Origem','Ruptura da Criação']
+      ].map(([key,kind,x,y,biome,title])=>Object.freeze({nodeId:'node-'+key,challengeKind:kind,challengeId:key,type:'special',position:Object.freeze({x,y}),biomeLabel:biome,visibilityPolicy:'ALWAYS_IN_REGION',ariaLabelBase:title}))
+    }
   ].map(Object.freeze);
 
   function deepFreeze(obj, visited = new WeakSet()) {
@@ -350,21 +369,26 @@
     // trigger the challenge at either endpoint.
     regionTravelLinks: {
       'region-1': {
+        'region-postgame':{exitNodeId:'node-flying',entryNodeId:'node-zygarde'},
         'region-2': { exitNodeId: 'node-flying', entryNodeId: 'node-fighting' },
         'region-3': { exitNodeId: 'node-flying', entryNodeId: 'node-fairy' },
         'region-endgame': { exitNodeId: 'node-flying', entryNodeId: 'node-legendary' }
       },
       'region-2': {
+        'region-postgame':{exitNodeId:'node-ice',entryNodeId:'node-zygarde'},
         'region-1': { exitNodeId: 'node-fighting', entryNodeId: 'node-flying' },
         'region-3': { exitNodeId: 'node-ice', entryNodeId: 'node-fairy' },
         'region-endgame': { exitNodeId: 'node-ice', entryNodeId: 'node-legendary' }
       },
       'region-3': {
+        'region-postgame':{exitNodeId:'node-dragon',entryNodeId:'node-zygarde'},
         'region-1': { exitNodeId: 'node-fairy', entryNodeId: 'node-flying' },
         'region-2': { exitNodeId: 'node-fairy', entryNodeId: 'node-ice' },
         'region-endgame': { exitNodeId: 'node-dragon', entryNodeId: 'node-mythical' }
       },
+      'region-postgame': {'region-endgame':{exitNodeId:'node-zygarde',entryNodeId:'node-mewtwo'},'region-1':{exitNodeId:'node-zygarde',entryNodeId:'node-flying'},'region-2':{exitNodeId:'node-zygarde',entryNodeId:'node-fighting'},'region-3':{exitNodeId:'node-zygarde',entryNodeId:'node-fairy'}},
       'region-endgame': {
+        'region-postgame':{exitNodeId:'node-mewtwo',entryNodeId:'node-zygarde'},
         'region-1': { exitNodeId: 'node-legendary', entryNodeId: 'node-flying' },
         'region-2': { exitNodeId: 'node-legendary', entryNodeId: 'node-ice' },
         'region-3': { exitNodeId: 'node-mythical', entryNodeId: 'node-dragon' }

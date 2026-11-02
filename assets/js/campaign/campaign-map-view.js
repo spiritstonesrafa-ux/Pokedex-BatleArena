@@ -27,6 +27,7 @@
   });
 
   const TRIAL_ICONS = Object.freeze({
+    ZYGARDE_TRIAL:'🧩', KYUREM_TRIAL:'❄️', NECROZMA_TRIAL:'🌘', CREATION_TRIAL:'🌌',
     MEWTWO_TRIAL: '🧬',
     LEGENDARY_TRIAL: '👑',
     MYTHICAL_TRIAL: '🔮',
@@ -46,7 +47,7 @@
     if (Model && typeof Model.isTrial === 'function') {
       return Model.isTrial(kind);
     }
-    return ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL', 'MEWTWO_TRIAL'].includes(kind);
+    return ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL', 'MEWTWO_TRIAL','ZYGARDE_TRIAL','KYUREM_TRIAL','NECROZMA_TRIAL','CREATION_TRIAL'].includes(kind);
   }
 
   function getTrialKey(node) {
@@ -475,7 +476,7 @@
       const tabsHtml = viewModel.regions.map(region => {
         const isActive = region.id === viewModel.activeRegionId;
         const isLocked = Boolean(region.isLocked);
-        const lockNote = isLocked ? ` (Bloqueada: ${viewModel.badgeCount}/18)` : '';
+        const lockNote = isLocked ? (region.id==='region-postgame'?' (Bloqueada: derrote o Shadow)':` (Bloqueada: ${viewModel.badgeCount}/18)`) : '';
         const recBadge = region.hasRecommended && !isLocked
           ? '<span class="tab-badge-hint" title="Próximo Mestre sugerido nesta região">★ Sugerido</span>'
           : '';
@@ -1138,7 +1139,7 @@
           const isLocked = !targetRegion || targetRegion.isLocked || tab.dataset.isLocked === 'true';
 
           if (isLocked) {
-            this.announce(`Região Final bloqueada. Requer 18 insígnias conquistadas (você possui ${viewModel.badgeCount}/18).`);
+            this.announce(regionId==='region-postgame'?'Derrote o Shadow para acessar esta região.':`Região Final bloqueada. Requer 18 insígnias conquistadas (você possui ${viewModel.badgeCount}/18).`);
             return;
           }
 
@@ -1838,7 +1839,7 @@
         payload = { kind: 'SHADOW', id: null };
       } else if (trialKey || isTrialKind(node.challengeKind)) {
         const kind = trialKey || node.challengeKind;
-        const validTrials = ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL', 'MEWTWO_TRIAL'];
+        const validTrials = ['LEGENDARY_TRIAL', 'MYTHICAL_TRIAL', 'TITANS_TRIAL', 'CELESTIAL_TRIAL', 'MEWTWO_TRIAL','ZYGARDE_TRIAL','KYUREM_TRIAL','NECROZMA_TRIAL','CREATION_TRIAL'];
         if (validTrials.includes(kind)) {
           payload = { kind, id: null };
         }

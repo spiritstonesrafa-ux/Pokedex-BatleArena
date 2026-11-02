@@ -13,6 +13,7 @@
   }
 
   const TRIAL_DEFINITIONS = Object.freeze({
+    ...Object.fromEntries(Object.entries(Catalog.POSTGAME_TRIALS).map(([kind,d])=>[kind,Object.freeze({key:d.key,title:d.name,trainerName:d.name,trainerTitle:d.subtitle,badgeName:'Aliado '+d.name,difficulty:5,getTeam:()=>d.team})])),
     MEWTWO_TRIAL: Object.freeze({key:'mewtwo',title:'Desafio Mewtwo',trainerName:'Desafio Mewtwo',trainerTitle:'As Três Faces do Poder',badgeName:'Aliado Mewtwo',difficulty:5,getTeam:()=>Catalog.MEWTWO_TRIAL_TEAM||[]}),
     LEGENDARY_TRIAL: Object.freeze({
       key: 'legendary',
@@ -219,7 +220,9 @@
       const isDefeated = isCompleted;
       const isVictoryPending = Boolean(trialProgress.completed && !trialProgress.rewardClaimed);
       const attempts = Math.max(0, Math.floor(Number(trialProgress.attempts) || 0));
-      const isRegionUnlocked = trialKind === 'MEWTWO_TRIAL' ? Boolean(shadowTrainer.defeated) : badgeCount >= 18;
+      const postgame=Boolean(Catalog.POSTGAME_TRIALS[trialKind]);
+      const lockReason=postgame?Catalog.getPostgameLockReason(trialKind,campaignState):null;
+      const isRegionUnlocked = postgame ? !lockReason : badgeCount >= 18;
 
       let state = 'LOCKED';
       if (!isRegionUnlocked) {
@@ -233,7 +236,7 @@
       }
 
       const statusText = !isRegionUnlocked
-        ? (trialKind === 'MEWTWO_TRIAL' ? 'Bloqueado. Derrote o Shadow para desbloquear o Desafio Mewtwo.' : 'Bloqueada. Conquiste as 18 insígnias para desbloquear.')
+        ? (lockReason || 'Bloqueada. Conquiste as 18 insígnias para desbloquear.')
         : (isCompleted
           ? (trialKind === 'MEWTWO_TRIAL' ? 'Desafio Mewtwo concluído. Revanche disponível.' : 'Concluída. Aliado recrutado. Revanche disponível.')
           : (isVictoryPending ? 'Vitória conquistada! Escolha de recompensa pendente.' : 'Disponível para desafio de elite.'));
@@ -241,7 +244,7 @@
       const ariaLabel = `${node.ariaLabelBase}. Estado: ${statusText}`;
       const canChallenge = isRegionUnlocked && !hasPendingReward;
       const cannotChallengeReason = !isRegionUnlocked
-        ? (trialKind === 'MEWTWO_TRIAL' ? 'Bloqueado. Derrote o Shadow para desbloquear o Desafio Mewtwo.' : 'Bloqueada. Conquiste as 18 insígnias para desbloquear.')
+        ? (lockReason || 'Bloqueada. Conquiste as 18 insígnias para desbloquear.')
         : (hasPendingReward ? 'Resgate a recompensa pendente antes de iniciar uma nova batalha.' : null);
 
       const trainerName = trialDef.trainerName;
@@ -430,7 +433,9 @@
   }
 
   function deriveRegionState(region, campaignState, mastersList, recommended, selectedNodeId, badgeCount, rosterCount) {
-    const isUnlocked = region.unlockCondition.kind === 'ALWAYS'
+    const isUnlocked = region.unlockCondition.kind === 'SHADOW_DEFEATED'
+      ? Boolean(campaignState?.shadowTrainer?.defeated)
+      : region.unlockCondition.kind === 'ALWAYS'
       ? true
       : (['BADGE_COUNT', 'BADGES_COUNT'].includes(region.unlockCondition.kind)
           ? badgeCount >= (region.unlockCondition.count || region.unlockCondition.badgesRequired || 18)
@@ -466,13 +471,9 @@
 
     let defeatedCount = 0;
     let totalCount = 0;
-    if (region.id === 'region-endgame') {
-      const trials = (campaignState && campaignState.endgameTrials) || {};
-      const trialCompletedCount = Object.values(trials).filter(t => t.completed && t.rewardClaimed).length;
-      const superDefeated = campaignState?.superTrainer?.defeated ? 1 : 0;
-      const shadowDefeated = campaignState?.shadowTrainer?.defeated ? 1 : 0;
-      defeatedCount = trialCompletedCount + superDefeated + shadowDefeated;
-      totalCount = 6;
+    if (region.nodes.some(n=>n.challengeKind!=='MASTER')) {
+      totalCount=derivedNodes.length;
+      defeatedCount=derivedNodes.filter(n=>n.isCompleted||n.isDefeated).length;
     } else {
       const masterIds = region.nodes.filter(n => n.challengeKind === 'MASTER').map(n => n.challengeId);
       totalCount = masterIds.length;
@@ -482,6 +483,7 @@
     const hasRecommended = Boolean(recommended && region.nodes.some(n => n.challengeId === recommended.challengeId));
 
     let badgeLabel = `${defeatedCount}/${totalCount}`;
+    if (region.id === 'region-postgame'&&!isUnlocked) badgeLabel='Bloqueada (derrote o Shadow)';
     if (region.id === 'region-endgame') {
       badgeLabel = isUnlocked ? `${defeatedCount}/${totalCount}` : `Bloqueada (${badgeCount}/18)`;
     }
