@@ -2,6 +2,12 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: Região da Glória Eterna
+
+- Região pós-Shadow renomeada para Região da Glória Eterna (aba Glória Eterna).
+- Mewtwo movido da Região Final para a Glória Eterna, reunindo os cinco desafios pós-Shadow. Rotas locais e passagem entre regiões ajustadas; nenhum desafio duplicado.
+- Identificadores e progresso de Mewtwo preservados, incluindo recompensa e revanche. Contadores passam a mostrar seis desafios na Região Final e cinco na Glória Eterna. Cache atualizado. Validação: **2.871 testes aprovados em 39 suítes, zero falhas**; git diff --check aprovado.
+
 ## Atualização — 02/11/2026: exploração com 50% de lendários/míticos após Shadow
 
 - Depois de derrotar Shadow, exploração sorteia 50% de lendários e míticos juntos e 50% de Pokémon comuns/incomuns/raros. A separação ocorre antes de escolher a espécie para manter os 50% mesmo quando faltam categorias de raridade na área.

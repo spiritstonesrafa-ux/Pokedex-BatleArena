@@ -253,7 +253,6 @@
         { routeId: 'rend-celestial-super', from: 'node-celestial', to: 'node-super', pathD: 'M 780 203 C 700 230, 600 270, 500 315' },
         { routeId: 'rend-legendary-super', from: 'node-legendary', to: 'node-super', pathD: 'M 200 394 C 290 380, 390 360, 500 315' },
         { routeId: 'rend-mythical-super', from: 'node-mythical', to: 'node-super', pathD: 'M 800 394 C 710 380, 610 360, 500 315' },
-        { routeId: 'rend-shadow-mewtwo', from: 'node-shadow', to: 'node-mewtwo', pathD: 'M 500 113 C 625 180, 625 450, 500 495' },
         { routeId: 'rend-super-shadow', from: 'node-super', to: 'node-shadow', pathD: 'M 500 315 L 500 113' }
       ].map(Object.freeze),
       nodes: [
@@ -316,27 +315,25 @@
           biomeLabel: 'Trono do Eclipse',
           visibilityPolicy: 'SHADOW_REVEALED',
           ariaLabelBase: 'Shadow Super Trainer — O Desafio Final'
-        },
-        {
-          nodeId: 'node-mewtwo', challengeKind: 'MEWTWO_TRIAL', challengeId: 'mewtwo', type: 'special',
-          position: Object.freeze({ x:50, y:88 }), biomeLabel: 'Núcleo Psíquico', visibilityPolicy: 'ALWAYS_IN_REGION',
-          ariaLabelBase: 'Desafio Mewtwo — As Três Faces do Poder',
         }
       ].map(Object.freeze)
     }
     ,{
-      id:'region-postgame', name:'Além do Eclipse', shortName:'Após Shadow',
+      id:'region-postgame', name:'Região da Glória Eterna', shortName:'Glória Eterna',
       subtitle:'Guardiões, fusões e a origem do mundo',
       bgImage:'assets/images/campaign/maps/region-endgame.webp', themeClass:'theme-region-endgame',
       fallbackTheme:{background:'radial-gradient(circle at 50% 30%, #243653, #15102a 55%, #0a0816)',accentColor:'#bc9cff'},
       unlockCondition:Object.freeze({kind:'SHADOW_DEFEATED'}),
       routes:[
+        {routeId:'rpost-mewtwo-zygarde',from:'node-mewtwo',to:'node-zygarde',pathD:'M 200 225 L 200 440'},
+        {routeId:'rpost-mewtwo-kyurem',from:'node-mewtwo',to:'node-kyurem',pathD:'M 200 225 C 300 225, 400 280, 500 320'},
         {routeId:'rpost-zygarde-kyurem',from:'node-zygarde',to:'node-kyurem',pathD:'M 200 440 C 300 440, 400 370, 500 320'},
         {routeId:'rpost-kyurem-necrozma',from:'node-kyurem',to:'node-necrozma',pathD:'M 500 320 C 620 330, 700 420, 800 440'},
         {routeId:'rpost-necrozma-creation',from:'node-necrozma',to:'node-creation',pathD:'M 800 440 C 760 180, 650 100, 500 100'},
         {routeId:'rpost-zygarde-creation',from:'node-zygarde',to:'node-creation',pathD:'M 200 440 C 240 180, 350 100, 500 100'}
       ].map(Object.freeze),
       nodes:[
+        ['mewtwo','MEWTWO_TRIAL',20,40,'Núcleo Psíquico','Desafio Mewtwo'],
         ['zygarde','ZYGARDE_TRIAL',20,78,'Santuário das Células','Equilíbrio de Zygarde'],
         ['kyurem','KYUREM_TRIAL',50,57,'Fenda Glacial','Zero Absoluto'],
         ['necrozma','NECROZMA_TRIAL',80,78,'Prisma do Eclipse','Eclipse de Necrozma'],
@@ -386,9 +383,9 @@
         'region-2': { exitNodeId: 'node-fairy', entryNodeId: 'node-ice' },
         'region-endgame': { exitNodeId: 'node-dragon', entryNodeId: 'node-mythical' }
       },
-      'region-postgame': {'region-endgame':{exitNodeId:'node-zygarde',entryNodeId:'node-mewtwo'},'region-1':{exitNodeId:'node-zygarde',entryNodeId:'node-flying'},'region-2':{exitNodeId:'node-zygarde',entryNodeId:'node-fighting'},'region-3':{exitNodeId:'node-zygarde',entryNodeId:'node-fairy'}},
+      'region-postgame': {'region-endgame':{exitNodeId:'node-zygarde',entryNodeId:'node-shadow'},'region-1':{exitNodeId:'node-zygarde',entryNodeId:'node-flying'},'region-2':{exitNodeId:'node-zygarde',entryNodeId:'node-fighting'},'region-3':{exitNodeId:'node-zygarde',entryNodeId:'node-fairy'}},
       'region-endgame': {
-        'region-postgame':{exitNodeId:'node-mewtwo',entryNodeId:'node-zygarde'},
+        'region-postgame':{exitNodeId:'node-shadow',entryNodeId:'node-mewtwo'},
         'region-1': { exitNodeId: 'node-legendary', entryNodeId: 'node-flying' },
         'region-2': { exitNodeId: 'node-legendary', entryNodeId: 'node-ice' },
         'region-3': { exitNodeId: 'node-mythical', entryNodeId: 'node-dragon' }

@@ -85,7 +85,7 @@ test('Map Catalog — Quatro Provas, desafio Mewtwo pós-Shadow, Super e Shadow 
 
   const endgameRegion = CAMPAIGN_MAP_CATALOG.regions.find(r => r.id === 'region-endgame');
   assert.ok(endgameRegion);
-  assert.equal(endgameRegion.nodes.length, 7);
+  assert.equal(endgameRegion.nodes.length, 6);
 
   const trials = endgameRegion.nodes.filter(n => n.challengeKind.includes('TRIAL') && n.challengeKind !== 'MEWTWO_TRIAL');
   assert.equal(trials.length, 4);
@@ -299,7 +299,7 @@ test('Map Model — Região Final bloqueada com 17 insígnias e desbloqueada com
 
   // 4 trials must be available
   const trials = endgameUnlocked.nodes.filter(n => n.challengeKind.includes('TRIAL') && n.challengeKind !== 'MEWTWO_TRIAL');
-  assert.equal(endgameUnlocked.nodes.find(n=>n.challengeKind==='MEWTWO_TRIAL').canChallenge,false,'Mewtwo ainda exige vitória sobre Shadow');
+  assert.equal(vm.regions.find(r=>r.id==='region-postgame').nodes.find(n=>n.challengeKind==='MEWTWO_TRIAL').canChallenge,false,'Mewtwo ainda exige vitória sobre Shadow');
   assert.equal(trials.length, 4);
   for (const t of trials) {
     assert.equal(t.canChallenge, true);
@@ -2174,7 +2174,7 @@ test('Map Phase 4 — 9, 10 & 11. Nós recebem índices de stagger, nós ocultos
   // Mewtwo bloqueado é visível; Shadow oculto não consome índice.
   assert.ok(!capturedHtml.includes('id="node-shadow"'), 'Shadow deve estar oculto');
   assert.ok(capturedHtml.includes('data-node-index="4"'), 'Último nó visível antes de Shadow deve ter índice 4');
-  assert.ok(capturedHtml.includes('data-node-index="5"'), 'Mewtwo bloqueado ocupa o índice 5');
+  assert.ok(!capturedHtml.includes('data-node-index="5"'), 'Mewtwo foi movido e Shadow oculto não consome índice');
   assert.ok(!capturedHtml.includes('data-node-index="6"'), 'Shadow oculto não consome índice');
 
   // 11. Coordenadas do Super permanecem intactas em 50.0%, 56.0%
