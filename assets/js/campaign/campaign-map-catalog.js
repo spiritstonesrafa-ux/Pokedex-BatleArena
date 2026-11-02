@@ -325,6 +325,10 @@
       fallbackTheme:{background:'radial-gradient(circle at 50% 30%, #243653, #15102a 55%, #0a0816)',accentColor:'#bc9cff'},
       unlockCondition:Object.freeze({kind:'SHADOW_DEFEATED'}),
       routes:[
+        {routeId:'rpost-mewtwo-league',from:'node-mewtwo',to:'node-league',pathD:'M 200 225 C 400 180, 600 180, 800 225'},
+        {routeId:'rpost-zygarde-tower',from:'node-zygarde',to:'node-tower',pathD:'M 200 440 C 300 470, 400 510, 500 510'},
+        {routeId:'rpost-kyurem-league',from:'node-kyurem',to:'node-league',pathD:'M 500 320 C 620 320, 700 250, 800 225'},
+        {routeId:'rpost-kyurem-tower',from:'node-kyurem',to:'node-tower',pathD:'M 500 320 L 500 510'},
         {routeId:'rpost-mewtwo-zygarde',from:'node-mewtwo',to:'node-zygarde',pathD:'M 200 225 L 200 440'},
         {routeId:'rpost-mewtwo-kyurem',from:'node-mewtwo',to:'node-kyurem',pathD:'M 200 225 C 300 225, 400 280, 500 320'},
         {routeId:'rpost-zygarde-kyurem',from:'node-zygarde',to:'node-kyurem',pathD:'M 200 440 C 300 440, 400 370, 500 320'},
@@ -333,6 +337,8 @@
         {routeId:'rpost-zygarde-creation',from:'node-zygarde',to:'node-creation',pathD:'M 200 440 C 240 180, 350 100, 500 100'}
       ].map(Object.freeze),
       nodes:[
+        ['league','LEAGUE',80,40,'Palácio da Elite','Liga da Glória Eterna'],
+        ['tower','TOWER',50,91,'Torre dos Campeões','Torre de Batalha'],
         ['mewtwo','MEWTWO_TRIAL',20,40,'Núcleo Psíquico','Desafio Mewtwo'],
         ['zygarde','ZYGARDE_TRIAL',20,78,'Santuário das Células','Equilíbrio de Zygarde'],
         ['kyurem','KYUREM_TRIAL',50,57,'Fenda Glacial','Zero Absoluto'],

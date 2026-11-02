@@ -41,3 +41,5 @@ test('Cancelling a trial opening never starts the battle; a failed visual falls 
 test('Ordinary dialogue receives the same audio controller as its prepared battle',async()=>{
  let options;const f=coordinatorFixture(),cinematic={hasScene:()=>true,play:async(k,m,o)=>{options=o;}};f.coordinator.cinematicDialogue=cinematic;await f.coordinator.start('SHADOW',null,[3]);assert.equal(options.audioController,f.audio);assert.equal(f.order[0],'unlock');assert.equal(f.order.at(-1),'battle');
 });
+
+for(const kind of ['LEAGUE','TOWER'])test(kind+' opening reveals the prepared facility team and does not advance progression',async()=>{const F=require('../../assets/js/campaign/campaign-facilities'),enemy=F.getOpponent(kind,'CLASSIC'),team=enemy.team.map(Catalog.byId),env=setup(),scene=new env.Scene(),before=JSON.stringify(team);const played=scene.play(kind,team);for(let i=0;i<5;i++)scene.advance();assert.equal(scene.index,5);assert.ok(env.labels.every(n=>n.hidden===false));assert.ok(env.layer.innerHTML.includes(team[0].name.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())));scene.advance();assert.equal(await played,true);assert.equal(JSON.stringify(team),before);});

@@ -11,7 +11,7 @@
     if (!View?.prototype?.renderPicker || View.prototype.renderPicker.__moveCustomization) return;
     const previous = View.prototype.renderPicker;
     function renderPickerWithMoves() {
-      const result = previous.call(this);
+      const result = previous.call(this);if(['LEAGUE','TOWER'].includes(this.pending?.kind)&&this.manager.getFacilityState(this.pending.kind,this.facilityCategory)?.run)return result;
       if (!this.pending || !this.container?.querySelector || !Options ||
           typeof this.manager?.getEffectiveMoveIds !== 'function') return result;
       const roster = [...this.manager.getRoster(),

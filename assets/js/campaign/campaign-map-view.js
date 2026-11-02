@@ -27,6 +27,7 @@
   });
 
   const TRIAL_ICONS = Object.freeze({
+    LEAGUE:'🏆', TOWER:'🏯',
     ZYGARDE_TRIAL:'🧩', KYUREM_TRIAL:'❄️', NECROZMA_TRIAL:'🌘', CREATION_TRIAL:'🌌',
     MEWTWO_TRIAL: '🧬',
     LEGENDARY_TRIAL: '👑',
@@ -1829,7 +1830,8 @@
       let payload = null;
       const trialKey = getTrialKey(node);
 
-      if (node.challengeKind === 'MASTER') {
+      if(['LEAGUE','TOWER'].includes(node.challengeKind)){payload={kind:node.challengeKind,id:null};}
+      else if (node.challengeKind === 'MASTER') {
         if (typeof node.challengeId === 'string' && node.challengeId.trim().length > 0) {
           payload = { kind: 'MASTER', id: node.challengeId.trim() };
         }

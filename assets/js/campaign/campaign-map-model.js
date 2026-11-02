@@ -12,6 +12,8 @@
     TypeGuide = window.PBACampaign || {};
   }
 
+  const Facilities=typeof module!=='undefined'&&module.exports?require('./campaign-facilities'):Catalog.CampaignFacilities;
+
   const TRIAL_DEFINITIONS = Object.freeze({
     ...Object.fromEntries(Object.entries(Catalog.POSTGAME_TRIALS).map(([kind,d])=>[kind,Object.freeze({key:d.key,title:d.name,trainerName:d.name,trainerTitle:d.subtitle,badgeName:'Aliado '+d.name,difficulty:5,getTeam:()=>d.team})])),
     MEWTWO_TRIAL: Object.freeze({key:'mewtwo',title:'Desafio Mewtwo',trainerName:'Desafio Mewtwo',trainerTitle:'As Três Faces do Poder',badgeName:'Aliado Mewtwo',difficulty:5,getTeam:()=>Catalog.MEWTWO_TRIAL_TEAM||[]}),
@@ -138,6 +140,15 @@
 
     const isSelected = selectedNodeId === node.nodeId;
 
+    if(Facilities.isFacility(node.challengeKind)){
+      const kind=node.challengeKind,facility=campaignState.facilities||Facilities.defaults();
+      const progress=kind==='LEAGUE'?facility.league:facility.tower.CLASSIC;
+      const unlocked=Boolean(shadowTrainer.defeated),canChallenge=unlocked&&!hasPendingReward;
+      const enemy=Facilities.getOpponent(kind,kind==='LEAGUE'?'FREE':'CLASSIC',progress);
+      const completed=kind==='LEAGUE'?progress.championships>0:Math.max(facility.tower.CLASSIC.best,facility.tower.FREE.best)>=10;
+      const reason=!unlocked?'Derrote o Shadow para acessar a Glória Eterna.':hasPendingReward?'Resgate a recompensa pendente antes de iniciar.':null;
+      return Object.freeze({...node,trainerName:kind==='LEAGUE'?'Liga da Glória Eterna':'Torre de Batalha',trainerTitle:kind==='LEAGUE'?'Quatro da Elite e um campeão':'Sequências e recordes',badgeName:kind==='LEAGUE'?'Campeão da Glória Eterna':'Veterano da Torre',difficulty:5,difficultyLabel:'EXTREMA',team:enemy.team.map(Kid=>Catalog.byId(Kid)),state:!unlocked?'LOCKED':completed?'REMATCH_AVAILABLE':'AVAILABLE',statusText:reason||'Disponível. Entre para escolher as regras e sua equipe.',isCompleted:completed,isDefeated:completed,isVictoryPending:false,canChallenge,cannotChallengeReason:reason,attempts:progress.entries,rewardPokemonId:null,isSelected,thumbnailSrc:'',avatarSrc:'',typeGuide:null,isHidden:false,isVisible:true,ariaLabel:node.ariaLabelBase+'. '+(reason||'Disponível')});
+    }
     if (node.challengeKind === 'MASTER') {
       const record = challenges[node.challengeId] || {};
       const isDefeated = Boolean(record.badgeEarned);

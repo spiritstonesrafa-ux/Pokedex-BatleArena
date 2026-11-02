@@ -72,3 +72,5 @@ Store.sanitize=raw=>{const clean=previous(raw);clean.sketchMoves={};const owned=
 if(owned.includes(235)&&Number.isInteger(raw?.sketchMoves?.[235])&&Rules.P8.canSketch(Rules,raw.sketchMoves[235]))clean.sketchMoves[235]=raw.sketchMoves[235];
 clean.movePreferences=Options?.sanitizePreferences?.(raw?.movePreferences,owned,clean.sketchMoves)||clean.movePreferences;return clean;};
 })();
+
+(function(){const node=typeof module!=='undefined'&&module.exports;const facilities=node?require('./campaign-facilities'):window.PBACampaign.CampaignFacilities;facilities.installStore(node?module.exports:window.PBACampaign.CampaignStore);})();

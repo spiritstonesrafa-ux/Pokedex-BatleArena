@@ -1,0 +1,10 @@
+.campaign-facilities label{display:block;margin:1rem 0;font-weight:700}
+.campaign-facilities select{display:block;width:100%;max-width:100%;min-height:44px;margin-top:.5rem;padding:.6rem;border:1px solid #7181ad;border-radius:8px;background:#142039;color:#fff;font:inherit}
+.campaign-facilities .mini-team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
+.campaign-facilities .mini-team figure{margin:0;padding:.75rem .25rem;text-align:center;border:1px solid #7784a852;border-radius:12px;background:#142039;color:#fff}
+.campaign-facilities .mini-team img{display:block;width:72px;height:72px;margin:auto;object-fit:contain}
+.campaign-facilities .mini-team figcaption{overflow-wrap:anywhere;font-size:.85rem}
+.campaign-facilities [data-rental][aria-pressed="true"]{background:#ffd166;color:#26231a;outline:2px solid #fff;outline-offset:2px}
+.campaign-facilities button:focus-visible,.campaign-facilities select:focus-visible{outline:3px solid #ffd166;outline-offset:3px}
+.campaign-facilities #facilityError{color:#ffb3b3}
+@media(max-width:560px){.campaign-facilities .mini-team{gap:.35rem}.campaign-facilities .mini-team img{width:60px;height:60px}.campaign-facilities [data-rental]{width:100%}}

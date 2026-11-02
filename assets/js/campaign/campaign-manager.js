@@ -213,3 +213,5 @@ const learned=receipt.sketchChanges.filter(n=>n.role==='player'&&n.pokemonId===2
 if(learned){this.data.sketchMoves||={};this.data.sketchMoves[235]=learned.moveId;delete this.data.movePreferences?.[235];return true;}}return false;};
 Manager.prototype.recordBattle=function(receipt){const result=previous.call(this,receipt);if(result?.processed&&this.applySketchChanges(receipt))this.save('SKETCH_LEARNED');return result;};
 })();
+
+(function(){const node=typeof module!=='undefined'&&module.exports;const facilities=node?require('./campaign-facilities'):window.PBACampaign.CampaignFacilities;facilities.installManager(node?module.exports.CampaignManager:window.PBACampaign.CampaignManager);})();

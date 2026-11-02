@@ -28,9 +28,9 @@
 
     async startPrepared(kind, id, teamIds, options) {
       const config = this.manager.getBattleConfig(kind, id, teamIds, options);
-      config.playerSketchMoves=this.manager.getSketchMovesForTeam?.(config.playerTeamIds)||{};
-      config.playerBattlePreferences = this.manager.getBattlePreferencesForTeam?.(config.playerTeamIds)||{};
-      config.playerMovePreferences = this.manager.getMovePreferencesForTeam?.(config.playerTeamIds) || {};
+      config.playerSketchMoves={...(this.manager.getSketchMovesForTeam?.(config.playerTeamIds)||{}),...(config.playerSketchMoves||{})};
+      config.playerBattlePreferences = {...(this.manager.getBattlePreferencesForTeam?.(config.playerTeamIds)||{}),...(config.playerBattlePreferences||{})};
+      config.playerMovePreferences = {...(this.manager.getMovePreferencesForTeam?.(config.playerTeamIds)||{}),...(config.playerMovePreferences||{})};
       await this.session.prepareBattle(config);
 
       const cinematic = this.cinematicDialogue ||

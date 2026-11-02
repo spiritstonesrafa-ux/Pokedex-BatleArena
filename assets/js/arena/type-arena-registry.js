@@ -557,6 +557,8 @@
           return DEFAULT_ARENA_THEME;
         }
 
+        if (['LEAGUE','TOWER'].includes(context.kind)) return ARENA_CATALOG[context.arenaType] || DEFAULT_ARENA_THEME;
+
         // Encontros selvagens seguem o local do mapa, independentemente da espécie.
         if (context.kind === 'WILD') {
           const region = WILD_ARENAS_BY_REGION[context.regionId];

@@ -81,7 +81,7 @@ test('Map Catalog — Exatamente 18 nós MASTER sem duplicatas e sem ausências'
 
 test('Map Catalog — Quatro Provas, desafio Mewtwo pós-Shadow, Super e Shadow na Região Final (25 nós)', () => {
   const allNodes = CAMPAIGN_MAP_CATALOG.regions.flatMap(r => r.nodes);
-  assert.equal(allNodes.length, 29, 'Total inclui o desafio Mewtwo pós-Shadow');
+  assert.equal(allNodes.length, 31, 'Total inclui o desafio Mewtwo pós-Shadow');
 
   const endgameRegion = CAMPAIGN_MAP_CATALOG.regions.find(r => r.id === 'region-endgame');
   assert.ok(endgameRegion);
@@ -526,6 +526,7 @@ test('Caminho Real de Navegador (Script Tag via node:vm sem module/require) — 
     'assets/js/campaign/campaign-wild-audio.js',
     'assets/js/campaign/campaign-trainer-visuals.js',
     'assets/js/campaign/campaign-type-guide.js',
+    'assets/js/campaign/campaign-facilities.js',
     'assets/js/campaign/campaign-store.js',
     'assets/js/campaign/campaign-manager.js',
     'assets/js/campaign/campaign-wild-manager.js',
@@ -655,7 +656,7 @@ test('View Model Contract — Contrato completo e consistente em todos os nós',
   });
 
   const allNodes = vm.regions.flatMap(r => r.nodes);
-  assert.equal(allNodes.length, 29);
+  assert.equal(allNodes.length, 31);
 
   for (const node of allNodes) {
     assert.ok(typeof node.nodeId === 'string' && node.nodeId.length > 0);

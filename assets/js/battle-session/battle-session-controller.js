@@ -349,6 +349,7 @@
             ? { ...(campaignMode&&!player?fixedCatalog.getOpponentSpecies(id,options.metadata?.kind):fixedCatalog.byId[id]),
               ...(doublesMode&&moveOptions&&fixedCatalog.byId[id].moves.length===4?{moves:[...new Map([...moveOptions.getPool(id).filter(m=>battleConstants.Completion.ids.includes(m.id)),...fixedCatalog.byId[id].moves].map(m=>[m.id,m])).values()].slice(0,4),campaignCustomMoves:true}:{}),
               ...(player&&options.playerBattlePreferences?.[id]?{battlePreference:options.playerBattlePreferences[id]}:{}),
+              ...(!player&&options.enemyBattlePreferences?.[id]?{battlePreference:options.enemyBattlePreferences[id]}:{}),
               ...(player && moveOptions && options.playerMovePreferences?.[id]
                 ? { moves: moveOptions.resolveLoadout(id, options.playerMovePreferences[id],options.playerSketchMoves?.[id]), campaignCustomMoves: true }
                 : {}), campaignFixedMoves: true } : id)
@@ -961,6 +962,11 @@
      * Cancela recursos ativos e reseta o controlador ao sair da aba ou reiniciar.
      */
     leaveBattle() {
+      const meta=this.sessionOptions?.metadata;
+      if(meta?.mode==='CAMPAIGN'&&['LEAGUE','TOWER'].includes(meta.kind)&&this.battleState&&['IN_PROGRESS','AWAITING_REPLACEMENT'].includes(this.battleState.status)){
+        const campaign=typeof window!=='undefined'?window.campaignManager:null;
+        campaign?.recordBattle({kind:meta.kind,id:meta.id,battleId:this.currentBattleId,winner:'enemy'});
+      }
       this.isResolving = false;
       if (this.presentationEngine && typeof this.presentationEngine.cancel === 'function') {
         this.presentationEngine.cancel();

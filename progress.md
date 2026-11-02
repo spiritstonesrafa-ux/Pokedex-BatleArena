@@ -2,6 +2,15 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: Liga e Torre da Glória Eterna
+
+- Liga com quatro integrantes da Elite e campeão, cinco vitórias consecutivas e título; Torre repetível com categorias Equilibrada/Livre e recordes próprios.
+- Três equipes emprestadas, preparação fixada por sequência, cura completa entre lutas e retomada entre etapas. Derrota ou saída do combate encerra a tentativa, preservando histórico.
+- Integração no mapa e hub, prévia dos oponentes, aberturas cinematográficas e arenas temáticas. Adversários com itens legais; nenhuma recompensa de Pokémon duplicada.
+- Save estendido com sanitização e recibos de etapa, preservando campanhas anteriores. Referência: docs/eternal-glory-facilities.md.
+- Habilidades pendentes continuam explícitas: conclusão dos golpes cadastrados não equivale à implementação de todas as habilidades naturais.
+- Validação: **2.891 testes aprovados em 39 suítes**, zero falhas; git diff --check aprovado. Simulações da Liga com IA, 40 sementes por equipe: Equilíbrio 26 conclusões, Areia 24 e Controle 17. Resultados de triagem, não probabilidades garantidas para jogadores. Implementação local, sem commit/push.
+
 ## Atualização — 02/11/2026: Região da Glória Eterna
 
 - Região pós-Shadow renomeada para Região da Glória Eterna (aba Glória Eterna).

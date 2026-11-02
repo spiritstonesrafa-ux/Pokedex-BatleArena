@@ -215,8 +215,10 @@
     }
 
     returnToCampaign() {
+      const meta=this.sessionController?.sessionOptions?.metadata;
       this.resetArena();
       if (this.sessionController) this.sessionController.leaveBattle();
+      if(typeof window!=='undefined'&&window.campaignView&&['LEAGUE','TOWER'].includes(meta?.kind)){window.campaignView.pending={kind:meta.kind,id:null};window.campaignView.facilityCategory=meta.facilityCategory;window.campaignView.pick=[];}
       if (typeof window !== 'undefined' && window.switchAppTab) window.switchAppTab('campaign');
     }
 
@@ -958,7 +960,7 @@
             </p>
 
             <div class="battle-result-buttons-row">
-              ${campaignBattle ? `<button id="btnCampaignReturn" class="btn-battle-action-primary" onclick="if(window.battleView) window.battleView.returnToCampaign();"><i class="fa-solid fa-trophy"></i> ${isVictory ? 'ESCOLHER RECOMPENSA' : 'VOLTAR À CAMPANHA'}</button>` : `<button id="btnRematch" class="btn-battle-action-primary" onclick="if(window.battleSessionController) window.battleSessionController.rematch();"><i class="fa-solid fa-rotate-right"></i> Jogar Novamente</button><button id="btnBackToBattle" class="btn-battle-action-secondary" onclick="if(window.battleView) window.battleView.returnToPreparation();"><i class="fa-solid fa-arrow-left"></i> Voltar</button>`}
+              ${campaignBattle ? `<button id="btnCampaignReturn" class="btn-battle-action-primary" onclick="if(window.battleView) window.battleView.returnToCampaign();"><i class="fa-solid fa-trophy"></i> ${['LEAGUE','TOWER'].includes(campaignMeta.kind)?'VOLTAR À LIGA / TORRE':isVictory ? 'ESCOLHER RECOMPENSA' : 'VOLTAR À CAMPANHA'}</button>` : `<button id="btnRematch" class="btn-battle-action-primary" onclick="if(window.battleSessionController) window.battleSessionController.rematch();"><i class="fa-solid fa-rotate-right"></i> Jogar Novamente</button><button id="btnBackToBattle" class="btn-battle-action-secondary" onclick="if(window.battleView) window.battleView.returnToPreparation();"><i class="fa-solid fa-arrow-left"></i> Voltar</button>`}
             </div>
           </div>
         </div>
