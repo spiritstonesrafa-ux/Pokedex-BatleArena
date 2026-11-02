@@ -2,6 +2,13 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: exploração com 50% de lendários/míticos após Shadow
+
+- Depois de derrotar Shadow, exploração sorteia 50% de lendários e míticos juntos e 50% de Pokémon comuns/incomuns/raros. A separação ocorre antes de escolher a espécie para manter os 50% mesmo quando faltam categorias de raridade na área.
+- Antes de Shadow, pesos originais e chance-base especial de 10% preservados. Ao esgotar uma categoria por capturas, o sorteio usa os Pokémon elegíveis restantes; ponto sem candidatos retorna vazio.
+- Exclusividade dos desafios, biomas e espécies já capturadas continuam respeitados. Texto de frequência e cache atualizados.
+- Testes determinísticos de todas as áreas, limite exato de 50%, categorias esgotadas e compatibilidade da chance anterior. Validação: **2.869 testes aprovados em 39 suítes, zero falhas**; git diff --check aprovado.
+
 ## Atualização — 02/11/2026: desafios pós-Shadow no mapa
 
 - Corrigida integração incompleta: Zygarde, Kyurem, Necrozma e Criação existiam no hub, mas não tinham nós, reconhecimento ou ações no mapa.

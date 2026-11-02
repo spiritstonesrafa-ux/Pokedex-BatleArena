@@ -127,8 +127,8 @@
       LEGENDARY: '10%', MYTHICAL: '10%'
     }[rarity] || '';
     const rarityFrequency = rarity === 'LEGENDARY' || rarity === 'MYTHICAL'
-      ? '10% dos encontros (lendários e míticos juntos)'
-      : rarityHint + ' dos encontros';
+      ? `${Wild.getSpecialEncounterChance(this.manager.getState())*100}% dos encontros (lendários e míticos juntos)`
+      : Wild.getSpecialEncounterChance(this.manager.getState())===.5 ? 'Parte dos 50% de encontros comuns, incomuns e raros' : rarityHint + ' dos encontros';
     this.container.innerHTML = `
       <section class="campaign-shell wild-encounter-screen" data-region="${wild.active.regionId}">
         <button id="pickerBack" class="campaign-secondary" type="button">← Deixar ir e explorar novamente</button>

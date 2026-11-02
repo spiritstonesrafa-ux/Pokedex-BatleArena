@@ -186,10 +186,24 @@
     return rarityByPoint[pointId].get(id) || (campaign?.status === 'COMPLETED' && allowedAtPoint(campaign, pointId, id) ? 'RARE' : null);
   }
 
+  const getSpecialEncounterChance = campaign => campaign?.shadowTrainer?.defeated || campaign?.status === 'COMPLETED' ? .5 : .1;
+
   function choose(ownedIds = [], roll = randomUnit(), regionId = 'region-1',
     pointId = defaultPointId(regionId), campaign = null) {
-    const pool = getPool(ownedIds, regionId, pointId, campaign);
+    let pool = getPool(ownedIds, regionId, pointId, campaign);
     if (!pool.length) return null;
+    if (getSpecialEncounterChance(campaign) === .5) {
+      const special=pool.filter(isSpecial), ordinary=pool.filter(id=>!isSpecial(id));
+      const unit=Number.isFinite(roll)?Math.max(0,Math.min(.999999999,roll)):0;
+      // Split the encounter chance before choosing a species; empty rarity buckets
+      // must not inflate the combined legendary/mythical chance above 50%.
+      if(special.length && (!ordinary.length || unit>=.5)){
+        const position=ordinary.length?(unit-.5)*2:unit;
+        return special[Math.min(special.length-1,Math.floor(position*special.length))];
+      }
+      pool=ordinary;
+      roll=special.length?unit*2:unit;
+    }
     const buckets = Object.entries(RARITY_WEIGHTS)
       .map(([rarity, weight]) => ({
         rarity, weight, ids: pool.filter(id => rarity === 'SPECIAL'
@@ -295,7 +309,7 @@
     REGION_1_POOL, RARITY_WEIGHTS,
     getCaptureLimit, MAX_CAPTURES_PER_POINT, MAX_CAPTURES_PER_REGION, MAX_REGION_1_CAPTURES, CAPTURE_CHANCE,
     isRegionId, isPointId, getPoint, defaultPointId, getDefaultState,
-    getRegionCaptureCount, getPointCaptureCount, getPool, getRarity, choose, randomUnit, sanitize
+    getRegionCaptureCount, getPointCaptureCount, getPool, getRarity, getSpecialEncounterChance, choose, randomUnit, sanitize
   });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
