@@ -31,6 +31,10 @@
   const { BATTLE_EVENTS } = constants;
   const { PRESENTATION_COMMANDS } = presentationConstants;
 
+  // STATUS_DAMAGE also carries indirect damage emitted by the P6/P7 mechanics.
+  const DAMAGE_CAUSES = new Set(['poison','toxic','burn','leech-seed','binding',
+    'stealth-rock','spikes','hail','sandstorm','solar-power','black-sludge']);
+
   const PresentationMapper = (() => {
     /**
      * Valida a estrutura básica de um evento e campos obrigatórios para seu tipo.
@@ -128,7 +132,7 @@
           break;
 
         case BATTLE_EVENTS.STATUS_DAMAGE:
-          if (!event.target || !['poison', 'toxic', 'burn'].includes(event.statusCondition) || !event.pokemonName ||
+          if (!event.target || !DAMAGE_CAUSES.has(event.statusCondition) || !event.pokemonName ||
               !Number.isFinite(Number(event.damage)) || !Number.isFinite(Number(event.previousHp)) ||
               !Number.isFinite(Number(event.currentHp)) || !Number.isFinite(Number(event.maxHp))) {
             throw new Error('INVALID_EVENT_PAYLOAD: dano de status requer HP e alvo válidos.');

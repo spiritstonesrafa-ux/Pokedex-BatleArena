@@ -2,6 +2,13 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: ataques sem erro após dano indireto
+
+- Reproduzido o erro de Petra com Keldeo usando Hydro Pump contra Tyranitar: a tempestade de areia gerava STATUS_DAMAGE válido, mas o mapper aceitava apenas veneno/veneno grave/queimadura. O turno já estava resolvido quando a apresentação falhava.
+- Mapper agora aceita também as causas emitidas pelas mecânicas: areia, granizo, Leech Seed, aprisionamento, Stealth Rock, Spikes, Solar Power e Black Sludge, mantendo a validação dos dados e a rejeição de causas desconhecidas.
+- Dano de clima/armadilhas mantém mensagem e transição de HP sem pulsar indevidamente o visual de uma condição primária. Cache atualizado.
+- Regressões: batalha real com ataques consecutivos, oito causas indiretas, HP, alvo em duplas, validação de payloads e separação dos efeitos visuais. Suíte completa: **2.857 testes aprovados, 39 suítes, zero falhas**.
+
 ## Atualização — 02/11/2026: provas táticas antes do Super
 
 - Prova da Resistência: Calyrex Ice, Hoopa Unbound e Lugia; Prova das Sombras: Incineroar, Mega Tyranitar e Mega Gyarados; Prova das Chamas: Reshiram, Volcanion e Mega Swampert. A Prova Celestial permanece disponível.

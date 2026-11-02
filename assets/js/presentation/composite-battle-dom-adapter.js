@@ -260,7 +260,7 @@
 
               await this.statusController.applyStatus(side, command.statusCondition);
 
-            } else if (outcome === 'DAMAGE') {
+            } else if (outcome === 'DAMAGE' && ['poison','toxic','burn'].includes(command.statusCondition)) {
 
               await this.statusController.pulseDamage(side, command.statusCondition);
 
