@@ -263,9 +263,9 @@
           challengeId: 'legendary',
           type: 'special',
           position: Object.freeze({ x: 20.0, y: 70.0 }),
-          biomeLabel: 'Santuário das Lendas',
+          biomeLabel: 'Fortaleza Glacial',
           visibilityPolicy: 'ALWAYS_IN_REGION',
-          ariaLabelBase: 'Prova Lendária — Desafio Especial de Elite'
+          ariaLabelBase: 'Prova da Resistência — Desafio Especial de Elite'
         },
         {
           nodeId: 'node-mythical',
@@ -273,9 +273,9 @@
           challengeId: 'mythical',
           type: 'special',
           position: Object.freeze({ x: 80.0, y: 70.0 }),
-          biomeLabel: 'Santuário Mítico',
+          biomeLabel: 'Coliseu das Sombras',
           visibilityPolicy: 'ALWAYS_IN_REGION',
-          ariaLabelBase: 'Prova Mítica — Desafio Especial de Elite'
+          ariaLabelBase: 'Prova das Sombras — Desafio Especial de Elite'
         },
         {
           nodeId: 'node-titans',
@@ -283,9 +283,9 @@
           challengeId: 'titans',
           type: 'special',
           position: Object.freeze({ x: 22.0, y: 36.0 }),
-          biomeLabel: 'Arena dos Titãs',
+          biomeLabel: 'Fornalha dos Dragões',
           visibilityPolicy: 'ALWAYS_IN_REGION',
-          ariaLabelBase: 'Prova dos Titãs — Desafio Especial de Elite'
+          ariaLabelBase: 'Prova das Chamas — Desafio Especial de Elite'
         },
         {
           nodeId: 'node-celestial',

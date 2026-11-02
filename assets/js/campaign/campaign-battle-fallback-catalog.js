@@ -17448,61 +17448,60 @@
       }
     ]
   },
-  "727": {
-    "id": 727,
-    "number": 727,
-    "name": "incineroar",
+  "728": {
+    "id": 728,
+    "number": 728,
+    "name": "popplio",
     "types": [
-      "fire",
-      "dark"
+      "water"
     ],
     "stats": {
-      "hp": 95,
-      "attack": 115,
-      "defense": 90,
-      "specialAttack": 80,
-      "specialDefense": 90,
-      "speed": 60
+      "hp": 50,
+      "attack": 54,
+      "defense": 54,
+      "specialAttack": 66,
+      "specialDefense": 56,
+      "speed": 40
     },
-    "photo": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/727.png",
-    "animatedPhoto": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/727.gif",
-    "cry": "https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/727.ogg",
+    "photo": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/728.png",
+    "animatedPhoto": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/728.gif",
+    "cry": "https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/728.ogg",
     "moves": [
       {
-        "id": 299,
-        "name": "blaze-kick",
-        "type": "fire",
-        "power": 85,
-        "accuracy": 90,
-        "pp": 10,
-        "damageClass": "physical"
+        "id": 56,
+        "name": "hydro-pump",
+        "type": "water",
+        "power": 110,
+        "accuracy": 80,
+        "pp": 5,
+        "damageClass": "special"
       },
       {
-        "id": 663,
-        "name": "darkest-lariat",
-        "type": "dark",
-        "power": 85,
-        "accuracy": 100,
-        "pp": 10,
-        "damageClass": "physical"
+        "id": 59,
+        "name": "blizzard",
+        "type": "ice",
+        "power": 110,
+        "accuracy": 70,
+        "pp": 5,
+        "damageClass": "special"
       },
       {
-        "id": 89,
-        "name": "earthquake",
-        "type": "ground",
+        "id": 231,
+        "name": "iron-tail",
+        "type": "steel",
         "power": 100,
-        "accuracy": 100,
-        "pp": 10,
+        "accuracy": 75,
+        "pp": 15,
         "damageClass": "physical"
       },
       {
-        "id": 141,
-        "name": "leech-life",
-        "type": "bug",
-        "power": 80,
+        "id": 585,
+        "name": "moonblast",
+        "type": "fairy",
+        "power": 95,
         "accuracy": 100,
-        "pp": 10,
-        "damageClass": "physical"
+        "pp": 15,
+        "damageClass": "special"
       }
     ]
   },

@@ -580,7 +580,7 @@ test('Wild exploration — nine thematic points have distinct map targets and sa
 test('Wild special encounters — expanded legendary and mythical candidates exclude every final reward', () => {
   const Fixed = require('../../assets/js/campaign/campaign-fixed-battle-catalog.js');
   const reserved = new Set([
-    ...Catalog.SUPER_TEAM, ...Object.values(Catalog.POSTGAME_TRIALS).flatMap(d=>d.team), ...Catalog.LEGENDARY_TRIAL_TEAM,
+    ...Object.values(Catalog.LEGACY_TRIAL_REWARDS).flat().map(Catalog.byId), ...Catalog.SUPER_TEAM, ...Object.values(Catalog.POSTGAME_TRIALS).flatMap(d=>d.team), ...Catalog.LEGENDARY_TRIAL_TEAM,
     ...Catalog.MYTHICAL_TRIAL_TEAM, ...Catalog.TITANS_TRIAL_TEAM,
     ...Catalog.CELESTIAL_TRIAL_TEAM
   ].map(pokemon => pokemon.id));

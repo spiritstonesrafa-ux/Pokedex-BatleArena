@@ -25,7 +25,7 @@ const obtainable = new Set([
 
 test('every currently obtainable campaign Pokémon has one to four distinct supported fixed moves', () => {
   assert.equal(obtainable.size, 1349);
-  assert.equal(Object.keys(Fixed.extras).length, 18);
+  assert.equal(Object.keys(Fixed.extras).length, 27);
   for (const id of obtainable) {
     const pokemon = Fixed.byId[id];
     assert.ok(pokemon, `missing Pokémon ${id}`);

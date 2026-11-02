@@ -20,6 +20,7 @@
     }
   }
   const curated = Object.freeze({
+    727: { stats: [95,115,90,80,90,60], moves: ['blaze-kick','darkest-lariat','earthquake','leech-life'] },
     264: { stats: [78, 70, 61, 50, 61, 100], moves: ['body-slam', 'play-rough', 'throat-chop', 'seed-bomb'] },
     549: { stats: [70, 60, 75, 110, 75, 90], moves: ['energy-ball', 'pollen-puff', 'alluring-voice', 'round'] },
     303: { stats: [50, 85, 85, 55, 55, 50], moves: ['play-rough', 'iron-head', 'crunch', 'ice-punch'] },
@@ -37,7 +38,7 @@
     Campaign.LEGENDARY_TRIAL_TEAM, Campaign.MYTHICAL_TRIAL_TEAM,
     Campaign.TITANS_TRIAL_TEAM, Campaign.CELESTIAL_TRIAL_TEAM
   ];
-  const trialIds = new Set(trialTeams.flatMap(team => team.map(pokemon => pokemon.id)));
+  const trialIds = new Set([...trialTeams.flatMap(team => team.map(pokemon => pokemon.id)),...Object.values(Campaign.LEGACY_TRIAL_REWARDS).flat()]);
 
   function fixedMoves(names, id) {
     if (names.length !== 4 || new Set(names).size !== 4) {
@@ -51,6 +52,7 @@
   }
 
   function extraSpecies(id) {
+    if (Expanded.byId[id]?.battleSupported && !curated[id] && !trialOverrides[id] && !Object.values(Campaign.LEGACY_TRIAL_REWARDS).flat().includes(id)) return Expanded.byId[id];
     const canonical = Campaign.byId(id);
     if (!canonical) throw new Error(`Pokémon da campanha desconhecido: ${id}.`);
     const definition = curated[id];
@@ -62,7 +64,7 @@
     const names = definition ? definition.moves : (trialOverrides[id] || legacy.moves.map(move => move.name));
     return Object.freeze({
       id, number: id, name: canonical.name, types: Object.freeze([...canonical.types]),
-      stats: Object.freeze({ ...stats }), moves: fixedMoves(names, id),
+      stats: Object.freeze({ ...stats }), moves: definition || trialOverrides[id] ? fixedMoves(names, id) : Object.freeze(legacy.moves.map(move => Object.freeze({...move}))),
       photo: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
       animatedPhoto: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`,
       cry: `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`

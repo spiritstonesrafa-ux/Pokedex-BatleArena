@@ -49,3 +49,12 @@
 @media(prefers-reduced-motion:reduce){.trial-arrival__motif *,.trial-arrival--zygarde .trial-arrival__particles i,.trial-arrival--kyurem .trial-arrival__particles i,.trial-arrival--necrozma .trial-arrival__particles i,.trial-arrival--creation .trial-arrival__particles i{animation:none!important;transition:none!important}}
 
 @media(max-width:600px){.trial-arrival[data-phase="lineup"] .trial-arrival__figure{width:31vw}.trial-arrival[data-phase="lineup"] .trial-arrival__figure figcaption{left:-3%;right:-3%}.trial-arrival[data-phase="lineup"] .trial-arrival__figure figcaption strong{font-size:12px;text-wrap:balance}.trial-arrival[data-phase="lineup"] .trial-arrival__figure figcaption small{font-size:6px}}
+
+/* Tactical trials: frost, darkness and a rising furnace. */
+.trial-arrival--legendary{--trial-accent:#c8f5ff;--trial-glow:#438cce}
+.trial-arrival--mythical{--trial-accent:#f9abbd;--trial-glow:#7e183f}
+.trial-arrival--titans{--trial-accent:#ffe0a0;--trial-glow:#ed561b}
+.trial-arrival--legendary .trial-arrival__particles i{width:4px;height:16px;background:#d9f8ff;box-shadow:0 0 12px #85eaff;opacity:.45}
+.trial-arrival--titans .trial-arrival__particles i{width:5px;height:10px;border-radius:50%;clip-path:none;background:#ffd282;box-shadow:0 0 14px #ff601e;animation:trial-embers 5s var(--delay) ease-in infinite}
+@keyframes trial-embers{from{transform:translateY(24vh) rotate(0);opacity:0}40%{opacity:.7}to{transform:translateY(-50vh) rotate(90deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.trial-arrival--titans .trial-arrival__particles i{animation:none}}

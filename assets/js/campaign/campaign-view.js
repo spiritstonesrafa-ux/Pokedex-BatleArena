@@ -91,9 +91,9 @@
   if (!View) return;
   const C = window.PBACampaign;
   const trialInfo = kind => kind === 'LEGENDARY_TRIAL'
-    ? { title: 'Prova Lendária', team: C.LEGENDARY_TRIAL_TEAM, reward: 'Escolha seu Pokémon Lendário' }
+    ? { title: 'Prova da Resistência', team: C.LEGENDARY_TRIAL_TEAM, reward: 'Escolha seu aliado da Resistência' }
     : kind === 'MYTHICAL_TRIAL'
-      ? { title: 'Prova Mítica', team: C.MYTHICAL_TRIAL_TEAM, reward: 'Escolha seu Pokémon Mítico' }
+      ? { title: 'Prova das Sombras', team: C.MYTHICAL_TRIAL_TEAM, reward: 'Escolha seu aliado das Sombras' }
       : null;
   const portrait = (visual, size = 'LARGE') => visual
     ? C.renderTrainerAvatar(visual, { size, shape: 'PORTRAIT', decorative: true })
@@ -204,9 +204,9 @@
     if (kind !== 'SUPER' && kind !== 'LEGENDARY_TRIAL' && kind !== 'MYTHICAL_TRIAL') return previousPicker.call(this);
     const roster = this.manager.getRoster();
     const trial = kind === 'LEGENDARY_TRIAL'
-      ? { title: 'PROVA LENDÁRIA', team: C.LEGENDARY_TRIAL_TEAM }
+      ? { title: 'PROVA DA RESISTÊNCIA', team: C.LEGENDARY_TRIAL_TEAM }
       : kind === 'MYTHICAL_TRIAL'
-        ? { title: 'PROVA MÍTICA', team: C.MYTHICAL_TRIAL_TEAM }
+        ? { title: 'PROVA DAS SOMBRAS', team: C.MYTHICAL_TRIAL_TEAM }
         : null;
     const isSuper = kind === 'SUPER';
     const header = isSuper
@@ -236,9 +236,9 @@
   const cap = value => String(value).replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
   const trial = {
     MEWTWO_TRIAL: {key:'mewtwo',title:'DESAFIO MEWTWO',label:'Desafio Mewtwo',team:C.MEWTWO_TRIAL_TEAM,difficulty:'EXTREMA'},
-    LEGENDARY_TRIAL: { key: 'legendary', title: 'PROVA LENDÁRIA', label: 'Prova Lendária', team: C.LEGENDARY_TRIAL_TEAM, difficulty: 'DIFÍCIL' },
-    MYTHICAL_TRIAL: { key: 'mythical', title: 'PROVA MÍTICA', label: 'Prova Mítica', team: C.MYTHICAL_TRIAL_TEAM, difficulty: 'DIFÍCIL' },
-    TITANS_TRIAL: { key: 'titans', title: 'PROVA DOS TITÃS', label: 'Prova dos Titãs', team: C.TITANS_TRIAL_TEAM, difficulty: 'MUITO DIFÍCIL' },
+    LEGENDARY_TRIAL: { key: 'legendary', title: 'PROVA DA RESISTÊNCIA', label: 'Prova da Resistência', team: C.LEGENDARY_TRIAL_TEAM, difficulty: 'DIFÍCIL' },
+    MYTHICAL_TRIAL: { key: 'mythical', title: 'PROVA DAS SOMBRAS', label: 'Prova das Sombras', team: C.MYTHICAL_TRIAL_TEAM, difficulty: 'DIFÍCIL' },
+    TITANS_TRIAL: { key: 'titans', title: 'PROVA DAS CHAMAS', label: 'Prova das Chamas', team: C.TITANS_TRIAL_TEAM, difficulty: 'MUITO DIFÍCIL' },
     CELESTIAL_TRIAL: { key: 'celestial', title: 'PROVA CELESTIAL', label: 'Prova Celestial', team: C.CELESTIAL_TRIAL_TEAM, difficulty: 'MUITO DIFÍCIL' }
   };
   Object.assign(trial,Object.fromEntries(Object.entries(C.POSTGAME_TRIALS).map(([kind,d])=>[kind,{...d,title:d.name.toLocaleUpperCase('pt-BR'),label:d.name,difficulty:'EXTREMA',postgame:true}])));
@@ -264,7 +264,7 @@
     `).join('');
 
     let rewardCallout = '';
-    if (definition.postgame && isRewardClaimed && !trialState.rewardPokemonId) {
+    if (isRewardClaimed && !trialState.rewardPokemonId) {
       rewardCallout='<div class="trial-reward-callout claimed">Você já possui as três formas. Revanche disponível sem novo recrutamento.</div>';
     } else if (isRewardClaimed) {
       const claimedMon = C.byId(trialState.rewardPokemonId);
@@ -273,6 +273,12 @@
       rewardCallout = `<div class="trial-reward-callout highlight"><i class="fa-solid fa-gift"></i> <strong>Recompensa ao vencer:</strong> Escolha um dos três guardiões da Prova para o seu elenco permanente.</div>`;
     }
 
+    const tacticalTip = {
+      LEGENDARY_TRIAL:'Para enfrentar Eternamax: recrute Calyrex Cavaleiro Glacial. Na preparação do elenco, escolha Assault Vest e Tera Terrestre; coloque-o primeiro na equipe e ative a Terastalização na batalha.',
+      MYTHICAL_TRIAL:'Para enfrentar Calyrex Shadow: recrute Incineroar e prepare Leftovers. Darkest Lariat é sua opção de dano Sombrio. Ele pode acompanhar Calyrex Glacial na equipe contra o Super.',
+      TITANS_TRIAL:'Para enfrentar Zacian: recrute Reshiram e prepare Choice Specs. Blue Flare pressiona o adversário, mas pode errar. O item prende a escolha de golpe até a troca.'
+    }[this.pending.kind];
+    if (tacticalTip) rewardCallout += `<p class="trial-reward-callout">${tacticalTip}</p>`;
     const previewSection = `<section class="opponent-team-preview" aria-label="Equipe adversária"><div class="opponent-team-preview__head"><p class="eyebrow">EQUIPE ADVERSÁRIA</p></div><div class="opponent-team-preview__grid">${previewCards}</div>${rewardCallout}</section>`;
 
     const isReady = this.pick.length === 3;
@@ -420,9 +426,9 @@ if (typeof window !== 'undefined') {
 
   const trialInfo = {
     MEWTWO_TRIAL:{title:'DESAFIO MEWTWO',subtitle:'As Três Faces do Poder · 3 contra 3',difficulty:'EXTREMA'},
-    LEGENDARY_TRIAL: { title: 'PROVA LENDÁRIA', subtitle: '3 contra 3 · Elite', difficulty: 'DIFÍCIL' },
-    MYTHICAL_TRIAL: { title: 'PROVA MÍTICA', subtitle: '3 contra 3 · Elite', difficulty: 'DIFÍCIL' },
-    TITANS_TRIAL: { title: 'PROVA DOS TITÃS', subtitle: '3 contra 3 · Elite', difficulty: 'MUITO DIFÍCIL' },
+    LEGENDARY_TRIAL: { title: 'PROVA DA RESISTÊNCIA', subtitle: '3 contra 3 · Elite', difficulty: 'DIFÍCIL' },
+    MYTHICAL_TRIAL: { title: 'PROVA DAS SOMBRAS', subtitle: '3 contra 3 · Elite', difficulty: 'DIFÍCIL' },
+    TITANS_TRIAL: { title: 'PROVA DAS CHAMAS', subtitle: '3 contra 3 · Elite', difficulty: 'MUITO DIFÍCIL' },
     CELESTIAL_TRIAL: { title: 'PROVA CELESTIAL', subtitle: '3 contra 3 · Elite', difficulty: 'MUITO DIFÍCIL' }
   };
 

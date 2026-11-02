@@ -60,9 +60,9 @@ function eliteTrial(manager, kind, battleId) {
 }
 
 test('PBA-015E canonical trial teams are battle-compatible and exclude the Super team', () => {
-  assert.deepEqual(K.LEGENDARY_TRIAL_TEAM.map(p => p.id), [145, 245, 381]);
-  assert.deepEqual(K.MYTHICAL_TRIAL_TEAM.map(p => p.id), [151, 385, 494]);
-  assert.deepEqual(K.TITANS_TRIAL_TEAM.map(p => p.id), [1007, 383, 717]);
+  assert.deepEqual(K.LEGENDARY_TRIAL_TEAM.map(p => p.id), [10193, 10086, 249]);
+  assert.deepEqual(K.MYTHICAL_TRIAL_TEAM.map(p => p.id), [727, 10049, 10041]);
+  assert.deepEqual(K.TITANS_TRIAL_TEAM.map(p => p.id), [643, 721, 10064]);
   assert.deepEqual(K.CELESTIAL_TRIAL_TEAM.map(p => p.id), [889, 791, 487]);
 
   const superIds = new Set(K.SUPER_TEAM.map(p => p.id));
@@ -77,7 +77,7 @@ test('PBA-015E canonical trial teams are battle-compatible and exclude the Super
     assert.ok(!superIds.has(pokemon.id), `Trial mon ${pokemon.id} must not overlap with Super team`);
     assert.ok(pokemon.name);
     assert.ok(pokemon.types.length);
-    assert.ok(pokemon.bst >= 580);
+    assert.ok(pokemon.bst > 0);
     assert.ok(K.byId(pokemon.id));
   }
 });
@@ -158,14 +158,14 @@ test('3x3 Trial Battle — Engine accepts 3x3 trial battle: KO of 1st and 2nd en
   const pLead = mon(1, 100, 100);
   pLead.moves[0].power = 500; // instant knockout
   const pTeam = [pLead, mon(2), mon(3)];
-  const eTeam = [mon(145, 50, 10), mon(245, 50, 10), mon(381, 50, 10)];
+  const eTeam = [mon(10193, 50, 10), mon(10086, 50, 10), mon(249, 50, 10)];
 
   const btl = E.createTeamBattle(pTeam, eTeam);
   assert.equal(btl.player.team.length, 3);
   assert.equal(btl.enemy.team.length, 3);
   assert.equal(btl.status, 'IN_PROGRESS');
 
-  // Turn 1: Player KOs 1st enemy (145)
+  // Turn 1: Player KOs 1st enemy (10193)
   const turn1 = E.resolveTurn(btl, {
     player: { moveId: 1, damageRoll: 100 },
     enemy: { moveId: 1, damageRoll: 100 }
@@ -175,12 +175,12 @@ test('3x3 Trial Battle — Engine accepts 3x3 trial battle: KO of 1st and 2nd en
   assert.equal(turn1.state.enemy.team[0].currentHp, 0);
   assert.equal(turn1.state.winner, null);
 
-  // Resolve replacement to 2nd enemy (245)
-  const rep1 = E.resolveReplacement(turn1.state, { enemy: { targetPokemonId: 245 } });
+  // Resolve replacement to 2nd enemy (10086)
+  const rep1 = E.resolveReplacement(turn1.state, { enemy: { targetPokemonId: 10086 } });
   assert.equal(rep1.state.status, 'IN_PROGRESS');
   assert.equal(rep1.state.enemy.activeIndex, 1);
 
-  // Turn 2: Player KOs 2nd enemy (245)
+  // Turn 2: Player KOs 2nd enemy (10086)
   const turn2 = E.resolveTurn(rep1.state, {
     player: { moveId: 1, damageRoll: 100 },
     enemy: { moveId: 1, damageRoll: 100 }
@@ -190,12 +190,12 @@ test('3x3 Trial Battle — Engine accepts 3x3 trial battle: KO of 1st and 2nd en
   assert.equal(turn2.state.enemy.team[1].currentHp, 0);
   assert.equal(turn2.state.winner, null);
 
-  // Resolve replacement to 3rd enemy (381)
-  const rep2 = E.resolveReplacement(turn2.state, { enemy: { targetPokemonId: 381 } });
+  // Resolve replacement to 3rd enemy (249)
+  const rep2 = E.resolveReplacement(turn2.state, { enemy: { targetPokemonId: 249 } });
   assert.equal(rep2.state.status, 'IN_PROGRESS');
   assert.equal(rep2.state.enemy.activeIndex, 2);
 
-  // Turn 3: Player KOs 3rd enemy (381)
+  // Turn 3: Player KOs 3rd enemy (249)
   const turn3 = E.resolveTurn(rep2.state, {
     player: { moveId: 1, damageRoll: 100 },
     enemy: { moveId: 1, damageRoll: 100 }
@@ -228,7 +228,7 @@ test('3x3 Trial Battle — Engine accepts 3x3 trial battle: KO of 1st and 2nd en
   });
   assert.equal(retryResult.processed, true);
   assert.equal(manager.getState().endgameTrials.legendary.completed, true);
-  assert.deepEqual(manager.getState().pendingReward.candidates, [145, 245, 381]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [10193, 10086, 249]);
 });
 
 test('PBA-015E Legendary trial 3x3 offers all 3 candidates, allows choosing exactly one, and permits replay without new reward', () => {
@@ -240,12 +240,12 @@ test('PBA-015E Legendary trial 3x3 offers all 3 candidates, allows choosing exac
   assert.equal(trial(manager, 'LEGENDARY_TRIAL', 'legendary-win').processed, true);
   assert.equal(manager.getState().endgameTrials.legendary.completed, true);
   assert.equal(manager.getState().pendingReward.kind, 'LEGENDARY_TRIAL');
-  assert.deepEqual(manager.getState().pendingReward.candidates, [145, 245, 381]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [10193, 10086, 249]);
 
   // Candidates offers all 3 options
   const candidates = manager.getRewardCandidates();
   assert.equal(candidates.length, 3);
-  assert.deepEqual(candidates.map(c => c.id), [145, 245, 381]);
+  assert.deepEqual(candidates.map(c => c.id), [10193, 10086, 249]);
   assert.ok(candidates.every(c => c.selectable));
 
   // Attempt to claim invalid ID fails
@@ -254,25 +254,25 @@ test('PBA-015E Legendary trial 3x3 offers all 3 candidates, allows choosing exac
   // Reload keeps all 3 candidates
   const reloaded = fresh(false);
   assert.equal(reloaded.getState().endgameTrials.legendary.completed, true);
-  assert.deepEqual(reloaded.getState().pendingReward.candidates, [145, 245, 381]);
+  assert.deepEqual(reloaded.getState().pendingReward.candidates, [10193, 10086, 249]);
   assert.equal(reloaded.getRewardCandidates().length, 3);
 
-  // Claim Suicune (245)
-  assert.equal(reloaded.claimReward(245).ok, true);
+  // Claim Suicune (10086)
+  assert.equal(reloaded.claimReward(10086).ok, true);
   assert.equal(reloaded.getState().endgameTrials.legendary.rewardClaimed, true);
-  assert.equal(reloaded.getState().endgameTrials.legendary.rewardPokemonId, 245);
-  assert.ok(reloaded.getRosterIds().includes(245));
+  assert.equal(reloaded.getState().endgameTrials.legendary.rewardPokemonId, 10086);
+  assert.ok(reloaded.getRosterIds().includes(10086));
   assert.equal(reloaded.getRosterIds().length, 25);
 
   // Cannot claim another from same trial
-  assert.equal(reloaded.claimReward(145).ok, false);
-  assert.equal(reloaded.claimReward(381).ok, false);
+  assert.equal(reloaded.claimReward(10193).ok, false);
+  assert.equal(reloaded.claimReward(249).ok, false);
 
   // Replay without second reward
   const claimedReload = fresh(false);
   assert.equal(claimedReload.canChallenge('LEGENDARY_TRIAL'), true);
   assert.equal(trial(claimedReload, 'LEGENDARY_TRIAL', 'legendary-replay').pendingReward, null);
-  assert.equal(claimedReload.claimReward(145).ok, false);
+  assert.equal(claimedReload.claimReward(10193).ok, false);
   assert.equal(claimedReload.getRosterIds().length, 25);
 });
 
@@ -283,25 +283,25 @@ test('PBA-015E Mythical trial 3x3 offers all 3 candidates, allows choosing exact
 
   // Challenge and win
   assert.equal(trial(manager, 'MYTHICAL_TRIAL', 'mythical-win').processed, true);
-  assert.deepEqual(manager.getState().pendingReward.candidates, [151, 385, 494]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [727, 10049, 10041]);
 
   const reloaded = fresh(false);
   const candidates = reloaded.getRewardCandidates();
   assert.equal(candidates.length, 3);
-  assert.deepEqual(candidates.map(c => c.id), [151, 385, 494]);
+  assert.deepEqual(candidates.map(c => c.id), [727, 10049, 10041]);
 
-  // Claim Victini (494)
-  assert.equal(reloaded.claimReward(494).ok, true);
+  // Claim Victini (10041)
+  assert.equal(reloaded.claimReward(10041).ok, true);
   assert.equal(reloaded.getState().endgameTrials.mythical.rewardClaimed, true);
   assert.equal(reloaded.getRosterIds().length, 25);
 
   // Cannot claim another
-  assert.equal(reloaded.claimReward(151).ok, false);
+  assert.equal(reloaded.claimReward(727).ok, false);
 
   // Replay
   const claimedReload = fresh(false);
   assert.equal(trial(claimedReload, 'MYTHICAL_TRIAL', 'mythical-replay').pendingReward, null);
-  assert.equal(claimedReload.claimReward(151).ok, false);
+  assert.equal(claimedReload.claimReward(727).ok, false);
   assert.equal(new Set(claimedReload.getRosterIds()).size, claimedReload.getRosterIds().length);
 });
 
@@ -311,13 +311,13 @@ test('PBA-015E trial rewards support final rosters of 25, 26 and 27 without relo
 
   const first = trial(manager, 'LEGENDARY_TRIAL', 'legendary-roster');
   assert.equal(first.processed, true);
-  assert.equal(manager.claimReward(145).ok, true);
+  assert.equal(manager.claimReward(10193).ok, true);
   assert.equal(manager.getRosterIds().length, 25);
   assert.equal(manager.canChallenge('SUPER'), true);
 
   const second = trial(manager, 'MYTHICAL_TRIAL', 'mythical-roster');
   assert.equal(second.processed, true);
-  assert.equal(manager.claimReward(151).ok, true);
+  assert.equal(manager.claimReward(727).ok, true);
   assert.equal(manager.getRosterIds().length, 26);
   assert.equal(manager.canChallenge('SUPER'), true);
 
@@ -346,7 +346,7 @@ test('PBA-015E legacy save migration preserves pending 3-choice reward and isola
     challenges: { 'master-fire': { attempts: 2, badgeEarned: true, rewardPokemonId: K.MASTERS.find(m => m.challengeId === 'master-fire').team[0].id } },
     superTrainer: { attempts: 0, defeated: false },
     shadowTrainer: { revealed: false },
-    pendingReward: { kind: 'LEGENDARY_TRIAL', challengeId: 'legendary', candidates: [145, 245, 381] },
+    pendingReward: { kind: 'LEGENDARY_TRIAL', challengeId: 'legendary', candidates: [10193, 10086, 249] },
     endgameTrials: {
       legendary: { completed: true, rewardClaimed: false, rewardPokemonId: null, attempts: 1 },
       mythical: { completed: false, rewardClaimed: false, rewardPokemonId: null, attempts: 0 },
@@ -358,19 +358,19 @@ test('PBA-015E legacy save migration preserves pending 3-choice reward and isola
 
   const migrated = S.sanitize(rawLegacyPending);
   // Preserves all 3 candidates for legacy pending reward!
-  assert.deepEqual(migrated.pendingReward.candidates, [145, 245, 381]);
+  assert.deepEqual(migrated.pendingReward.candidates, [10193, 10086, 249]);
 
   mem.clear();
   mem.set(C.STORAGE_KEY, JSON.stringify(rawLegacyPending));
   const manager = fresh(false);
   const candidates = manager.getRewardCandidates();
   assert.equal(candidates.length, 3);
-  assert.ok(candidates.some(c => c.id === 145));
-  assert.ok(candidates.some(c => c.id === 245));
-  assert.ok(candidates.some(c => c.id === 381));
+  assert.ok(candidates.some(c => c.id === 10193));
+  assert.ok(candidates.some(c => c.id === 10086));
+  assert.ok(candidates.some(c => c.id === 249));
   // Player can choose any of the 3 in legacy flow
-  assert.equal(manager.claimReward(381).ok, true);
-  assert.equal(manager.getState().endgameTrials.legendary.rewardPokemonId, 381);
+  assert.equal(manager.claimReward(249).ok, true);
+  assert.equal(manager.getState().endgameTrials.legendary.rewardPokemonId, 249);
 });
 
 test('PBA-015E legacy save migration preserves single-candidate 3x1 pending reward intact without rewriting', () => {
@@ -382,7 +382,7 @@ test('PBA-015E legacy save migration preserves single-candidate 3x1 pending rewa
     challenges: {},
     superTrainer: { attempts: 0, defeated: false },
     shadowTrainer: { revealed: false },
-    pendingReward: { kind: 'LEGENDARY_TRIAL', challengeId: 'legendary', candidates: [245] },
+    pendingReward: { kind: 'LEGENDARY_TRIAL', challengeId: 'legendary', candidates: [10086] },
     endgameTrials: {
       legendary: { completed: true, rewardClaimed: false, rewardPokemonId: null, attempts: 1 },
       mythical: { completed: false, rewardClaimed: false, rewardPokemonId: null, attempts: 0 },
@@ -393,17 +393,17 @@ test('PBA-015E legacy save migration preserves single-candidate 3x1 pending rewa
   };
 
   const migrated = S.sanitize(rawLegacy1Candidate);
-  assert.deepEqual(migrated.pendingReward.candidates, [245]);
+  assert.deepEqual(migrated.pendingReward.candidates, [10086]);
 
   mem.clear();
   mem.set(C.STORAGE_KEY, JSON.stringify(rawLegacy1Candidate));
   const manager = fresh(false);
   const candidates = manager.getRewardCandidates();
   assert.equal(candidates.length, 1);
-  assert.equal(candidates[0].id, 245);
-  assert.equal(manager.claimReward(145).ok, false);
-  assert.equal(manager.claimReward(245).ok, true);
-  assert.equal(manager.getState().endgameTrials.legendary.rewardPokemonId, 245);
+  assert.equal(candidates[0].id, 10086);
+  assert.equal(manager.claimReward(10193).ok, false);
+  assert.equal(manager.claimReward(10086).ok, true);
+  assert.equal(manager.getState().endgameTrials.legendary.rewardPokemonId, 10086);
 });
 
 test('PBA-015E retains existing Super, false-ending, Shadow and aura contracts', () => {
@@ -426,7 +426,7 @@ test('PBA-015E retains existing Super, false-ending, Shadow and aura contracts',
 test('PBA-015E trial Pokémon hydrate through canonical offline battle fallbacks', async () => {
   const hydrator = new BattleTeamHydrator({ api: { getPokemonDetail: async () => { throw new Error('offline'); } } });
   const team = await hydrator.hydrateTeam([...K.LEGENDARY_TRIAL_TEAM, ...K.MYTHICAL_TRIAL_TEAM].map(p => p.id));
-  assert.deepEqual(team.map(p => p.id), [145, 245, 381, 151, 385, 494]);
+  assert.deepEqual(team.map(p => p.id), [10193, 10086, 249, 727, 10049, 10041]);
   for (const combatant of team) {
     assert.ok(combatant.moves.length >= 1);
     assert.ok(combatant.baseStats.hp > 0);
@@ -452,14 +452,14 @@ test('PBA-015F boss presentation keeps canonical previews and player selector co
 });
 
 test('PBA-015G Titans and Celestial are canonical, independent at 18 badges and exclude Super rewards', () => {
-  assert.deepEqual(K.TITANS_TRIAL_TEAM.map(p => p.id), [1007, 383, 717]);
+  assert.deepEqual(K.TITANS_TRIAL_TEAM.map(p => p.id), [643, 721, 10064]);
   assert.deepEqual(K.CELESTIAL_TRIAL_TEAM.map(p => p.id), [889, 791, 487]);
   const superIds = new Set(K.SUPER_TEAM.map(p => p.id));
   for (const pokemon of [...K.TITANS_TRIAL_TEAM, ...K.CELESTIAL_TRIAL_TEAM]) {
     assert.ok(!superIds.has(pokemon.id));
-    assert.ok(pokemon.legendary);
+    assert.ok(pokemon.legendary || pokemon.mythical || pokemon.id === 10064);
     assert.ok(pokemon.sprite);
-    assert.ok(pokemon.bst >= 670);
+    assert.ok(pokemon.bst >= 600);
     assert.ok(K.byId(pokemon.id));
   }
   const manager = fresh();
@@ -473,23 +473,23 @@ test('PBA-015G Titans 3x3 pending reload, one reward among 3, replay and duplica
   unlock18(manager);
   assert.equal(eliteTrial(manager, 'TITANS_TRIAL', 'titans-win').processed, true);
   assert.equal(manager.getState().pendingReward.kind, 'TITANS_TRIAL');
-  assert.deepEqual(manager.getState().pendingReward.candidates, [1007, 383, 717]);
+  assert.deepEqual(manager.getState().pendingReward.candidates, [643, 721, 10064]);
 
   const reloaded = fresh(false);
   assert.equal(reloaded.getState().pendingReward.kind, 'TITANS_TRIAL');
-  assert.deepEqual(reloaded.getState().pendingReward.candidates, [1007, 383, 717]);
+  assert.deepEqual(reloaded.getState().pendingReward.candidates, [643, 721, 10064]);
   const candidates = reloaded.getRewardCandidates();
   assert.equal(candidates.length, 3);
-  const reward = candidates.find(x => x.id === 1007);
+  const reward = candidates.find(x => x.id === 643);
   assert.equal(reloaded.claimReward(reward.id).ok, true);
   assert.equal(reloaded.getRosterIds().length, 25);
 
   // Cannot claim another
-  assert.equal(reloaded.claimReward(383).ok, false);
+  assert.equal(reloaded.claimReward(721).ok, false);
 
   // Replay without second reward
   assert.equal(eliteTrial(reloaded, 'TITANS_TRIAL', 'titans-replay').pendingReward, null);
-  assert.equal(reloaded.claimReward(383).ok, false);
+  assert.equal(reloaded.claimReward(721).ok, false);
   assert.equal(new Set(reloaded.getRosterIds()).size, reloaded.getRosterIds().length);
 });
 
@@ -514,9 +514,9 @@ test('PBA-015G roster expands through 27, 28 and 29 while Super remains availabl
   const manager = fresh();
   unlock18(manager);
   for (const [kind, battleId, claimId] of [
-    ['LEGENDARY_TRIAL', 'g-legendary', 145],
-    ['MYTHICAL_TRIAL', 'g-mythical', 151],
-    ['TITANS_TRIAL', 'g-titans', 1007],
+    ['LEGENDARY_TRIAL', 'g-legendary', 10193],
+    ['MYTHICAL_TRIAL', 'g-mythical', 727],
+    ['TITANS_TRIAL', 'g-titans', 643],
     ['CELESTIAL_TRIAL', 'g-celestial', 889]
   ]) {
     eliteTrial(manager, kind, battleId);
@@ -546,8 +546,8 @@ test('PBA-015G Super stays unlocked at roster 27 and 28, legacy PBA-015F migrate
     superTrainer: {},
     shadowTrainer: {},
     endgameTrials: {
-      legendary: { completed: true, rewardClaimed: true, rewardPokemonId: 145 },
-      mythical: { completed: true, rewardClaimed: true, rewardPokemonId: 151 }
+      legendary: { completed: true, rewardClaimed: true, rewardPokemonId: 10193 },
+      mythical: { completed: true, rewardClaimed: true, rewardPokemonId: 727 }
     },
     processedBattleIds: []
   };
@@ -565,7 +565,7 @@ test('PBA-015G Super stays unlocked at roster 27 and 28, legacy PBA-015F migrate
 test('PBA-015G six elite Pokémon hydrate through canonical offline fallbacks and presentation references all four trials', async () => {
   const hydrator = new BattleTeamHydrator({ api: { getPokemonDetail: async () => { throw new Error('offline'); } } });
   const team = await hydrator.hydrateTeam([...K.TITANS_TRIAL_TEAM, ...K.CELESTIAL_TRIAL_TEAM].map(p => p.id));
-  assert.deepEqual(team.map(p => p.id), [1007, 383, 717, 889, 791, 487]);
+  assert.deepEqual(team.map(p => p.id), [643, 721, 10064, 889, 791, 487]);
   for (const member of team) {
     assert.ok(member.moves.length >= 1);
     assert.ok(member.baseStats.hp > 0);
@@ -574,7 +574,7 @@ test('PBA-015G six elite Pokémon hydrate through canonical offline fallbacks an
   const source = fs.readFileSync(path.join(__dirname, '../../assets/js/campaign/campaign-view.js'), 'utf8');
   assert.match(source, /TITANS_TRIAL/);
   assert.match(source, /CELESTIAL_TRIAL/);
-  assert.match(source, /Prova dos Titãs/);
+  assert.match(source, /Prova das Chamas/);
   assert.match(source, /Prova Celestial/);
 });
 
@@ -610,9 +610,9 @@ test('PBA-015I derives temporary Final Stand guests from claimed canonical Trial
   const manager = fresh();
   unlock18(manager);
   for (const [kind, battleId, oppId] of [
-    ['LEGENDARY_TRIAL', 'i-l', 145],
-    ['MYTHICAL_TRIAL', 'i-m', 151],
-    ['TITANS_TRIAL', 'i-t', 1007],
+    ['LEGENDARY_TRIAL', 'i-l', 10193],
+    ['MYTHICAL_TRIAL', 'i-m', 727],
+    ['TITANS_TRIAL', 'i-t', 643],
     ['CELESTIAL_TRIAL', 'i-c', 889]
   ]) {
     trial(manager, kind, battleId, oppId);

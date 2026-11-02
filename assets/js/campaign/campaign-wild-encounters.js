@@ -70,6 +70,7 @@
   const POINTS = Object.freeze(Object.fromEntries(Object.entries(REGIONS)
     .flatMap(([regionId, region]) => region.points.map(point => [point.id, Object.freeze({ ...point, regionId })]))));
   const reserved = new Set([
+    ...Object.values(Catalog.LEGACY_TRIAL_REWARDS).flat().map(Catalog.byId),
     ...Catalog.MASTER_SPECIES,
     ...Catalog.SUPER_TEAM,
     ...Catalog.SHADOW_TEAM,

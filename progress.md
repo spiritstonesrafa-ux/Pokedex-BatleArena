@@ -2,6 +2,15 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: provas táticas antes do Super
+
+- Prova da Resistência: Calyrex Ice, Hoopa Unbound e Lugia; Prova das Sombras: Incineroar, Mega Tyranitar e Mega Gyarados; Prova das Chamas: Reshiram, Volcanion e Mega Swampert. A Prova Celestial permanece disponível.
+- Cada prova permite escolher um aliado, garantindo uma rota para recrutar Calyrex Ice, Incineroar e Reshiram na mesma campanha antes do Super. Dicas de preparação explicam itens, Tera Terrestre e a ordem de entrada.
+- Cenas atualizadas: fortaleza glacial com fissuras, coliseu escuro com eclipse e fornalha com brasas; textos individuais revelam os times canônicos usados na batalha. Controles de pular, áudio e redução de movimento preservados.
+- Migração única preserva os antigos recrutas no elenco e reabre as três provas revisadas. Vitórias com recompensa pendente oferecem escolhas atualizadas. Revanches e opções já possuídas não duplicam recompensas nem bloqueiam a campanha.
+- Novos aliados e recompensas antigas continuam excluídos da exploração. Incineroar sai do novo draft, substituído por Popplio, mantendo 450 opções e 50 por geração; saves com Incineroar inicial são preservados. Catálogos offline e cache atualizados.
+- Validação: **2.846 testes aprovados em 39 suítes, zero falhas**; auditoria dos 450 Pokémon do draft e git diff --check aprovados. Inclui recrutamento dos três aliados, preparação Tera/itens, migração, recompensas pendentes, exclusividade e textos da tela. Alterações locais, sem commit/push.
+
 ## Atualização — 02/11/2026: Super Treinador sem itens
 
 - Removidos Black Sludge de Eternatus Eternamax, Choice Specs de Calyrex Shadow e Choice Band de Zacian Crowned somente no confronto SUPER, conforme pedido de ajuste de dificuldade.

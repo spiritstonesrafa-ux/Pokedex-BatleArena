@@ -16,8 +16,8 @@
     MEWTWO_TRIAL: Object.freeze({key:'mewtwo',title:'Desafio Mewtwo',trainerName:'Desafio Mewtwo',trainerTitle:'As Três Faces do Poder',badgeName:'Aliado Mewtwo',difficulty:5,getTeam:()=>Catalog.MEWTWO_TRIAL_TEAM||[]}),
     LEGENDARY_TRIAL: Object.freeze({
       key: 'legendary',
-      title: 'Prova Lendária',
-      trainerName: 'Prova Lendária',
+      title: 'Prova da Resistência',
+      trainerName: 'Prova da Resistência',
       trainerTitle: 'Desafio Especial de Elite',
       badgeName: 'Aliado Lendário',
       difficulty: 4,
@@ -25,8 +25,8 @@
     }),
     MYTHICAL_TRIAL: Object.freeze({
       key: 'mythical',
-      title: 'Prova Mítica',
-      trainerName: 'Prova Mítica',
+      title: 'Prova das Sombras',
+      trainerName: 'Prova das Sombras',
       trainerTitle: 'Desafio Especial de Elite',
       badgeName: 'Aliado Mítico',
       difficulty: 4,
@@ -34,8 +34,8 @@
     }),
     TITANS_TRIAL: Object.freeze({
       key: 'titans',
-      title: 'Prova dos Titãs',
-      trainerName: 'Prova dos Titãs',
+      title: 'Prova das Chamas',
+      trainerName: 'Prova das Chamas',
       trainerTitle: 'Desafio Opcional de Elite',
       badgeName: 'Aliado Titã',
       difficulty: 5,

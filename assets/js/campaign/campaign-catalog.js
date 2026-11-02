@@ -75,9 +75,10 @@
   const draftSet = new Set(DRAFT.map(entry => entry.id));
   const EXPLORATION_SPECIES = Object.freeze(Object.values(allById).filter(entry =>
     !draftSet.has(entry.id)));
-  const LEGENDARY_TRIAL_TEAM = Object.freeze([145,245,381].map(id => allById[id]));
-  const MYTHICAL_TRIAL_TEAM = Object.freeze([151,385,494].map(id => allById[id]));
-  const TITANS_TRIAL_TEAM = Object.freeze([1007,383,717].map(id => allById[id]));
+  const LEGACY_TRIAL_REWARDS = Object.freeze({legendary:Object.freeze([145,245,381]),mythical:Object.freeze([151,385,494]),titans:Object.freeze([1007,383,717])});
+  const LEGENDARY_TRIAL_TEAM = Object.freeze([10193,10086,249].map(id => allById[id]));
+  const MYTHICAL_TRIAL_TEAM = Object.freeze([727,10049,10041].map(id => allById[id]));
+  const TITANS_TRIAL_TEAM = Object.freeze([643,721,10064].map(id => allById[id]));
   const MEWTWO_TRIAL_TEAM = Object.freeze([150,10043,10044].map(id => allById[id]));
   const CELESTIAL_TRIAL_TEAM = Object.freeze([889,791,487].map(id => allById[id]));
   const POSTGAME_TRIALS=Object.freeze(Object.fromEntries([
@@ -98,7 +99,7 @@
   }
   const api = Object.freeze({
     ZYGARDE_TRIAL_TEAM:POSTGAME_TRIALS.ZYGARDE_TRIAL.team, KYUREM_TRIAL_TEAM:POSTGAME_TRIALS.KYUREM_TRIAL.team, NECROZMA_TRIAL_TEAM:POSTGAME_TRIALS.NECROZMA_TRIAL.team, CREATION_TRIAL_TEAM:POSTGAME_TRIALS.CREATION_TRIAL.team,
-    POSTGAME_TRIALS, getPostgameLockReason, DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SHADOW_TEAM, SUPER_REWARD_IDS, LEGACY_SUPER_REWARD_IDS, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
+    LEGACY_TRIAL_REWARDS, POSTGAME_TRIALS, getPostgameLockReason, DRAFT, MASTERS, MASTER_SPECIES, SUPER_TEAM, SHADOW_TEAM, SUPER_REWARD_IDS, LEGACY_SUPER_REWARD_IDS, SUPER_AUDIT, MEWTWO_TRIAL_TEAM, LEGENDARY_TRIAL_TEAM, MYTHICAL_TRIAL_TEAM, TITANS_TRIAL_TEAM, CELESTIAL_TRIAL_TEAM,
     EXPANSION_SPECIES, EXPLORATION_SPECIES,
     WILD_SPECIAL_SPECIES: Object.freeze([...WildSpecial.entries, ...Expanded.entries.filter(entry =>
       (entry.legendary || entry.mythical) && !WildSpecial.byId[entry.id])]),

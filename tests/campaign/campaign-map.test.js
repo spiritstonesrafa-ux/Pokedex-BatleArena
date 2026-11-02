@@ -600,9 +600,9 @@ test('Caminho Real de Navegador (Script Tag via node:vm sem module/require) — 
 });
 
 const TRIAL_TEST_CASES = [
-  { kind: 'LEGENDARY_TRIAL', expectedKey: 'legendary', expectedTitle: 'Prova Lendária' },
-  { kind: 'MYTHICAL_TRIAL', expectedKey: 'mythical', expectedTitle: 'Prova Mítica' },
-  { kind: 'TITANS_TRIAL', expectedKey: 'titans', expectedTitle: 'Prova dos Titãs' },
+  { kind: 'LEGENDARY_TRIAL', expectedKey: 'legendary', expectedTitle: 'Prova da Resistência' },
+  { kind: 'MYTHICAL_TRIAL', expectedKey: 'mythical', expectedTitle: 'Prova das Sombras' },
+  { kind: 'TITANS_TRIAL', expectedKey: 'titans', expectedTitle: 'Prova das Chamas' },
   { kind: 'CELESTIAL_TRIAL', expectedKey: 'celestial', expectedTitle: 'Prova Celestial' }
 ];
 
@@ -1821,9 +1821,9 @@ test('Map Phase 3 — Calibração da Região Final: Coordenadas e Rotas SVG con
   assert.ok(superNode.position.y > shadowNode.position.y, 'Super deve ficar visualmente abaixo de Shadow');
 
   // 4. Os quatro nós das Provas permanecem inalterados
-  assert.deepEqual(legendaryNode.position, { x: 20.0, y: 70.0 }, 'Prova Lendária deve permanecer inalterada');
-  assert.deepEqual(mythicalNode.position, { x: 80.0, y: 70.0 }, 'Prova Mítica deve permanecer inalterada');
-  assert.deepEqual(titansNode.position, { x: 22.0, y: 36.0 }, 'Prova dos Titãs deve permanecer inalterada');
+  assert.deepEqual(legendaryNode.position, { x: 20.0, y: 70.0 }, 'Prova da Resistência deve permanecer inalterada');
+  assert.deepEqual(mythicalNode.position, { x: 80.0, y: 70.0 }, 'Prova das Sombras deve permanecer inalterada');
+  assert.deepEqual(titansNode.position, { x: 22.0, y: 36.0 }, 'Prova das Chamas deve permanecer inalterada');
   assert.deepEqual(celestialNode.position, { x: 78.0, y: 36.0 }, 'Prova Celestial deve permanecer inalterada');
 
   // Helper de conversão canônica: percentual para coordenadas SVG (1000 x 562.5)
@@ -3605,9 +3605,9 @@ test('Map Phase 5 — 10. Região Final bloqueada redireciona para Região 1 e p
   // 9. Nós exclusivos do endgame NÃO são renderizados
   assert.equal(capturedHtml.includes('data-node-id="node-super"'), false, 'Nó Super Trainer não deve ser renderizado');
   assert.equal(capturedHtml.includes('data-node-id="node-shadow"'), false, 'Nó Shadow Trainer não deve ser renderizado');
-  assert.equal(capturedHtml.includes('data-node-id="node-legendary"'), false, 'Prova Lendária não deve ser renderizada');
-  assert.equal(capturedHtml.includes('data-node-id="node-mythical"'), false, 'Prova Mítica não deve ser renderizada');
-  assert.equal(capturedHtml.includes('data-node-id="node-titans"'), false, 'Prova dos Titãs não deve ser renderizada');
+  assert.equal(capturedHtml.includes('data-node-id="node-legendary"'), false, 'Prova da Resistência não deve ser renderizada');
+  assert.equal(capturedHtml.includes('data-node-id="node-mythical"'), false, 'Prova das Sombras não deve ser renderizada');
+  assert.equal(capturedHtml.includes('data-node-id="node-titans"'), false, 'Prova das Chamas não deve ser renderizada');
   assert.equal(capturedHtml.includes('data-node-id="node-celestial"'), false, 'Prova Celestial não deve ser renderizada');
 
   // 10. Tentar ativar a aba bloqueada
