@@ -98,7 +98,7 @@
     [kind,Object.freeze(Object.fromEntries(team.map(p => {
       const species=byId[p.id];
       const moves=p.id===10188?[Battle.P8.moves[781],...species.moves.slice(1)]:species.moves;
-      return [p.id,Object.freeze({...species,item:bossItems[p.id],moves:Object.freeze(moves.map(m=>Object.freeze({...m})) )})];
+      return [p.id,Object.freeze({...species,item:kind==='SUPER'?null:bossItems[p.id],moves:Object.freeze(moves.map(m=>Object.freeze({...m})) )})];
     })))])));
   const getOpponentSpecies=(id,kind)=>bossByKind[kind]?.[Number(id)]||byId[Number(id)];
   const api = Object.freeze({ byId, extras: Object.freeze(extras), bossByKind, getOpponentSpecies });

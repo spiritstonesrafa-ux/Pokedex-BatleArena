@@ -2,6 +2,12 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: Super Treinador sem itens
+
+- Removidos Black Sludge de Eternatus Eternamax, Choice Specs de Calyrex Shadow e Choice Band de Zacian Crowned somente no confronto SUPER, conforme pedido de ajuste de dificuldade.
+- Eternatus não recupera mais HP pelo item; Calyrex e Zacian perdem os bônus de dano e as travas dos itens Choice. Equipe, atributos, golpes e habilidades mantidos; Shadow conserva seus itens.
+- Cache do catálogo atualizado. Os 13 testes de equipes/migração passaram, incluindo preparação real das equipes com itens nulos no Super e itens preservados no Shadow. Alteração local, ainda sem commit/push.
+
 ## Atualização — 01/11/2026: retomada segura após nocaute
 
 - startBattle agora respeita a fase real do motor ao retomar: substituições obrigatórias vão para a seleção de reserva e não para chooseAction.
