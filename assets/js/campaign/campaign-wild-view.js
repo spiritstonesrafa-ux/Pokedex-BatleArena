@@ -225,45 +225,85 @@
     const pokemon = Catalog.byId(pending.pokemonId);
     if (!pokemon) return;
     const regionId = pending.regionId || 'region-1';
+    const isCollection = Boolean(pokemon.collectionOnly);
+
     this.container.innerHTML = `
       <section class="campaign-shell wild-capture-screen" data-region="${regionId}">
-        <div class="campaign-hero">
-          <p class="eyebrow">ENCONTRO SELVAGEM VENCIDO</p>
-          <h2 id="wildScreenHeading" tabindex="-1">Hora de tentar capturar ${cap(pokemon.name)}!</h2>
-          <p>Uma Poké Bola, uma tentativa: ${Math.round(Wild.CAPTURE_CHANCE * 100)}% de chance. Se não der certo, ele foge.</p>
-          ${soundButton()}
-          <div class="wild-capture-stage" data-region="${regionId}" aria-hidden="true">
-            <div class="wild-capture-target">
-              <img src="${pokemon.sprite}" alt="" width="112" height="112">
-            </div>
-            <div class="wild-capture-beam"></div>
-            <div class="wild-pokeball">
-              <span class="wild-pokeball__top"></span>
-              <span class="wild-pokeball__button"></span>
-            </div>
-            <div class="wild-capture-sparkles"></div>
+        <header class="wild-capture-header">
+          <div class="wild-capture-header__left">
+            <span class="wild-capture-chip-mode">
+              <i class="fa-solid fa-sparkles" aria-hidden="true"></i> ${isCollection ? 'COLEÇÃO' : 'ENCONTRO SELVAGEM'}
+            </span>
+            <h2 id="wildScreenHeading" class="wild-capture-title" tabindex="-1">
+              ${cap(pokemon.name)}
+            </h2>
           </div>
-          <p id="wildCaptureStatus" class="wild-capture-status" role="status" aria-live="polite">
-            ${cap(pokemon.name)} está esperando. Lance a Poké Bola!
-          </p>
-          <button id="throwWildBall" class="campaign-primary" type="button">Lançar Poké Bola</button>
+          <div class="wild-capture-header__center">
+            <span class="wild-capture-chance-pill" title="Chance de captura nesta tentativa">
+              <i class="fa-solid fa-bullseye" aria-hidden="true"></i> <strong>${Math.round(Wild.CAPTURE_CHANCE * 100)}%</strong> de chance
+            </span>
+          </div>
+          <div class="wild-capture-header__right">
+            ${soundButton()}
+          </div>
+        </header>
+
+        <div class="wild-capture-stage" data-region="${regionId}" aria-hidden="true">
+          <div class="wild-capture-atmosphere">
+            <div class="wild-capture-stars"></div>
+            <div class="wild-capture-glow"></div>
+          </div>
+          <div class="wild-capture-platform">
+            <div class="wild-capture-platform-ring"></div>
+            <div class="wild-capture-shadow"></div>
+          </div>
+          <div class="wild-capture-target">
+            <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" width="128" height="128" class="wild-target-sprite">
+          </div>
+          <div class="wild-capture-beam"></div>
+          <div class="wild-pokeball">
+            <span class="wild-pokeball__top"></span>
+            <span class="wild-pokeball__button"></span>
+          </div>
+          <div class="wild-capture-sparkles"></div>
+          <div class="wild-capture-smoke"></div>
         </div>
+
+        <footer class="wild-capture-dock">
+          <div class="wild-capture-status-wrap">
+            <p id="wildCaptureStatus" class="wild-capture-status" role="status" aria-live="polite">
+              ${cap(pokemon.name)} está esperando. Lance a Poké Bola!
+            </p>
+          </div>
+          <div class="wild-capture-action-wrap">
+            <button id="throwWildBall" class="wild-capture-throw-btn" type="button">
+              <i class="fa-solid fa-baseball" aria-hidden="true"></i>
+              <span>Lançar Poké Bola</span>
+            </button>
+          </div>
+        </footer>
       </section>`;
+
     bindSoundButton(this);
     focusHeading(this, 'capture:' + pending.battleId);
+
     const button = this.container.querySelector('#throwWildBall');
     button.onclick = () => {
       if (button.disabled) return;
       button.disabled = true;
+      button.classList?.add?.('is-active');
       button.textContent = 'Captura em andamento...';
+
       const stage = this.container.querySelector('.wild-capture-stage');
       const status = this.container.querySelector('#wildCaptureStatus');
       const reducedMotion = typeof window !== 'undefined'
         && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
       Audio?.playCue?.(getAudioController(this), reducedMotion ? 'QUICK_THROW' : 'CAPTURE');
       if (status) status.textContent = 'Poké Bola lançada. Será que ele vai ficar?';
       this._wildCaptureAnimating = !reducedMotion;
       stage?.classList?.add('is-playing');
+
       const resolve = () => {
         if (this.manager.getState().wild?.pendingCapture?.battleId !== pending.battleId) {
           this._wildCaptureAnimating = false;
@@ -278,14 +318,17 @@
           return;
         }
         stage?.classList?.add(result.captured ? 'is-caught' : 'is-escaped');
-        if (status) status.textContent = result.captured
-          ? 'A Poké Bola ficou fechada!'
-          : `${cap(pokemon.name)} escapou da Poké Bola!`;
+        if (status) {
+          status.textContent = result.captured
+            ? 'A Poké Bola ficou fechada!'
+            : `${cap(pokemon.name)} escapou da Poké Bola!`;
+        }
         setTimeout(() => {
           this._wildCaptureAnimating = false;
           this.render();
         }, 900);
       };
+
       if (reducedMotion) resolve();
       else setTimeout(resolve, 3800);
     };
@@ -296,16 +339,46 @@
     if (!pokemon) return;
     const caught = result.status === 'CAUGHT';
     const lost = result.status === 'LOST';
+    const regionId = result.regionId || 'region-1';
+
     this.container.innerHTML = `
-      <section class="campaign-shell wild-capture-screen" data-region="${result.regionId || 'region-1'}">
-        <div class="campaign-hero">
-          <p class="eyebrow">ENCONTRO SELVAGEM</p>
-          <h2 id="wildScreenHeading" tabindex="-1">${caught ? cap(pokemon.name) + ' foi capturado!' : lost ? 'Você perdeu o encontro' : cap(pokemon.name) + ' escapou!'}</h2>
-          <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" width="112" height="112">
-          <p>${caught ? 'Novo Pokémon no elenco da campanha.' : 'Você poderá explorar a região novamente.'}</p>
-          <button id="wildResultContinue" class="campaign-primary" type="button">Voltar ao mapa</button>
+      <section class="wild-capture-screen wild-result-screen" data-region="${regionId}">
+        <div class="wild-result-card ${caught ? 'is-caught' : 'is-fled'}">
+          <div class="wild-result-header">
+            <p class="wild-result-eyebrow">ENCONTRO SELVAGEM</p>
+            <h2 id="wildScreenHeading" class="wild-result-title" tabindex="-1">
+              ${caught ? cap(pokemon.name) + ' foi capturado!' : lost ? 'Você perdeu o encontro' : cap(pokemon.name) + ' escapou!'}
+            </h2>
+          </div>
+
+          <div class="wild-result-stage" aria-hidden="true">
+            <div class="wild-result-spotlight"></div>
+            <div class="wild-result-pokemon-wrap">
+              <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" class="wild-result-sprite" width="120" height="120">
+            </div>
+            <div class="wild-result-badge-plate">
+              <span class="wild-result-badge ${caught ? 'badge-success' : 'badge-failure'}">
+                ${caught ? '★ CAPTURA BEM-SUCEDIDA!' : '💨 O POKÉMON ESCAPOU!'}
+              </span>
+            </div>
+          </div>
+
+          <div class="wild-result-body">
+            <p class="wild-result-message">
+              ${caught
+                ? (pokemon.collectionOnly ? 'Novo Pokémon adicionado à sua coleção da campanha.' : 'Novo Pokémon adicionado ao elenco da campanha.')
+                : (lost ? 'Sua equipe não conseguiu vencer este desafio.' : 'Você poderá explorar a região novamente.')}
+            </p>
+            <div class="wild-result-actions">
+              <button id="wildResultContinue" class="campaign-primary wild-result-btn" type="button">
+                <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                <span>Voltar ao mapa</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>`;
+
     focusHeading(this, 'result:' + result.status + ':' + result.pokemonId);
     this.container.querySelector('#wildResultContinue').onclick = () => {
       this.manager.acknowledgeWildResult();

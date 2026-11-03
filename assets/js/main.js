@@ -1878,6 +1878,9 @@ function switchAppTab(tabName) {
       campaignView.style.display = 'block';
       if (typeof window !== 'undefined' && window.campaignView) window.campaignView.render();
     }
+    if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.shouldShowEntryPrompt?.()) {
+      window.PBACampaign.CampaignFullscreen.showEntryPrompt();
+    }
     if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (tabName === 'profile') {
     if (typeof window !== 'undefined' && window.battleSessionController && window.battleSessionController.uiState !== 'NO_TEAM') {

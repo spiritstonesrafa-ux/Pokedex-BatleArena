@@ -180,88 +180,213 @@
   image-rendering: pixelated;
 }
 
+/* ==========================================================================
+   WILD CAPTURE PREMIUM CINEMATIC SCENE (M2) — ZERO-SCROLL LANDSCAPE
+   ========================================================================== */
+
+.wild-capture-screen {
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  position: relative !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  background: #080c18 !important;
+}
+
+/* Compact Cinematic HUD Header */
+.wild-capture-header {
+  flex: 0 0 auto !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  background: rgba(10, 15, 30, 0.90) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  z-index: 20 !important;
+}
+
+.wild-capture-header__left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.wild-capture-chip-mode {
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  color: #38bdf8 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  background: rgba(56, 189, 248, 0.12) !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
+  white-space: nowrap !important;
+}
+
+.wild-capture-title {
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.wild-capture-header__center {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.wild-capture-chance-pill {
+  font-size: 0.72rem !important;
+  color: #cbd5e1 !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+.wild-capture-chance-pill strong {
+  color: #ffd166 !important;
+  font-weight: 800 !important;
+}
+
+.wild-capture-header__right {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Central Cinematic Arena Stage */
 .wild-capture-stage {
-  position: relative;
-  width: min(100%, 460px);
-  height: 260px;
-  margin: 18px auto 8px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, .18);
-  border-radius: 18px;
-  background:
-    radial-gradient(ellipse at 50% 77%, rgba(255, 255, 255, .17), transparent 37%),
-    linear-gradient(#234c65 0%, #244e54 60%, #264b3c 61%, #163c32 100%);
-  isolation: isolate;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  background: radial-gradient(ellipse at 50% 80%, rgba(60, 160, 100, 0.28), transparent 60%),
+              linear-gradient(180deg, #132432 0%, #173238 45%, #183e2e 75%, #0f271e 100%);
 }
 
 .wild-capture-stage[data-region="region-2"] {
-  background:
-    radial-gradient(ellipse at 50% 77%, rgba(255, 216, 170, .19), transparent 37%),
-    linear-gradient(#75544e 0%, #584054 60%, #84513c 61%, #4c302c 100%);
+  background: radial-gradient(ellipse at 50% 80%, rgba(255, 140, 60, 0.28), transparent 60%),
+              linear-gradient(180deg, #321c24 0%, #3e262c 45%, #4a2820 75%, #2a1412 100%);
 }
 
 .wild-capture-stage[data-region="region-3"] {
-  background:
-    radial-gradient(ellipse at 50% 77%, rgba(226, 185, 255, .24), transparent 37%),
-    linear-gradient(#342b5b 0%, #28274d 60%, #543b70 61%, #302344 100%);
+  background: radial-gradient(ellipse at 50% 80%, rgba(160, 90, 240, 0.32), transparent 60%),
+              linear-gradient(180deg, #1d1732 0%, #241c40 45%, #301f4a 75%, #1a102a 100%);
 }
 
 .wild-capture-stage::after {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: 14px;
-  width: 125px;
-  height: 15px;
+  bottom: 20%;
+  width: min(280px, 65vw);
+  height: 38px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, .35);
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.65) 0%, transparent 75%);
   transform: translateX(-50%);
+  pointer-events: none;
 }
 
+/* 3D Platform Ground Ellipse */
+.wild-capture-platform {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(290px, 68vw);
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--wild-accent, #38bdf8);
+  box-shadow: 0 0 25px var(--wild-glow, rgba(56, 189, 248, 0.4)), inset 0 0 15px rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Target Pokémon */
 .wild-capture-target {
   position: absolute;
-  z-index: 2;
-  top: 22px;
+  z-index: 5;
+  bottom: calc(20% + 12px);
   left: 50%;
-  width: 112px;
-  height: 112px;
   transform: translateX(-50%);
+  width: 128px;
+  height: 128px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
-.wild-capture-target img {
+.wild-capture-target img,
+.wild-target-sprite {
   width: 100%;
   height: 100%;
   object-fit: contain;
   margin: 0;
-  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, .45));
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.65));
+  animation: wildTargetIdle 2.5s ease-in-out infinite;
 }
 
+@keyframes wildTargetIdle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Radiant Capture Beam */
 .wild-capture-beam {
   position: absolute;
-  z-index: 3;
-  top: 5px;
+  z-index: 6;
+  bottom: calc(20% + 20px);
   left: 50%;
-  width: 190px;
-  height: 190px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #ffefad 18%, rgba(255, 79, 79, .8) 38%, transparent 70%);
+  background: radial-gradient(circle, #ffffff 0%, #ffefad 20%, rgba(255, 79, 79, 0.85) 45%, transparent 72%);
   opacity: 0;
-  transform: translateX(-50%) scale(.2);
+  transform: translateX(-50%) scale(0.2);
   pointer-events: none;
 }
 
+/* The High-Definition Pokéball */
 .wild-pokeball {
   position: absolute;
-  z-index: 4;
-  bottom: 25px;
-  left: calc(50% - 29px);
-  width: 58px;
-  height: 58px;
-  border: 4px solid #161a21;
+  z-index: 10;
+  bottom: calc(20% + 10px);
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  border: 3px solid #161a21;
   border-radius: 50%;
-  background: #f8f8f4;
-  box-shadow: 0 8px 13px rgba(0, 0, 0, .45);
-  transform: translate(-125px, 15px) rotate(-55deg) scale(.82);
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+  transform: translate(-140px, 35px) rotate(-35deg) scale(0.85);
+  transform-origin: center center;
 }
 
 .wild-pokeball__top {
@@ -270,92 +395,164 @@
   left: -1px;
   width: calc(100% + 2px);
   height: 53%;
-  border-bottom: 5px solid #161a21;
+  border-bottom: 4px solid #161a21;
   border-radius: 50% 50% 0 0;
-  background: linear-gradient(#fa7272, #d82735);
+  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
   transform-origin: 10% 100%;
 }
 
 .wild-pokeball__button {
   position: absolute;
   z-index: 2;
-  top: calc(50% - 10px);
-  left: calc(50% - 10px);
-  width: 20px;
-  height: 20px;
-  border: 4px solid #161a21;
+  top: calc(50% - 7px);
+  left: calc(50% - 7px);
+  width: 14px;
+  height: 14px;
+  border: 3px solid #161a21;
   border-radius: 50%;
-  background: #fff;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
 }
 
 .wild-capture-sparkles {
   position: absolute;
-  z-index: 5;
-  bottom: 19px;
+  z-index: 12;
+  bottom: calc(20% + 10px);
   left: 50%;
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  box-shadow: 0 -40px 0 -35px #ffe681, 40px -8px 0 -35px #ffe681,
-    -40px -8px 0 -35px #ffe681, 27px -38px 0 -35px #ffe681,
-    -27px -38px 0 -35px #ffe681;
+  box-shadow: 0 -45px 0 -35px #ffe681, 45px -10px 0 -35px #ffe681,
+              -45px -10px 0 -35px #ffe681, 30px -42px 0 -35px #ffe681,
+              -30px -42px 0 -35px #ffe681;
   opacity: 0;
-  transform: translateX(-50%) scale(.2);
+  transform: translateX(-50%) scale(0.2);
   pointer-events: none;
 }
 
-.wild-capture-status {
-  min-height: 1.5em;
-  font-weight: 700;
+/* Bottom Floating Action Dock */
+.wild-capture-dock {
+  flex: 0 0 auto !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  background: rgba(8, 12, 24, 0.95) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  z-index: 20 !important;
 }
 
+.wild-capture-status-wrap {
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  margin-right: 12px !important;
+}
+
+.wild-capture-status {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: #f1f5f9 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin: 0 !important;
+}
+
+.wild-capture-action-wrap {
+  flex: 0 0 auto !important;
+}
+
+.wild-capture-throw-btn {
+  height: 42px !important;
+  min-height: 42px !important;
+  min-width: 190px !important;
+  margin: 0 !important;
+  padding: 0 18px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.05em !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45) !important;
+  transition: all 0.15s ease !important;
+}
+
+.wild-capture-throw-btn:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.65) !important;
+}
+
+.wild-capture-throw-btn:disabled,
+.wild-capture-throw-btn.is-active {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Animations Triggered via .is-playing */
 .wild-capture-stage.is-playing .wild-pokeball {
-  animation: wildBallJourney 3.7s linear forwards;
+  animation: wildBallJourney 3.7s linear forwards !important;
 }
 
 .wild-capture-stage.is-playing .wild-pokeball__top {
-  animation: wildBallClose 3.7s linear forwards;
+  animation: wildBallClose 3.7s linear forwards !important;
 }
 
 .wild-capture-stage.is-playing .wild-capture-target {
-  animation: wildPokemonAbsorb 3.7s linear forwards;
+  animation: wildPokemonAbsorb 3.7s linear forwards !important;
 }
 
 .wild-capture-stage.is-playing .wild-capture-beam {
-  animation: wildCaptureBeam 3.7s linear forwards;
+  animation: wildCaptureBeam 3.7s linear forwards !important;
 }
 
 .wild-capture-stage.is-caught .wild-pokeball {
-  animation: wildBallSuccess .9s ease-out forwards;
+  animation: wildBallSuccess 0.9s ease-out forwards !important;
 }
 
 .wild-capture-stage.is-caught .wild-capture-sparkles {
-  animation: wildCaptureSparkles .9s ease-out forwards;
+  animation: wildCaptureSparkles 0.9s ease-out forwards !important;
 }
 
 .wild-capture-stage.is-escaped .wild-pokeball {
-  animation: wildBallEscape .9s ease-out forwards;
+  animation: wildBallEscape 0.9s ease-out forwards !important;
 }
 
 .wild-capture-stage.is-escaped .wild-pokeball__top {
-  animation: wildBallLidEscape .9s ease-out forwards;
+  animation: wildBallLidEscape 0.9s ease-out forwards !important;
 }
 
 .wild-capture-stage.is-escaped .wild-capture-target {
-  animation: wildPokemonEscape .9s ease-out forwards;
+  animation: wildPokemonEscape 0.9s ease-out forwards !important;
 }
 
+/* Keyframes synchronized with Audio Timeline */
 @keyframes wildBallJourney {
-  0% { transform: translate(-125px, 15px) rotate(-55deg) scale(.82); }
-  20% { transform: translate(0, -94px) rotate(350deg) scale(1); }
-  29%, 44% { transform: translate(0, -94px) rotate(360deg); }
-  53%, 60% { transform: translate(0, 0) rotate(360deg); }
-  66% { transform: translate(0, 0) rotate(338deg); }
-  72% { transform: translate(0, 0) rotate(382deg); }
-  78% { transform: translate(0, 0) rotate(360deg); }
-  84% { transform: translate(0, 0) rotate(340deg); }
-  90% { transform: translate(0, 0) rotate(380deg); }
-  96%, 100% { transform: translate(0, 0) rotate(360deg); }
+  0% { transform: translate(-140px, 35px) rotate(-35deg) scale(0.85); }
+  20% { transform: translate(0, -90px) rotate(350deg) scale(1.05); }
+  29%, 44% { transform: translate(0, -90px) rotate(360deg); }
+  53% { transform: translate(0, 0) rotate(360deg); }
+  58% { transform: translate(0, -14px) rotate(360deg); }
+  63% { transform: translate(0, 0) rotate(360deg); }
+  66% { transform: translate(0, 0) rotate(336deg); }
+  72% { transform: translate(0, 0) rotate(360deg); }
+  80% { transform: translate(0, 0) rotate(384deg); }
+  86% { transform: translate(0, 0) rotate(360deg); }
+  92% { transform: translate(0, 0) rotate(340deg); }
+  97%, 100% { transform: translate(0, 0) rotate(360deg); }
 }
 
 @keyframes wildBallClose {
@@ -365,31 +562,32 @@
 }
 
 @keyframes wildPokemonAbsorb {
-  0%, 26% { opacity: 1; transform: translateX(-50%) scale(1); }
+  0%, 26% { opacity: 1; transform: translateX(-50%) scale(1); filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.65)); }
+  35% { filter: brightness(2) drop-shadow(0 0 20px #ffffff); }
   42%, 100% { opacity: 0; transform: translateX(-50%) translateY(70px) scale(0); }
 }
 
 @keyframes wildCaptureBeam {
-  0%, 22%, 45%, 100% { opacity: 0; transform: translateX(-50%) scale(.2); }
-  29%, 38% { opacity: .95; transform: translateX(-50%) scale(1); }
+  0%, 22%, 45%, 100% { opacity: 0; transform: translateX(-50%) scale(0.2); }
+  29%, 38% { opacity: 0.95; transform: translateX(-50%) scale(1); }
 }
 
 @keyframes wildBallSuccess {
   0% { transform: translate(0, 0) rotate(360deg) scale(1); filter: brightness(1); }
-  50% { transform: translate(0, 0) rotate(360deg) scale(1.08); filter: brightness(1.7); }
-  100% { transform: translate(0, 0) rotate(360deg) scale(1); filter: brightness(1.2); }
+  50% { transform: translate(0, 0) rotate(360deg) scale(1.12); filter: brightness(1.7) drop-shadow(0 0 16px #ffd166); }
+  100% { transform: translate(0, 0) rotate(360deg) scale(1); filter: brightness(1.2) drop-shadow(0 0 8px #ffd166); }
 }
 
 @keyframes wildCaptureSparkles {
-  0% { opacity: 0; transform: translateX(-50%) scale(.2); }
+  0% { opacity: 0; transform: translateX(-50%) scale(0.2); }
   40% { opacity: 1; transform: translateX(-50%) scale(1); }
   100% { opacity: 0; transform: translateX(-50%) scale(1.4); }
 }
 
 @keyframes wildBallEscape {
   0% { opacity: 1; transform: translate(0, 0) rotate(360deg) scale(1); }
-  50% { opacity: 1; transform: translate(0, 0) rotate(360deg) scale(1.12); }
-  100% { opacity: .45; transform: translate(-30px, 12px) rotate(315deg) scale(.8); }
+  40% { opacity: 1; transform: translate(0, 0) rotate(360deg) scale(1.15); }
+  100% { opacity: 0.45; transform: translate(-30px, 12px) rotate(315deg) scale(0.8); }
 }
 
 @keyframes wildBallLidEscape {
@@ -398,29 +596,234 @@
 }
 
 @keyframes wildPokemonEscape {
-  0% { opacity: 0; transform: translateX(-50%) translateY(70px) scale(0); }
-  70%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  0% { opacity: 0; transform: translateX(-50%) translateY(70px) scale(0); filter: brightness(2); }
+  50% { opacity: 1; filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8)); }
+  75%, 100% { opacity: 1; transform: translateX(-50%) scale(1); filter: none; }
 }
 
 @keyframes wildEncounterReveal {
-  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes wildPokemonArrive {
-  from { opacity: 0; transform: translateY(28px) scale(.72); }
+  from { opacity: 0; transform: translateY(28px) scale(0.72); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ==========================================================================
+   WILD RESULT SCREEN (ZERO-SCROLL LANDSCAPE)
+   ========================================================================== */
+
+.wild-result-screen {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px !important;
+}
+
+.wild-result-card {
+  width: min(540px, 94vw) !important;
+  max-height: calc(100dvh - 16px) !important;
+  background: linear-gradient(165deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 30, 0.99)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 20px !important;
+  padding: 16px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 8px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85) !important;
+  box-sizing: border-box !important;
+}
+
+.wild-result-card.is-caught {
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(245, 158, 11, 0.2) !important;
+}
+
+.wild-result-header .wild-result-eyebrow {
+  margin: 0 0 2px 0 !important;
+  font-size: 0.68rem !important;
+  color: #ffd166 !important;
+  letter-spacing: 0.14em !important;
+  font-weight: 800 !important;
+}
+
+.wild-result-header .wild-result-title {
+  margin: 0 !important;
+  font-size: 1.15rem !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+}
+
+.wild-result-stage {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  margin: 4px 0 !important;
+}
+
+.wild-result-pokemon-wrap {
+  width: 100px !important;
+  height: 100px !important;
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+}
+
+.wild-result-pokemon-wrap img,
+.wild-result-sprite {
+  width: 90px !important;
+  height: 90px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65)) !important;
+}
+
+.wild-result-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.wild-result-badge.badge-success {
+  background: rgba(34, 197, 94, 0.18) !important;
+  border: 1px solid rgba(34, 197, 94, 0.45) !important;
+  color: #86efac !important;
+}
+
+.wild-result-badge.badge-failure {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  color: #fca5a5 !important;
+}
+
+.wild-result-message {
+  font-size: 0.82rem !important;
+  color: #cbd5e1 !important;
+  margin: 0 !important;
+  max-width: 420px !important;
+}
+
+.wild-result-actions {
+  margin-top: 6px !important;
+}
+
+.wild-result-btn {
+  height: 42px !important;
+  min-height: 42px !important;
+  min-width: 190px !important;
+  margin: 0 !important;
+  padding: 0 20px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #38bdf8, #2563eb) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.05em !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Compact Landscape Viewport Rules (< 420px height) */
+@media (max-height: 420px) and (orientation: landscape), (max-height: 420px) {
+  .wild-capture-header {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+  }
+
+  .wild-capture-title {
+    font-size: 0.82rem !important;
+  }
+
+  .wild-capture-dock {
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .wild-capture-throw-btn {
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    min-width: 150px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .wild-capture-target {
+    width: 90px !important;
+    height: 90px !important;
+    bottom: calc(18% + 10px) !important;
+  }
+
+  .wild-capture-platform {
+    bottom: 18% !important;
+    height: 36px !important;
+  }
+
+  .wild-pokeball {
+    width: 38px !important;
+    height: 38px !important;
+    bottom: calc(18% + 6px) !important;
+  }
+
+  .wild-result-card {
+    flex-direction: row !important;
+    max-width: 620px !important;
+    padding: 10px 16px !important;
+    gap: 14px !important;
+    text-align: left !important;
+  }
+
+  .wild-result-stage {
+    flex: 0 0 120px !important;
+    margin: 0 !important;
+  }
+
+  .wild-result-pokemon-wrap {
+    width: 75px !important;
+    height: 75px !important;
+  }
+
+  .wild-result-pokemon-wrap img,
+  .wild-result-sprite {
+    width: 70px !important;
+    height: 70px !important;
+  }
+
+  .wild-result-body {
+    flex: 1 1 auto !important;
+    text-align: left !important;
+  }
+
+  .wild-result-btn {
+    height: 34px !important;
+    min-width: 160px !important;
+    font-size: 0.76rem !important;
+  }
 }
 
 @media (max-width: 560px) {
   .wild-encounter-screen,
   .wild-capture-screen {
-    padding: .75rem;
+    padding: 0;
   }
 
   .wild-encounter-hero,
   .wild-capture-screen .campaign-hero {
-    padding: 1rem .75rem;
+    padding: 1rem 0.75rem;
   }
 
   .wild-encounter-preview {
@@ -434,7 +837,7 @@
 
   .wild-capture-stage {
     width: 100%;
-    max-width: 460px;
+    max-width: 100%;
   }
 
   .wild-capture-screen .campaign-primary,

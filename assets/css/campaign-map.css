@@ -1866,11 +1866,14 @@ body.campaign-fullscreen-active.campaign-in-battle .battle-modal-backdrop,
   pointer-events: auto !important;
 }
 
-body.campaign-fullscreen-active #campaignView:has(.campaign-map-shell) {
+body.campaign-fullscreen-active #campaignView:has(.campaign-map-shell),
+body.campaign-fullscreen-active #campaignView:has(.wild-capture-screen),
+body.campaign-fullscreen-active #campaignView:has(.wild-result-screen) {
   overflow: hidden !important;
+  padding: 0 !important;
 }
 
-body.campaign-fullscreen-active .campaign-shell {
+body.campaign-fullscreen-active .campaign-shell:not(.wild-capture-screen):not(.wild-result-screen) {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
@@ -1880,6 +1883,23 @@ body.campaign-fullscreen-active .campaign-shell {
   overflow-y: visible !important;
   padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
            max(100px, calc(env(safe-area-inset-bottom) + 84px)) max(12px, env(safe-area-inset-left)) !important;
+}
+
+body.campaign-fullscreen-active .wild-capture-screen,
+body.campaign-fullscreen-active .wild-result-screen,
+body.campaign-fullscreen-active .campaign-shell.wild-capture-screen,
+body.campaign-fullscreen-active .campaign-shell.wild-result-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Hide mobile nav bar and scroll hint in fullscreen to maximize screen space */
@@ -2922,5 +2942,266 @@ body.campaign-fullscreen-active .draft-grid {
 
   .campaign-grid.draft-grid .campaign-mon small {
     font-size: 0.62rem !important;
+  }
+}
+
+
+/* ==========================================================================
+   CAMPAIGN IMMERSIVE ENTRY MODAL (M1)
+   ========================================================================== */
+
+.campaign-entry-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 28000 !important;
+  background: radial-gradient(circle at 50% 45%, rgba(15, 23, 42, 0.94), rgba(4, 7, 15, 0.98)) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+  animation: campaignEntryFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+.campaign-entry-card {
+  width: min(520px, 94vw);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  background: linear-gradient(165deg, rgba(17, 24, 39, 0.98) 0%, rgba(10, 15, 30, 0.99) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(56, 189, 248, 0.15);
+  padding: 20px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  position: relative;
+  isolation: isolate;
+  animation: campaignEntryScaleUp 0.30s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes campaignEntryFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes campaignEntryScaleUp {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.campaign-entry-header {
+  margin: 0;
+  padding: 0;
+}
+
+.campaign-entry-eyebrow {
+  margin: 0 0 2px 0;
+  font-size: 0.70rem;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.campaign-entry-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.campaign-entry-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.campaign-entry-device-frame {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.25), transparent 70%);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.campaign-entry-device-icon {
+  font-size: 1.5rem;
+  color: #38bdf8;
+  animation: campaignEntryRotatePhone 2.4s ease-in-out infinite;
+}
+
+@keyframes campaignEntryRotatePhone {
+  0%, 15% { transform: rotate(0deg); }
+  45%, 75% { transform: rotate(-90deg); }
+  90%, 100% { transform: rotate(0deg); }
+}
+
+.campaign-entry-orient-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-size: 0.72rem;
+  color: #7dd3fc;
+  font-weight: 700;
+}
+
+.campaign-entry-body {
+  margin: 0;
+  padding: 0;
+}
+
+.campaign-entry-lead {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 4px 0;
+}
+
+.campaign-entry-desc {
+  font-size: 0.80rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0 auto;
+  max-width: 440px;
+}
+
+.campaign-entry-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 6px;
+}
+
+.campaign-entry-btn {
+  width: 100%;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.campaign-entry-btn--primary {
+  height: 42px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  border: none;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.campaign-entry-btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.55);
+}
+
+.campaign-entry-btn--primary:active {
+  transform: translateY(1px);
+}
+
+.campaign-entry-btn--secondary {
+  height: 38px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.campaign-entry-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Compact Landscape Adaptation for Handheld Console Experience */
+@media (max-height: 440px) and (orientation: landscape), (max-height: 440px) {
+  .campaign-entry-modal-backdrop {
+    padding: 6px !important;
+  }
+
+  .campaign-entry-card {
+    width: min(620px, 96vw) !important;
+    max-height: calc(100dvh - 12px) !important;
+    padding: 10px 18px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    text-align: left !important;
+  }
+
+  .campaign-entry-header {
+    text-align: left !important;
+  }
+
+  .campaign-entry-header .campaign-entry-title {
+    font-size: 1.15rem !important;
+  }
+
+  .campaign-entry-visual {
+    display: none !important;
+  }
+
+  .campaign-entry-body {
+    flex: 1 1 auto !important;
+    text-align: left !important;
+  }
+
+  .campaign-entry-lead {
+    font-size: 0.85rem !important;
+    margin: 0 0 2px 0 !important;
+  }
+
+  .campaign-entry-desc {
+    font-size: 0.74rem !important;
+    line-height: 1.35 !important;
+    max-width: 320px !important;
+    margin: 0 !important;
+  }
+
+  .campaign-entry-actions {
+    flex: 0 0 210px !important;
+    max-width: 210px !important;
+    gap: 6px !important;
+    margin-top: 0 !important;
+  }
+
+  .campaign-entry-btn--primary {
+    height: 42px !important;
+    min-height: 42px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .campaign-entry-btn--secondary {
+    height: 40px !important;
+    min-height: 40px !important;
+    font-size: 0.74rem !important;
   }
 }
