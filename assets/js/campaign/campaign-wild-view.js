@@ -253,6 +253,31 @@
             <div class="wild-capture-stars"></div>
             <div class="wild-capture-glow"></div>
           </div>
+
+          <!-- TRAINER AVATAR LAUNCHING THE POKEBALL -->
+          <div class="wild-capture-trainer" id="wildCaptureTrainer">
+            <div class="wild-trainer-platform">
+              <div class="wild-trainer-platform-ring"></div>
+              <div class="wild-trainer-shadow"></div>
+            </div>
+            <div class="wild-trainer-visual">
+              <img src="assets/images/campaign/player-traveler.png"
+                   alt="Você"
+                   class="wild-trainer-sprite wild-trainer-sprite--idle"
+                   width="56" height="56"
+                   draggable="false">
+              <img src="assets/images/campaign/player-traveler-step-b.png"
+                   alt="Você arremessando"
+                   class="wild-trainer-sprite wild-trainer-sprite--throw"
+                   width="56" height="56"
+                   draggable="false">
+              <div class="wild-trainer-throw-fx"></div>
+            </div>
+            <div class="wild-trainer-badge">
+              <span class="wild-trainer-badge-tag">VOCÊ</span>
+            </div>
+          </div>
+
           <div class="wild-capture-platform">
             <div class="wild-capture-platform-ring"></div>
             <div class="wild-capture-shadow"></div>
@@ -353,8 +378,18 @@
 
           <div class="wild-result-stage" aria-hidden="true">
             <div class="wild-result-spotlight"></div>
-            <div class="wild-result-pokemon-wrap">
-              <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" class="wild-result-sprite" width="120" height="120">
+            <div class="wild-result-characters">
+              <div class="wild-result-trainer ${caught ? 'is-celebrating' : 'is-disappointed'}">
+                <img src="${caught ? 'assets/images/campaign/player-traveler-step-b.png' : 'assets/images/campaign/player-traveler.png'}"
+                     alt="Você"
+                     class="wild-result-trainer-sprite"
+                     width="52" height="52"
+                     draggable="false">
+                <span class="wild-result-trainer-badge">VOCÊ</span>
+              </div>
+              <div class="wild-result-pokemon-wrap">
+                <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" class="wild-result-sprite" width="120" height="120">
+              </div>
             </div>
             <div class="wild-result-badge-plate">
               <span class="wild-result-badge ${caught ? 'badge-success' : 'badge-failure'}">

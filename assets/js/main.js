@@ -1811,6 +1811,9 @@ function switchAppTab(tabName) {
     if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) {
       window.PBACampaign.CampaignFullscreen.exit();
     }
+    if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.onLeaveCampaign) {
+      window.PBACampaign.CampaignFullscreen.onLeaveCampaign();
+    }
   }
 
   navTabs.forEach(tab => {

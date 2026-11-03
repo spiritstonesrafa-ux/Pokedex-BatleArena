@@ -38,22 +38,20 @@
       if (typeof document === 'undefined') return false;
       if (this.isActive) return false;
       if (this.hasDismissedEntryPrompt) return false;
-      try {
-        if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('pba_campaign_entry_seen_v1') === 'true') {
-          return false;
-        }
-      } catch (_) {}
       if (document.body?.classList?.contains('campaign-in-battle')) return false;
       return true;
     }
 
     markEntryPromptSeen() {
       this.hasDismissedEntryPrompt = true;
-      try {
-        if (typeof sessionStorage !== 'undefined') {
-          sessionStorage.setItem('pba_campaign_entry_seen_v1', 'true');
-        }
-      } catch (_) {}
+    }
+
+    resetEntryPrompt() {
+      this.hasDismissedEntryPrompt = false;
+    }
+
+    onLeaveCampaign() {
+      this.resetEntryPrompt();
     }
 
     showEntryPrompt(options = {}) {
@@ -316,7 +314,9 @@
       shouldShow: () => instance.shouldShowEntryPrompt(),
       show: (options) => instance.showEntryPrompt(options),
       dismiss: () => instance.dismissEntryPrompt(),
-      markSeen: () => instance.markEntryPromptSeen()
+      markSeen: () => instance.markEntryPromptSeen(),
+      reset: () => instance.resetEntryPrompt(),
+      onLeaveCampaign: () => instance.onLeaveCampaign()
     }
   };
 

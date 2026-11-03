@@ -150,20 +150,23 @@ describe('M1 & M2: CAMPAIGN IMMERSIVE ENTRY & PREMIUM CAPTURE SUITE', () => {
     global.document = origDocument;
   });
 
-  it('M1 — shouldShowEntryPrompt: respects fullscreen state and session dismissal', () => {
-    const context = { window: mockWindow, document: mockDocument, navigator: mockWindow.navigator, screen: mockScreen, console };
+  it('M1 — shouldShowEntryPrompt: respects fullscreen state, intra-campaign dismissal and external re-entry', () => {
+    const context = { window: mockWindow, document: mockDocument, navigator: mockWindow.navigator, screen: mockScreen, console, setTimeout, clearTimeout };
     vm.createContext(context);
     vm.runInContext(fullscreenSource, context);
 
     const controller = context.window.PBACampaign.CampaignFullscreen;
     assert.equal(controller.shouldShowEntryPrompt(), true, 'Should recommend fullscreen on fresh entry');
 
-    // Dismissal
+    // Dismissal for current visit
     controller.markEntryPromptSeen();
-    assert.equal(controller.shouldShowEntryPrompt(), false, 'Should not re-prompt after dismissal');
+    assert.equal(controller.shouldShowEntryPrompt(), false, 'Should not re-prompt during the same campaign visit');
 
-    // Reset dismissal but enter fullscreen
-    controller.hasDismissedEntryPrompt = false;
+    // User leaves campaign to another module and returns
+    controller.onLeaveCampaign();
+    assert.equal(controller.shouldShowEntryPrompt(), true, 'Must re-prompt whenever entering campaign externally');
+
+    // In fullscreen active, prompt must stay suppressed
     controller.isActive = true;
     assert.equal(controller.shouldShowEntryPrompt(), false, 'Should not prompt if fullscreen is already active');
   });
@@ -249,6 +252,9 @@ describe('M1 & M2: CAMPAIGN IMMERSIVE ENTRY & PREMIUM CAPTURE SUITE', () => {
     assert.match(container.innerHTML, /wild-capture-screen/);
     assert.match(container.innerHTML, /wild-capture-header/);
     assert.match(container.innerHTML, /wild-capture-stage/);
+    assert.match(container.innerHTML, /wild-capture-trainer/);
+    assert.match(container.innerHTML, /player-traveler\.png/);
+    assert.match(container.innerHTML, /player-traveler-step-b\.png/);
     assert.match(container.innerHTML, /wild-capture-dock/);
     assert.match(container.innerHTML, /Lançar Poké Bola/);
 
@@ -271,12 +277,12 @@ describe('M1 & M2: CAMPAIGN IMMERSIVE ENTRY & PREMIUM CAPTURE SUITE', () => {
     const initialRoster = Catalog.DRAFT.slice(0, 6).map(p => p.id);
     manager.start(initialRoster);
 
-    // Mock active wild encounter with a collection-only Pokemon
-    const collectionMon = Catalog.ALL.find(p => p.collectionOnly) || { id: 999, name: 'Togepi', collectionOnly: true, sprite: 'togepi.png' };
+    // Mock active wild encounter with a collection-only Pokemon (Cosmog #789 in region-3)
+    const collectionMon = Catalog.byId(789) || { id: 789, name: 'Cosmog', collectionOnly: true, sprite: 'cosmog.png' };
     manager.data.wild = {
       active: {
-        regionId: 'region-1',
-        pointId: 'r1-meadow',
+        regionId: 'region-3',
+        pointId: 'r3-grove',
         pokemonId: collectionMon.id,
         encounterId: 'collection-test-1'
       },
