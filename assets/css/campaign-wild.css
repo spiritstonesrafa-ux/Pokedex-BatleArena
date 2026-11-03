@@ -305,121 +305,138 @@
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden !important;
+  contain: paint !important;
   isolation: isolate !important;
-  background: radial-gradient(ellipse at 50% 80%, rgba(60, 160, 100, 0.28), transparent 60%),
-              linear-gradient(180deg, #132432 0%, #173238 45%, #183e2e 75%, #0f271e 100%);
+  background: radial-gradient(circle at 72% 52%, rgba(34, 197, 94, 0.22) 0%, rgba(16, 36, 28, 0.72) 45%, #050d0a 100%) !important;
+  --ball-start-x: 310px;
+  --ball-start-y: 195px;
+  --ball-apex-x: 430px;
+  --ball-apex-y: 110px;
+  --ball-target-x: 540px;
+  --ball-target-y: 200px;
+  --ball-ground-x: 540px;
+  --ball-ground-y: 250px;
 }
 
 .wild-capture-stage[data-region="region-2"] {
-  background: radial-gradient(ellipse at 50% 80%, rgba(255, 140, 60, 0.28), transparent 60%),
-              linear-gradient(180deg, #321c24 0%, #3e262c 45%, #4a2820 75%, #2a1412 100%);
+  background: radial-gradient(circle at 72% 52%, rgba(255, 140, 60, 0.24) 0%, rgba(45, 24, 18, 0.75) 45%, #140807 100%) !important;
 }
 
 .wild-capture-stage[data-region="region-3"] {
-  background: radial-gradient(ellipse at 50% 80%, rgba(160, 90, 240, 0.32), transparent 60%),
-              linear-gradient(180deg, #1d1732 0%, #241c40 45%, #301f4a 75%, #1a102a 100%);
+  background: radial-gradient(circle at 72% 52%, rgba(160, 90, 240, 0.26) 0%, rgba(30, 20, 48, 0.75) 45%, #0b0714 100%) !important;
 }
 
-.wild-capture-stage::after {
-  content: '';
-  position: absolute;
-  left: calc(50% + 72px);
-  bottom: calc(22% - 4px);
-  width: min(290px, 65vw);
-  height: 38px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.7) 0%, transparent 75%);
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-/* Player Trainer Avatar in Foreground (Over-the-shoulder perspective) */
+/* Player Trainer Avatar in Foreground Left (Over-the-shoulder perspective) */
 .wild-capture-trainer {
   position: absolute !important;
   bottom: 0px !important;
-  left: max(24px, calc(50% - 240px)) !important;
-  width: 112px !important;
-  height: 134px !important;
+  left: 0px !important;
+  width: clamp(240px, 42vw, 380px) !important;
+  height: clamp(230px, 86%, 420px) !important;
   display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
   z-index: 15 !important;
   pointer-events: none !important;
-  transform-origin: bottom center !important;
-}
-
-.wild-trainer-shadow {
-  position: absolute !important;
-  bottom: 2px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 84px !important;
-  height: 16px !important;
-  border-radius: 50% !important;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 55%, transparent 80%) !important;
-  filter: blur(2px) !important;
+  transform-origin: bottom left !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .wild-trainer-visual {
   position: relative !important;
-  width: 106px !important;
-  height: 128px !important;
-  margin-bottom: 2px !important;
-  transform-origin: bottom center !important;
-  animation: wildTrainerBreathing 2.4s ease-in-out infinite alternate !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  transform-origin: bottom left !important;
+  animation: wildTrainerBreathing 2.6s ease-in-out infinite alternate !important;
 }
 
 .wild-trainer-sprite {
   position: absolute !important;
-  inset: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  image-rendering: pixelated !important;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) !important;
+  object-position: left bottom !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.9)) !important;
+  transition: opacity 0.12s ease !important;
 }
 
-.wild-trainer-sprite--idle {
+.wild-trainer-sprite--windup {
   opacity: 1 !important;
   display: block !important;
 }
 
-.wild-trainer-sprite--throw {
+.wild-trainer-sprite--release {
   opacity: 0 !important;
   display: block !important;
+}
+
+.wild-trainer-sprite--followthrough {
+  opacity: 0 !important;
+  display: block !important;
+}
+
+.wild-capture-stage.is-windup .wild-trainer-visual {
+  animation: wildTrainerWindupPull 0.35s ease-in-out forwards !important;
+}
+
+.wild-capture-stage.is-release .wild-trainer-sprite--windup {
+  opacity: 0 !important;
+}
+
+.wild-capture-stage.is-release .wild-trainer-sprite--release {
+  opacity: 1 !important;
+}
+
+.wild-capture-stage.is-release .wild-trainer-visual {
+  animation: wildTrainerThrowSurge 0.6s cubic-bezier(0.15, 0.85, 0.25, 1) forwards !important;
 }
 
 .wild-trainer-throw-fx {
   position: absolute !important;
   right: 18px !important;
-  top: 52px !important;
-  width: 24px !important;
-  height: 24px !important;
+  top: 48% !important;
+  width: 28px !important;
+  height: 28px !important;
   border-radius: 50% !important;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(56, 189, 248, 0.85) 45%, transparent 75%) !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(74, 222, 128, 0.85) 45%, transparent 75%) !important;
   opacity: 0 !important;
   transform: scale(0.2) !important;
   pointer-events: none !important;
 }
 
 @keyframes wildTrainerBreathing {
-  0% { transform: translateY(0) scaleY(1); }
-  100% { transform: translateY(-2px) scaleY(1.015); }
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px) scaleY(1.01); }
 }
 
-/* 3D Platform Ground Ellipse */
+@keyframes wildTrainerWindupPull {
+  0% { transform: translateY(0) rotate(0); }
+  100% { transform: translateY(4px) translateX(-6px) rotate(-2.5deg) scale(0.97); }
+}
+
+@keyframes wildTrainerThrowSurge {
+  0% { transform: translateY(4px) translateX(-6px) rotate(-2.5deg) scale(0.97); }
+  40% { transform: translateY(-4px) translateX(12px) rotate(3deg) scale(1.03); }
+  100% { transform: translateY(0) translateX(6px) rotate(1deg) scale(1.01); }
+}
+
+/* 3D Glowing Green Platform Neon Ring */
 .wild-capture-platform {
   position: absolute !important;
   bottom: 22% !important;
-  left: calc(50% + 72px) !important;
+  left: calc(50% + 140px) !important;
   transform: translateX(-50%) !important;
-  width: min(290px, 58vw) !important;
+  width: min(290px, 54vw) !important;
   height: 48px !important;
   border-radius: 50% !important;
-  border: 2px solid var(--wild-accent, #38bdf8) !important;
-  background: radial-gradient(ellipse at center, var(--wild-glow, rgba(56, 189, 248, 0.3)) 0%, rgba(14, 165, 233, 0.08) 55%, transparent 75%) !important;
-  box-shadow: 0 0 25px var(--wild-glow, rgba(56, 189, 248, 0.4)), inset 0 0 15px rgba(255, 255, 255, 0.2) !important;
+  border: 2.5px solid #4ade80 !important;
+  background: radial-gradient(ellipse at center, rgba(74, 222, 128, 0.22) 0%, rgba(34, 197, 94, 0.06) 55%, transparent 75%) !important;
+  box-shadow: 0 0 18px #22c55e, 0 0 42px rgba(34, 197, 94, 0.4), inset 0 0 16px rgba(74, 222, 128, 0.3) !important;
   pointer-events: none !important;
   z-index: 2 !important;
 }
@@ -428,8 +445,8 @@
 .wild-capture-target {
   position: absolute !important;
   z-index: 5 !important;
-  bottom: calc(22% + 14px) !important;
-  left: calc(50% + 72px) !important;
+  bottom: calc(22% + 12px) !important;
+  left: calc(50% + 140px) !important;
   transform: translateX(-50%) !important;
   width: 130px !important;
   height: 130px !important;
@@ -458,7 +475,7 @@
   position: absolute !important;
   z-index: 9 !important;
   bottom: calc(22% + 20px) !important;
-  left: calc(50% + 72px) !important;
+  left: calc(50% + 140px) !important;
   width: 180px !important;
   height: 180px !important;
   border-radius: 50% !important;
@@ -468,20 +485,44 @@
   pointer-events: none !important;
 }
 
-/* The High-Definition Pokéball (Proportional: ~22px, anchored at trainer hand) */
+/* The High-Definition Pokéball (Anchored dynamically to release hand) */
 .wild-pokeball {
   position: absolute !important;
-  z-index: 18 !important;
-  bottom: 44px !important;
-  left: calc(max(24px, calc(50% - 240px)) + 78px) !important;
-  width: 22px !important;
-  height: 22px !important;
+  z-index: 25 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
   border: 2px solid #111827 !important;
   border-radius: 50% !important;
   background: #ffffff !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), 0 0 8px rgba(255, 255, 255, 0.4) !important;
-  transform: rotate(-15deg) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 255, 255, 0.5) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
   transform-origin: center center !important;
+}
+
+.wild-capture-stage.is-release .wild-pokeball,
+.wild-capture-stage.is-playing .wild-pokeball {
+  opacity: 1 !important;
+}
+
+.wild-pokeball-trail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(270deg, rgba(255, 255, 255, 0.85) 0%, rgba(74, 222, 128, 0.5) 45%, transparent 100%);
+  transform-origin: left center;
+  transform: translate(-100%, -50%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.wild-capture-stage.is-playing .wild-pokeball-trail {
+  opacity: 0.85;
 }
 
 .wild-pokeball__top {
@@ -513,7 +554,7 @@
   position: absolute !important;
   z-index: 12 !important;
   bottom: calc(22% + 20px) !important;
-  left: calc(50% + 72px) !important;
+  left: calc(50% + 140px) !important;
   width: 100px !important;
   height: 100px !important;
   border-radius: 50% !important;
@@ -569,24 +610,24 @@
   margin: 0 !important;
   padding: 0 18px !important;
   border-radius: 999px !important;
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  color: #0f172a !important;
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%) !important;
+  color: #ffffff !important;
   font-weight: 800 !important;
   font-size: 0.82rem !important;
   letter-spacing: 0.05em !important;
-  border: none !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
   cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 0 16px rgba(185, 28, 28, 0.5) !important;
   transition: all 0.15s ease !important;
 }
 
 .wild-capture-throw-btn:hover:not(:disabled) {
   transform: translateY(-1px) !important;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.65) !important;
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.7) !important;
 }
 
 .wild-capture-throw-btn:disabled,
@@ -602,12 +643,16 @@
   animation: wildTrainerThrowPose 3.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
 }
 
-.wild-capture-stage.is-playing .wild-trainer-sprite--idle {
-  animation: wildTrainerSpriteIdleSwap 3.7s step-end forwards !important;
+.wild-capture-stage.is-playing .wild-trainer-sprite--windup {
+  animation: wildTrainerSpriteWindupSwap 3.7s step-end forwards !important;
 }
 
-.wild-capture-stage.is-playing .wild-trainer-sprite--throw {
-  animation: wildTrainerSpriteThrowSwap 3.7s step-end forwards !important;
+.wild-capture-stage.is-playing .wild-trainer-sprite--release {
+  animation: wildTrainerSpriteReleaseSwap 3.7s step-end forwards !important;
+}
+
+.wild-capture-stage.is-playing .wild-trainer-sprite--followthrough {
+  animation: wildTrainerSpriteFollowthroughSwap 3.7s step-end forwards !important;
 }
 
 .wild-capture-stage.is-playing .wild-trainer-throw-fx {
@@ -624,6 +669,10 @@
 
 .wild-capture-stage.is-playing .wild-pokeball {
   animation: wildBallJourney 3.7s linear forwards !important;
+}
+
+.wild-capture-stage.is-playing .wild-pokeball-trail {
+  animation: wildBallTrailFade 3.7s linear forwards !important;
 }
 
 .wild-capture-stage.is-playing .wild-pokeball__top {
@@ -660,41 +709,88 @@
 
 /* Keyframes synchronized with Audio Timeline */
 @keyframes wildBallJourney {
-  0% { transform: translate(0, 0) rotate(-15deg) scale(1); }
-  3% { transform: translate(-5px, 3px) rotate(-35deg) scale(1); } /* windup in hand */
-  8% { transform: translate(35px, -45px) rotate(60deg) scale(1.08); } /* release launch */
-  16% { transform: translate(130px, -145px) rotate(200deg) scale(1.15); } /* mid-arc */
-  22% { transform: translate(232px, -180px) rotate(360deg) scale(1.2); } /* apex above target */
-  29%, 44% { transform: translate(232px, -180px) rotate(360deg) scale(1.2); } /* open beam & absorb */
-  53% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* snap shut & drop to platform */
-  58% { transform: translate(232px, -74px) rotate(360deg) scale(1); } /* bounce 1 */
-  63% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* ground impact 1 */
-  66% { transform: translate(232px, -60px) rotate(340deg) scale(1); } /* hop 2 */
-  72% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* settled */
-  80% { transform: translate(232px, -54px) rotate(382deg) scale(1); } /* wobble 1 */
-  86% { transform: translate(232px, -54px) rotate(360deg) scale(1); }
-  92% { transform: translate(232px, -54px) rotate(338deg) scale(1); } /* wobble 2 */
-  97%, 100% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* wobble 3 / settled */
+  0%, 8.9% {
+    opacity: 0;
+    transform: translate(var(--ball-start-x, 310px), var(--ball-start-y, 195px)) rotate(-15deg) scale(0.95);
+  }
+  9% {
+    opacity: 1;
+    transform: translate(var(--ball-start-x, 310px), var(--ball-start-y, 195px)) rotate(0deg) scale(1);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(var(--ball-apex-x, 430px), var(--ball-apex-y, 110px)) rotate(360deg) scale(1.15);
+  }
+  30%, 46% {
+    opacity: 1;
+    transform: translate(var(--ball-target-x, 540px), var(--ball-target-y, 200px)) rotate(720deg) scale(1.08);
+  }
+  54% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(720deg) scale(1);
+  }
+  58% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), calc(var(--ball-ground-y, 250px) - 18px)) rotate(720deg) scale(1);
+  }
+  63% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(720deg) scale(1);
+  }
+  67% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), calc(var(--ball-ground-y, 250px) - 6px)) rotate(705deg) scale(1);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(720deg) scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(700deg) scale(1);
+  }
+  84% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(720deg) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(738deg) scale(1);
+  }
+  95%, 100% {
+    opacity: 1;
+    transform: translate(var(--ball-ground-x, 540px), var(--ball-ground-y, 250px)) rotate(720deg) scale(1);
+  }
+}
+
+@keyframes wildBallTrailFade {
+  0%, 8.9% { opacity: 0; }
+  9%, 28% { opacity: 0.9; }
+  31%, 100% { opacity: 0; }
 }
 
 @keyframes wildTrainerThrowPose {
   0% { transform: translateY(0) rotate(0) scale(1); }
-  3% { transform: translateY(3px) rotate(-3deg) scale(0.97); }
-  8% { transform: translateY(-4px) translateX(8px) rotate(4deg) scale(1.04); }
-  16% { transform: translateY(-1px) translateX(4px) rotate(2deg) scale(1.01); }
-  24%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  4% { transform: translateY(4px) translateX(-6px) rotate(-2.5deg) scale(0.97); }
+  10% { transform: translateY(-4px) translateX(12px) rotate(3deg) scale(1.03); }
+  18% { transform: translateY(-2px) translateX(8px) rotate(1.5deg) scale(1.02); }
+  26%, 100% { transform: translateY(0) translateX(0) rotate(0) scale(1); }
 }
 
-@keyframes wildTrainerSpriteIdleSwap {
-  0%, 3% { opacity: 1; }
-  4%, 18% { opacity: 0; }
-  19%, 100% { opacity: 1; }
+@keyframes wildTrainerSpriteWindupSwap {
+  0%, 8.9% { opacity: 1; }
+  9%, 100% { opacity: 0; }
 }
 
-@keyframes wildTrainerSpriteThrowSwap {
-  0%, 3% { opacity: 0; }
-  4%, 18% { opacity: 1; }
-  19%, 100% { opacity: 0; }
+@keyframes wildTrainerSpriteReleaseSwap {
+  0%, 8.9% { opacity: 0; }
+  9%, 21.9% { opacity: 1; }
+  22%, 100% { opacity: 0; }
+}
+
+@keyframes wildTrainerSpriteFollowthroughSwap {
+  0%, 21.9% { opacity: 0; }
+  22%, 100% { opacity: 1; }
 }
 
 @keyframes wildTrainerBurst {
@@ -977,48 +1073,35 @@
   }
 
   .wild-capture-trainer {
-    width: 104px !important;
-    height: 125px !important;
+    width: clamp(230px, 40vw, 320px) !important;
+    height: clamp(210px, 86%, 330px) !important;
+    left: 0px !important;
     bottom: 0px !important;
-    left: max(20px, calc(50% - 230px)) !important;
   }
 
   .wild-trainer-visual {
-    width: 100px !important;
-    height: 120px !important;
-  }
-
-  .wild-trainer-shadow {
-    width: 78px !important;
-    height: 15px !important;
-    bottom: 2px !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .wild-capture-platform {
     bottom: 20% !important;
-    left: calc(50% + 64px) !important;
-    width: min(250px, 54vw) !important;
-    height: 42px !important;
+    left: calc(50% + 120px) !important;
+    width: min(260px, 50vw) !important;
+    height: 44px !important;
   }
 
   .wild-capture-target {
-    width: 115px !important;
-    height: 115px !important;
+    width: 120px !important;
+    height: 120px !important;
     bottom: calc(20% + 10px) !important;
-    left: calc(50% + 64px) !important;
+    left: calc(50% + 120px) !important;
   }
 
   .wild-capture-beam,
   .wild-capture-sparkles {
     bottom: calc(20% + 16px) !important;
-    left: calc(50% + 64px) !important;
-  }
-
-  .wild-pokeball {
-    width: 20px !important;
-    height: 20px !important;
-    bottom: 40px !important;
-    left: calc(max(20px, calc(50% - 230px)) + 74px) !important;
+    left: calc(50% + 120px) !important;
   }
 
   .wild-result-card {
@@ -1104,26 +1187,21 @@
   }
 
   .wild-capture-trainer {
-    width: 88px !important;
-    height: 106px !important;
+    width: clamp(210px, 42vw, 250px) !important;
+    height: 220px !important;
+    left: 0px !important;
     bottom: 0px !important;
-    left: max(14px, calc(50% - 200px)) !important;
   }
 
   .wild-trainer-visual {
-    width: 84px !important;
-    height: 101px !important;
-  }
-
-  .wild-trainer-shadow {
-    width: 66px !important;
-    height: 12px !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .wild-capture-platform {
     bottom: 18% !important;
-    left: calc(50% + 52px) !important;
-    width: min(200px, 50vw) !important;
+    left: calc(50% + 85px) !important;
+    width: min(200px, 46vw) !important;
     height: 36px !important;
   }
 
@@ -1131,20 +1209,13 @@
     width: 95px !important;
     height: 95px !important;
     bottom: calc(18% + 8px) !important;
-    left: calc(50% + 52px) !important;
+    left: calc(50% + 85px) !important;
   }
 
   .wild-capture-beam,
   .wild-capture-sparkles {
     bottom: calc(18% + 14px) !important;
-    left: calc(50% + 52px) !important;
-  }
-
-  .wild-pokeball {
-    width: 17px !important;
-    height: 17px !important;
-    bottom: 34px !important;
-    left: calc(max(14px, calc(50% - 200px)) + 62px) !important;
+    left: calc(50% + 85px) !important;
   }
 
   .wild-result-card {

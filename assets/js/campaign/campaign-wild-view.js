@@ -254,33 +254,38 @@
             <div class="wild-capture-glow"></div>
           </div>
 
-          <!-- TRAINER AVATAR IN FOREGROUND FACING ARENA -->
+          <!-- CINEMATIC OVER-THE-SHOULDER TRAINER IN FOREGROUND LEFT -->
           <div class="wild-capture-trainer" id="wildCaptureTrainer">
-            <div class="wild-trainer-shadow"></div>
             <div class="wild-trainer-visual">
-              <img src="assets/images/campaign/player-traveler-up-a.png"
-                   alt="Você"
-                   class="wild-trainer-sprite wild-trainer-sprite--idle"
+              <img src="assets/images/campaign/trainer-capture-windup.png"
+                   alt="Você pronto para arremessar"
+                   class="wild-trainer-sprite wild-trainer-sprite--windup"
                    draggable="false">
-              <img src="assets/images/campaign/player-traveler-up-b.png"
-                   alt="Você arremessando"
-                   class="wild-trainer-sprite wild-trainer-sprite--throw"
+              <img src="assets/images/campaign/trainer-capture-release.png"
+                   alt="Você arremessando a Pokébola"
+                   class="wild-trainer-sprite wild-trainer-sprite--release"
+                   draggable="false">
+              <img src="assets/images/campaign/trainer-capture-followthrough.png"
+                   alt="Você finalizando o arremesso"
+                   class="wild-trainer-sprite wild-trainer-sprite--followthrough"
                    draggable="false">
               <div class="wild-trainer-throw-fx"></div>
             </div>
           </div>
 
-          <div class="wild-capture-platform">
+          <!-- GLOWING NEON RING PLATFORM UNDER POKÉMON -->
+          <div class="wild-capture-platform" id="wildCapturePlatform">
             <div class="wild-capture-platform-ring"></div>
             <div class="wild-capture-shadow"></div>
           </div>
-          <div class="wild-capture-target">
+          <div class="wild-capture-target" id="wildCaptureTarget">
             <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" width="128" height="128" class="wild-target-sprite">
           </div>
           <div class="wild-capture-beam"></div>
-          <div class="wild-pokeball">
+          <div class="wild-pokeball" id="wildCapturePokeball">
             <span class="wild-pokeball__top"></span>
             <span class="wild-pokeball__button"></span>
+            <div class="wild-pokeball-trail"></div>
           </div>
           <div class="wild-capture-sparkles"></div>
           <div class="wild-capture-smoke"></div>
@@ -312,14 +317,17 @@
       button.textContent = 'Captura em andamento...';
 
       const stage = this.container.querySelector('.wild-capture-stage');
+      const trainer = this.container.querySelector('#wildCaptureTrainer');
+      const ball = this.container.querySelector('#wildCapturePokeball');
+      const target = this.container.querySelector('#wildCaptureTarget');
+      const platform = this.container.querySelector('#wildCapturePlatform');
       const status = this.container.querySelector('#wildCaptureStatus');
       const reducedMotion = typeof window !== 'undefined'
         && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
       Audio?.playCue?.(getAudioController(this), reducedMotion ? 'QUICK_THROW' : 'CAPTURE');
-      if (status) status.textContent = 'Poké Bola lançada. Será que ele vai ficar?';
+      if (status) status.textContent = 'Poké Bola lançada! Em direção a ' + cap(pokemon.name) + '...';
       this._wildCaptureAnimating = !reducedMotion;
-      stage?.classList?.add('is-playing');
 
       const resolve = () => {
         if (this.manager.getState().wild?.pendingCapture?.battleId !== pending.battleId) {
@@ -346,8 +354,47 @@
         }, 900);
       };
 
-      if (reducedMotion) resolve();
-      else setTimeout(resolve, 3800);
+      if (reducedMotion) {
+        resolve();
+        return;
+      }
+
+      if (stage && trainer && target && platform && typeof stage.getBoundingClientRect === 'function') {
+        const sRect = stage.getBoundingClientRect();
+        const tRect = trainer.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const platRect = platform.getBoundingClientRect();
+
+        // Posição de origem: mão estendida no sprite de release (98% da largura, 46% da altura do treinador)
+        const startX = Math.round(tRect.left - sRect.left + tRect.width * 0.98);
+        const startY = Math.round(tRect.top - sRect.top + tRect.height * 0.46);
+
+        // Posição de destino: centro do Pokémon
+        const endX = Math.round(targetRect.left - sRect.left + targetRect.width * 0.5);
+        const endY = Math.round(targetRect.top - sRect.top + targetRect.height * 0.5);
+
+        // Ápice da parábola: arco alto entre início e fim
+        const apexX = Math.round((startX + endX) * 0.52);
+        const apexY = Math.round(Math.min(startY, endY) - Math.max(50, sRect.height * 0.22));
+
+        // Posição de solo na plataforma
+        const groundX = Math.round(platRect.left - sRect.left + platRect.width * 0.5);
+        const groundY = Math.round(platRect.top - sRect.top + platRect.height * 0.35);
+
+        // Definir propriedades CSS para animações
+        stage.style.setProperty('--ball-start-x', startX + 'px');
+        stage.style.setProperty('--ball-start-y', startY + 'px');
+        stage.style.setProperty('--ball-target-x', endX + 'px');
+        stage.style.setProperty('--ball-target-y', endY + 'px');
+        stage.style.setProperty('--ball-apex-x', apexX + 'px');
+        stage.style.setProperty('--ball-apex-y', apexY + 'px');
+        stage.style.setProperty('--ball-ground-x', groundX + 'px');
+        stage.style.setProperty('--ball-ground-y', groundY + 'px');
+      }
+
+      // STATE 2..4 acionados por keyframes síncronos em CSS
+      stage?.classList?.add('is-playing');
+      setTimeout(resolve, 3800);
     };
   };
 
