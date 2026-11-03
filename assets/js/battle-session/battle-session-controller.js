@@ -458,7 +458,10 @@
       // Tenta desbloquear áudio se disponível no navegador
       if (this.compositeAdapter && this.compositeAdapter.audioController) {
         try {
-          await this.compositeAdapter.audioController.unlock();
+          await Promise.race([
+            this.compositeAdapter.audioController.unlock(),
+            new Promise(resolve => setTimeout(resolve, 300))
+          ]);
         } catch {
           // Continua normalmente mesmo se áudio falhar
         }

@@ -28,6 +28,7 @@
       if (typeof document !== 'undefined') {
         const campaignEl = document.getElementById('campaignView');
         if (campaignEl && campaignEl.style.display !== 'none') return true;
+        if (document.body.classList.contains('campaign-in-battle')) return true;
       }
       return false;
     }

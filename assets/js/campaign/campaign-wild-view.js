@@ -147,18 +147,23 @@
           <p>Você pode deixar este Pokémon ir e explorar novamente, ou enfrentá-lo com 3 Pokémon contra 1 para tentar capturá-lo.</p>
         </div>
         <div class="campaign-hero picker-choice">
-          <h2>Escolha exatamente 3 Pokémon</h2>
-          <p>O primeiro selecionado será o líder. ${this.pick.length}/3 selecionados.</p>
+          <div class="picker-header-block">
+            <h2 class="picker-main-title">Escolha 3 Pokémon</h2>
+            <p class="picker-subtitle"><i class="fa-solid fa-crown"></i> O primeiro selecionado será o líder.</p>
+          </div>
+          <div class="picker-counter-badge ${ready ? 'is-ready' : ''}" role="status" aria-live="polite">
+            <span class="counter-num">${this.pick.length}/3</span> selecionados
+          </div>
         </div>
         <div class="campaign-grid draft-grid">
           ${roster.map(member => this.card(member, this.pick.includes(member.id))).join('')}
         </div>
-        <div class="picker-action-bar wild-picker-action-bar" id="pickerActionBar">
-          <div class="picker-status-hint ${ready ? 'complete' : 'incomplete'}">
-            <i class="fa-solid ${ready ? 'fa-circle-check' : 'fa-circle-info'}"></i>
-            <span>${ready ? 'Equipe completa (3/3) — Pronto para enfrentar!' : `Selecione mais ${3 - this.pick.length} Pokémon (${this.pick.length}/3)`}</span>
+        <div class="picker-action-bar compact-picker-dock wild-picker-action-bar" id="pickerActionBar">
+          <div class="picker-dock-info">
+            <i class="fa-solid fa-users"></i>
+            <span>Equipe: <strong>${this.pick.length}/3</strong></span>
           </div>
-          <button id="startCampaignBattle" class="campaign-primary ${ready ? 'ready-to-battle' : ''}" type="button" ${ready ? '' : 'disabled'}>
+          <button id="startCampaignBattle" class="campaign-primary picker-dock-btn ${ready ? 'ready-to-battle' : ''}" type="button" ${ready ? '' : 'disabled'}>
             ${ready ? '<i class="fa-solid fa-play"></i> ENFRENTAR PARA TENTAR CAPTURAR' : `<i class="fa-solid fa-lock"></i> Enfrentar para tentar capturar (${this.pick.length}/3)`}
           </button>
         </div>
@@ -193,16 +198,27 @@
         this.render();
       };
     });
-    this.container.querySelector('#startCampaignBattle').onclick = async () => {
-      if (this.pick.length !== 3) return;
-      try {
-        await this.coordinator.start('WILD', pokemon.id, this.pick);
-        this.pending = null;
-        window.switchAppTab('battle');
-      } catch (error) {
-        alert(error.message);
-      }
-    };
+    const startBtn = this.container.querySelector('#startCampaignBattle');
+    if (startBtn) {
+      startBtn.onclick = async () => {
+        if (this.pick.length !== 3 || this._startingBattle) return;
+        this._startingBattle = true;
+        startBtn.disabled = true;
+        const originalText = startBtn.innerHTML;
+        startBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Iniciando batalha...';
+        try {
+          await this.coordinator.start('WILD', pokemon.id, this.pick);
+          this.pending = null;
+          this._startingBattle = false;
+          window.switchAppTab('battle');
+        } catch (error) {
+          this._startingBattle = false;
+          startBtn.disabled = false;
+          startBtn.innerHTML = originalText;
+          alert(error.message);
+        }
+      };
+    }
   };
 
   View.prototype.renderWildCapture = function (pending) {

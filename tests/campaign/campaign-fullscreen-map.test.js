@@ -302,6 +302,44 @@ describe('CAMPAIGN FULLSCREEN & MAP PAN/ZOOM ISOLATION', () => {
     assert.ok(clampedMinY.y <= -160, 'minPanY should reach at least -160px at zoom 1.0');
   });
 
+  it('P0 Regression: CSS guarantees #campaignView is hidden and #futureModuleView elevated during campaign battle', () => {
+    const css = fs.readFileSync(path.join(root, 'assets/css/campaign-map.css'), 'utf8');
+    assert.ok(css.includes('body.campaign-fullscreen-active #campaignView[style*="display: none"]'), 'Must hide campaign view when inline display is none');
+    assert.ok(css.includes('body.campaign-fullscreen-active.campaign-in-battle #campaignView'), 'Must hide campaign view in campaign-in-battle');
+    assert.ok(css.includes('body.campaign-fullscreen-active.campaign-in-battle #futureModuleView'), 'Must display futureModuleView in campaign-in-battle');
+    assert.ok(css.includes('compact-picker-dock') || css.includes('border-radius: 999px'), 'Action bar must have compact floating pill dock');
+  });
+
+  it('P0 Regression: Audio unlock never blocks battle execution with timeout protection', () => {
+    const audioMgr = fs.readFileSync(path.join(root, 'assets/js/audio/audio-context-manager.js'), 'utf8');
+    assert.ok(audioMgr.includes('Promise.race') && audioMgr.includes('Audio unlock timed out'), 'audio-context-manager must use Promise.race with timeout for unlock');
+    const controller = fs.readFileSync(path.join(root, 'assets/js/battle-session/battle-session-controller.js'), 'utf8');
+    assert.ok(controller.includes('Promise.race') && controller.includes('audioController.unlock'), 'battle-session-controller must guard audioController.unlock with race');
+  });
+
+  it('P0 Regression: Coordinator executes switchAppTab before starting battle to avoid invisible combat', () => {
+    const coord = fs.readFileSync(path.join(root, 'assets/js/campaign/campaign-battle-coordinator.js'), 'utf8');
+    const switchIdx = coord.indexOf("switchAppTab('battle')");
+    const startIdx = coord.indexOf("this.session.startBattle()");
+    assert.ok(switchIdx !== -1, 'Coordinator must invoke switchAppTab');
+    assert.ok(startIdx !== -1, 'Coordinator must invoke startBattle');
+    assert.ok(switchIdx < startIdx, 'switchAppTab must be called before or during battle start');
+  });
+
+  it('P0 Regression: Picker header splits title and subtitle, and renders order badges on roster cards', () => {
+    const wildView = fs.readFileSync(path.join(root, 'assets/js/campaign/campaign-wild-view.js'), 'utf8');
+    assert.ok(wildView.includes('picker-main-title'), 'Wild view must have picker-main-title');
+    assert.ok(wildView.includes('picker-subtitle'), 'Wild view must have picker-subtitle');
+    assert.ok(wildView.includes('picker-counter-badge'), 'Wild view must have picker-counter-badge');
+    const campaignView = fs.readFileSync(path.join(root, 'assets/js/campaign/campaign-view.js'), 'utf8');
+    assert.ok(campaignView.includes('picker-order-badge is-leader'), 'Campaign view card must render leader order badge');
+  });
+
+  it('P0 Regression: Fullscreen isolation persists into campaign-in-battle without dropping mode', () => {
+    const fsSource = fs.readFileSync(path.join(root, 'assets/js/campaign/campaign-fullscreen.js'), 'utf8');
+    assert.ok(fsSource.includes("document.body.classList.contains('campaign-in-battle')"), 'CampaignFullscreenController must recognize campaign-in-battle');
+  });
+
   it('Campaign View: Wild Encounter view renders sticky #pickerActionBar with #startCampaignBattle', () => {
     const wildSource = fs.readFileSync(path.join(root, 'assets/js/campaign/campaign-wild-view.js'), 'utf8');
     assert.ok(wildSource.includes('id="pickerActionBar"'), 'Wild view must render #pickerActionBar');

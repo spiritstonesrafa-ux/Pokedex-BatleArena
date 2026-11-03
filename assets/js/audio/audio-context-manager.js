@@ -234,7 +234,11 @@
       try {
         const ctx = this.getContext();
         if (ctx.state === 'suspended') {
-          await ctx.resume();
+          // Garante que o desbloqueio não trave se a política de autoplay do navegador deixar ctx.resume() pendente
+          await Promise.race([
+            ctx.resume(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Audio unlock timed out')), 250))
+          ]);
         }
         this._state = AUDIO_STATES.READY;
         return this._state;

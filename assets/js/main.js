@@ -1848,7 +1848,13 @@ function switchAppTab(tabName) {
     if (pokedexView) pokedexView.style.display = 'none';
     if (teamView) teamView.style.display = 'none';
     if (profileView) profileView.style.display = 'none';
-    if (campaignView) campaignView.style.display = 'none';
+    if (campaignView) {
+      campaignView.style.display = 'none';
+      campaignView.classList.add('is-hidden');
+    }
+    if (isCampaignBattle && typeof document !== 'undefined' && document.body) {
+      document.body.classList.add('campaign-in-battle');
+    }
     if (futureModuleView) {
       futureModuleView.style.display = 'block';
       if (typeof window !== 'undefined' && window.battleView) {
@@ -1859,12 +1865,19 @@ function switchAppTab(tabName) {
     }
     if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (tabName === 'campaign') {
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.remove('campaign-in-battle');
+    }
     if (typeof window !== 'undefined' && window.battleSessionController && window.battleSessionController.uiState !== 'NO_TEAM') window.battleSessionController.leaveBattle();
     if (pokedexView) pokedexView.style.display = 'none';
     if (teamView) teamView.style.display = 'none';
     if (futureModuleView) futureModuleView.style.display = 'none';
     if (profileView) profileView.style.display = 'none';
-    if (campaignView) { campaignView.style.display = 'block'; if (typeof window !== 'undefined' && window.campaignView) window.campaignView.render(); }
+    if (campaignView) {
+      campaignView.classList.remove('is-hidden');
+      campaignView.style.display = 'block';
+      if (typeof window !== 'undefined' && window.campaignView) window.campaignView.render();
+    }
     if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (tabName === 'profile') {
     if (typeof window !== 'undefined' && window.battleSessionController && window.battleSessionController.uiState !== 'NO_TEAM') {

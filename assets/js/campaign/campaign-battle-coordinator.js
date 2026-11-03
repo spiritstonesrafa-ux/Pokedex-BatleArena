@@ -59,6 +59,9 @@
         }
       }
 
+      if (typeof window !== 'undefined' && typeof window.switchAppTab === 'function') {
+        window.switchAppTab('battle');
+      }
       await this.session.startBattle();
       return config;
     }
