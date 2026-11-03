@@ -80,9 +80,14 @@
         if(id===432)benefit=Object.values(constants.P6.hazards).some(k=>own[k]||foe[k])?60:10;
         if([100,226,575].includes(id))benefit=(context.attackerTeam||[]).some(m=>m.id!==attacker.id&&m.currentHp>0)?20:0;
         if(move.target!=='self'&&move.target!=='foeSide'&&(defender.isProtected||defender.twoTurnMove?.state))benefit=0;
+        if(constants.P7?.ability(attacker)==='prankster'&&!attacker.abilitySuppressed&&move.target!=='self'&&move.target!=='foeSide'&&((defender.types||[]).includes('dark')||constants.P8?.hasType?.(defender,'dark')))benefit=0;
+        const defHasMagicBounce=(constants.P7?.ability(defender)==='magic-bounce'&&!defender.abilitySuppressed&&!constants.P7?.ignored(attacker,defender,'magic-bounce'));
+        if(defHasMagicBounce&&constants.MoveFlags?.isReflectableMove?.(id)&&move.target!=='self'&&!constants.P5?.ohko?.(move))benefit=-50;
+        const attackerInfiltrates=(constants.P7?.ability(attacker)==='infiltrator'&&!attacker.abilitySuppressed);
+        if((defender.substituteHp>0||defender.substitute)&&!attackerInfiltrates&&!constants.MoveFlags?.isSoundMove?.(move)&&move.target!=='self'&&move.target!=='foeSide')benefit=0;
         const factor=move.accuracy===null?1:constants.getEffectiveAccuracy(move,attacker,defender)/100;
         if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0||attacker.statusCondition==='freeze')benefit=0;
-        return {moveId:id,moveName:move.name,damageClass:'status',power:null,accuracy:move.accuracy,currentPp:move.currentPp,priority:constants.getMovePriority(move),expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:Math.round(benefit*factor),statusChance:factor};
+        return {moveId:id,moveName:move.name,damageClass:'status',power:null,accuracy:move.accuracy,currentPp:move.currentPp,priority:constants.P7?.priority(attacker,move,constants)??constants.getMovePriority(move),expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:Math.round(benefit*factor),statusChance:factor};
       }
       if (constants.isProtectMove(move)) {
         const consecutive = Math.max(0, Number.isInteger(attacker.stallCount) ? attacker.stallCount : 0);
@@ -175,7 +180,10 @@
         let statusChance = 0;
         let isEligible = false;
 
-        if (move.statusEffect) {
+        if (constants.P7?.ability(attacker)==='prankster'&&!attacker.abilitySuppressed&&move.target!=='self'&&move.target!=='foeSide'&&((defender.types||[]).includes('dark')||constants.P8?.hasType?.(defender,'dark'))){expectedStatusBenefit=0;statusChance=0;}
+        else if ((constants.P7?.ability(defender)==='magic-bounce'&&!defender.abilitySuppressed&&!constants.P7?.ignored(attacker,defender,'magic-bounce'))&&constants.MoveFlags?.isReflectableMove?.(move.id)&&move.target!=='self'){expectedStatusBenefit=-50;statusChance=0;}
+        else if ((defender.substituteHp>0||defender.substitute)&&!(constants.P7?.ability(attacker)==='infiltrator'&&!attacker.abilitySuppressed)&&!constants.MoveFlags?.isSoundMove?.(move)&&move.target!=='self'&&move.target!=='foeSide'){expectedStatusBenefit=0;statusChance=0;}
+        else if (move.statusEffect) {
           if (move.statusEffect === 'confusion') {
             const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
             isEligible = !immune && !(defender.confusionTurns > 0) && (Number(defender.currentHp) || 0) > 0;
@@ -258,7 +266,7 @@
           guaranteedKo: false,
           possibleKo: false,
           wouldKo: false,
-          priority: constants?.getMovePriority?.(move) || 0,
+          priority: constants.P7?.priority(attacker,move,constants) ?? (constants?.getMovePriority?.(move) || 0),
           drainRatio: 0,
           expectedHeal: 0,
           recoilRatio: 0,
@@ -432,7 +440,7 @@
           baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
         }
       }
-      if(context.battleState && !isFixedDamage){const role=context.attackerSide==='enemy'?'player':'enemy';const f=constants.P6.barrierMultiplier(context.battleState,role,{...move,damageClass},Boolean(multiHit?.critical));minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
+      if(context.battleState && !isFixedDamage){const role=context.attackerSide==='enemy'?'player':'enemy';const f=constants.P6.barrierMultiplier(context.battleState,role,{...move,damageClass},Boolean(multiHit?.critical),attacker);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
       if(!isFixedDamage){const f=constants.P7.damageMultiplier(context.battleState,attacker,defender,{...move,type:moveType},typeMultiplier);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
       if(!isFixedDamage){const f=constants.P8.finalMultiplier(attacker,defender,move);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
       const ab=constants.P7.defenderAbility(attacker,defender,move),absorbs={'water-absorb':'water','volt-absorb':'electric','flash-fire':'fire','sap-sipper':'grass','lightning-rod':'electric','storm-drain':'water'};

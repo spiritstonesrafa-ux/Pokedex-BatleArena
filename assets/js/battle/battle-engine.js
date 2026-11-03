@@ -276,7 +276,7 @@
         })),
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
-        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,
+        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
@@ -495,6 +495,9 @@
       previousActive.isFlinched = false;
       previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
+          previousActive.substitute = false;
+          previousActive.substituteHp = 0;
+          previousActive.tauntTurns = 0;
           previousActive.entryMoveAttempts = 0;
           constants.P7.leave(state,role,previousActive,constants,events);
           constants.P8.restore(previousActive);
@@ -643,6 +646,17 @@
         if (mon) {
           mon.isFlinched = false;
           mon.isProtected = false;mon.maxGuard=false;
+          if (mon.tauntTurns > 0) {
+            mon.tauntTurns--;
+            if (mon.tauntTurns === 0) {
+              events.push({
+                type: BATTLE_EVENTS.MOVE_PREPARED,
+                actor: role,
+                pokemonName: mon.name,
+                reason: 'TAUNT_ENDED'
+              });
+            }
+          }
         }
       }
 
@@ -871,9 +885,10 @@
     function executeActionCore(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
       const attacker = getActiveCombatant(state, attackerRole);
       const defender = getActiveCombatant(state, defenderRole);
+      const attackerInfiltrates = Boolean(constants.P7?.ability(attacker) === "infiltrator" && !attacker.abilitySuppressed);
       constants.P6.init(state);
       attacker.safeguarded=Boolean(state.p6Sides[attackerRole].safeguard);
-      defender.safeguarded=Boolean(state.p6Sides[defenderRole].safeguard);
+      defender.safeguarded=Boolean(state.p6Sides[defenderRole].safeguard) && !attackerInfiltrates;
 
       // Recharge precedes PP, sleep, freeze, flinch and confusion checks. It is an action, not a move failure.
       if(attacker.rechargeMoveId){
@@ -902,6 +917,9 @@
           (action.moveId !== undefined && m.id === Number(action.moveId)) ||
           (action.moveName !== undefined && m.name.toLowerCase() === String(action.moveName).trim().toLowerCase())
         );
+        if (!selectedMove && (calledMove || action?.bounced)) {
+          selectedMove = constants.KNOWN_CATALOG_MOVES[action.moveId] || Object.values(constants.SUPPORTED_STATUS_MOVES).find(m => m.id === Number(action.moveId));
+        }
         if (!selectedMove) {
           throw new Error(`Golpe especificado não pertence ao loadout de "${attacker.name}": ${JSON.stringify(action)}`);
         }
@@ -1392,6 +1410,177 @@
       const p5Failure=constants.P5.get(selectedMove)?constants.P5.failure(selectedMove,attacker,defender,p5Context):null;
       if(p5Failure){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveName:selectedMove.name,reason:p5Failure});return;}
       const fail = reason => events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,target:defenderRole,pokemonName:attacker.name,moveId:selectedMove.id,moveName:selectedMove.name,reason});
+
+      if (!calledMove && attacker.tauntTurns > 0 && selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
+        attacker.lastMoveFailed = true;
+        fail('TAUNTED');
+        return;
+      }
+
+      // H5-A.3: Magic Bounce Reflection
+      const isReflectable = constants.MoveFlags?.isReflectableMove?.(selectedMove.id) ?? false;
+      const isHazardMove = [191, 390, 446, 564].includes(selectedMove.id);
+      const defenderHasMagicBounce = Boolean(constants.P7?.ability(defender) === 'magic-bounce' && !defender.abilitySuppressed);
+      const isMoldBreakerIgnored = defenderHasMagicBounce && constants.P7?.ignored(attacker, defender, 'magic-bounce');
+      const canMagicBounce = isReflectable && !isSelfTarget && selectedMove.target !== 'self' && defenderHasMagicBounce && !isMoldBreakerIgnored && !action.bounced;
+
+      if (canMagicBounce) {
+        events.push({
+          type: BATTLE_EVENTS.MOVE_PREPARED,
+          actor: defenderRole,
+          pokemonName: defender.name,
+          reason: 'P7_ABILITY',
+          label: 'magic-bounce'
+        });
+
+        if (isHazardMove) {
+          const hazardMap = { 191: 'spikes', 390: 'toxicSpikes', 446: 'stealthRock', 564: 'stickyWeb' };
+          const key = hazardMap[selectedMove.id];
+          const max = selectedMove.id === 191 ? 3 : selectedMove.id === 390 ? 2 : 1;
+          constants.P6.init(state);
+          const oppSide = state.p6Sides[attackerRole];
+          if ((oppSide[key] || 0) >= max) {
+            fail('HAZARD_LIMIT');
+          } else {
+            oppSide[key] = (oppSide[key] || 0) + 1;
+            events.push({
+              type: BATTLE_EVENTS.MOVE_PREPARED,
+              actor: attackerRole,
+              pokemonName: attacker.name,
+              reason: 'HAZARD_STARTED',
+              hazard: key,
+              layers: oppSide[key]
+            });
+          }
+          return;
+        }
+
+        executeAction(defenderRole, attackerRole, state, events, { ...action, bounced: true }, true);
+        return;
+      }
+
+      // H5-A.1: Prankster vs Dark-type Immunity and Psychic Terrain
+      const isPranksterBoosted = (constants.P7?.ability(attacker) === 'prankster' && !attacker.abilitySuppressed && selectedMove.damageClass === 'status' && !action.bounced);
+      const defenderIsDark = (defender.types || []).includes('dark') || (constants.P8?.hasType?.(defender, 'dark') ?? false);
+      const isTargetBlockedByPsychicTerrain = isPranksterBoosted && !isSelfTarget && selectedMove.target !== 'foeSide' && !state.doublesAllyTarget && (state.terrain?.id === 'psychic' || state.terrain?.id === 'psychic-terrain') && (constants.P7?.grounded ? constants.P7.grounded(defender) : true);
+
+      if (isTargetBlockedByPsychicTerrain) {
+        attacker.lastMoveFailed = true;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_FAILED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: attacker.name,
+          defenderName: defender.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'PSYCHIC_TERRAIN_PROTECTED'
+        });
+        return;
+      }
+
+      if (isPranksterBoosted && !isSelfTarget && selectedMove.target !== 'foeSide' && !state.doublesAllyTarget && defenderIsDark) {
+        attacker.lastMoveFailed = true;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_FAILED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: attacker.name,
+          defenderName: defender.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'IMMUNE_PRANKSTER'
+        });
+        return;
+      }
+
+      // H5-A.2: Infiltrator & Substitute on Status Moves
+      const hasSubstitute = Boolean(defender.substituteHp > 0 || defender.substitute);
+      const bypassesSub = attackerInfiltrates || (constants.MoveFlags?.isSoundMove?.(selectedMove) ?? false);
+
+      if (hasSubstitute && !bypassesSub && selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS && !isSelfTarget && selectedMove.target !== 'foeSide' && !state.doublesAllyTarget) {
+        attacker.lastMoveFailed = true;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_FAILED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: attacker.name,
+          defenderName: defender.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'BLOCKED_BY_SUBSTITUTE'
+        });
+        return;
+      }
+      if (selectedMove.id === 164) {
+        const subCost = Math.floor(constants.P8.baseMaxHp(attacker) / 4);
+        if (attacker.substitute || (attacker.substituteHp > 0)) {
+          fail('ALREADY_SUBSTITUTE');
+          return;
+        }
+        if (attacker.currentHp <= subCost) {
+          fail('TOO_WEAK');
+          return;
+        }
+        const previousHp = attacker.currentHp;
+        attacker.currentHp = previousHp - subCost;
+        attacker.substituteHp = subCost;
+        attacker.substitute = true;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_PREPARED,
+          actor: attackerRole,
+          pokemonName: attacker.name,
+          reason: 'SUBSTITUTE_CREATED',
+          substituteHp: subCost,
+          cost: subCost,
+          previousHp,
+          currentHp: attacker.currentHp,
+          maxHp: attacker.maxHp
+        });
+        return;
+      }
+      if (selectedMove.id === 269) {
+        if (defender.tauntTurns > 0) {
+          fail('ALREADY_TAUNTED');
+          return;
+        }
+        defender.tauntTurns = 3;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_PREPARED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: defender.name,
+          reason: 'TAUNT_APPLIED',
+          duration: 3
+        });
+        return;
+      }
+      if (selectedMove.id === 668) {
+        const targetAtk = Math.max(1, defender.stats?.attack || defender.attack || 50);
+        const stageMod = constants.getStatStageMultiplier ? constants.getStatStageMultiplier(defender.statStages?.attack || 0) : 1;
+        const effectiveAtk = Math.floor(targetAtk * stageMod);
+        const report = constants.applyStatStageChange(defender, 'attack', -1);
+        events.push({
+          type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+          combatant: defenderRole,
+          pokemonName: defender.name,
+          statKey: 'attack',
+          ...report
+        });
+        const previousHp = attacker.currentHp;
+        attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + effectiveAtk);
+        const healedAmount = attacker.currentHp - previousHp;
+        events.push({
+          type: BATTLE_EVENTS.HP_HEALED,
+          target: attackerRole,
+          pokemonName: attacker.name,
+          previousHp,
+          currentHp: attacker.currentHp,
+          maxHp: attacker.maxHp,
+          healedAmount
+        });
+        return;
+      }
       if(selectedMove.id===156){
         if(attacker.currentHp===attacker.maxHp||attacker.statusCondition==='sleep'||constants.P7.statusImmune(attacker,'sleep')){fail('REST_NOT_NEEDED');return;}
         const previousHp=attacker.currentHp,oldStatus=attacker.statusCondition;
@@ -1448,7 +1637,7 @@
       if(constants.P8.action(state,attackerRole,selectedMove,constants,events))return;
       if(constants.P7.statusAction(state,attackerRole,selectedMove,constants,events))return;
       if(constants.P6.statusAction(state,attackerRole,selectedMove,action||{},constants,events))return;
-      if(selectedMove.id===599&&state.p6Sides[defenderRole].mist){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,moveId:599,moveName:selectedMove.name,reason:'MIST'});return;}
+      if(selectedMove.id===599&&state.p6Sides[defenderRole].mist&&!attackerInfiltrates){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,moveId:599,moveName:selectedMove.name,reason:'MIST'});return;}
       if(selectedMove.id===599){
         if(!['poison','toxic'].includes(defender.statusCondition)){fail('VENOM_DRENCH');return;}
         if(['attack','specialAttack','speed'].every(k=>defender.statStages[k]<=-6)){fail('STAT_LIMIT');return;}
@@ -1715,14 +1904,26 @@
           const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
           const critical=constants.Critical.resolve(damageMove,criticalRolls[index],constants);
           const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat,critical?criticalStats.defense:defenseStat,hitPower);
-          let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
+          let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical,attacker)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
             hitDamage=Math.max(hitMultiplier===0?0:1,Math.floor(hitDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,hitMultiplier)));
             hitDamage=constants.P7.survive(state,attackerRole,damageMove,hitDamage,constants,events);
+            const hasMultiSub = Boolean(defender.substituteHp > 0 || defender.substitute);
+            const bypassesMultiSub = attackerInfiltrates || (constants.MoveFlags?.isSoundMove?.(damageMove) ?? false);
+            let hitActualDamage = 0;
             const previousHp = defender.currentHp;
-            defender.currentHp = Math.max(0, previousHp - hitDamage);
-            totalDamage += previousHp - defender.currentHp;
+            if (hasMultiSub && !bypassesMultiSub) {
+              defender.substituteHp = Math.max(0, (defender.substituteHp || 0) - hitDamage);
+              if (defender.substituteHp === 0) {
+                defender.substitute = false;
+              }
+              hitActualDamage = 0;
+            } else {
+              defender.currentHp = Math.max(0, previousHp - hitDamage);
+              hitActualDamage = previousHp - defender.currentHp;
+              totalDamage += hitActualDamage;
+            }
             hitCount++;
-          afterDirectHit(attacker,defender,attackerRole,defenderRole,damageMove,events,previousHp-defender.currentHp);
+          afterDirectHit(attacker,defender,attackerRole,defenderRole,damageMove,events,hitActualDamage);
             events.push({ type: BATTLE_EVENTS.DAMAGE_APPLIED, source: attackerRole, target: defenderRole,
               attackType: actualDamageType, damageClass: actualDamageClass, defenderTypes: defenderTypesList,
               moveName: selectedMove.name, power: hitPower, baseDamage:hitBaseDamage, critical, criticalMultiplier:critical?1.5:1, damageRoll: damageRolls[index],
@@ -1753,15 +1954,29 @@
       }
 
       if(!isFixedDamage&&state.battleFormat==='DOUBLES'&&state.doublesSpread)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*.75));
-      if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical)));
+      if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical,attacker)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,effectiveMultiplier)));
       if(!isFixedDamage)finalDamage=Math.max(effectiveMultiplier===0?0:1,Math.floor(finalDamage*constants.P8.finalMultiplier(attacker,defender,damageMove)));
       finalDamage=constants.P7.survive(state,attackerRole,damageMove,finalDamage,constants,events);
       // 7. Aplicação do dano ao HP
-      const previousHp = defender.currentHp;
-      const currentHp = Math.max(0, previousHp - finalDamage);
-      defender.currentHp = currentHp;
-      const actualDamageDealt = previousHp - currentHp;
+      const hasActiveSub = Boolean(defender.substituteHp > 0 || defender.substitute);
+      const bypassesSubDamage = attackerInfiltrates || (constants.MoveFlags?.isSoundMove?.(damageMove) ?? false);
+      let previousHp = defender.currentHp;
+      let currentHp = defender.currentHp;
+      let actualDamageDealt = 0;
+
+      if (hasActiveSub && !bypassesSubDamage) {
+        defender.substituteHp = Math.max(0, (defender.substituteHp || 0) - finalDamage);
+        if (defender.substituteHp === 0) {
+          defender.substitute = false;
+        }
+        actualDamageDealt = 0;
+      } else {
+        previousHp = defender.currentHp;
+        currentHp = Math.max(0, previousHp - finalDamage);
+        defender.currentHp = currentHp;
+        actualDamageDealt = previousHp - currentHp;
+      }
       afterDirectHit(attacker,defender,attackerRole,defenderRole,damageMove,events,actualDamageDealt);
 
       // 8. Emite evento de dano aplicado com dados completos
@@ -1952,7 +2167,7 @@
           }
 
           if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
-            if (!state.p6Sides[defenderRole].mist && secondaryEffectRoll <= secEffect.chance) {
+            if ((!state.p6Sides[defenderRole].mist || attackerInfiltrates) && secondaryEffectRoll <= secEffect.chance) {
               for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
                 const report = constants.applyStatStageChange(defender, statKey, delta);
                 events.push({
@@ -2056,6 +2271,9 @@
           previousActive.isFlinched = false;
           previousActive.confusionTurns = 0;
           previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
+          previousActive.substitute = false;
+          previousActive.substituteHp = 0;
+          previousActive.tauntTurns = 0;
           previousActive.entryMoveAttempts = 0;
           previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
           previousActive.toxicStage = 0;

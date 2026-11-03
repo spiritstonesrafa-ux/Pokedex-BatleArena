@@ -815,6 +815,9 @@
 
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     182: Object.freeze({ id: 182, name: 'protect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
+    164: Object.freeze({ id: 164, name: 'substitute', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'SUBSTITUTE'], knownPending: [], blockedReason: null, priority: 0 }),
+    269: Object.freeze({ id: 269, name: 'taunt', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'TAUNT'], knownPending: [], blockedReason: null, priority: 0 }),
+    668: Object.freeze({ id: 668, name: 'strength-sap', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'STAT_DROP', 'HEAL'], knownPending: [], blockedReason: null, priority: 0 }),
     197: Object.freeze({ id: 197, name: 'detect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
     49: Object.freeze({ id: 49, name: 'sonic-boom', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     82: Object.freeze({ id: 82, name: 'dragon-rage', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -948,6 +951,9 @@
     24: Object.freeze({"id":24,"name":"double-kick","type":"fighting","power":30,"accuracy":100,"pp":30,"damageClass":"physical"}),
     41: Object.freeze({"id":41,"name":"twineedle","type":"bug","power":25,"accuracy":100,"pp":20,"damageClass":"physical"}),
     594: Object.freeze({"id":594,"name":"water-shuriken","type":"water","power":15,"accuracy":100,"pp":20,"damageClass":"special"}),
+    164: Object.freeze({ id: 164, name: 'substitute', type: 'normal', power: 0, accuracy: null, pp: 10, damageClass: 'status', target: 'self' }),
+    269: Object.freeze({ id: 269, name: 'taunt', type: 'dark', power: 0, accuracy: 100, pp: 20, damageClass: 'status', target: 'normal' }),
+    668: Object.freeze({ id: 668, name: 'strength-sap', type: 'grass', power: 0, accuracy: 100, pp: 10, damageClass: 'status', target: 'normal' }),
     19: Object.freeze({ id: 19, name: 'fly', type: 'flying', power: 90, accuracy: 95, pp: 15, damageClass: 'physical' }),
     91: Object.freeze({ id: 91, name: 'dig', type: 'ground', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
     291: Object.freeze({ id: 291, name: 'dive', type: 'water', power: 80, accuracy: 100, pp: 10, damageClass: 'physical' }),
@@ -1605,6 +1611,9 @@
       power: 0, accuracy: 90, pp: 20, damageClass: 'status', statusEffect: 'paralysis' }),
     'protect': PROTECT_MOVES[182],
     'detect': PROTECT_MOVES[197],
+    'substitute': Object.freeze({ id: 164, name: 'substitute', type: 'normal', power: 0, accuracy: null, pp: 10, damageClass: 'status', target: 'self' }),
+    'taunt': Object.freeze({ id: 269, name: 'taunt', type: 'dark', power: 0, accuracy: 100, pp: 20, damageClass: 'status', target: 'normal' }),
+    'strength-sap': Object.freeze({ id: 668, name: 'strength-sap', type: 'grass', power: 0, accuracy: 100, pp: 10, damageClass: 'status', target: 'normal' }),
     ...P6.statusMoves,
     ...P7.statusMoves,
     ...P8.statusMoves

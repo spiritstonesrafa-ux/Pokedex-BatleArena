@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 97,
+    "declaredSupported": 100,
     "assignedAbilities": 313,
-    "assignedPending": 217,
+    "assignedPending": 214,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 595
+    "recordsWithPendingDefault": 580
   },
   "phases": [
     {
@@ -39,8 +39,8 @@
     {
       "id": "H5",
       "name": "Prioridade, controle e fluxo de ações",
-      "assignedPending": 18,
-      "defaultRecordsImpacted": 28
+      "assignedPending": 15,
+      "defaultRecordsImpacted": 13
     },
     {
       "id": "H6",
@@ -7053,8 +7053,8 @@
     },
     {
       "name": "infiltrator",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -9774,8 +9774,8 @@
     },
     {
       "name": "magic-bounce",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -12935,8 +12935,8 @@
     },
     {
       "name": "prankster",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {

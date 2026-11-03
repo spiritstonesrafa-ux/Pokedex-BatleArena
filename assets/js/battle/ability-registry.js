@@ -440,6 +440,54 @@
       swappable: false,
       testFiles: Object.freeze(['tests/battle/abilities-h4a.test.js']),
       description: 'Aumenta em 25% (multiplicador 1.25x) o dano de ataques super efetivos desferidos pelo portador. Aplica-se a movimentos físicos e especiais.'
+    },
+    'prankster': {
+      id: 'prankster',
+      name: 'Prankster',
+      generation: 5,
+      phase: 'H5',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_PRIORITY', 'ON_TRY_HIT']),
+      bearer: 'Whimsicott (#547), Sableye (#302), Klefki (#707), Grimmsnarl (#859), Tornadus (#641), Thundurus (#642)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h5a.test.js']),
+      description: 'Concede prioridade +1 para movimentos de status desferidos pelo portador. Oponentes do tipo Dark são imunes a golpes de status direcionados fortalecidos por Prankster.'
+    },
+    'infiltrator': {
+      id: 'infiltrator',
+      name: 'Infiltrator',
+      generation: 5,
+      phase: 'H5',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGE_CALCULATION', 'ON_STATUS_CHECK', 'ON_STAT_DROP_CHECK', 'ON_SUBSTITUTE_CHECK']),
+      bearer: 'Dragapult (#887), Noivern (#715), Chandelure (#609), Crobat (#169), Malamar (#687)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h5a.test.js']),
+      description: 'Ultrapassa as barreiras do oponente (Reflect, Light Screen, Aurora Veil, Safeguard, Mist) e o Substitute, desferindo dano e efeitos diretamente ao Pokémon alvo.'
+    },
+    'magic-bounce': {
+      id: 'magic-bounce',
+      name: 'Magic Bounce',
+      generation: 5,
+      phase: 'H5',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT', 'ON_REFLECT_STATUS', 'ON_REFLECT_HAZARDS']),
+      bearer: 'Mega Sableye (#10066), Mega Diancie (#10075), Espeon (#196), Xatu (#178), Hatterene (#858)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h5a.test.js']),
+      description: 'Reflete golpes de status e hazards direcionados de volta para o atacante. Ignorado por Mold Breaker, a menos que o defensor segure Ability Shield. Sem recursão de reflexão.'
     }
   };
 

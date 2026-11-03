@@ -199,8 +199,10 @@
     446,  // Stealth Rock
     487,  // Soak
     564,  // Sticky Web
+    575,  // Parting Shot
     598,  // Eerie Impulse
     608,  // Baby-Doll Eyes
+    668,  // Strength Sap
     673,  // Tearful Look
     749,  // Tar Shot
     810   // Corrosive Gas
