@@ -76,4 +76,53 @@ describe('PBA-014D — IMMERSIVE BATTLE VIEW', () => {
     assert.equal(immersive, false);
     assert.equal(controller.battleState, null);
   });
+
+  it('UX26–UX30 — fullscreen controller and interactive toggle button', () => {
+    assert.match(viewSource, /id="btnToggleFullscreen"/);
+    assert.match(viewSource, /toggleFullscreen/);
+    assert.match(viewSource, /enterPseudoFullscreen/);
+    assert.match(viewSource, /exitPseudoFullscreen/);
+    assert.match(viewSource, /updateFullscreenButton/);
+    assert.match(css, /battle-fullscreen-toggle-btn/);
+    assert.match(css, /html.battle-fullscreen-mode/);
+    assert.match(css, /body.battle-fullscreen-mode/);
+  });
+
+  it('UX31–UX35 — collapsible field conditions and abilities drawer', () => {
+    assert.match(viewSource, /id="battleFieldDrawer"/);
+    assert.match(viewSource, /id="battleFieldBackdrop"/);
+    assert.match(viewSource, /id="btnToggleFieldInfo"/);
+    assert.match(viewSource, /toggleFieldDrawer/);
+    assert.match(css, /.battle-field-drawer/);
+    assert.match(css, /.battle-field-backdrop/);
+    assert.match(css, /.btn-field-info-toggle/);
+  });
+
+  it('UX36–UX40 — responsive mobile layout, landscape mode and safe areas', () => {
+    assert.match(css, /@media \(orientation: landscape\) and \(max-height: 540px\)/);
+    assert.match(css, /env\(safe-area-inset-bottom\)/);
+    assert.match(viewSource, /class="battle-top-actions"/);
+  });
+
+  it('BattleView runtime manages fullscreen and field drawer states', () => {
+    const view = new BattleView({ container: { innerHTML: '', querySelector: () => null, querySelectorAll: () => [] } });
+    assert.equal(view.isFieldDrawerOpen, false);
+    assert.equal(view.isPseudoFullscreen, false);
+
+    // Toggle field drawer state
+    view.toggleFieldDrawer();
+    assert.equal(view.isFieldDrawerOpen, true);
+    view.toggleFieldDrawer();
+    assert.equal(view.isFieldDrawerOpen, false);
+    view.toggleFieldDrawer(true);
+    assert.equal(view.isFieldDrawerOpen, true);
+    view.toggleFieldDrawer(false);
+    assert.equal(view.isFieldDrawerOpen, false);
+
+    // Toggle pseudo-fullscreen fallback state
+    view.enterPseudoFullscreen();
+    assert.equal(view.isPseudoFullscreen, true);
+    view.exitPseudoFullscreen();
+    assert.equal(view.isPseudoFullscreen, false);
+  });
 });

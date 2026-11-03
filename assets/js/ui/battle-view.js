@@ -98,11 +98,15 @@
       this.isSwitchModalOpen = false;
       this.isReplacementModalOpen = false;
       this.isMuted = false;
+      this.isFieldDrawerOpen = false;
+      this.isPseudoFullscreen = false;
+      this.hasFullscreenListener = false;
       this.activeModal = null;
       this.activeModalCanClose = true;
       this.savedScrollY = 0;
       this.modalTrigger = null;
       this._lastCinematicResultBattleId = null;
+      this.fullscreenChangeHandler = () => this.handleFullscreenChange();
       this.keydownHandler = (event) => {
         if (!this.activeModal) return;
         if (event.key === 'Escape' && this.activeModalCanClose) { this.closeModal(); return; }
@@ -125,6 +129,11 @@
       if (typeof document !== 'undefined' && !this.hasKeyboardListener) {
         document.addEventListener('keydown', this.keydownHandler);
         this.hasKeyboardListener = true;
+      }
+      if (typeof document !== 'undefined' && !this.hasFullscreenListener) {
+        document.addEventListener('fullscreenchange', this.fullscreenChangeHandler);
+        document.addEventListener('webkitfullscreenchange', this.fullscreenChangeHandler);
+        this.hasFullscreenListener = true;
       }
     }
 
@@ -196,7 +205,120 @@
       } else {
         document.documentElement.classList.remove('battle-immersive-active');
         document.body.classList.remove('battle-immersive-active');
+        const isCampaignActive = typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive;
+        if (!isCampaignActive) {
+          this.exitPseudoFullscreen();
+        }
+        this.toggleFieldDrawer(false);
         this.resetArena();
+      }
+    }
+
+    toggleFullscreen() {
+      if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen) {
+        window.PBACampaign.CampaignFullscreen.toggle();
+        return;
+      }
+      if (typeof document === 'undefined') return;
+      const isNative = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (isNative) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        this.updateFullscreenButton(false);
+      } else if (this.isPseudoFullscreen) {
+        this.exitPseudoFullscreen();
+      } else {
+        const docEl = document.documentElement;
+        const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+        if (requestFs && (document.fullscreenEnabled || document.webkitFullscreenEnabled !== false)) {
+          requestFs.call(docEl)
+            .then(() => {
+              this.updateFullscreenButton(true);
+            })
+            .catch(() => {
+              this.enterPseudoFullscreen();
+            });
+        } else {
+          this.enterPseudoFullscreen();
+        }
+      }
+    }
+
+    enterPseudoFullscreen() {
+      this.isPseudoFullscreen = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.add('battle-fullscreen-mode');
+        document.body.classList.add('battle-fullscreen-mode');
+      }
+      this.updateFullscreenButton(true);
+    }
+
+    exitPseudoFullscreen() {
+      this.isPseudoFullscreen = false;
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('battle-fullscreen-mode');
+        document.body.classList.remove('battle-fullscreen-mode');
+      }
+      this.updateFullscreenButton(false);
+    }
+
+    handleFullscreenChange() {
+      if (typeof document === 'undefined') return;
+      const isNative = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (isNative) {
+        document.documentElement.classList.add('battle-fullscreen-mode');
+        document.body.classList.add('battle-fullscreen-mode');
+        this.updateFullscreenButton(true);
+      } else if (!this.isPseudoFullscreen) {
+        document.documentElement.classList.remove('battle-fullscreen-mode');
+        document.body.classList.remove('battle-fullscreen-mode');
+        this.updateFullscreenButton(false);
+      }
+    }
+
+    updateFullscreenButton(isFullscreen) {
+      if (typeof document === 'undefined') return;
+      const btn = document.getElementById('btnToggleFullscreen');
+      if (!btn) return;
+      const icon = btn.querySelector('i');
+      if (isFullscreen) {
+        btn.setAttribute('aria-label', 'Sair da tela cheia');
+        btn.setAttribute('title', 'Sair da tela cheia');
+        btn.classList.add('is-active');
+        if (icon) icon.className = 'fa-solid fa-compress';
+      } else {
+        btn.setAttribute('aria-label', 'Alternar tela cheia');
+        btn.setAttribute('title', 'Modo Imersivo Fullscreen');
+        btn.classList.remove('is-active');
+        if (icon) icon.className = 'fa-solid fa-expand';
+      }
+    }
+
+    toggleFieldDrawer(forcedState) {
+      const nextState = typeof forcedState === 'boolean' ? forcedState : !this.isFieldDrawerOpen;
+      this.isFieldDrawerOpen = nextState;
+      if (typeof document === 'undefined') return;
+      const drawer = document.getElementById('battleFieldDrawer');
+      const backdrop = document.getElementById('battleFieldBackdrop');
+      const btn = document.getElementById('btnToggleFieldInfo');
+      if (drawer) {
+        if (nextState) {
+          drawer.classList.add('is-open');
+          drawer.setAttribute('aria-hidden', 'false');
+        } else {
+          drawer.classList.remove('is-open');
+          drawer.setAttribute('aria-hidden', 'true');
+        }
+      }
+      if (backdrop) {
+        backdrop.classList.toggle('is-open', nextState);
+        backdrop.setAttribute('aria-hidden', nextState ? 'false' : 'true');
+      }
+      if (btn) {
+        btn.setAttribute('aria-expanded', nextState ? 'true' : 'false');
       }
     }
 
@@ -488,6 +610,7 @@
       const enemyVisual = this.resolveCombatantVisual(enemyActive, 'enemy');
 
       const isResolving = uiState === 'RESOLVING';
+      const isCampaignBattle = this.sessionController?.sessionOptions?.metadata?.mode === 'CAMPAIGN';
       const shadowAura = this.sessionController?.sessionOptions?.metadata?.kind === 'SHADOW' || !!battleState?.modifiers?.SHADOW_AURA;
       const finalStand = this.sessionController?.sessionOptions?.metadata?.battleFormat === 'FINAL_STAND';
       const playerRemaining = player.team.filter(p => p.currentHp > 0).length;
@@ -523,6 +646,10 @@
       const p7Field=['weather','terrain'].filter(k=>battleState[k]).map(k=>p7Names[battleState[k].id]+(k==='weather'&&!PowerRules.P7.fieldWeather(battleState)?' (efeito suspenso)':'')+' · '+battleState[k].turns+' turnos').join(' / ');
       const p7Loadout=[playerActive,enemyActive].map(m=>m.name+(m.dynamax?' [Dynamax · '+m.dynamax.turns+' turnos]':m.tera?' [Tera '+m.tera+']':'')+(m.transformedName?' → '+m.transformedName:'')+': '+(m.ability||'sem habilidade')+(m.ability&&![...PowerRules.P7.abilityNames,...PowerRules.P8.abilityNames,...PowerRules.Completion.abilityNames].includes(m.ability)?' (efeito pendente)':'')+(m.abilitySuppressed?' (suprimida)':'')+' · '+(m.item||'sem item')).join(' / ');
       const fieldHtml='<p role="status">'+p7Field+'</p><p>'+p7Loadout+'</p>'+['player','enemy'].map(role=>fieldSummary(role)?`<p role="status">${role==='player'?'Seu campo':'Campo adversário'}: ${fieldSummary(role)}</p>`:'').join('');
+      const activeWeatherName = battleState.weather ? (p7Names[battleState.weather.id] || battleState.weather.id) : null;
+      const activeTerrainName = battleState.terrain ? (p7Names[battleState.terrain.id] || battleState.terrain.id) : null;
+      const fieldChipText = [activeWeatherName, activeTerrainName].filter(Boolean).join(' · ');
+      const fieldBadgeHtml = fieldChipText ? `<span class="battle-field-chip" title="${fieldChipText}">${fieldChipText}</span>` : '';
       // Botões de golpes do Pokémon ativo do jogador
       const activationOptions=['dynamax','tera'].filter(kind=>PowerRules.P8.canActivate(battleState,'player',kind));
       const p8Activation=activationOptions.length?'<label>Mecânica especial <select id="p8Activation"><option value="">Batalhar normalmente</option>'+activationOptions.map(kind=>'<option value="'+kind+'" '+(kind===playerActive.specialMechanic?'selected':'')+'>'+(kind==='dynamax'?'Dynamax · três turnos':'Terastallizar · '+playerActive.teraType)+'</option>').join('')+'</select></label><p>Uma mecânica especial por equipe nesta batalha.</p>':'';
@@ -568,7 +695,7 @@
 
       this.container.innerHTML = `
         <div class="battle-view-container battle-immersive-shell">
-          <div class="battle-arena-layout ${shadowAura ? 'shadow-aura-active' : ''} ${finalStand ? 'final-stand-active' : ''} ${arenaTheme.themeClass}">
+          <div class="battle-arena-layout ${isCampaignBattle ? 'campaign-battle-layout' : ''} ${shadowAura ? 'shadow-aura-active' : ''} ${finalStand ? 'final-stand-active' : ''} ${arenaTheme.themeClass}">
           ${shadowAura ? '<div class="shadow-aura-indicator" role="status"><strong>AURA SOMBRIA</strong><span>Todos os ataques inimigos são no mínimo Super Efetivos.</span></div>' : ''}
             <!-- Barra Superior com Utilitários -->
             <div class="battle-top-bar">
@@ -583,9 +710,14 @@
               <div class="team-status-dots" id="enemyTeamDots" title="Status da equipe adversária" aria-label="Status da equipe adversária">
                 ${renderDots(enemy.team, enemy.activeIndex)}<i class="fa-solid fa-robot"></i>
               </div>
-              <button id="battleAudioToggle" class="battle-audio-toggle-btn" onclick="if(window.battleView) window.battleView.toggleBattleAudio();" aria-label="Silenciar áudio" aria-pressed="false">
-                <i class="fa-solid fa-volume-high"></i>
-              </button>
+              <div class="battle-top-actions">
+                <button id="battleAudioToggle" class="battle-audio-toggle-btn" onclick="if(window.battleView) window.battleView.toggleBattleAudio();" aria-label="Silenciar áudio" aria-pressed="false" title="Alternar áudio">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+                ${isCampaignBattle ? `<button id="btnToggleFullscreen" class="battle-fullscreen-toggle-btn ${(typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) || this.isPseudoFullscreen || (typeof document !== 'undefined' && Boolean(document.fullscreenElement || document.webkitFullscreenElement)) ? 'is-active' : ''}" onclick="if(window.battleView) window.battleView.toggleFullscreen();" aria-label="${(typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) ? 'Sair da tela cheia' : 'Alternar tela cheia'}" title="${(typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) ? 'Sair da tela cheia' : 'Modo Imersivo Fullscreen'}">
+                  <i class="fa-solid ${(typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) || this.isPseudoFullscreen || (typeof document !== 'undefined' && Boolean(document.fullscreenElement || document.webkitFullscreenElement)) ? 'fa-compress' : 'fa-expand'}"></i>
+                </button>` : ''}
+              </div>
             </div>
 
             <!-- HUD do Pokémon Adversário -->
@@ -690,7 +822,6 @@
               O que ${playerActive.name} deve fazer?
             </div>
 
-            <div class="battle-field-summary">${fieldHtml}</div>
             <!-- Painel de Ação do Jogador -->
             <div class="battle-action-panel">
               <div class="action-controls-row">
@@ -699,16 +830,44 @@
                   class="btn-switch-action"
                   ${isResolving || PowerRules.P6.switchBlocked(battleState,'player') ? 'disabled' : ''}
                   onclick="if(window.battleView) window.battleView.openSwitchModal();"
+                  aria-label="Trocar Pokémon"
                 >
                   <i class="fa-solid fa-repeat"></i> TROCAR POKÉMON
                 </button>
+                <button
+                  id="btnToggleFieldInfo"
+                  class="btn-field-info-toggle"
+                  type="button"
+                  onclick="if(window.battleView) window.battleView.toggleFieldDrawer();"
+                  aria-label="Condições de campo e habilidades"
+                  aria-expanded="${this.isFieldDrawerOpen ? 'true' : 'false'}"
+                  title="Condições de campo e habilidades"
+                >
+                  <i class="fa-solid fa-shield-halved"></i> <span>CAMPO</span>${fieldBadgeHtml}
+                </button>
+                ${p8Activation}
               </div>
 
               <div class="moves-action-grid" id="movesGrid">
-                ${p8Activation}${zButton}${movesHtml}
+                ${zButton}${movesHtml}
               </div>
             </div>
           </div>
+
+          <!-- Gaveta recolhível de Condições de Campo & Habilidades -->
+          <div id="battleFieldBackdrop" class="battle-field-backdrop ${this.isFieldDrawerOpen ? 'is-open' : ''}" onclick="if(window.battleView) window.battleView.toggleFieldDrawer(false);" aria-hidden="${this.isFieldDrawerOpen ? 'false' : 'true'}"></div>
+          <aside id="battleFieldDrawer" class="battle-field-drawer ${this.isFieldDrawerOpen ? 'is-open' : ''}" role="dialog" aria-modal="false" aria-label="Condições de campo e habilidades" aria-hidden="${this.isFieldDrawerOpen ? 'false' : 'true'}">
+            <div class="battle-field-drawer-header">
+              <div class="battle-field-drawer-title">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Condições de Campo & Habilidades</span>
+              </div>
+              <button type="button" class="battle-field-drawer-close-btn" onclick="if(window.battleView) window.battleView.toggleFieldDrawer(false);" aria-label="Fechar informações de campo">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <div class="battle-field-summary">${fieldHtml}</div>
+          </aside>
         </div>
       `;
 

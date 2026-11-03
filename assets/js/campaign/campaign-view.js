@@ -774,6 +774,19 @@ if (typeof window !== 'undefined') {
    const map=this.container.querySelector('#postgameMap');if(map)map.onclick=()=>{this.postgameMap=true;this.render();if(this.mapView){this.mapView.activeRegionId='region-postgame';this.mapView.selectedNodeId='node-mewtwo';this.mapView.render();}};
  };
  View.prototype.renderHome=function(){home.call(this);if(this.mapView)this.mapView.onPostgame=()=>{this.postgameMap=false;this.pending=null;this.render();};};
+  const origDeactivate = View.prototype.deactivate;
+  View.prototype.deactivate = function() {
+    if (typeof origDeactivate === 'function') {
+      origDeactivate.call(this);
+    } else {
+      if (typeof document !== 'undefined' && document.body) document.body.classList.remove('campaign-mobile-open');
+      if (typeof this.clearDraftDebounce === 'function') this.clearDraftDebounce();
+      if (this.mapView && typeof this.mapView.destroy === 'function') this.mapView.destroy();
+    }
+    if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) {
+      window.PBACampaign.CampaignFullscreen.exit();
+    }
+  };
 })();
 
 /* Old exploration saves may already own every new Super reward. */

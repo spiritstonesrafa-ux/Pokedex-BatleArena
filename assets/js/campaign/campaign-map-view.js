@@ -93,6 +93,12 @@
       this._ariaTimer = null;
       this._renderVersion = 0;
 
+      // Pan & Zoom state
+      this.zoomLevel = 1.0;
+      this.panX = 0;
+      this.panY = 0;
+      this.hasDragged = false;
+
       // Phase 4: Controlled transitions, lifecycle & cleanup
       this._isDestroyed = false;
       this.transitionCause = 'REGION_CHANGE';
@@ -291,6 +297,53 @@
       }
     }
 
+    zoomIn() {
+      this.zoomLevel = Math.min(1.8, +(this.zoomLevel + 0.2).toFixed(1));
+      const clamped = this._clampPan(this.panX, this.panY);
+      this.panX = clamped.x;
+      this.panY = clamped.y;
+      this._applyStageTransform();
+      this.announce(`Zoom do mapa: ${Math.round(this.zoomLevel * 100)}%`);
+    }
+
+    zoomOut() {
+      this.zoomLevel = Math.max(1.0, +(this.zoomLevel - 0.2).toFixed(1));
+      const clamped = this._clampPan(this.panX, this.panY);
+      this.panX = clamped.x;
+      this.panY = clamped.y;
+      this._applyStageTransform();
+      this.announce(`Zoom do mapa: ${Math.round(this.zoomLevel * 100)}%`);
+    }
+
+    recenterMap() {
+      this.zoomLevel = 1.0;
+      this.panX = 0;
+      this.panY = 0;
+      this._applyStageTransform();
+      this.announce('Mapa recentralizado.');
+    }
+
+    _clampPan(x, y) {
+      if (!this.container) return { x: 0, y: 0 };
+      const viewport = this.container.querySelector('.campaign-map-viewport');
+      if (!viewport) return { x: 0, y: 0 };
+      const w = viewport.clientWidth || 600;
+      const h = viewport.clientHeight || 350;
+      const maxPanX = Math.max(0, ((this.zoomLevel - 1) * w) / 2 + (this.zoomLevel > 1.0 ? 120 : 40));
+      const maxPanY = Math.max(0, ((this.zoomLevel - 1) * h) / 2 + (this.zoomLevel > 1.0 ? 80 : 30));
+      return {
+        x: Math.max(-maxPanX, Math.min(maxPanX, x)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, y))
+      };
+    }
+
+    _applyStageTransform() {
+      if (!this.container) return;
+      const stage = this.container.querySelector('.campaign-map-stage');
+      if (!stage) return;
+      stage.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`;
+    }
+
     announce(message) {
       if (this._isDestroyed || !message) return;
       this.ariaLiveMessage = message;
@@ -393,7 +446,7 @@
       this.container.innerHTML = `
         <section class="campaign-map-shell ${this._travel ? 'is-traveling' : ''}">
           <div id="mapAriaLive" class="campaign-map-live-region" role="status" aria-live="polite" aria-atomic="true"></div>
-          
+
           ${this._renderHeader(viewModel)}
           ${this._renderTabs(viewModel)}
 
@@ -445,26 +498,34 @@
 
           <div class="campaign-map-header__controls">
             ${this.manager.getState().shadowTrainer?.defeated?'<button id="returnPostgameHub" class="campaign-secondary">← Desafios após Shadow</button>':''}
+            <button type="button"
+                    id="btnCampaignFullscreen"
+                    class="campaign-view-toggle-btn campaign-fullscreen-btn"
+                    aria-pressed="false"
+                    aria-label="Modo imersivo horizontal"
+                    title="Modo Imersivo Horizontal">
+              <i class="fa-solid fa-expand" aria-hidden="true"></i> <span class="fullscreen-btn-label">Tela Cheia</span>
+            </button>
             <div class="campaign-view-toggle-group" role="group" aria-label="Modo de visualização">
-              <button type="button" 
-                      id="viewModeMapBtn" 
-                      class="campaign-view-toggle-btn" 
-                      aria-pressed="${isMap}" 
+              <button type="button"
+                      id="viewModeMapBtn"
+                      class="campaign-view-toggle-btn"
+                      aria-pressed="${isMap}"
                       title="Exibir mapa com rotas">
                 <i class="fa-solid fa-map" aria-hidden="true"></i> Mapa
               </button>
-              <button type="button" 
-                      id="viewModeListBtn" 
-                      class="campaign-view-toggle-btn" 
-                      aria-pressed="${!isMap}" 
+              <button type="button"
+                      id="viewModeListBtn"
+                      class="campaign-view-toggle-btn"
+                      aria-pressed="${!isMap}"
                       title="Exibir lista de mestres e desafios">
                 <i class="fa-solid fa-list-ul" aria-hidden="true"></i> Lista
               </button>
             </div>
 
-            <button type="button" 
-                    id="campaignResetBtn" 
-                    class="campaign-map-reset-btn" 
+            <button type="button"
+                    id="campaignResetBtn"
+                    class="campaign-map-reset-btn"
                     title="Reiniciar campanha">
               Resetar campanha
             </button>
@@ -645,8 +706,8 @@
         const sel = region.nodes.find(n => n.nodeId === this.selectedNodeId);
         if (sel && !(sel.isHidden || (sel.challengeKind === 'SHADOW' && sel.state === 'HIDDEN'))) {
           selectedMarkerHtml = `
-            <div class="map-selection-marker" 
-                 style="left: ${sel.position.x}%; top: ${sel.position.y}%;" 
+            <div class="map-selection-marker"
+                 style="left: ${sel.position.x}%; top: ${sel.position.y}%;"
                  aria-hidden="true">
               <i class="fa-solid fa-caret-down fa-2x"></i>
             </div>
@@ -662,6 +723,11 @@
 
       return `
         <div class="campaign-map-viewport">
+          <div class="campaign-map-zoom-controls" role="toolbar" aria-label="Controles de navegação do mapa">
+            <button type="button" id="btnMapZoomIn" class="campaign-map-ctrl-btn" aria-label="Aumentar zoom do mapa" title="Aumentar zoom"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" id="btnMapZoomOut" class="campaign-map-ctrl-btn" aria-label="Diminuir zoom do mapa" title="Diminuir zoom"><i class="fa-solid fa-minus"></i></button>
+            <button type="button" id="btnMapRecenter" class="campaign-map-ctrl-btn" aria-label="Recentralizar mapa" title="Recentralizar mapa"><i class="fa-solid fa-crosshairs"></i></button>
+          </div>
           <div class="${stageClasses.join(' ')}">
             ${region.bgImage ? `
               <img class="campaign-map-bg-image"
@@ -675,7 +741,7 @@
             ` : ''}
             <div class="map-contrast-overlay" aria-hidden="true"></div>
             <div class="map-ambient-grid" aria-hidden="true"></div>
-            
+
             <div class="map-region-info-overlay">
               <h3 class="region-name">${region.name}</h3>
               <p class="region-subtitle">${region.subtitle}</p>
@@ -774,14 +840,14 @@
             </div>
 
             <div class="campaign-list-card__actions">
-              <button type="button" 
-                      class="campaign-list-card__btn campaign-list-card__btn-details" 
-                      data-node-open="${node.nodeId}" 
+              <button type="button"
+                      class="campaign-list-card__btn campaign-list-card__btn-details"
+                      data-node-open="${node.nodeId}"
                       aria-label="Ver detalhes de ${nameText}">
                 <i class="fa-solid fa-circle-info"></i> Detalhes
               </button>
-              <button type="button" 
-                      class="campaign-list-card__btn ${btnClass}" 
+              <button type="button"
+                      class="campaign-list-card__btn ${btnClass}"
                       data-node-challenge="${node.nodeId}"
                       ${challengeDisabledAttr}>
                 ${btnText}
@@ -801,11 +867,11 @@
     _renderDrawer(selectedNode, viewModel) {
       if (!selectedNode || !this.isDrawerOpen) {
         return `
-          <aside id="trainerDetailsDrawer" 
-                 class="campaign-details-drawer" 
-                 role="dialog" 
-                 aria-modal="true" 
-                 aria-hidden="true" 
+          <aside id="trainerDetailsDrawer"
+                 class="campaign-details-drawer"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-hidden="true"
                  style="display:none;">
           </aside>
         `;
@@ -932,12 +998,12 @@
                aria-hidden="${drawerAriaHidden}"
                aria-labelledby="drawerTrainerTitle">
           <div class="details-drawer-handle" aria-hidden="true"></div>
-          
+
           <div class="details-drawer-header">
             <h3 id="drawerTrainerTitle">${trainerName}</h3>
-            <button type="button" 
-                    id="detailsCloseBtn" 
-                    class="details-close-btn" 
+            <button type="button"
+                    id="detailsCloseBtn"
+                    class="details-close-btn"
                     aria-label="Fechar painel de detalhes">
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
@@ -984,10 +1050,10 @@
           </div>
 
           <div class="details-drawer-footer">
-            <button type="button" 
-                    id="drawerActionBtn" 
-                    class="details-action-btn ${ctaClass}" 
-                    data-action-kind="${selectedNode.challengeKind}" 
+            <button type="button"
+                    id="drawerActionBtn"
+                    class="details-action-btn ${ctaClass}"
+                    data-action-kind="${selectedNode.challengeKind}"
                     data-action-id="${selectedNode.challengeId}"
                     ${canChallenge ? '' : 'disabled aria-disabled="true"'}>
               <i class="fa-solid ${ctaIcon}"></i> ${ctaText}
@@ -1185,8 +1251,87 @@
         };
       });
 
+      // Pan, Zoom and Fullscreen events
+      const zoomInBtn = this.container.querySelector('#btnMapZoomIn');
+      const zoomOutBtn = this.container.querySelector('#btnMapZoomOut');
+      const recenterBtn = this.container.querySelector('#btnMapRecenter');
+      const fullscreenBtn = this.container.querySelector('#btnCampaignFullscreen');
+
+      if (zoomInBtn) zoomInBtn.onclick = () => this.zoomIn();
+      if (zoomOutBtn) zoomOutBtn.onclick = () => this.zoomOut();
+      if (recenterBtn) recenterBtn.onclick = () => this.recenterMap();
+      if (fullscreenBtn) {
+        fullscreenBtn.onclick = () => {
+          if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen) {
+            window.PBACampaign.CampaignFullscreen.toggle();
+          }
+        };
+      }
+      if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen) {
+        window.PBACampaign.CampaignFullscreen.syncUI();
+      }
+
+      // Drag / Pan on viewport
+      const viewport = this.container.querySelector('.campaign-map-viewport');
+      if (viewport) {
+        let isDown = false;
+        let startClientX = 0;
+        let startClientY = 0;
+        let initialPanX = 0;
+        let initialPanY = 0;
+
+        const onDown = (clientX, clientY) => {
+          isDown = true;
+          this.hasDragged = false;
+          startClientX = clientX;
+          startClientY = clientY;
+          initialPanX = this.panX;
+          initialPanY = this.panY;
+        };
+
+        const onMove = (clientX, clientY) => {
+          if (!isDown) return;
+          const dx = clientX - startClientX;
+          const dy = clientY - startClientY;
+          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+            this.hasDragged = true;
+            const clamped = this._clampPan(initialPanX + dx, initialPanY + dy);
+            this.panX = clamped.x;
+            this.panY = clamped.y;
+            this._applyStageTransform();
+          }
+        };
+
+        const onUp = () => {
+          isDown = false;
+          setTimeout(() => { this.hasDragged = false; }, 60);
+        };
+
+        viewport.onmousedown = (e) => {
+          if (e.button !== 0) return;
+          onDown(e.clientX, e.clientY);
+        };
+        viewport.onmousemove = (e) => onMove(e.clientX, e.clientY);
+        viewport.onmouseup = onUp;
+        viewport.onmouseleave = onUp;
+
+        viewport.ontouchstart = (e) => {
+          if (e.touches.length === 1) {
+            onDown(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        };
+        viewport.ontouchmove = (e) => {
+          if (e.touches.length === 1) {
+            onMove(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        };
+        viewport.ontouchend = onUp;
+        viewport.ontouchcancel = onUp;
+      }
+
       this.container.querySelectorAll('.campaign-map-node').forEach(nodeBtn => {
         nodeBtn.onclick = () => {
+          if (this.hasDragged) return;
           const nodeId = nodeBtn.dataset.nodeId;
           this.openNode(nodeId, nodeBtn, 'map-node');
         };

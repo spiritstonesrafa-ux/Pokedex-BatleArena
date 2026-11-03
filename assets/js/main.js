@@ -1803,9 +1803,13 @@ function renderFutureModule(moduleKey) {
 }
 
 function switchAppTab(tabName) {
-  if (tabName !== 'campaign') {
+  const isCampaignBattle = tabName === 'battle' && (window.battleSessionController?.sessionOptions?.metadata?.mode === 'CAMPAIGN' || window.campaignBattleCoordinator?.starting);
+  if (tabName !== 'campaign' && !isCampaignBattle) {
     if (typeof window !== 'undefined' && window.campaignView && typeof window.campaignView.deactivate === 'function') {
       window.campaignView.deactivate();
+    }
+    if (typeof window !== 'undefined' && window.PBACampaign?.CampaignFullscreen?.isActive) {
+      window.PBACampaign.CampaignFullscreen.exit();
     }
   }
 

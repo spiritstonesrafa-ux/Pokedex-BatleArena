@@ -1650,3 +1650,255 @@
 [data-simulate-reduced-motion="true"] .map-selection-marker {
   animation: none !important;
 }
+
+/* ==========================================================================
+   CAMPAIGN FULLSCREEN & IMMERSIVE HORIZONTAL MODE
+   ========================================================================== */
+.campaign-fullscreen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #bae6fd;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.campaign-fullscreen-btn:hover {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.campaign-fullscreen-btn.is-active {
+  background: rgba(56, 189, 248, 0.35);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+/* Map Zoom & Recenter Controls Overlay */
+.campaign-map-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+
+.campaign-map-ctrl-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease;
+}
+
+.campaign-map-ctrl-btn:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.campaign-map-ctrl-btn:active {
+  transform: scale(0.92);
+}
+
+/* Rotate Device Prompt Banner for Portrait mode */
+.campaign-rotate-prompt {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid #38bdf8;
+  border-radius: 12px;
+  padding: 8px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  max-width: 90vw;
+  animation: promptSlideDown 0.3s ease-out;
+}
+
+@keyframes promptSlideDown {
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.campaign-rotate-prompt__content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campaign-rotate-prompt__dismiss {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+@media (orientation: landscape) {
+  .campaign-rotate-prompt {
+    display: none !important;
+  }
+}
+
+/* Fullscreen Immersive Container for Campaign */
+body.campaign-fullscreen-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #060914 !important;
+  z-index: 99999 !important;
+}
+
+body.campaign-fullscreen-active .header,
+body.campaign-fullscreen-active .footer,
+body.campaign-fullscreen-active .bottom-nav {
+  display: none !important;
+}
+
+body.campaign-fullscreen-active #campaignView {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  z-index: 10000 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: #060914 !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-shell {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+    max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-header {
+  flex: 0 0 auto !important;
+  padding: 4px 10px !important;
+  margin-bottom: 2px !important;
+  border-radius: 8px !important;
+  gap: 6px !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-header__titles h2 {
+  font-size: 0.95rem !important;
+  margin: 0 !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-header__titles p.eyebrow {
+  display: none !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tabs {
+  flex: 0 0 auto !important;
+  padding: 2px 4px !important;
+  margin-bottom: 2px !important;
+  gap: 4px !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tab {
+  padding: 4px 10px !important;
+  font-size: 0.72rem !important;
+}
+
+body.campaign-fullscreen-active #campaign-map-region-panel {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-viewport {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-stage {
+  min-width: 100% !important;
+  min-height: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform-origin: center center;
+  transition: transform 0.12s ease-out;
+}
+
+/* Landscape Drawer adjustment for Campaign */
+@media (orientation: landscape) {
+  body.campaign-fullscreen-active .campaign-details-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: auto !important;
+    width: min(380px, 46vw) !important;
+    max-width: 46vw !important;
+    max-height: 100dvh !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    border-radius: 0 !important;
+    border-left: 2px solid #38bdf8 !important;
+    border-top: none !important;
+    transform: translateX(105%) !important;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.8) !important;
+    z-index: 9999 !important;
+  }
+
+  body.campaign-fullscreen-active .campaign-details-drawer.is-open {
+    transform: translateX(0) !important;
+  }
+}
