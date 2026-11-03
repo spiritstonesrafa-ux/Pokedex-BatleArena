@@ -253,8 +253,8 @@ describe('M1 & M2: CAMPAIGN IMMERSIVE ENTRY & PREMIUM CAPTURE SUITE', () => {
     assert.match(container.innerHTML, /wild-capture-header/);
     assert.match(container.innerHTML, /wild-capture-stage/);
     assert.match(container.innerHTML, /wild-capture-trainer/);
-    assert.match(container.innerHTML, /player-traveler\.png/);
-    assert.match(container.innerHTML, /player-traveler-step-b\.png/);
+    assert.match(container.innerHTML, /player-traveler-up-a\.png/);
+    assert.match(container.innerHTML, /player-traveler-up-b\.png/);
     assert.match(container.innerHTML, /wild-capture-dock/);
     assert.match(container.innerHTML, /Lançar Poké Bola/);
 

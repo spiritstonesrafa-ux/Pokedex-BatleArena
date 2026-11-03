@@ -173,7 +173,12 @@
   min-height: 44px;
 }
 
-.wild-encounter-hero img,
+.wild-encounter-hero img {
+  display: block;
+  margin: 12px auto;
+  image-rendering: pixelated;
+}
+
 .wild-capture-screen img {
   display: block;
   margin: 12px auto;
@@ -195,6 +200,7 @@
   position: relative !important;
   margin: 0 !important;
   padding: 0 !important;
+  padding-bottom: 0 !important;
   box-sizing: border-box !important;
   background: #080c18 !important;
 }
@@ -268,6 +274,19 @@
   font-weight: 800 !important;
 }
 
+.wild-capture-header .wild-sound-toggle {
+  min-height: 26px !important;
+  height: 26px !important;
+  margin: 0 !important;
+  padding: 2px 8px !important;
+  font-size: 0.68rem !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #f1f5f9 !important;
+  line-height: 1 !important;
+}
+
 .wild-capture-header__right {
   display: flex !important;
   align-items: center !important;
@@ -304,67 +323,48 @@
 .wild-capture-stage::after {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: 20%;
-  width: min(280px, 65vw);
+  left: calc(50% + 72px);
+  bottom: calc(22% - 4px);
+  width: min(290px, 65vw);
   height: 38px;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.65) 0%, transparent 75%);
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.7) 0%, transparent 75%);
   transform: translateX(-50%);
   pointer-events: none;
 }
 
-/* Player Trainer Avatar Stage Presence */
+/* Player Trainer Avatar in Foreground (Over-the-shoulder perspective) */
 .wild-capture-trainer {
   position: absolute !important;
-  bottom: 20% !important;
-  left: max(22px, calc(50% - 192px)) !important;
-  width: 60px !important;
-  height: 78px !important;
+  bottom: 0px !important;
+  left: max(24px, calc(50% - 240px)) !important;
+  width: 112px !important;
+  height: 134px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  z-index: 7 !important;
+  z-index: 15 !important;
   pointer-events: none !important;
   transform-origin: bottom center !important;
 }
 
-.wild-trainer-platform {
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 58px !important;
-  height: 16px !important;
-  pointer-events: none !important;
-}
-
-.wild-trainer-platform-ring {
-  position: absolute !important;
-  inset: 0 !important;
-  border-radius: 50% !important;
-  border: 2px solid rgba(56, 189, 248, 0.45) !important;
-  background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.22) 0%, transparent 70%) !important;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35) !important;
-}
-
 .wild-trainer-shadow {
   position: absolute !important;
-  bottom: 1px !important;
+  bottom: 2px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  width: 44px !important;
-  height: 8px !important;
+  width: 84px !important;
+  height: 16px !important;
   border-radius: 50% !important;
-  background: rgba(0, 0, 0, 0.6) !important;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 55%, transparent 80%) !important;
   filter: blur(2px) !important;
 }
 
 .wild-trainer-visual {
   position: relative !important;
-  width: 56px !important;
-  height: 56px !important;
+  width: 106px !important;
+  height: 128px !important;
   margin-bottom: 2px !important;
   transform-origin: bottom center !important;
   animation: wildTrainerBreathing 2.4s ease-in-out infinite alternate !important;
@@ -377,7 +377,7 @@
   height: 100% !important;
   object-fit: contain !important;
   image-rendering: pixelated !important;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.65)) !important;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) !important;
 }
 
 .wild-trainer-sprite--idle {
@@ -392,76 +392,60 @@
 
 .wild-trainer-throw-fx {
   position: absolute !important;
-  right: -8px !important;
-  top: 14px !important;
+  right: 18px !important;
+  top: 52px !important;
   width: 24px !important;
   height: 24px !important;
   border-radius: 50% !important;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(245, 158, 11, 0.8) 45%, transparent 75%) !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(56, 189, 248, 0.85) 45%, transparent 75%) !important;
   opacity: 0 !important;
   transform: scale(0.2) !important;
   pointer-events: none !important;
 }
 
-.wild-trainer-badge {
-  margin-top: 2px !important;
-}
-
-.wild-trainer-badge-tag {
-  font-size: 0.58rem !important;
-  font-weight: 900 !important;
-  color: #7dd3fc !important;
-  letter-spacing: 0.08em !important;
-  background: rgba(15, 23, 42, 0.88) !important;
-  border: 1px solid rgba(56, 189, 248, 0.45) !important;
-  border-radius: 999px !important;
-  padding: 1px 7px !important;
-  text-transform: uppercase !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
-}
-
 @keyframes wildTrainerBreathing {
   0% { transform: translateY(0) scaleY(1); }
-  100% { transform: translateY(-2px) scaleY(1.02); }
+  100% { transform: translateY(-2px) scaleY(1.015); }
 }
 
 /* 3D Platform Ground Ellipse */
 .wild-capture-platform {
-  position: absolute;
-  bottom: 20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(290px, 68vw);
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid var(--wild-accent, #38bdf8);
-  box-shadow: 0 0 25px var(--wild-glow, rgba(56, 189, 248, 0.4)), inset 0 0 15px rgba(255, 255, 255, 0.15);
-  pointer-events: none;
-  z-index: 1;
+  position: absolute !important;
+  bottom: 22% !important;
+  left: calc(50% + 72px) !important;
+  transform: translateX(-50%) !important;
+  width: min(290px, 58vw) !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--wild-accent, #38bdf8) !important;
+  background: radial-gradient(ellipse at center, var(--wild-glow, rgba(56, 189, 248, 0.3)) 0%, rgba(14, 165, 233, 0.08) 55%, transparent 75%) !important;
+  box-shadow: 0 0 25px var(--wild-glow, rgba(56, 189, 248, 0.4)), inset 0 0 15px rgba(255, 255, 255, 0.2) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
 }
 
 /* Target Pokémon */
 .wild-capture-target {
-  position: absolute;
-  z-index: 5;
-  bottom: calc(20% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 128px;
-  height: 128px;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
+  position: absolute !important;
+  z-index: 5 !important;
+  bottom: calc(22% + 14px) !important;
+  left: calc(50% + 72px) !important;
+  transform: translateX(-50%) !important;
+  width: 130px !important;
+  height: 130px !important;
+  display: grid !important;
+  place-items: center !important;
+  pointer-events: none !important;
 }
 
 .wild-capture-target img,
 .wild-target-sprite {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  margin: 0;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.65));
-  animation: wildTargetIdle 2.5s ease-in-out infinite;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.75)) !important;
+  animation: wildTargetIdle 2.5s ease-in-out infinite !important;
 }
 
 @keyframes wildTargetIdle {
@@ -471,74 +455,74 @@
 
 /* Radiant Capture Beam */
 .wild-capture-beam {
-  position: absolute;
-  z-index: 6;
-  bottom: calc(20% + 20px);
-  left: 50%;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0%, #ffefad 20%, rgba(255, 79, 79, 0.85) 45%, transparent 72%);
-  opacity: 0;
-  transform: translateX(-50%) scale(0.2);
-  pointer-events: none;
+  position: absolute !important;
+  z-index: 9 !important;
+  bottom: calc(22% + 20px) !important;
+  left: calc(50% + 72px) !important;
+  width: 180px !important;
+  height: 180px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, #ffffff 0%, #ffefad 20%, rgba(255, 79, 79, 0.85) 45%, transparent 72%) !important;
+  opacity: 0 !important;
+  transform: translateX(-50%) scale(0.2) !important;
+  pointer-events: none !important;
 }
 
-/* The High-Definition Pokéball */
+/* The High-Definition Pokéball (Proportional: ~22px, anchored at trainer hand) */
 .wild-pokeball {
-  position: absolute;
-  z-index: 10;
-  bottom: calc(20% + 14px);
-  left: 50%;
-  width: 44px;
-  height: 44px;
-  border: 3px solid #161a21;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
-  transform: translate(-148px, 4px) rotate(-22deg) scale(0.72);
-  transform-origin: center center;
+  position: absolute !important;
+  z-index: 18 !important;
+  bottom: 44px !important;
+  left: calc(max(24px, calc(50% - 240px)) + 78px) !important;
+  width: 22px !important;
+  height: 22px !important;
+  border: 2px solid #111827 !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), 0 0 8px rgba(255, 255, 255, 0.4) !important;
+  transform: rotate(-15deg) !important;
+  transform-origin: center center !important;
 }
 
 .wild-pokeball__top {
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  width: calc(100% + 2px);
-  height: 53%;
-  border-bottom: 4px solid #161a21;
-  border-radius: 50% 50% 0 0;
-  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
-  transform-origin: 10% 100%;
+  position: absolute !important;
+  top: -1px !important;
+  left: -1px !important;
+  width: calc(100% + 2px) !important;
+  height: 52% !important;
+  border-bottom: 2px solid #111827 !important;
+  border-radius: 50% 50% 0 0 !important;
+  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%) !important;
+  transform-origin: 10% 100% !important;
 }
 
 .wild-pokeball__button {
-  position: absolute;
-  z-index: 2;
-  top: calc(50% - 7px);
-  left: calc(50% - 7px);
-  width: 14px;
-  height: 14px;
-  border: 3px solid #161a21;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+  position: absolute !important;
+  z-index: 2 !important;
+  top: calc(50% - 3.5px) !important;
+  left: calc(50% - 3.5px) !important;
+  width: 7px !important;
+  height: 7px !important;
+  border: 1.5px solid #111827 !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.9) !important;
 }
 
 .wild-capture-sparkles {
-  position: absolute;
-  z-index: 12;
-  bottom: calc(20% + 10px);
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  position: absolute !important;
+  z-index: 12 !important;
+  bottom: calc(22% + 20px) !important;
+  left: calc(50% + 72px) !important;
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 50% !important;
   box-shadow: 0 -45px 0 -35px #ffe681, 45px -10px 0 -35px #ffe681,
               -45px -10px 0 -35px #ffe681, 30px -42px 0 -35px #ffe681,
-              -30px -42px 0 -35px #ffe681;
-  opacity: 0;
-  transform: translateX(-50%) scale(0.2);
-  pointer-events: none;
+              -30px -42px 0 -35px #ffe681 !important;
+  opacity: 0 !important;
+  transform: translateX(-50%) scale(0.2) !important;
+  pointer-events: none !important;
 }
 
 /* Bottom Floating Action Dock */
@@ -676,47 +660,47 @@
 
 /* Keyframes synchronized with Audio Timeline */
 @keyframes wildBallJourney {
-  0% { transform: translate(-148px, 4px) rotate(-22deg) scale(0.72); }
-  3% { transform: translate(-152px, 2px) rotate(-32deg) scale(0.72); }
-  8% { transform: translate(-128px, -24px) rotate(45deg) scale(0.85); }
-  16% { transform: translate(-64px, -78px) rotate(180deg) scale(0.98); }
-  22% { transform: translate(0, -90px) rotate(350deg) scale(1.05); }
-  29%, 44% { transform: translate(0, -90px) rotate(360deg); }
-  53% { transform: translate(0, 0) rotate(360deg); }
-  58% { transform: translate(0, -14px) rotate(360deg); }
-  63% { transform: translate(0, 0) rotate(360deg); }
-  66% { transform: translate(0, 0) rotate(336deg); }
-  72% { transform: translate(0, 0) rotate(360deg); }
-  80% { transform: translate(0, 0) rotate(384deg); }
-  86% { transform: translate(0, 0) rotate(360deg); }
-  92% { transform: translate(0, 0) rotate(340deg); }
-  97%, 100% { transform: translate(0, 0) rotate(360deg); }
+  0% { transform: translate(0, 0) rotate(-15deg) scale(1); }
+  3% { transform: translate(-5px, 3px) rotate(-35deg) scale(1); } /* windup in hand */
+  8% { transform: translate(35px, -45px) rotate(60deg) scale(1.08); } /* release launch */
+  16% { transform: translate(130px, -145px) rotate(200deg) scale(1.15); } /* mid-arc */
+  22% { transform: translate(232px, -180px) rotate(360deg) scale(1.2); } /* apex above target */
+  29%, 44% { transform: translate(232px, -180px) rotate(360deg) scale(1.2); } /* open beam & absorb */
+  53% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* snap shut & drop to platform */
+  58% { transform: translate(232px, -74px) rotate(360deg) scale(1); } /* bounce 1 */
+  63% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* ground impact 1 */
+  66% { transform: translate(232px, -60px) rotate(340deg) scale(1); } /* hop 2 */
+  72% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* settled */
+  80% { transform: translate(232px, -54px) rotate(382deg) scale(1); } /* wobble 1 */
+  86% { transform: translate(232px, -54px) rotate(360deg) scale(1); }
+  92% { transform: translate(232px, -54px) rotate(338deg) scale(1); } /* wobble 2 */
+  97%, 100% { transform: translate(232px, -54px) rotate(360deg) scale(1); } /* wobble 3 / settled */
 }
 
 @keyframes wildTrainerThrowPose {
-  0% { transform: translateX(0) translateY(0) rotate(0) scale(1); }
-  3% { transform: translateX(-4px) translateY(2px) rotate(-6deg) scale(0.96); }
-  8% { transform: translateX(9px) translateY(-2px) rotate(5deg) scale(1.06); }
-  16% { transform: translateX(5px) translateY(0) rotate(2deg) scale(1.02); }
-  24%, 100% { transform: translateX(2px) translateY(0) rotate(1deg) scale(1); }
+  0% { transform: translateY(0) rotate(0) scale(1); }
+  3% { transform: translateY(3px) rotate(-3deg) scale(0.97); }
+  8% { transform: translateY(-4px) translateX(8px) rotate(4deg) scale(1.04); }
+  16% { transform: translateY(-1px) translateX(4px) rotate(2deg) scale(1.01); }
+  24%, 100% { transform: translateY(0) rotate(0) scale(1); }
 }
 
 @keyframes wildTrainerSpriteIdleSwap {
   0%, 3% { opacity: 1; }
-  4%, 16% { opacity: 0; }
-  17%, 100% { opacity: 1; }
+  4%, 18% { opacity: 0; }
+  19%, 100% { opacity: 1; }
 }
 
 @keyframes wildTrainerSpriteThrowSwap {
   0%, 3% { opacity: 0; }
-  4%, 16% { opacity: 1; }
-  17%, 100% { opacity: 0; }
+  4%, 18% { opacity: 1; }
+  19%, 100% { opacity: 0; }
 }
 
 @keyframes wildTrainerBurst {
   0%, 3% { opacity: 0; transform: scale(0.2); }
-  8% { opacity: 1; transform: scale(1.2) translateX(4px); }
-  22% { opacity: 0; transform: scale(1.8) translateX(16px); }
+  8% { opacity: 1; transform: scale(1.3) translateX(6px); }
+  22% { opacity: 0; transform: scale(1.9) translateX(18px); }
   100% { opacity: 0; }
 }
 
@@ -741,7 +725,7 @@
 }
 
 @keyframes wildPokemonAbsorb {
-  0%, 26% { opacity: 1; transform: translateX(-50%) scale(1); filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.65)); }
+  0%, 26% { opacity: 1; transform: translateX(-50%) scale(1); filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.75)); }
   35% { filter: brightness(2) drop-shadow(0 0 20px #ffffff); }
   42%, 100% { opacity: 0; transform: translateX(-50%) translateY(70px) scale(0); }
 }
@@ -752,9 +736,9 @@
 }
 
 @keyframes wildBallSuccess {
-  0% { transform: translate(0, 0) rotate(360deg) scale(1); filter: brightness(1); }
-  50% { transform: translate(0, 0) rotate(360deg) scale(1.12); filter: brightness(1.7) drop-shadow(0 0 16px #ffd166); }
-  100% { transform: translate(0, 0) rotate(360deg) scale(1); filter: brightness(1.2) drop-shadow(0 0 8px #ffd166); }
+  0% { transform: translate(232px, -54px) rotate(360deg) scale(1); filter: brightness(1); }
+  50% { transform: translate(232px, -54px) rotate(360deg) scale(1.12); filter: brightness(1.7) drop-shadow(0 0 16px #ffd166); }
+  100% { transform: translate(232px, -54px) rotate(360deg) scale(1); filter: brightness(1.2) drop-shadow(0 0 8px #ffd166); }
 }
 
 @keyframes wildCaptureSparkles {
@@ -764,9 +748,9 @@
 }
 
 @keyframes wildBallEscape {
-  0% { opacity: 1; transform: translate(0, 0) rotate(360deg) scale(1); }
-  40% { opacity: 1; transform: translate(0, 0) rotate(360deg) scale(1.15); }
-  100% { opacity: 0.45; transform: translate(-30px, 12px) rotate(315deg) scale(0.8); }
+  0% { opacity: 1; transform: translate(232px, -54px) rotate(360deg) scale(1); }
+  40% { opacity: 1; transform: translate(232px, -54px) rotate(360deg) scale(1.15); }
+  100% { opacity: 0.45; transform: translate(202px, -42px) rotate(315deg) scale(0.8); }
 }
 
 @keyframes wildBallLidEscape {
@@ -993,37 +977,48 @@
   }
 
   .wild-capture-trainer {
-    width: 52px !important;
-    height: 70px !important;
-    bottom: 18% !important;
-    left: max(14px, calc(50% - 175px)) !important;
+    width: 104px !important;
+    height: 125px !important;
+    bottom: 0px !important;
+    left: max(20px, calc(50% - 230px)) !important;
   }
 
   .wild-trainer-visual {
-    width: 48px !important;
-    height: 48px !important;
+    width: 100px !important;
+    height: 120px !important;
   }
 
-  .wild-trainer-platform {
-    width: 50px !important;
-    height: 14px !important;
-  }
-
-  .wild-capture-target {
-    width: 86px !important;
-    height: 86px !important;
-    bottom: calc(18% + 8px) !important;
+  .wild-trainer-shadow {
+    width: 78px !important;
+    height: 15px !important;
+    bottom: 2px !important;
   }
 
   .wild-capture-platform {
-    bottom: 18% !important;
-    height: 36px !important;
+    bottom: 20% !important;
+    left: calc(50% + 64px) !important;
+    width: min(250px, 54vw) !important;
+    height: 42px !important;
+  }
+
+  .wild-capture-target {
+    width: 115px !important;
+    height: 115px !important;
+    bottom: calc(20% + 10px) !important;
+    left: calc(50% + 64px) !important;
+  }
+
+  .wild-capture-beam,
+  .wild-capture-sparkles {
+    bottom: calc(20% + 16px) !important;
+    left: calc(50% + 64px) !important;
   }
 
   .wild-pokeball {
-    width: 36px !important;
-    height: 36px !important;
-    bottom: calc(18% + 8px) !important;
+    width: 20px !important;
+    height: 20px !important;
+    bottom: 40px !important;
+    left: calc(max(20px, calc(50% - 230px)) + 74px) !important;
   }
 
   .wild-result-card {
@@ -1073,6 +1068,105 @@
     min-height: 40px !important;
     min-width: 160px !important;
     font-size: 0.76rem !important;
+  }
+}
+
+/* Ultra-Compact Viewport Rules (<= 350px height, e.g. iPhone SE 568x320) */
+@media (max-height: 350px) and (orientation: landscape), (max-height: 350px) {
+  .wild-capture-header {
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 8px !important;
+  }
+
+  .wild-capture-title {
+    font-size: 0.78rem !important;
+  }
+
+  .wild-capture-header .wild-sound-toggle {
+    min-height: 22px !important;
+    height: 22px !important;
+    padding: 1px 6px !important;
+    font-size: 0.60rem !important;
+  }
+
+  .wild-capture-dock {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 8px !important;
+  }
+
+  .wild-capture-throw-btn {
+    height: 36px !important;
+    min-height: 36px !important;
+    min-width: 140px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .wild-capture-trainer {
+    width: 88px !important;
+    height: 106px !important;
+    bottom: 0px !important;
+    left: max(14px, calc(50% - 200px)) !important;
+  }
+
+  .wild-trainer-visual {
+    width: 84px !important;
+    height: 101px !important;
+  }
+
+  .wild-trainer-shadow {
+    width: 66px !important;
+    height: 12px !important;
+  }
+
+  .wild-capture-platform {
+    bottom: 18% !important;
+    left: calc(50% + 52px) !important;
+    width: min(200px, 50vw) !important;
+    height: 36px !important;
+  }
+
+  .wild-capture-target {
+    width: 95px !important;
+    height: 95px !important;
+    bottom: calc(18% + 8px) !important;
+    left: calc(50% + 52px) !important;
+  }
+
+  .wild-capture-beam,
+  .wild-capture-sparkles {
+    bottom: calc(18% + 14px) !important;
+    left: calc(50% + 52px) !important;
+  }
+
+  .wild-pokeball {
+    width: 17px !important;
+    height: 17px !important;
+    bottom: 34px !important;
+    left: calc(max(14px, calc(50% - 200px)) + 62px) !important;
+  }
+
+  .wild-result-card {
+    padding: 6px 12px !important;
+    gap: 8px !important;
+    border-radius: 14px !important;
+  }
+
+  .wild-result-header .wild-result-title {
+    font-size: 0.92rem !important;
+  }
+
+  .wild-result-body .wild-result-message {
+    font-size: 0.72rem !important;
+    margin: 2px 0 6px 0 !important;
+  }
+
+  .wild-result-btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    min-width: 130px !important;
+    font-size: 0.70rem !important;
   }
 }
 

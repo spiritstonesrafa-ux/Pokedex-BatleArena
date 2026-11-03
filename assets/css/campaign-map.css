@@ -2604,8 +2604,8 @@ body.campaign-fullscreen-active .picker-action-bar #collectionCapture.ready-to-b
 }
 
 /* Ensure padding-bottom on all shell containers so content is never obscured by sticky bar */
-body.campaign-fullscreen-active .campaign-shell,
-body.campaign-fullscreen-active .wild-encounter-screen,
+body.campaign-fullscreen-active .campaign-shell:not(.wild-capture-screen):not(.wild-result-screen),
+body.campaign-fullscreen-active .wild-encounter-screen:not(.wild-capture-screen):not(.wild-result-screen),
 body.campaign-fullscreen-active .campaign-preparation,
 body.campaign-fullscreen-active .draft-grid {
   box-sizing: border-box !important;

@@ -254,27 +254,19 @@
             <div class="wild-capture-glow"></div>
           </div>
 
-          <!-- TRAINER AVATAR LAUNCHING THE POKEBALL -->
+          <!-- TRAINER AVATAR IN FOREGROUND FACING ARENA -->
           <div class="wild-capture-trainer" id="wildCaptureTrainer">
-            <div class="wild-trainer-platform">
-              <div class="wild-trainer-platform-ring"></div>
-              <div class="wild-trainer-shadow"></div>
-            </div>
+            <div class="wild-trainer-shadow"></div>
             <div class="wild-trainer-visual">
-              <img src="assets/images/campaign/player-traveler.png"
+              <img src="assets/images/campaign/player-traveler-up-a.png"
                    alt="Você"
                    class="wild-trainer-sprite wild-trainer-sprite--idle"
-                   width="56" height="56"
                    draggable="false">
-              <img src="assets/images/campaign/player-traveler-step-b.png"
+              <img src="assets/images/campaign/player-traveler-up-b.png"
                    alt="Você arremessando"
                    class="wild-trainer-sprite wild-trainer-sprite--throw"
-                   width="56" height="56"
                    draggable="false">
               <div class="wild-trainer-throw-fx"></div>
-            </div>
-            <div class="wild-trainer-badge">
-              <span class="wild-trainer-badge-tag">VOCÊ</span>
             </div>
           </div>
 
