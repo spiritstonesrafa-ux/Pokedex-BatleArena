@@ -107,7 +107,7 @@
         <h2 id="wildScreenHeading" tabindex="-1">Um ${cap(pokemon.name)} apareceu!</h2>
         <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" width="160" height="160">
         <p>Você pode capturá-lo para sua coleção. Este Pokémon não participa de batalhas.</p></div>
-        <button id="collectionCapture" class="campaign-primary">Tentar capturar</button></section>`;
+        <div class="picker-action-bar wild-picker-action-bar" id="pickerActionBar"><button id="collectionCapture" class="campaign-primary ready-to-battle"><i class="fa-solid fa-circle-check"></i> Tentar capturar</button></div></section>`;
       this.container.querySelector('#collectionBack').onclick = () => { this.pending = null; this.manager.cancelWildEncounter(); this.render(); };
       this.container.querySelector('#collectionCapture').onclick = () => this.manager.prepareWildCollectionCapture();
       focusHeading(this, 'collection:' + wild.active.encounterId);
@@ -153,9 +153,15 @@
         <div class="campaign-grid draft-grid">
           ${roster.map(member => this.card(member, this.pick.includes(member.id))).join('')}
         </div>
-        <button id="startCampaignBattle" class="campaign-primary" type="button" ${ready ? '' : 'disabled'}>
-          Enfrentar para tentar capturar
-        </button>
+        <div class="picker-action-bar wild-picker-action-bar" id="pickerActionBar">
+          <div class="picker-status-hint ${ready ? 'complete' : 'incomplete'}">
+            <i class="fa-solid ${ready ? 'fa-circle-check' : 'fa-circle-info'}"></i>
+            <span>${ready ? 'Equipe completa (3/3) — Pronto para enfrentar!' : `Selecione mais ${3 - this.pick.length} Pokémon (${this.pick.length}/3)`}</span>
+          </div>
+          <button id="startCampaignBattle" class="campaign-primary ${ready ? 'ready-to-battle' : ''}" type="button" ${ready ? '' : 'disabled'}>
+            ${ready ? '<i class="fa-solid fa-play"></i> ENFRENTAR PARA TENTAR CAPTURAR' : `<i class="fa-solid fa-lock"></i> Enfrentar para tentar capturar (${this.pick.length}/3)`}
+          </button>
+        </div>
       </section>`;
     bindSoundButton(this);
     focusHeading(this, 'encounter:' + wild.active.encounterId);

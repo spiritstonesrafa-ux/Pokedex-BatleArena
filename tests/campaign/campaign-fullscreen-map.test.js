@@ -147,7 +147,7 @@ describe('CAMPAIGN FULLSCREEN & MAP PAN/ZOOM ISOLATION', () => {
 
     // Zoom out down to min (1.0)
     for (let i = 0; i < 15; i++) mapView.zoomOut();
-    assert.equal(mapView.zoomLevel, 1.0, 'zoomLevel should be clamped to 1.0');
+    assert.equal(mapView.zoomLevel, 0.8, 'zoomLevel should be clamped to 0.8');
 
     // Pan clamping
     mapView.panX = 9999;
@@ -277,4 +277,36 @@ describe('CAMPAIGN FULLSCREEN & MAP PAN/ZOOM ISOLATION', () => {
     assert.ok(htmlOutput.includes('id="btnMapZoomOut"'), 'Map view must render #btnMapZoomOut');
     assert.ok(htmlOutput.includes('id="btnMapRecenter"'), 'Map view must render #btnMapRecenter');
   });
+
+  it('Campaign Map View: pan clamping permits generous movement (>= 160px in Y) to reveal bottom nodes', () => {
+    const { CampaignMapView } = require('../../assets/js/campaign/campaign-map-view.js');
+    const mockContainer = {
+      innerHTML: '',
+      querySelector: (selector) => {
+        if (selector === '.campaign-map-viewport') {
+          return { clientWidth: 844, clientHeight: 320 };
+        }
+        return null;
+      },
+      querySelectorAll: () => []
+    };
+    const mockManager = {
+      getState: () => ({ completedMilestones: [], shadowTrainer: {} }),
+      isStarted: () => true
+    };
+    const mapView = new CampaignMapView({ container: mockContainer, manager: mockManager });
+    mapView.zoomLevel = 1.0;
+    const clampedMaxY = mapView._clampPan(0, 9999);
+    const clampedMinY = mapView._clampPan(0, -9999);
+    assert.ok(clampedMaxY.y >= 160, 'maxPanY should be at least 160px at zoom 1.0');
+    assert.ok(clampedMinY.y <= -160, 'minPanY should reach at least -160px at zoom 1.0');
+  });
+
+  it('Campaign View: Wild Encounter view renders sticky #pickerActionBar with #startCampaignBattle', () => {
+    const wildSource = fs.readFileSync(path.join(root, 'assets/js/campaign/campaign-wild-view.js'), 'utf8');
+    assert.ok(wildSource.includes('id="pickerActionBar"'), 'Wild view must render #pickerActionBar');
+    assert.ok(wildSource.includes('id="startCampaignBattle"'), 'Wild view must render #startCampaignBattle');
+    assert.ok(wildSource.includes('wild-picker-action-bar'), 'Wild view must have action bar styling class');
+  });
+
 });

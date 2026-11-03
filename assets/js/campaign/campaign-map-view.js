@@ -307,7 +307,7 @@
     }
 
     zoomOut() {
-      this.zoomLevel = Math.max(1.0, +(this.zoomLevel - 0.2).toFixed(1));
+      this.zoomLevel = Math.max(0.8, +(this.zoomLevel - 0.2).toFixed(1));
       const clamped = this._clampPan(this.panX, this.panY);
       this.panX = clamped.x;
       this.panY = clamped.y;
@@ -329,8 +329,8 @@
       if (!viewport) return { x: 0, y: 0 };
       const w = viewport.clientWidth || 600;
       const h = viewport.clientHeight || 350;
-      const maxPanX = Math.max(0, ((this.zoomLevel - 1) * w) / 2 + (this.zoomLevel > 1.0 ? 120 : 40));
-      const maxPanY = Math.max(0, ((this.zoomLevel - 1) * h) / 2 + (this.zoomLevel > 1.0 ? 80 : 30));
+      const maxPanX = Math.max(180, Math.round(w * 0.45) + Math.max(0, ((this.zoomLevel - 1) * w) / 2));
+      const maxPanY = Math.max(160, Math.round(h * 0.55) + Math.max(0, ((this.zoomLevel - 1) * h) / 2));
       return {
         x: Math.max(-maxPanX, Math.min(maxPanX, x)),
         y: Math.max(-maxPanY, Math.min(maxPanY, y))
