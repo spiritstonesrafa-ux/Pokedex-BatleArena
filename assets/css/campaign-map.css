@@ -1932,6 +1932,7 @@ body.campaign-fullscreen-active .campaign-map-hud-row-main {
   width: 100% !important;
   display: flex !important;
   flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: space-between !important;
   height: auto !important;
@@ -1948,25 +1949,28 @@ body.campaign-fullscreen-active .campaign-map-hud-group--left {
 }
 
 body.campaign-fullscreen-active .campaign-map-hud-group--left #btnCampaignFullscreen {
-  height: 24px !important;
-  min-height: 24px !important;
-  padding: 0 8px !important;
-  border-radius: 6px !important;
-  background: rgba(239, 68, 68, 0.22) !important;
-  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.24), rgba(185, 28, 28, 0.35)) !important;
+  border: 1px solid rgba(248, 113, 113, 0.45) !important;
   color: #fca5a5 !important;
   font-size: 0.72rem !important;
   font-weight: 700 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 5px !important;
   cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
   transition: all 0.15s ease !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-hud-group--left #btnCampaignFullscreen:hover {
-  background: rgba(239, 68, 68, 0.35) !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.38), rgba(185, 28, 28, 0.5)) !important;
+  border-color: rgba(248, 113, 113, 0.7) !important;
   color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4) !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-header__titles {
@@ -1983,13 +1987,18 @@ body.campaign-fullscreen-active .campaign-map-header__titles p.eyebrow {
 }
 
 body.campaign-fullscreen-active .campaign-map-header__titles h2 {
-  font-size: 0.8rem !important;
+  font-size: 0.74rem !important;
   font-weight: 800 !important;
-  color: #f8fafc !important;
-  letter-spacing: 0.04em !important;
+  color: #f1f5f9 !important;
+  letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   margin: 0 !important;
   white-space: nowrap !important;
+  padding: 2px 9px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Top Right Group: Badges & Controls */
@@ -2008,24 +2017,25 @@ body.campaign-fullscreen-active .campaign-map-header__meta {
 }
 
 body.campaign-fullscreen-active .campaign-map-stat-badge {
-  height: 23px !important;
-  min-height: 23px !important;
-  padding: 0 7px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 8px !important;
   border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 3px !important;
-  font-size: 0.68rem !important;
+  gap: 4px !important;
+  font-size: 0.70rem !important;
   color: #cbd5e1 !important;
   white-space: nowrap !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08) !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-stat-badge strong {
   color: #ffd166 !important;
   font-weight: 800 !important;
-  font-size: 0.72rem !important;
+  font-size: 0.74rem !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-stat-badge .stat-suffix {
@@ -2035,7 +2045,7 @@ body.campaign-fullscreen-active .campaign-map-stat-badge .stat-suffix {
 body.campaign-fullscreen-active .campaign-map-header__controls {
   display: flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 5px !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -2043,44 +2053,61 @@ body.campaign-fullscreen-active .campaign-map-header__controls {
 body.campaign-fullscreen-active .campaign-view-toggle-group {
   display: inline-flex !important;
   gap: 2px !important;
-  background: rgba(0, 0, 0, 0.3) !important;
-  border-radius: 6px !important;
-  padding: 1px !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 999px !important;
+  padding: 2px !important;
 }
 
 body.campaign-fullscreen-active .campaign-view-toggle-btn {
-  height: 23px !important;
-  min-height: 23px !important;
-  padding: 0 6px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
   font-size: 0.68rem !important;
   font-weight: 700 !important;
-  border-radius: 5px !important;
-  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  border: none !important;
   background: transparent !important;
   color: #94a3b8 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 3px !important;
+  gap: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+body.campaign-fullscreen-active .campaign-view-toggle-btn:hover {
+  color: #f1f5f9 !important;
 }
 
 body.campaign-fullscreen-active .campaign-view-toggle-btn[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-reset-btn {
-  height: 23px !important;
-  min-height: 23px !important;
-  padding: 0 6px !important;
-  font-size: 0.65rem !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 8px !important;
+  font-size: 0.68rem !important;
   font-weight: 600 !important;
-  border-radius: 5px !important;
-  background: rgba(239, 68, 68, 0.12) !important;
-  border: 1px solid rgba(239, 68, 68, 0.25) !important;
-  color: #fca5a5 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #94a3b8 !important;
   cursor: pointer !important;
   white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-reset-btn:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #fca5a5 !important;
 }
 
 /* Row 2: Region Selector Pills Strip */
@@ -2103,19 +2130,20 @@ body.campaign-fullscreen-active .campaign-map-tabs {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 3px !important;
-  padding: 1px 4px !important;
+  gap: 4px !important;
+  padding: 2px 6px !important;
   margin: 0 !important;
-  background: rgba(0, 0, 0, 0.35) !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35) !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-tab {
   height: 22px !important;
   min-height: 22px !important;
-  padding: 0 8px !important;
-  font-size: 0.68rem !important;
+  padding: 0 10px !important;
+  font-size: 0.70rem !important;
   font-weight: 700 !important;
   border-radius: 999px !important;
   border: 1px solid transparent !important;
@@ -2124,15 +2152,20 @@ body.campaign-fullscreen-active .campaign-map-tab {
   white-space: nowrap !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 3px !important;
+  gap: 4px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
 }
 
+body.campaign-fullscreen-active .campaign-map-tab:hover:not(.is-locked) {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
 body.campaign-fullscreen-active .campaign-map-tab[aria-selected="true"] {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(99, 102, 241, 0.35)) !important;
-  border-color: rgba(56, 189, 248, 0.55) !important;
-  color: #38bdf8 !important;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(99, 102, 241, 0.4)) !important;
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  color: #ffffff !important;
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.35) !important;
 }
 
@@ -2156,6 +2189,30 @@ body.campaign-fullscreen-active .campaign-map-tab .tab-badge-hint {
 
   body.campaign-fullscreen-active .campaign-view-toggle-btn .btn-text {
     display: none !important;
+  }
+
+  body.campaign-fullscreen-active .campaign-map-header__titles h2 {
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+  }
+
+  body.campaign-fullscreen-active .campaign-map-reset-btn {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border-radius: 999px !important;
+  }
+
+  body.campaign-fullscreen-active .campaign-map-reset-btn::before {
+    content: "↺" !important;
+    font-size: 0.85rem !important;
+    line-height: 1 !important;
+    color: #fca5a5 !important;
   }
 }
 
@@ -2262,7 +2319,7 @@ body.campaign-fullscreen-active .campaign-map-ctrl-btn:hover {
     border-left: 2px solid #38bdf8 !important;
     border-top: none !important;
     transform: translateX(105%) !important;
-    background: linear-gradient(180deg, rgba(12, 17, 34, 0.97) 0%, rgba(8, 12, 24, 0.98) 100%) !important;
+    background: linear-gradient(180deg, rgba(12, 17, 34, 0.98) 0%, rgba(8, 12, 24, 0.99) 100%) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     box-shadow: -12px 0 35px rgba(0,0,0,0.85) !important;
@@ -2288,7 +2345,131 @@ body.campaign-fullscreen-active .campaign-map-ctrl-btn:hover {
   body.campaign-fullscreen-active .details-drawer-body {
     flex: 1 1 auto !important;
     overflow-y: auto !important;
-    padding: 10px 14px 70px 14px !important;
+    padding: 8px 14px 64px 14px !important;
+    gap: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body.campaign-fullscreen-active .details-portrait-wrap {
+    width: 62px !important;
+    height: 70px !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+    border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+    flex: 0 0 auto !important;
+  }
+
+  body.campaign-fullscreen-active .details-trainer-heading {
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  body.campaign-fullscreen-active .details-trainer-heading .eyebrow {
+    font-size: 0.65rem !important;
+    margin: 0 0 2px 0 !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  body.campaign-fullscreen-active .details-trainer-heading h4 {
+    font-size: 1.1rem !important;
+    margin: 0 0 2px 0 !important;
+    font-weight: 800 !important;
+  }
+
+  body.campaign-fullscreen-active .details-trainer-heading .trainer-title {
+    font-size: 0.72rem !important;
+    margin: 0 0 4px 0 !important;
+    color: #94a3b8 !important;
+  }
+
+  body.campaign-fullscreen-active .details-pill-row {
+    margin: 0 0 4px 0 !important;
+    gap: 4px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  body.campaign-fullscreen-active .details-meta-stats {
+    gap: 6px !important;
+    padding: 6px 8px !important;
+    margin: 0 !important;
+    border-radius: 10px !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+  }
+
+  body.campaign-fullscreen-active .details-meta-stat {
+    padding: 2px 6px !important;
+    font-size: 0.70rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1px !important;
+  }
+
+  body.campaign-fullscreen-active .details-meta-stat span {
+    font-size: 0.60rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #94a3b8 !important;
+  }
+
+  body.campaign-fullscreen-active .details-meta-stat strong {
+    font-size: 0.76rem !important;
+    color: #ffd166 !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-preview {
+    margin: 0 !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-preview .eyebrow {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.12em !important;
+    margin: 0 0 4px 0 !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-card {
+    flex: 1 1 0 !important;
+    padding: 4px 6px !important;
+    border-radius: 10px !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+    transition: transform 0.15s ease !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-card:hover {
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    background: rgba(56, 189, 248, 0.12) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-card img {
+    width: 38px !important;
+    height: 38px !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-card strong {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #e2e8f0 !important;
   }
 
   body.campaign-fullscreen-active .details-drawer-footer {
@@ -2313,29 +2494,7 @@ body.campaign-fullscreen-active .campaign-map-ctrl-btn:hover {
     border-radius: 999px !important;
     box-shadow: 0 0 16px rgba(245, 158, 11, 0.4) !important;
   }
-
-  body.campaign-fullscreen-active .details-team-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 6px !important;
-  }
-
-  body.campaign-fullscreen-active .details-team-card {
-    flex: 1 1 0 !important;
-    padding: 4px 6px !important;
-    border-radius: 8px !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-  }
-
-  body.campaign-fullscreen-active .details-team-card img {
-    width: 36px !important;
-    height: 36px !important;
-  }
 }
-
-/* ==========================================================================
-   CAMPAIGN FULLSCREEN MOBILE LANDSCAPE COMPACTION & STICKY CONTROLS (P0 FIX)
-   ========================================================================== */
 
 /* Compact Floating Action Dock for Team Picker in Campaign */
 body.campaign-fullscreen-active .picker-action-bar,
