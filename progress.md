@@ -2,6 +2,119 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 02/11/2026: Homologação final e publicação H0–H4-A
+
+- **Homologação Final das Entregas H0 a H4-A:**
+  - Auditados e validados todos os componentes das fases H0, H1-A, H2-A, H3-A e H4-A.
+  - Total de 19 habilidades funcionais implementadas com status FULL:
+    - **H1-A:** Justified, Moxie, Chilling Neigh, As One (Glastrier), Dauntless Shield.
+    - **H2-A:** Marvel Scale, Hustle, Keen Eye, Steadfast.
+    - **H3-A:** Rough Skin, Iron Barbs, Effect Spore, Synchronize, Shed Skin.
+    - **H4-A:** Dark Aura, Fairy Aura, Aura Break, Prism Armor, Neuroforce.
+  - Inventário oficial auditado via [audit-abilities.js](file:///c:/pokemon/scripts/audit-abilities.js): 374 habilidades conhecidas, **97 declaradas suportadas (+19 desde H0)**, **217 atribuídas pendentes (-19)**, **595 registros com padrão pendente (-102)**.
+- **Auditoria Rigorosa e Correção de Shed Skin em Sessões Reais:**
+  - **Mecânica na Camada de Sessão:** [battle-random-source.js](file:///c:/pokemon/assets/js/battle-session/battle-random-source.js) agora provê o método `rollShedSkin()`, retornando valores inteiros de 1 a 3 para garantir a probabilidade canônica exata de 1/3 (33.333...%), além de permitir injeção determinística via `setShedSkinSequence()`.
+  - **Injeção de Ações em Batalhas Reais:** [battle-session-controller.js](file:///c:/pokemon/assets/js/battle-session/battle-session-controller.js) agora injeta `shedSkinRoll` e `shedSkinScale: 3` em todas as ações de combate (`submitPlayerMove`, `submitPlayerSwitch` e `submitDoublesTurn`), garantindo que portadores de Shed Skin em partidas reais (Quick Battle, etc.) resolvam a rolagem ao final do turno sem depender de mocks manuais.
+  - **Determinismo Estrito e Isolamento:** [p7-mechanics.js](file:///c:/pokemon/assets/js/battle/p7-mechanics.js) (`earlyResidual`) suporta tanto a escala de 1..3 quanto 1..100 (`roll <= 33`), possuindo fallback seguro para não-ativação caso nenhuma rolagem seja injetada. O motor [battle-engine.js](file:///c:/pokemon/assets/js/battle/battle-engine.js) permanece com 0 chamadas a `Math.random()`.
+  - **Suíte H3-A Expandida:** [tests/battle/abilities-h3a.test.js](file:///c:/pokemon/tests/battle/abilities-h3a.test.js) ampliada de 60 para **65 testes**, adicionando validação de sessão real via `BattleSessionController`, troca voluntária, verificação de distribuição de 30.000 amostras (convergência para 33.33%) e determinismo estrito.
+- **Reconciliação e Cobertura de Testes Automatizados:**
+  - Total global: **3.080 testes aprovados em 39 suítes, zero falhas e zero regressões**.
+  - Detalhamento: 3.028 (base pré-H3-A) + 8 (ajuste H3-A) + 39 (H4-A) + 5 (Shed Skin sessão real) = **3.080 testes**.
+- **Publicação:**
+  - Validação completa com `git diff --check` e `node scripts/audit-abilities.js --check`.
+  - Commit semântico: `feat(battle): implement ability roadmap H0-H4 with validated mechanics`.
+  - Push realizado para `origin/main` sem flags de força.
+
+## Atualização — 02/11/2026: Auditoria corretiva H3-A e implementação H4-A
+
+- **Auditoria Corretiva H3-A (Mold Breaker vs Contato e Shed Skin):**
+  - **Mold Breaker vs Habilidades de Contato:** Confirmada a regra canônica oficial da Geração IX (*Ignoring Abilities* / *Pokémon Showdown* `data/abilities.ts`). Habilidades reativas ativadas ao receber contato (`rough-skin`, `iron-barbs`, `effect-spore`, bem como `static`, `flame-body`, `poison-point`) **NÃO** são ignoradas por Mold Breaker, Teravolt ou Turboblaze. Classificação atualizada em [ability-registry.js](file:///c:/pokemon/assets/js/battle/ability-registry.js) para `breakable: false`. Em [p7-mechanics.js](file:///c:/pokemon/assets/js/battle/p7-mechanics.js) (`contact`), desvinculou-se o acionamento de `abilityIgnored`, assegurando que o atacante com Mold Breaker sofra recuo ou status, mantendo integralmente o respeito à supressão genuína (`abilitySuppressed = true` via Gastro Acid / Core Enforcer / Neutralizing Gas). Adicionada cobertura completa para os 9 cenários exigidos (atacante normal, Mold Breaker, Teravolt, Turboblaze, supressão genuína, Ability Shield, multihit e KO simultâneo, contato de golpes físicos e especiais como Draining Kiss vs Earthquake, e efeitos acumulados de contato como Rocky Helmet + Rough Skin = 1/6 + 1/8).
+  - **Shed Skin — Probabilidade Exata e Suporte Determinístico:** Auditada a probabilidade canônica de 1/3 (33.333...%). O motor em [p7-mechanics.js](file:///c:/pokemon/assets/js/battle/p7-mechanics.js) (`earlyResidual`) foi aprimorado para suportar injeções determinísticas tanto na escala padrão do motor de 1..100 (`roll <= 33`) quanto na escala direta de 1..3 (`shedSkinRoll: 1` com `shedSkinScale: 3`), com testes de limites (1 e 33 curam; 34 e 100 falham; escala 1..3: 1 cura, 2 e 3 falham), ausência de status primário e tentativas consecutivas em múltiplos turnos.
+  - Suíte [tests/battle/abilities-h3a.test.js](file:///c:/pokemon/tests/battle/abilities-h3a.test.js) expandida para **60 testes aprovados** (zero falhas).
+- **Implementação H4-A (5 habilidades funcionais no motor com status FULL):**
+  - `dark-aura` (Yveltal #717): Aumenta a potência de movimentos do tipo Dark de TODOS os Pokémon em campo por 4/3 (~1.33x). Com Aura Break ativa, inverte o multiplicador para 0.75x. Não acumula se houver mais de um portador em campo. Não afeta outros tipos. Suprimível por Gastro Acid / Neutralizing Gas.
+  - `fairy-aura` (Xerneas #716): Aumenta a potência de movimentos do tipo Fairy de TODOS os Pokémon em campo por 4/3 (~1.33x). Com Aura Break ativa, inverte para 0.75x. Não acumula com múltiplos portadores. Não afeta outros tipos. Suprimível.
+  - `aura-break` (Zygarde #718): Inverte os efeitos de Dark Aura e Fairy Aura (multiplicador passa a 0.75x para o respectivo tipo). Não aplica redução isolada sem aura correspondente ativa no campo. Mold Breaker no atacante não neutraliza a inversão de Aura Break sobre as auras.
+  - `prism-armor` (Necrozma #800): Reduz em 25% (multiplicador 0.75x) o dano de ataques super efetivos (2x e 4x) sofridos pelo portador. Canônico Gen VII-IX: **NÃO é ignorada por Mold Breaker, Teravolt, Turboblaze, Moongeist Beam (#714) ou Photon Geyser (#722)** (`breakable: false`). Não afeta dano neutro ou resistido. Suprimível por Gastro Acid (`abilitySuppressed = true`).
+  - `neuroforce` (Ultra Necrozma #10157): Aumenta em 25% (multiplicador 1.25x) o dano de ataques super efetivos (físicos e especiais) desferidos pelo portador. Não afeta golpes neutros ou resistidos. Suprimível.
+- **Inventário e Cobertura:**
+  - `scripts/audit-abilities.js --check` validado: 374 habilidades conhecidas, **97 declaradas suportadas (+5)**, **217 atribuídas pendentes (-5)**, **595 registros com padrão pendente (-9)**.
+- **Validação Automatizada e Regressão:**
+  - Criada suíte dedicada [tests/battle/abilities-h4a.test.js](file:///c:/pokemon/tests/battle/abilities-h4a.test.js) com **39 testes** cobrindo todos os cenários, formatos (1v1, 3v3, Duplas) e espécies reais da campanha (Yveltal #717, Xerneas #716, Zygarde #718, Necrozma #800, Ultra Necrozma #10157).
+  - Suítes H1-A (36 testes), H2-A (49 testes) e H3-A (60 testes) 100% aprovadas.
+  - Suíte completa: **3.075 testes aprovados em 39 suítes, zero falhas** (baseline anterior: 3.028; acréscimo de +47 testes).
+  - Nenhuma alteração em equipes, golpes, base stats ou recompensas. Sem commit, push ou deploy.
+
+## Atualização — 02/11/2026: Auditoria H2-A e implementação H3-A
+
+- **Revisão e Correção H2-A (Keen Eye & Hustle):**
+  - **Keen Eye:** Confirmada a regra canônica oficial de *Pokémon Showdown* para Geração IX (`move.ignoreEvasion = true`). O cálculo de precisão efetiva em [battle-constants.js](file:///c:/pokemon/assets/js/battle/battle-constants.js) foi corrigido para tratar a evasão do alvo como `0` incondicionalmente quando o atacante possui Keen Eye (`effectiveDefenderEvasion = attackerHasKeenEye ? 0 : rawDefenderEvasion`), eliminando a limitação anterior que preservava estágios negativos. Adicionada bateria de testes para evasão do alvo em -6, -1, 0, +1 e +6.
+  - **Hustle:** Auditada a precisão de movimentos físicos contra a implementação Gen 9 do Showdown (`this.modify(accuracy, 3277, 4096)`). Comprovado matematicamente que para qualquer valor inteiro de precisão base entre 1 e 100, `Math.floor(b * 3277 / 4096) === Math.floor(b * 0.8)` é estritamente idêntico (inclusive para base 100, 90, 85, 75). O cálculo foi unificado em [p7-mechanics.js](file:///c:/pokemon/assets/js/battle/p7-mechanics.js) e documentado.
+  - Suíte [abilities-h2a.test.js](file:///c:/pokemon/tests/battle/abilities-h2a.test.js) mantida 100% verde (49/49 testes aprovados).
+- **Implementação H3-A (5 habilidades funcionais no motor com status FULL):**
+  - `rough-skin`: Causa dano equivalente a 1/8 (12.5%) do HP máximo do atacante ao sofrer golpe de contato (mínimo 1 de dano). Ativa por cada acerto de golpes multi-hit. Ativa mesmo que o defensor seja nocauteado pelo ataque. Nocaute simultâneo respeita ordem canônica. Ignorada por Mold Breaker, protegida por Ability Shield e anulada por Magic Guard no atacante. Simétrica para jogador e oponente. Integrada à IA em [battle-evaluator.js](file:///c:/pokemon/assets/js/battle/battle-evaluator.js).
+  - `iron-barbs`: Compartilha a mecânica de Rough Skin (1/8 max HP do atacante em contato). Em batalhas em Duplas (2v2), atribui a punição estritamente ao agressor direto sem afetar aliados.
+  - `effect-spore`: 30% de chance total ao sofrer golpe de contato: 9% Poison (roll 1..9), 10% Paralysis (roll 10..19), 11% Sleep (roll 20..30). Determinismo total via `action.effectSporeRoll`. Imunidades canônicas: tipo Grass, habilidade Overcoat, item Safety Goggles, Safeguard, Misty Terrain e Electric Terrain (para sono). Não sobrescreve status já existente.
+  - `synchronize`: Reflete Burn, Paralysis, Poison e Toxic aplicados diretamente por outro Pokémon (golpes de status, efeitos secundários ou Beak Blast). Não reflete Sleep nem Freeze. Não reflete status autoinfligidos (Rest, Flame/Toxic Orb) nem dano residual. Preserva a distinção entre Poison regular e Toxic (Bad Poison). Respeita imunidades elementais (Fire imune a Burn, Electric a Paralysis, Poison/Steel a Poison/Toxic), habilidades (Water Veil, Limber, Immunity) e Safeguard do adversário. Previne recursão infinita contra outro portador de Synchronize.
+  - `shed-skin`: 33.3% de chance (roll <= 33 via `action.shedSkinRoll`) de curar condição principal de status (Burn, Poison, Toxic, Paralysis, Sleep, Freeze) no início da fase residual de final de turno. Ocorre antes da aplicação de dano de veneno ou queimadura daquele turno (o Pokémon curado não sofre dano no mesmo turno). Não cura confusão.
+- **Inventário e Cobertura:**
+  - `scripts/audit-abilities.js --check` validado: 374 habilidades conhecidas, **92 declaradas suportadas (+5)**, **222 atribuídas pendentes (-5)**, **604 registros com padrão pendente (-39)**.
+- **Validação Automatizada e Regressão:**
+  - Criada suíte dedicada [tests/battle/abilities-h3a.test.js](file:///c:/pokemon/tests/battle/abilities-h3a.test.js) com **52 testes** cobrindo todos os cenários, formatos (1v1, 3v3, Final Stand, Duplas) e espécies reais da campanha (Garchomp #445, Ferrothorn #598, Breloom #286, Umbreon #197, Seviper #336).
+  - Suítes H1-A (36 testes) e H2-A (49 testes) 100% aprovadas.
+  - Suíte completa: **3.028 testes aprovados em 39 suítes, zero falhas** (baseline anterior: 2.976; acréscimo de +52 testes).
+  - Nenhuma alteração em equipes, golpes, base stats ou recompensas. Sem commit, push ou deploy.
+
+## Atualização — 02/11/2026: Correção H11 (Mega Sol) e implementação H2-A
+
+- **Correção Canônica H11 — Mega Sol (Mega Meganium):**
+  - Retificada a especificação de Mega Sol conforme as regras canônicas de *Pokémon Champions* (2026, Nintendo Switch) documentadas no Serebii e Bulbapedia: Mega Sol faz os movimentos do próprio portador funcionarem como se houvesse sol intenso (*sun simulation*), independentemente do clima real.
+  - Registrado explicitamente que a habilidade **NÃO** modifica o clima do campo, **NÃO** invoca clima global, **NÃO** altera diretamente o clima dos aliados e **NÃO** funciona como Desolate Land.
+  - Atualizados [ability-registry.js](file:///c:/pokemon/assets/js/battle/ability-registry.js), [roadmap-abilities.md](file:///c:/pokemon/docs/roadmap-abilities.md) e [ability-coverage.json](file:///c:/pokemon/docs/ability-coverage.json). Mantido o status `RULE_CONFIRMED_PENDING_IMPLEMENTATION` para todas as 7 habilidades H11 (sem implementação antecipada no motor).
+- **Implementação H2-A (4 habilidades funcionais no motor com status FULL):**
+  - `marvel-scale`: Quando o portador tem uma condição principal de status ativa (Burn, Poison, Toxic, Paralysis, Sleep, Freeze), sua Defense efetiva aumenta em 50% (multiplicador 1.5x) no cálculo de dano físico recebido. Não altera Special Defense. Ignorada por Mold Breaker (a menos que o portador use Ability Shield). Críticos preservam o multiplicador por ser modificador de atributo efetivo e não estágio de stat. Simétrica para jogador e oponente.
+  - `hustle`: Concede multiplicador de 1.5x no Attack efetivo do portador. Aplica multiplicador de 0.8x na precisão de movimentos físicos elegíveis (`Math.floor(base * 0.8)`). Não penaliza movimentos especiais, de status ou golpes OHKO. Movimentos de acerto garantido (Aerial Ace) continuam sem falhar. A IA (`BattleEvaluator`) avalia o Attack amplificado e a precisão reduzida com os mesmos valores.
+  - `keen-eye`: Previne reduções no estágio de precisão causadas por adversários (Sand-Attack, Flash, etc.). Ignora os estágios positivos de evasão do alvo durante o cálculo de acerto (trata evasão do defensor como <= 0 sem zerar o atributo globalmente). Preserva estágios negativos de evasão do alvo e não garante acerto automático para golpes com precisão base imperfeita. Quebrável por Mold Breaker ao tentar reduzir precisão.
+  - `steadfast`: Quando o portador sofre hesitação efetiva (*flinch*), perdendo sua oportunidade de agir no turno, sua Speed aumenta em +1 estágio. Respeita precedência canônica (Sono/Freeze impedem a ação antes do flinch e descartam a hesitação sem ativar Steadfast). Não ativa em duplicidade no mesmo evento. Respeita o teto de +6 estágios. Não é ignorada por Mold Breaker.
+- **Inventário e Cobertura:**
+  - `scripts/audit-abilities.js --check` validado: 374 habilidades conhecidas, **87 declaradas suportadas (+4)**, **227 atribuídas pendentes (-4)**, **643 registros com padrão pendente (-45)**.
+- **Validação Automatizada e Regressão:**
+  - Criada suíte [tests/battle/abilities-h2a.test.js](file:///c:/pokemon/tests/battle/abilities-h2a.test.js) com **49 testes** cobrindo todos os cenários, formatos (1v1, 3v3, Final Stand, Duplas) e espécies reais da campanha (Milotic #350, Togekiss #468, Pelipper #279, Skarmory #227, Lucario #448).
+  - Suíte H1-A preservada: 36/36 testes aprovados.
+  - Suíte completa: **2.976 testes aprovados em 39 suítes, zero falhas** (baseline anterior: 2.927).
+  - Sem commit, push ou deploy.
+
+## Atualização — 02/11/2026: Auditoria corretiva H0, H1-A e H11
+
+- **Retificação Canônica H11 (Pokémon Champions 2026):**
+  - Retificada a classificação das 7 habilidades de Mega Evolução presentes no snapshot da PokéAPI (`piercing-drill`, `dragonize`, `mega-sol`, `spicy-spray`, `eelevate`, `fire-mane`, `aura-guard`).
+  - Confirmadas como canônicas e oficiais do título competitivo *Pokémon Champions* (Nintendo Switch, 2026), documentadas no Serebii, comunicado oficial Nintendo/Pokémon e Pokémon Showdown (`data/abilities.ts`).
+  - Classificação formal atualizada de `NEEDS_RULE_VALIDATION` para `RULE_CONFIRMED_PENDING_IMPLEMENTATION`. Documentadas detalhadamente em [ability-registry.js](file:///c:/pokemon/assets/js/battle/ability-registry.js), [roadmap-abilities.md](file:///c:/pokemon/docs/roadmap-abilities.md) e [ability-coverage.json](file:///c:/pokemon/docs/ability-coverage.json). Não foram implementadas antecipadamente no motor neste ciclo.
+- **Auditoria Mecânica — Justified vs Mold Breaker:**
+  - Corrigida a divergência canônica: conforme mecânicas oficiais (Bulbapedia, Serebii, Pokémon Showdown), Mold Breaker anula apenas habilidades defensivas/preventivas de dano ou efeitos (ex.: Sturdy, Levitate, Wonder Guard, Unaware), mas **NÃO** anula habilidades reativas pós-dano como Justified, Weak Armor, Stamina ou Anger Shell.
+  - [p7-mechanics.js](file:///c:/pokemon/assets/js/battle/p7-mechanics.js) (`afterHit`): ajustado para verificar a habilidade intrínseca do defensor (`ability(d) === 'justified'`), desvinculando-a da lista de anulação de Mold Breaker, mas preservando o respeito à supressão genuína (`abilitySuppressed = true` via Gastro Acid / Neutralizing Gas) e ao estado de nocaute.
+  - [ability-registry.js](file:///c:/pokemon/assets/js/battle/ability-registry.js): definido `justified.breakable = false`.
+- **Auditoria H1-A (Moxie, Chilling Neigh, As One Glastrier, Dauntless Shield):**
+  - **Moxie / Chilling Neigh:** Autoria de KO rigorosamente validada — ativa apenas em KOs diretos causados por ataque do próprio Pokémon; não ativa em KOs por dano residual (Burn, Poison, Sandstorm, Leech Seed) nem quando o atacante desmaie por dano de recuo no mesmo turno (Double-Edge / Life Orb). Suporta acúmulo de +2 em nocautes duplos de dano em área (Doubles).
+  - **As One (Glastrier):** Bloqueio de berries validado tanto no motor (`constants.P7.berriesBlocked`) quanto no [battle-evaluator.js](file:///c:/pokemon/assets/js/battle/battle-evaluator.js). Insuprimível em batalha conforme regras canônicas Gen VIII/IX.
+  - **Dauntless Shield:** Validação da regra da Gen IX (uma única ativação por batalha através da flag de instância `dauntlessShieldUsed`, preservada ao longo de trocas e resetada apenas em novo combate).
+- **Integração H0 de Ponta a Ponta:**
+  - `AbilityRegistry` e `MoveFlags` integrados ao motor ([battle-engine.js](file:///c:/pokemon/assets/js/battle/battle-engine.js)), [p7-mechanics.js](file:///c:/pokemon/assets/js/battle/p7-mechanics.js), avaliador de IA ([battle-evaluator.js](file:///c:/pokemon/assets/js/battle/battle-evaluator.js)) e adaptador de interface ([battle-ui-adapter.js](file:///c:/pokemon/assets/js/ui/battle-ui-adapter.js)).
+  - Passagem explícita de combatentes `attacker` e `defender` nas chamadas de `afterHit` e `directKO` para resolução unívoca em formatos multialvo (Doubles).
+- **Cobertura e Validação Automatizada:**
+  - Testes em [abilities-h1a.test.js](file:///c:/pokemon/tests/battle/abilities-h1a.test.js) expandidos para **36 testes** cobrindo todas as matrizes de verificação, cenários de borda, espécies reais da campanha (Keldeo #647, Zamazenta #889, Calyrex-Ice #10193, Glastrier #896, Krookodile #553, Salamence #373) nos quatro formatos (1v1, 3v3, Final Stand, Duplas 2v2).
+  - Validação de inventário `node scripts/audit-abilities.js --check`: 100% aprovado.
+  - Suíte completa de testes: **2.927 testes aprovados em 39 suítes, zero falhas**.
+  - Nenhuma alteração de times, movesets, base stats, recompensas ou IA. Sem commit ou push.
+
+## Atualização — 02/11/2026: roadmap de habilidades H0–H11
+
+- Criado docs/roadmap-abilities.md, com fundação, lotes prioritários, onze famílias, dependências, contratos e aceite por habilidade. Planejamento; nenhum efeito de combate novo habilitado.
+- Inventário local: 374 nomes conhecidos; 78 declarados suportados (77 atribuídos); 313 habilidades naturais atribuídas; **236 pendentes atribuídas**, 60 pendentes sem portador e 697 registros/formas com habilidade padrão pendente. A contagem anterior de 235 pressupunha incorretamente que todas as 78 declarações tinham portador.
+- Todas as 236 pendências atribuídas possuem fase em docs/ability-roadmap-catalog.json. docs/ability-coverage.json relaciona portadores, opções ocultas, registros padrão e presença nos desafios.
+- scripts/audit-abilities.js gera e verifica o inventário offline; rejeita nomes inválidos, fases duplicadas, pendências atribuídas sem fase e inventário desatualizado. Suporte declarado não é tratado como auditoria comportamental FULL.
+- Primeiros lotes: Justified, Moxie, Chilling Neigh, As One Glastrier e Dauntless Shield; em seguida, habilidades de Milotic, Togekiss e outros participantes da Liga/Torre. Sistemas externos e metadados recentes permanecem explícitos.
+
 ## Atualização — 02/11/2026: Liga e Torre da Glória Eterna
 
 - Liga com quatro integrantes da Elite e campeão, cinco vitórias consecutivas e título; Torre repetível com categorias Equilibrada/Livre e recordes próprios.

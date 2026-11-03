@@ -276,7 +276,7 @@
         })),
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
-        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,abilityIgnored:false,intrepidSwordUsed:false,choiceLock:null,flashFire:false,
+        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
@@ -589,11 +589,12 @@
     }
     function finishTurn(state, events) {
       if(state.pendingPivot)return;
-      delete state.turnActions; // Intent is transient; never retain references to caller commands.
+      // Intent is transient; delete after earlyResidual to allow deterministic rolls for end-turn abilities
       if (state.status !== BATTLE_STATUS.IN_PROGRESS &&
           state.status !== BATTLE_STATUS.AWAITING_REPLACEMENT) return;
       const aliveAtResidual=['player','enemy'].filter(r=>getActiveCombatant(state,r).currentHp>0);
       constants.P7.earlyResidual(state,constants,events);
+      delete state.turnActions;
       constants.P6.residual(state,constants,events,'seed');
       const fainted = aliveAtResidual.filter(r=>getActiveCombatant(state,r).currentHp<=0);
       for (const role of ['player', 'enemy']) {
@@ -820,13 +821,14 @@
       if(defender.beakBlastReady && !attacker.safeguarded && constants.P5.contactIds.includes(move.id) && constants.isEligibleForStatusCondition(attacker,'burn')){
         attacker.statusCondition='burn';
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,source:defenderRole,target:attackerRole,pokemonName:attacker.name,statusCondition:'burn',moveId:690,moveName:'beak-blast',chance:100});
+        constants.P7.checkSynchronize?.(null,defenderRole,attackerRole,'burn',constants,events,defender,attacker);
       }
     }
     function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
       const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
       if(attacker.currentHp<=0 || state.status!=='IN_PROGRESS')return;
       executeActionCore(attackerRole,defenderRole,state,events,action,calledMove,pressureCallerId);
-      attacker.abilityIgnored=false;originalTarget.abilityIgnored=false;attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;originalTarget.p7BlockDrop=false;originalTarget.p7BlockAttackDrop=false;
+      attacker.abilityIgnored=false;originalTarget.abilityIgnored=false;attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;originalTarget.p7BlockDrop=false;originalTarget.p7BlockAttackDrop=false;originalTarget.p7KeenEyeAccuracyBlock=false;
       constants.Completion.crash(state,attackerRole,attacker,action,events.slice(start),constants,events);
       if(!calledMove&&!state.doublesSpread)constants.P7.afterMove(state,attackerRole,events,constants,events.slice(start));
       if(attacker.currentHp<=0&&!events.slice(start).some(e=>e.type===BATTLE_EVENTS.POKEMON_FAINTED&&e.target===attackerRole))resolveFaints(state,events,[attackerRole],'item');
@@ -919,7 +921,7 @@
       if(!calledMove && attacker.item==='assault-vest'&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
       const actualDamageClass = constants.P8.damageClass(attacker,selectedMove,constants);
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
-      attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';
+      attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';defender.p7KeenEyeAccuracyBlock=constants.P7.defenderAbility(attacker,defender,selectedMove)==='keen-eye';
       const actualDamageType=constants.P8.moveType(attacker,selectedMove,constants.P7.moveType(state,attacker,selectedMove,constants.P5.type(selectedMove,attacker)));
       const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType};
       const continuingBide=Boolean(attacker.bideState);
@@ -1112,6 +1114,11 @@
           actor: attackerRole,
           pokemonName: attacker.name
         });
+        // Steadfast: +1 Speed when flinched (not breakable by Mold Breaker)
+        if (constants.P7.ability(attacker, false) === 'steadfast') {
+          constants.P6.stage(constants, events, attackerRole, attacker, 'speed', 1);
+          events.push({ type: 'MOVE_PREPARED', actor: attackerRole, pokemonName: attacker.name, reason: 'P7_ABILITY', label: 'steadfast' });
+        }
         return;
       }
 
@@ -1526,6 +1533,7 @@
               statusCondition: selectedMove.statusEffect,
               ...(selectedMove.statusEffect === 'sleep' ? { sleepDuration: defender.sleepTurns } : {})
             });
+            constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, selectedMove.statusEffect, constants, events, attacker, defender);
           }
           return;
         }
@@ -1720,18 +1728,23 @@
               moveName: selectedMove.name, power: hitPower, baseDamage:hitBaseDamage, critical, criticalMultiplier:critical?1.5:1, damageRoll: damageRolls[index],
               stabMultiplier, typeMultiplier: hitMultiplier, multiplier: hitMultiplier,
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
-            constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp);
+            constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp,attacker,defender);
+            if (attacker.currentHp === 0) break;
             if (poisonRolls && poisonRolls[index] <= 20 && constants.isEligibleForStatusCondition(defender, 'poison')) {
               defender.statusCondition = 'poison';
               defender.toxicStage = 0;
               events.push({type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole, target: defenderRole,
                 pokemonName: defender.name, statusCondition: 'poison', moveId: selectedMove.id,
                 moveName: selectedMove.name, secondaryEffectRoll: poisonRolls[index], chance: 20, hitIndex: hitCount});
+              constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, 'poison', constants, events, attacker, defender);
             }
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
             moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical)});
-          if (defender.currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events);resolveFaints(state, events, [defenderRole]);}
+          const faintedRolesMulti = [];
+          if (defender.currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events,attacker);faintedRolesMulti.push(defenderRole);}
+          if (attacker.currentHp === 0) faintedRolesMulti.push(attackerRole);
+          if (faintedRolesMulti.length > 0) resolveFaints(state, events, faintedRolesMulti, defender.currentHp === 0 ? 'move' : 'recoil');
           return;
         }
         finalDamage = constants.applyBurnPenalty(
@@ -1773,7 +1786,7 @@
         currentHp
       });
 
-      constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,actualDamageDealt);
+      constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,actualDamageDealt,attacker,defender);
       constants.P8.afterHit(state,attackerRole,damageMove,constants,events,actualDamageDealt);
       // 8B. Descongelamento do alvo por golpe de dano Fire (onDamagingHit: P4)
       // Conforme Pokémon Showdown data/conditions.ts (frz.onDamagingHit): golpes de dano Fire
@@ -1890,6 +1903,7 @@
                 secondaryEffectRoll,
                 chance: secEffect.chance
               });
+              constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, secEffect.statusCondition, constants, events, attacker, defender);
             }
           }
 
@@ -1952,6 +1966,9 @@
                   finalStage: report.finalStage,
                   blockedReason: report.blockedReason
                 });
+                if (report.blockedReason === 'ABILITY' && report.statKey === 'accuracy' && constants.P7.ability(defender) === 'keen-eye') {
+                  events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: 'keen-eye' });
+                }
               }
             }
           }
@@ -2067,10 +2084,10 @@
       constants.P6.afterDamage(state,attackerRole,selectedMove,action||{},constants,events,actualDamageDealt);
       // 12. Nocaute (Faint Detection - defensor e/ou atacante por recuo)
       const faintedRoles = [];
-      if (currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events);faintedRoles.push(defenderRole);}
-      if (attackerFaintedFromRecoil) faintedRoles.push(attackerRole);
+      if (currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events,attacker);faintedRoles.push(defenderRole);}
+      if (attackerFaintedFromRecoil || attacker.currentHp === 0) faintedRoles.push(attackerRole);
       if (faintedRoles.length > 0) {
-        resolveFaints(state, events, faintedRoles, attackerFaintedFromRecoil && currentHp > 0 ? 'recoil' : 'move');
+        resolveFaints(state, events, faintedRoles, (attackerFaintedFromRecoil || attacker.currentHp === 0) && currentHp > 0 ? 'recoil' : 'move');
       }
     }
 

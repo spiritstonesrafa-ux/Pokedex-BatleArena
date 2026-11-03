@@ -54,6 +54,7 @@
       this.bindingDurationSequence=Array.isArray(options.bindingDurationSequence)?[...options.bindingDurationSequence]:null;
       this.lockedDurationSequence=Array.isArray(options.lockedDurationSequence)?[...options.lockedDurationSequence]:null;
       this.abilitySequence=Array.isArray(options.abilitySequence)?[...options.abilitySequence]:null;
+      this.shedSkinSequence=Array.isArray(options.shedSkinSequence)?[...options.shedSkinSequence]:null;
       this.protectSequence = Array.isArray(options.protectSequence) ? [...options.protectSequence] : null;
       this.opponentSequence = Array.isArray(options.opponentSequence) ? [...options.opponentSequence] : null;
     }
@@ -182,6 +183,14 @@
 
     rollBindingDuration(){const n=this.bindingDurationSequence?.length?Number(this.bindingDurationSequence.shift()):4+Math.floor(this.rng()*2);if(![4,5].includes(n))throw new Error('Duração de aprisionamento inválida.');return n;}
     rollLockedDuration(){const n=this.lockedDurationSequence?.length?Number(this.lockedDurationSequence.shift()):2+Math.floor(this.rng()*2);if(![2,3].includes(n))throw new Error('Duração de sequência inválida.');return n;}
+    rollShedSkin(){
+      if(this.shedSkinSequence&&this.shedSkinSequence.length>0){
+        const next=Math.floor(Number(this.shedSkinSequence.shift()));
+        return Math.max(1,Math.min(3,next));
+      }
+      return Math.floor(this.rng()*3)+1;
+    }
+
     rollAbility(){const n=this.abilitySequence?.length?Number(this.abilitySequence.shift()):Math.floor(this.rng()*100)+1;if(!Number.isInteger(n)||n<1||n>100)throw new Error('Rolagem de habilidade inválida.');return n;}
     rollProtect(denominator = 3) {
       if (this.protectSequence && this.protectSequence.length > 0) {
@@ -268,6 +277,14 @@
 
     setConfusionDamageSequence(seq) {
       this.confusionDamageSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setShedSkinSequence(seq) {
+      this.shedSkinSequence = Array.isArray(seq) ? [...seq] : null;
+    }
+
+    setAbilitySequence(seq) {
+      this.abilitySequence = Array.isArray(seq) ? [...seq] : null;
     }
 
     setProtectSequence(seq) {

@@ -478,7 +478,7 @@
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const berryBlocked=context.battleState?constants.P7.berriesBlocked(context.battleState,context.attackerSide==='enemy'?'player':'enemy'):['unnerve','as-one-spectrier'].includes(constants.P7.ability(attacker));
+      const berryBlocked=context.battleState?constants.P7.berriesBlocked(context.battleState,context.attackerSide==='enemy'?'player':'enemy'):['unnerve','as-one-spectrier','as-one-glastrier'].includes(constants.P7.ability(attacker));
       const guaranteedKo = !(multiHit&&(defender.item?.endsWith('-berry')&&!berryBlocked||ab==='multiscale')) && !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
       const possibleKo = !isTwoTurnCharging && !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
@@ -499,8 +499,19 @@
       const expectedRecoil = (recoilRatio > 0 && cappedExpectedDamage > 0)
         ? Math.max(1, Math.floor(cappedExpectedDamage * recoilRatio))
         : 0;
+      const isContact = Boolean(constants?.MoveFlags?.isContactMove ? constants.MoveFlags.isContactMove(move, constants.P5?.contactIds) : constants.P5?.contactIds?.includes(move.id));
+      const rawDefAbility = defender.abilitySuppressed ? '' : (defender.ability || '');
+      const isRoughBarbs = isContact && ['rough-skin', 'iron-barbs'].includes(rawDefAbility) && constants?.P7?.ability?.(attacker) !== 'magic-guard';
+      const isRockyHelmet = isContact && defender.item === 'rocky-helmet' && constants?.P7?.ability?.(attacker) !== 'magic-guard';
+      let contactRecoil = 0;
+      if (isRoughBarbs && cappedExpectedDamage > 0) {
+        contactRecoil += Math.max(1, Math.floor((constants?.P8?.baseMaxHp ? constants.P8.baseMaxHp(attacker) : attacker.maxHp || 100) / 8));
+      }
+      if (isRockyHelmet && cappedExpectedDamage > 0) {
+        contactRecoil += Math.max(1, Math.floor((constants?.P8?.baseMaxHp ? constants.P8.baseMaxHp(attacker) : attacker.maxHp || 100) / 6));
+      }
       const expectedCrash=move.id===853&&constants.P7.ability(attacker)!=='magic-guard'?Math.min(attacker.currentHp,Math.max(1,Math.floor(constants.P8.baseMaxHp(attacker)/2)))*(typeMultiplier===0||defender.isProtected||defender.twoTurnMove?.state?1:1-accuracyFactor):0;
-      const wouldRecoilKo = recoilRatio > 0 && expectedRecoil >= (Number(attacker.currentHp) || 0);
+      const wouldRecoilKo = (recoilRatio > 0 || contactRecoil > 0) && (expectedRecoil + contactRecoil) >= (Number(attacker.currentHp) || 0);
       const priority = constants.P7.priority(attacker,move,constants);
 
       // 8. Avaliação de Efeito Secundário Canônico (Secondary Effects: P4)
@@ -667,7 +678,7 @@
         drainRatio,
         expectedHeal,
         recoilRatio,
-        expectedRecoil:expectedRecoil+expectedCrash,
+        expectedRecoil:expectedRecoil+expectedCrash+contactRecoil,
         expectedCrash,
         wouldRecoilKo,
         statBoosts: null,

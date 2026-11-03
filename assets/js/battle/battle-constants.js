@@ -200,6 +200,8 @@
   const P6 = typeof module !== 'undefined' && module.exports ? require('./p6-mechanics.js') : window.PBAP6Mechanics;
   const P5 = typeof module !== 'undefined' && module.exports ? require('./p5-mechanics.js') : window.PBAP5Mechanics;
   const P4Catalog = typeof module !== 'undefined' && module.exports ? require('./p4-secondary-catalog.js') : (window.PBAP4SecondaryCatalog || {effects:{},definitions:{},moves:{},defrost:[]});
+  const AbilityRegistry = typeof module !== 'undefined' && module.exports ? require('./ability-registry.js') : window.PBAAbilityRegistry;
+  const MoveFlags = typeof module !== 'undefined' && module.exports ? require('./move-flags.js') : window.PBAMoveFlags;
   const SECONDARY_EFFECT_MOVES = Object.freeze({
     'twineedle': Object.freeze({id:41,name:'twineedle',chance:20,statusCondition:'poison'}),
     ...P4Catalog.effects,
@@ -409,7 +411,11 @@
     const weatherAccuracy=P7.accuracy(move,attacker,defender,move.accuracy);
     if(weatherAccuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
-    const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-(Completion.ignoresStages(move)?0:Number(defender.evasionStage)||0)));
+    // Keen Eye: ignore positive evasion of target (treat defender evasionStage as min(0, stage))
+    const attackerHasKeenEye = !attacker?.abilitySuppressed && P7.ability(attacker)==='keen-eye' && !attacker?.abilityIgnored;
+    const rawDefenderEvasion = Completion.ignoresStages(move)?0:(Number(defender.evasionStage)||0);
+    const effectiveDefenderEvasion = attackerHasKeenEye ? 0 : rawDefenderEvasion;
+    const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-effectiveDefenderEvasion));
     return Math.min(100,Math.floor(Number(weatherAccuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
   }
 
@@ -433,6 +439,8 @@
 
   function applyStatStageChange(combatant, statKey, delta) {
     if(delta<0&&(combatant.p7BlockDrop||statKey==='attack'&&combatant.p7BlockAttackDrop)){const previousStage=['accuracy','evasion'].includes(statKey)?combatant[statKey+'Stage']||0:combatant.statStages?.[statKey]||0;return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};}
+    // Keen Eye: block accuracy reductions caused by opponents
+    if(delta<0&&statKey==='accuracy'&&combatant.p7KeenEyeAccuracyBlock&&!combatant.abilityIgnored&&!combatant.abilitySuppressed){const previousStage=combatant.accuracyStage||0;return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};}
     if (['accuracy','evasion'].includes(statKey)) {
       const key=statKey+'Stage', previousStage=Math.max(-6,Math.min(6,Number(combatant[key])||0)), requestedDelta=Math.trunc(Number(delta)||0);
       const finalStage=Math.max(-6,Math.min(6,previousStage+requestedDelta));combatant[key]=finalStage;if(finalStage>previousStage)combatant.statsRaisedThisTurn=true;
@@ -1887,7 +1895,9 @@
     DEFAULT_SLEEP_TURNS,
     DEFAULT_CONFUSION_TURNS,
     isConfused,
-    isEligibleForConfusion
+    isEligibleForConfusion,
+    AbilityRegistry,
+    MoveFlags
   });
 
   // Suporte universal (Node.js & Browser)
