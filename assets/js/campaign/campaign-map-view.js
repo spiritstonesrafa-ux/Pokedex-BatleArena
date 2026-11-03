@@ -448,7 +448,6 @@
           <div id="mapAriaLive" class="campaign-map-live-region" role="status" aria-live="polite" aria-atomic="true"></div>
 
           ${this._renderHeader(viewModel)}
-          ${this._renderTabs(viewModel)}
 
           <!-- Tabpanel dinâmico estável: ID único com aria-labelledby apontando para a aba ativa -->
           <div id="campaign-map-region-panel"
@@ -480,55 +479,68 @@
       const isMap = this.viewMode === 'MAP';
       return `
         <header class="campaign-map-header">
-          <div class="campaign-map-header__titles">
-            <p class="eyebrow">CIRCUITO DOS MESTRES</p>
-            <h2>Mapa de Campanha</h2>
+          <div class="campaign-map-hud-row-main">
+            <div class="campaign-map-hud-group campaign-map-hud-group--left">
+              <button type="button"
+                      id="btnCampaignFullscreen"
+                      class="campaign-view-toggle-btn campaign-fullscreen-btn"
+                      aria-pressed="false"
+                      aria-label="Modo imersivo horizontal"
+                      title="Modo Imersivo Horizontal">
+                <i class="fa-solid fa-expand" aria-hidden="true"></i> <span class="fullscreen-btn-label">Tela Cheia</span>
+              </button>
+              <div class="campaign-map-header__titles">
+                <p class="eyebrow">CIRCUITO DOS MESTRES</p>
+                <h2>Mapa de Campanha</h2>
+              </div>
+            </div>
+
+            <div class="campaign-map-hud-group campaign-map-hud-group--right">
+              <div class="campaign-map-header__meta">
+                <div class="campaign-map-stat-badge">
+                  <span class="stat-icon" aria-hidden="true">🏅</span>
+                  <span class="stat-label">Insígnias:</span>
+                  <strong>${viewModel.badgeCount}/18</strong>
+                </div>
+                <div class="campaign-map-stat-badge">
+                  <span class="stat-icon" aria-hidden="true">👥</span>
+                  <span class="stat-label">Elenco:</span>
+                  <strong>${viewModel.rosterCount}</strong>
+                  <span class="stat-suffix"> Pokémon</span>
+                </div>
+              </div>
+
+              <div class="campaign-map-header__controls">
+                ${this.manager.getState().shadowTrainer?.defeated?'<button id="returnPostgameHub" class="campaign-secondary">← Desafios após Shadow</button>':''}
+                <div class="campaign-view-toggle-group" role="group" aria-label="Modo de visualização">
+                  <button type="button"
+                          id="viewModeMapBtn"
+                          class="campaign-view-toggle-btn"
+                          aria-pressed="${isMap}"
+                          title="Exibir mapa com rotas">
+                    <i class="fa-solid fa-map" aria-hidden="true"></i> <span class="btn-text">Mapa</span>
+                  </button>
+                  <button type="button"
+                          id="viewModeListBtn"
+                          class="campaign-view-toggle-btn"
+                          aria-pressed="${!isMap}"
+                          title="Exibir lista de mestres e desafios">
+                    <i class="fa-solid fa-list-ul" aria-hidden="true"></i> <span class="btn-text">Lista</span>
+                  </button>
+                </div>
+
+                <button type="button"
+                        id="campaignResetBtn"
+                        class="campaign-map-reset-btn"
+                        title="Reiniciar campanha">
+                  Resetar campanha
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div class="campaign-map-header__meta">
-            <div class="campaign-map-stat-badge">
-              <span>Insígnias:</span>
-              <strong>${viewModel.badgeCount}/18</strong>
-            </div>
-            <div class="campaign-map-stat-badge">
-              <span>Elenco:</span>
-              <strong>${viewModel.rosterCount} Pokémon</strong>
-            </div>
-          </div>
-
-          <div class="campaign-map-header__controls">
-            ${this.manager.getState().shadowTrainer?.defeated?'<button id="returnPostgameHub" class="campaign-secondary">← Desafios após Shadow</button>':''}
-            <button type="button"
-                    id="btnCampaignFullscreen"
-                    class="campaign-view-toggle-btn campaign-fullscreen-btn"
-                    aria-pressed="false"
-                    aria-label="Modo imersivo horizontal"
-                    title="Modo Imersivo Horizontal">
-              <i class="fa-solid fa-expand" aria-hidden="true"></i> <span class="fullscreen-btn-label">Tela Cheia</span>
-            </button>
-            <div class="campaign-view-toggle-group" role="group" aria-label="Modo de visualização">
-              <button type="button"
-                      id="viewModeMapBtn"
-                      class="campaign-view-toggle-btn"
-                      aria-pressed="${isMap}"
-                      title="Exibir mapa com rotas">
-                <i class="fa-solid fa-map" aria-hidden="true"></i> Mapa
-              </button>
-              <button type="button"
-                      id="viewModeListBtn"
-                      class="campaign-view-toggle-btn"
-                      aria-pressed="${!isMap}"
-                      title="Exibir lista de mestres e desafios">
-                <i class="fa-solid fa-list-ul" aria-hidden="true"></i> Lista
-              </button>
-            </div>
-
-            <button type="button"
-                    id="campaignResetBtn"
-                    class="campaign-map-reset-btn"
-                    title="Reiniciar campanha">
-              Resetar campanha
-            </button>
+          <div class="campaign-map-hud-group campaign-map-hud-group--center">
+            ${this._renderTabs(viewModel)}
           </div>
         </header>
       `;

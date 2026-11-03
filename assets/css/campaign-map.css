@@ -36,6 +36,34 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+
+.campaign-map-hud-row-main {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.campaign-map-hud-group--left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.campaign-map-hud-group--center {
+  width: 100%;
+  order: 3;
+}
+
+.campaign-map-hud-group--right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .campaign-map-header__titles {
   min-width: 220px;
 }
@@ -1854,6 +1882,14 @@ body.campaign-fullscreen-active .campaign-shell {
            max(100px, calc(env(safe-area-inset-bottom) + 84px)) max(12px, env(safe-area-inset-left)) !important;
 }
 
+/* Hide mobile nav bar and scroll hint in fullscreen to maximize screen space */
+body.campaign-fullscreen-active .campaign-mobile-nav,
+body.campaign-fullscreen-active .campaign-mobile-sheet,
+body.campaign-fullscreen-active .campaign-mobile-sheet-backdrop,
+body.campaign-fullscreen-active .campaign-map-scroll-hint {
+  display: none !important;
+}
+
 body.campaign-fullscreen-active .campaign-map-shell {
   display: flex !important;
   flex-direction: column !important;
@@ -1861,40 +1897,266 @@ body.campaign-fullscreen-active .campaign-map-shell {
   height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
-  padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
-    max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+  padding: max(2px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right))
+           max(2px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)) !important;
   margin: 0 !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  background: #060914 !important;
 }
 
+/* ==========================================================================
+   GAME HUD: Sleek unified top bar for Campaign Map in Fullscreen
+   ========================================================================== */
 body.campaign-fullscreen-active .campaign-map-header {
   flex: 0 0 auto !important;
-  padding: 4px 10px !important;
-  margin-bottom: 2px !important;
-  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 3px 8px !important;
+  margin: 0 0 3px 0 !important;
+  gap: 3px !important;
+  border-radius: 10px !important;
+  background: rgba(10, 15, 30, 0.94) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6) !important;
+  box-sizing: border-box !important;
+}
+
+/* Row 1: Left + Right HUD groups */
+body.campaign-fullscreen-active .campaign-map-hud-row-main {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: auto !important;
+  min-height: 26px !important;
   gap: 6px !important;
 }
 
-body.campaign-fullscreen-active .campaign-map-header__titles h2 {
-  font-size: 0.95rem !important;
+/* Top Left Group: Exit Button + Title */
+body.campaign-fullscreen-active .campaign-map-hud-group--left {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-hud-group--left #btnCampaignFullscreen {
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  background: rgba(239, 68, 68, 0.22) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  color: #fca5a5 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-hud-group--left #btnCampaignFullscreen:hover {
+  background: rgba(239, 68, 68, 0.35) !important;
+  color: #ffffff !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-header__titles {
+  min-width: 0 !important;
   margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-header__titles p.eyebrow {
   display: none !important;
 }
 
-body.campaign-fullscreen-active .campaign-map-tabs {
+body.campaign-fullscreen-active .campaign-map-header__titles h2 {
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Top Right Group: Badges & Controls */
+body.campaign-fullscreen-active .campaign-map-hud-group--right {
   flex: 0 0 auto !important;
-  padding: 2px 4px !important;
-  margin-bottom: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-left: auto !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-header__meta {
+  display: flex !important;
+  align-items: center !important;
   gap: 4px !important;
 }
 
-body.campaign-fullscreen-active .campaign-map-tab {
-  padding: 4px 10px !important;
+body.campaign-fullscreen-active .campaign-map-stat-badge {
+  height: 23px !important;
+  min-height: 23px !important;
+  padding: 0 7px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  font-size: 0.68rem !important;
+  color: #cbd5e1 !important;
+  white-space: nowrap !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-stat-badge strong {
+  color: #ffd166 !important;
+  font-weight: 800 !important;
   font-size: 0.72rem !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-stat-badge .stat-suffix {
+  display: none !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-header__controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.campaign-fullscreen-active .campaign-view-toggle-group {
+  display: inline-flex !important;
+  gap: 2px !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 6px !important;
+  padding: 1px !important;
+}
+
+body.campaign-fullscreen-active .campaign-view-toggle-btn {
+  height: 23px !important;
+  min-height: 23px !important;
+  padding: 0 6px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  border-radius: 5px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+body.campaign-fullscreen-active .campaign-view-toggle-btn[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-reset-btn {
+  height: 23px !important;
+  min-height: 23px !important;
+  padding: 0 6px !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  border-radius: 5px !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+/* Row 2: Region Selector Pills Strip */
+body.campaign-fullscreen-active .campaign-map-hud-group--center {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: auto !important;
+  min-height: 24px !important;
+  padding: 1px 0 !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-hud-group--center::-webkit-scrollbar {
+  display: none !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tabs {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 3px !important;
+  padding: 1px 4px !important;
+  margin: 0 !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tab {
+  height: 22px !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tab[aria-selected="true"] {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(99, 102, 241, 0.35)) !important;
+  border-color: rgba(56, 189, 248, 0.55) !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35) !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tab.is-locked {
+  opacity: 0.55 !important;
+  color: #64748b !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-tab .tab-badge-hint {
+  font-size: 0.58rem !important;
+  color: #ffd166 !important;
+  font-weight: 800 !important;
+  margin-left: 2px !important;
+}
+
+/* Responsive adjustment for narrow landscape (< 680px, e.g. 568px iPhone SE) */
+@media (max-width: 680px) and (orientation: landscape), (max-width: 680px) {
+  body.campaign-fullscreen-active .campaign-map-stat-badge .stat-label {
+    display: none !important;
+  }
+
+  body.campaign-fullscreen-active .campaign-view-toggle-btn .btn-text {
+    display: none !important;
+  }
 }
 
 body.campaign-fullscreen-active #campaign-map-region-panel {
@@ -1909,14 +2171,17 @@ body.campaign-fullscreen-active #campaign-map-region-panel {
 }
 
 body.campaign-fullscreen-active .campaign-map-viewport {
-  flex: 1 1 auto !important;
+  flex: 1 1 100% !important;
   width: 100% !important;
   height: 100% !important;
   min-height: 0 !important;
   aspect-ratio: auto !important;
   border-radius: 10px !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.7), 0 0 15px rgba(56, 189, 248, 0.1) !important;
   overflow: hidden !important;
   touch-action: none !important;
+  position: relative !important;
 }
 
 body.campaign-fullscreen-active .campaign-map-stage {
@@ -1928,7 +2193,59 @@ body.campaign-fullscreen-active .campaign-map-stage {
   transition: transform 0.12s ease-out;
 }
 
-/* Landscape Drawer adjustment for Campaign */
+body.campaign-fullscreen-active .map-region-info-overlay {
+  top: 8px !important;
+  left: 10px !important;
+  padding: 3px 8px !important;
+  background: rgba(10, 15, 30, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body.campaign-fullscreen-active .map-region-info-overlay .region-name {
+  font-size: 0.85rem !important;
+}
+
+body.campaign-fullscreen-active .map-region-info-overlay .region-subtitle {
+  font-size: 0.68rem !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-zoom-controls {
+  position: absolute !important;
+  bottom: 10px !important;
+  top: auto !important;
+  right: 10px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 4px !important;
+  background: rgba(10, 15, 30, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 999px !important;
+  padding: 3px 6px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  z-index: 10 !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-ctrl-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  font-size: 0.72rem !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.campaign-fullscreen-active .campaign-map-ctrl-btn:hover {
+  background: rgba(56, 189, 248, 0.25) !important;
+  color: #38bdf8 !important;
+}
+
+/* Landscape Drawer adjustment for Campaign: Sleek RPG Quest Briefing Card */
 @media (orientation: landscape) {
   body.campaign-fullscreen-active .campaign-details-drawer {
     position: fixed !important;
@@ -1936,8 +2253,8 @@ body.campaign-fullscreen-active .campaign-map-stage {
     bottom: 0 !important;
     right: 0 !important;
     left: auto !important;
-    width: min(380px, 46vw) !important;
-    max-width: 46vw !important;
+    width: min(390px, 45vw) !important;
+    max-width: 45vw !important;
     max-height: 100dvh !important;
     height: 100dvh !important;
     overflow-y: auto !important;
@@ -1945,12 +2262,74 @@ body.campaign-fullscreen-active .campaign-map-stage {
     border-left: 2px solid #38bdf8 !important;
     border-top: none !important;
     transform: translateX(105%) !important;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.8) !important;
+    background: linear-gradient(180deg, rgba(12, 17, 34, 0.97) 0%, rgba(8, 12, 24, 0.98) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    box-shadow: -12px 0 35px rgba(0,0,0,0.85) !important;
     z-index: 9999 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   body.campaign-fullscreen-active .campaign-details-drawer.is-open {
     transform: translateX(0) !important;
+  }
+
+  body.campaign-fullscreen-active .details-drawer-handle {
+    display: none !important;
+  }
+
+  body.campaign-fullscreen-active .details-drawer-header {
+    flex: 0 0 auto !important;
+    padding: 8px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  body.campaign-fullscreen-active .details-drawer-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    padding: 10px 14px 70px 14px !important;
+  }
+
+  body.campaign-fullscreen-active .details-drawer-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 8px 14px !important;
+    background: rgba(8, 12, 24, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    z-index: 20 !important;
+  }
+
+  body.campaign-fullscreen-active .details-action-btn {
+    width: 100% !important;
+    height: 38px !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    border-radius: 999px !important;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.4) !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-card {
+    flex: 1 1 0 !important;
+    padding: 4px 6px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  body.campaign-fullscreen-active .details-team-card img {
+    width: 36px !important;
+    height: 36px !important;
   }
 }
 
