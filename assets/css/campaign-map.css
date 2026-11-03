@@ -1829,6 +1829,15 @@ body.campaign-fullscreen-active.battle-immersive-active #futureModuleView {
   z-index: 10000 !important;
 }
 
+body.campaign-fullscreen-active .battle-modal-backdrop,
+body.campaign-fullscreen-active.campaign-in-battle .battle-modal-backdrop,
+#futureModuleView .battle-modal-backdrop {
+  z-index: 25000 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: auto !important;
+}
+
 body.campaign-fullscreen-active #campaignView:has(.campaign-map-shell) {
   overflow: hidden !important;
 }

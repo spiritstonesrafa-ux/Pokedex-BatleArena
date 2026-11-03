@@ -655,9 +655,10 @@
       const p8Activation=activationOptions.length?'<label>Mecânica especial <select id="p8Activation"><option value="">Batalhar normalmente</option>'+activationOptions.map(kind=>'<option value="'+kind+'" '+(kind===playerActive.specialMechanic?'selected':'')+'>'+(kind==='dynamax'?'Dynamax · três turnos':'Terastallizar · '+playerActive.teraType)+'</option>').join('')+'</select></label><p>Uma mecânica especial por equipe nesta batalha.</p>':'';
       const zAvailable=PowerRules.P8.canActivate(battleState,'player','z');
       const zButton=zAvailable?'<button class="move-action-btn" '+(isResolving?'disabled':'')+' onclick="window.battleSessionController.submitPlayerMove(722,{special: &quot;z&quot;});">Golpe Z · Light That Burns the Sky</button>':'';
-      const movesHtml = (PowerRules.P6.mustStruggle(playerActive)||PowerRules.P7.mustStruggle(playerActive)||PowerRules.P8.mustStruggle(playerActive)) ? `<button id="btnConsecutiveFallback" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(165);">Struggle · sem golpe disponível</button>` : playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.twoTurnMove ? `<button id="btnTwoTurnContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.twoTurnMove.id});"><span class="move-btn-name">Executar ${(playerActive.twoTurnMove.name || 'GOLPE').toUpperCase()}</span><span>Continuação obrigatória · sem gasto de PP</span></button>` : playerActive.lockedMove ? `<button id="btnRampageContinue" class="move-action-btn" ${isResolving?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.lockedMove.id});">Continuar sequência</button>` : playerActive.moves.map(m => {
+      const isReplacementPending = uiState === 'AWAITING_PLAYER_REPLACEMENT' || playerActive.currentHp === 0;
+      const movesHtml = (PowerRules.P6.mustStruggle(playerActive)||PowerRules.P7.mustStruggle(playerActive)||PowerRules.P8.mustStruggle(playerActive)) ? `<button id="btnConsecutiveFallback" class="move-action-btn" ${(isResolving||isReplacementPending)?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(165);">Struggle · sem golpe disponível</button>` : playerActive.rechargeMoveId ? `<button id="btnRecharge" class="move-action-btn" ${(isResolving||isReplacementPending)?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.rechargeMoveId});"><span class="move-btn-name">Recarregar energia</span><span>Este turno é de descanso obrigatório · sem gasto de PP</span></button>` : playerActive.twoTurnMove ? `<button id="btnTwoTurnContinue" class="move-action-btn" ${(isResolving||isReplacementPending)?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.twoTurnMove.id});"><span class="move-btn-name">Executar ${(playerActive.twoTurnMove.name || 'GOLPE').toUpperCase()}</span><span>Continuação obrigatória · sem gasto de PP</span></button>` : playerActive.lockedMove ? `<button id="btnRampageContinue" class="move-action-btn" ${(isResolving||isReplacementPending)?'disabled':''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerMove(${playerActive.lockedMove.id});">Continuar sequência</button>` : playerActive.moves.map(m => {
         const isZeroPp = m.currentPp === 0 && !(playerActive.bideState && m.id===117);
-        const isDisabled = isResolving || isZeroPp || !PowerRules.P7.legalMove(playerActive,m) || Boolean(PowerRules.P6.consecutive.includes(m.id)&&playerActive.lastP6Move===m.id) || Boolean(playerActive.bideState && m.id!==117);
+        const isDisabled = isResolving || isReplacementPending || isZeroPp || !PowerRules.P7.legalMove(playerActive,m) || Boolean(PowerRules.P6.consecutive.includes(m.id)&&playerActive.lastP6Move===m.id) || Boolean(playerActive.bideState && m.id!==117);
         const shown=PowerRules.P8.activeMove(playerActive,m,PowerRules);const displayType=PowerRules.P8.moveType(playerActive,shown,PowerRules.P7.moveType(battleState,playerActive,shown,PowerRules.P5.type(shown,playerActive)))||shown.type;
         const typeColor = `var(--type-${displayType}, #38bdf8)`;
 
@@ -818,21 +819,21 @@
             </div>
 
             <!-- Caixa de Narrativa / Mensagens de Batalha -->
-            <div id="battleNarrativeBox" class="battle-narrative-box" aria-live="polite">
-              O que ${playerActive.name} deve fazer?
+            <div id="battleNarrativeBox" class="battle-narrative-box ${isReplacementPending ? 'narrative-fainted-alert' : ''}" aria-live="polite">
+              ${isReplacementPending ? `<i class="fa-solid fa-skull"></i> <strong>${playerActive.name} foi nocauteado!</strong> Escolha o próximo Pokémon para entrar em campo.` : `O que ${playerActive.name} deve fazer?`}
             </div>
 
             <!-- Painel de Ação do Jogador -->
-            <div class="battle-action-panel">
+            <div class="battle-action-panel ${isReplacementPending ? 'is-replacement-pending' : ''}">
               <div class="action-controls-row">
                 <button
                   id="btnOpenSwitch"
-                  class="btn-switch-action"
-                  ${isResolving || PowerRules.P6.switchBlocked(battleState,'player') ? 'disabled' : ''}
-                  onclick="if(window.battleView) window.battleView.openSwitchModal();"
-                  aria-label="Trocar Pokémon"
+                  class="btn-switch-action ${isReplacementPending ? 'is-forced-switch' : ''}"
+                  ${isResolving || (!isReplacementPending && PowerRules.P6.switchBlocked(battleState,'player')) ? 'disabled' : ''}
+                  onclick="if(window.battleView) { ${isReplacementPending ? 'window.battleView.openReplacementModal(window.battleSessionController?.battleState);' : 'window.battleView.openSwitchModal();'} }"
+                  aria-label="${isReplacementPending ? 'Escolher Pokémon Substituto' : 'Trocar Pokémon'}"
                 >
-                  <i class="fa-solid fa-repeat"></i> TROCAR POKÉMON
+                  <i class="fa-solid ${isReplacementPending ? 'fa-arrow-right-to-bracket' : 'fa-repeat'}"></i> ${isReplacementPending ? 'ESCOLHER SUBSTITUTO' : 'TROCAR POKÉMON'}
                 </button>
                 <button
                   id="btnToggleFieldInfo"
@@ -1007,14 +1008,15 @@
         if (isActive || isFainted) {
           badge = '<span class="switch-item-status-tag fainted">NOCAUTEADO</span>';
         } else {
-          badge = '<span class="switch-item-status-tag" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">ESCOLHER</span>';
+          badge = '<span class="switch-item-status-tag ready"><i class="fa-solid fa-arrow-right-to-bracket"></i> ESCOLHER</span>';
         }
 
         return `
           <button
-            class="switch-pokemon-item"
+            class="switch-pokemon-item ${isDisabled ? 'is-disabled' : 'is-available'}"
             ${isDisabled ? 'disabled' : ''}
             onclick="if(!${isDisabled}) { if(window.battleView){ window.battleView.closeModal(); } if(window.battleSessionController){ window.battleSessionController.submitPlayerReplacement(${p.id}); } }"
+            aria-label="${visual.name}, HP ${p.currentHp} de ${p.maxHp}, ${isDisabled ? 'Nocauteado' : 'Disponível para substituição'}"
           >
             <div class="switch-item-info">
               <img
@@ -1035,18 +1037,24 @@
         `;
       }).join('');
 
-      this.renderModal('Escolha o Substituto!', itemsHtml, false);
+      this.renderModal(
+        '<i class="fa-solid fa-triangle-exclamation"></i> Seu Pokémon foi nocauteado!',
+        itemsHtml,
+        false,
+        'Escolha o próximo Pokémon para entrar em campo:'
+      );
     }
 
     /**
      * Helper genérico para renderizar modal acessível sobreposto.
      */
-    renderModal(title, contentHtml, canClose = true) {
+    renderModal(title, contentHtml, canClose = true, subtitle = null) {
       this.closeModal();
 
       if (typeof document === 'undefined') {
         if (this.container) {
           this.container.innerHTML += `<div class="battle-modal-backdrop" id="battleActiveModal"><div class="switch-pokemon-list">${contentHtml}</div></div>`;
+          this.activeModal = { id: 'battleActiveModal', innerHTML: contentHtml, parentNode: this.container };
         }
         return;
       }
@@ -1055,10 +1063,15 @@
       modalDiv.className = 'battle-modal-backdrop';
       modalDiv.id = 'battleActiveModal';
 
+      const cleanTitle = String(title).replace(/<[^>]*>/g, '').trim();
+
       modalDiv.innerHTML = `
-        <div class="battle-modal-card" role="dialog" aria-modal="true" aria-label="${title}">
+        <div class="battle-modal-card ${!canClose ? 'is-forced-replacement' : ''}" role="dialog" aria-modal="true" aria-label="${cleanTitle}">
           <div class="battle-modal-header">
-            <h3 class="battle-modal-title">${title}</h3>
+            <div class="battle-modal-titles">
+              <h3 class="battle-modal-title">${title}</h3>
+              ${subtitle ? `<p class="battle-modal-subtitle">${subtitle}</p>` : ''}
+            </div>
             ${canClose ? `
               <button class="battle-modal-close-btn" onclick="if(window.battleView) window.battleView.closeModal();" aria-label="Fechar">
                 <i class="fa-solid fa-xmark"></i>
@@ -1071,7 +1084,8 @@
         </div>
       `;
 
-      document.body.appendChild(modalDiv);
+      const mountTarget = (this.container && this.container.isConnected) ? this.container : document.body;
+      mountTarget.appendChild(modalDiv);
       this.activeModal = modalDiv;
 
       // Foco automático no primeiro botão interativo
@@ -1081,7 +1095,7 @@
 
     closeModal() {
       if (this.activeModal && this.activeModal.parentNode) {
-        this.activeModal.parentNode.removeChild(this.activeModal);
+        if (typeof this.activeModal.parentNode.removeChild === 'function') this.activeModal.parentNode.removeChild(this.activeModal);
         this.activeModal = null;
         this.activeModalCanClose = true;
         const trigger = this.modalTrigger;

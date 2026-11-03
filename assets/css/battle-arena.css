@@ -661,33 +661,61 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 25000 !important;
   padding: 16px;
+  pointer-events: auto !important;
 }
 
 .battle-modal-card {
   background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-  padding: 24px;
-  max-width: 440px;
+  padding: 18px 24px;
+  max-width: 480px;
   width: 100%;
+  max-height: calc(100dvh - 24px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  gap: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
+}
+
+.battle-modal-card.is-forced-replacement {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(239, 68, 68, 0.25);
 }
 
 .battle-modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.battle-modal-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .battle-modal-title {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #f8fafc;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.battle-modal-title .fa-triangle-exclamation {
+  color: #f59e0b;
+}
+
+.battle-modal-subtitle {
+  font-size: 0.82rem;
+  color: #94a3b8;
   margin: 0;
 }
 
@@ -708,6 +736,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  max-height: calc(100dvh - 100px);
+  overscroll-behavior: contain;
+  padding-right: 4px;
 }
 
 .switch-pokemon-item {
@@ -719,14 +751,22 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
   width: 100%;
   text-align: left;
+  box-sizing: border-box;
 }
 
-.switch-pokemon-item:hover:not(:disabled) {
-  background: rgba(30, 41, 59, 0.9);
+.switch-pokemon-item:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.switch-pokemon-item:hover:not(:disabled),
+.switch-pokemon-item:focus-visible:not(:disabled) {
+  background: rgba(30, 41, 59, 0.95);
   border-color: #38bdf8;
+  outline: none;
+  transform: translateY(-1px);
 }
 
 .switch-pokemon-item:disabled {
@@ -781,6 +821,81 @@
 .switch-item-status-tag.fainted {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+.switch-item-status-tag.ready {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.narrative-fainted-alert {
+  color: #f87171;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.narrative-fainted-alert .fa-skull {
+  color: #ef4444;
+}
+
+.btn-switch-action.is-forced-switch {
+  background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+  color: #ffffff !important;
+  border: 1px solid #fca5a5 !important;
+  animation: pulse-forced-switch 1.6s infinite ease-in-out;
+}
+
+@keyframes pulse-forced-switch {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  .battle-modal-backdrop {
+    padding: 6px;
+  }
+  .battle-modal-card {
+    max-width: min(520px, 96vw);
+    max-height: calc(100dvh - 12px);
+    padding: 10px 14px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+  .battle-modal-title {
+    font-size: 0.98rem;
+  }
+  .battle-modal-subtitle {
+    font-size: 0.74rem;
+  }
+  .switch-pokemon-list {
+    gap: 5px;
+    max-height: calc(100dvh - 66px);
+  }
+  .switch-pokemon-item {
+    padding: 6px 12px;
+    min-height: 44px;
+  }
+  .switch-item-sprite {
+    width: 36px;
+    height: 36px;
+  }
+  .switch-item-name {
+    font-size: 0.88rem;
+  }
+  .switch-item-hp-bar {
+    font-size: 0.72rem;
+  }
+  .switch-item-status-tag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
 }
 
 /* ====================================================================
