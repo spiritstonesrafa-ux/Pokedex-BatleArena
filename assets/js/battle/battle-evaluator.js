@@ -297,9 +297,11 @@
       }
 
       // 2. STAB (Same-Type Attack Bonus)
-      const attackerTypes = Array.isArray(attacker.types) ? attacker.types : [];
+      const canProtean = Boolean(constants.P7?.canActivateProtean?.(attacker, move, moveType));
+      const effectiveAttacker = canProtean ? { ...attacker, types: [moveType] } : attacker;
+      const attackerTypes = Array.isArray(effectiveAttacker.types) ? effectiveAttacker.types : [];
       const hasStab = attackerTypes.includes(moveType);
-      const stabMultiplier = !isFixedDamage?constants.P8.stab(attacker,moveType,constants):1;
+      const stabMultiplier = !isFixedDamage ? constants.P8.stab(effectiveAttacker, moveType, constants) : 1;
 
       // 3. Efetividade de Tipos (Type Effectiveness)
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];

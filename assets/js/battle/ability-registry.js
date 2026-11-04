@@ -591,6 +591,58 @@
     }
   };
 
+  // H6-B Canonical Dynamic Type-Changing Abilities (FULL status - Gen IX)
+  const H6B_METADATA = {
+    'protean': {
+      id: 'protean',
+      name: 'Protean',
+      generation: 6,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_PREPARE_HIT']),
+      bearer: 'Kecleon (#352), Froakie (#656), Frogadier (#657), Greninja (#658), Sprigatito (#906), Floragato (#907), Meowscarada (#908)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6b.test.js']),
+      description: 'Altera o tipo do Pokémon para o tipo do golpe que ele está prestes a usar (antes do cálculo de dano e STAB). Na Gen IX, ativa apenas uma vez por entrada em campo (resetando ao sair e retornar). Não ativa se o usuário já for puramente daquele tipo, estiver Terastallizado, suprimido ou usar Struggle.'
+    },
+    'libero': {
+      id: 'libero',
+      name: 'Libero',
+      generation: 8,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_PREPARE_HIT']),
+      bearer: 'Scorbunny (#813), Raboot (#814), Cinderace (#815)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6b.test.js']),
+      description: 'Compartilha a mecânica canônica de Protean: altera o tipo do Pokémon para o tipo do golpe que ele está prestes a usar. Na Gen IX, ativa apenas uma vez por entrada em campo.'
+    },
+    'color-change': {
+      id: 'color-change',
+      name: 'Color Change',
+      generation: 3,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_AFTER_MOVE_SECONDARY']),
+      bearer: 'Kecleon (#352)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6b.test.js']),
+      description: 'Altera o tipo do Pokémon para o tipo do golpe de dano recebido após a resolução completa do movimento e efeitos secundários (após o último acerto em golpes multi-hit). O dano recebido usa o tipo anterior. Não ativa contra golpes de status, dano absorvido por Substitute, falhas, imunidades, se já possuir o tipo, se estiver Terastallizado ou nocauteado.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -624,6 +676,11 @@
 
     if (H6A_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6A_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6B_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6B_METADATA[slug] }));
       continue;
     }
 

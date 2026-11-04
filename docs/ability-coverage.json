@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 106,
+    "declaredSupported": 109,
     "assignedAbilities": 313,
-    "assignedPending": 208,
+    "assignedPending": 205,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 573
+    "recordsWithPendingDefault": 571
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 18,
-      "defaultRecordsImpacted": 47
+      "assignedPending": 15,
+      "defaultRecordsImpacted": 45
     },
     {
       "id": "H7",
@@ -2177,8 +2177,8 @@
     },
     {
       "name": "color-change",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -9200,8 +9200,8 @@
     },
     {
       "name": "libero",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -13429,8 +13429,8 @@
     },
     {
       "name": "protean",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {

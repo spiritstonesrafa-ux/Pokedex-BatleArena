@@ -276,7 +276,7 @@
         })),
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
-        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,
+        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,proteanUsed:false,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
@@ -1246,6 +1246,11 @@
       const baseCharge = !calledMove && !continuingTwoTurn && constants.isTwoTurnMove(selectedMove);
       const skipCharge=baseCharge&&constants.P7.instantCharge(state,attacker,selectedMove);
       const isTwoTurnCharging=baseCharge&&!skipCharge;
+      if (!immobilized && !entryRestricted) {
+        if (constants.P7?.canActivateProtean?.(attacker, selectedMove, actualDamageType)) {
+          constants.P7.activateProtean(state, attackerRole, attacker, selectedMove, actualDamageType, constants, events);
+        }
+      }
       if (!immobilized && !entryRestricted && !isTwoTurnCharging) {
         // Mantém a ordem histórica MOVE_USED → PP_CHANGED nos golpes executados.
         events.push({
@@ -1942,6 +1947,11 @@
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
             moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical)});
+          if (defender.currentHp > 0 && totalDamage > 0) {
+            if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, totalDamage, false, false)) {
+              constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events);
+            }
+          }
           const faintedRolesMulti = [];
           if (defender.currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events,attacker);faintedRolesMulti.push(defenderRole);}
           if (attacker.currentHp === 0) faintedRolesMulti.push(attackerRole);
@@ -2245,6 +2255,12 @@
           reason: 'THAWED',
           moveName: selectedMove.name
         });
+      }
+
+      if (currentHp > 0 && actualDamageDealt > 0) {
+        if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, actualDamageDealt, hasActiveSub, bypassesSubDamage)) {
+          constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events);
+        }
       }
 
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)

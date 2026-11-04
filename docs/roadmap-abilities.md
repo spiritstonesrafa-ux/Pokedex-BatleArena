@@ -136,7 +136,7 @@ Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída f
 
 ### H6 — Tipos e mudanças de forma
 
-**Inventário:** 18 habilidades pendentes (6 concluídas em H6-A); 47 registros com habilidade padrão afetados.
+**Inventário:** 15 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B); 45 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H2/H3/H4 conforme forma; base comum de exceções de H7.
 
@@ -144,7 +144,7 @@ Separar conversão de tipo de golpe, mudança de tipos, disfarce visual e mudan�
 
 #### H6-A — Conversão de tipos dos golpes (CONCLUÍDO)
 
-Lote canônico concluído e coberto por 33 testes determinísticos em `tests/battle/abilities-h6a.test.js`:
+Lote canônico concluído e coberto por 45 testes determinísticos em `tests/battle/abilities-h6a.test.js`:
 
 1. **`normalize`** (Gen IV, Regras Canônicas Gen VII-IX):
    - Converte todos os golpes elegíveis para o tipo Normal.
@@ -182,15 +182,41 @@ Lote canônico concluído e coberto por 33 testes determinísticos em `tests/bat
    - Water Absorb e Storm Drain absorvem golpes convertidos; ultrapassa Substitute preservando a propriedade sonora.
    - Portadores: Popplio (#728), Brionne (#729), Primarina (#730). STAB Water de 1.5x aplicado.
 
-**Regras canônicas transversais:**
-- Exceções canônicas imunes à conversão: Struggle (#165), Judgment (#449), Techno Blast (#546), Multi-Attack (#718), Weather Ball (#311), Terrain Pulse (#805), Revelation Dance (#756), Natural Gift (#236), Tera Blast terastallizado (#851) e golpes Z de dano.
+#### H6-B — Alteração Dinâmica dos Tipos do Pokémon (CONCLUÍDO)
+
+Lote canônico focado na alteração dinâmica da tipagem do Pokémon ativo em combate (Gen IX):
+
+1. **`protean`** (Gen VI-IX, Regras Canônicas Gen IX):
+   - Altera a tipagem do usuário para o tipo efetivo do golpe imediatamente antes da sua execução e cálculo de dano.
+   - Torna o Pokémon mono-tipo (`[moveType]`), aplicando STAB (1.5x) no movimento em execução.
+   - Regra Gen IX: Limite estrito de uma ativação por entrada em campo (`once per switch-in`). Reseta ao sair e retornar.
+   - Não ativa se o Pokémon já for exclusivamente daquele tipo (sem consumir o uso). Dual-type virando mono-type consome a ativação.
+   - Ativa mesmo se o golpe errar, for bloqueado por Protect ou encontrar imunidade elementar.
+   - Não ativa se a ação for impedida antes da execução (Sono, Congelamento, Flinch, Autoagressão de Confusão, Paralisia plena).
+   - Não altera tipo se o Pokémon estiver Terastallizado (`attacker.tera`). Isenção para Struggle (#165).
+   - Portadores: Kecleon (#352), Froakie (#656), Frogadier (#657), Greninja (#658), Sprigatito (#906), Floragato (#907), Meowscarada (#908).
+
+2. **`libero`** (Gen VIII-IX, Regras Canônicas Gen IX):
+   - Compartilha a mesma mecânica canônica e rotina de Protean na Gen IX.
+   - Altera o tipo de Cinderace/Scorbunny/Raboot para mono-tipo do golpe antes do cálculo de dano, com STAB imediato.
+   - Limite canônico de uma ativação por entrada em campo (`proteanUsed`).
+   - Portadores: Scorbunny (#813), Raboot (#814), Cinderace (#815).
+
+3. **`color-change`** (Gen III-IX):
+   - Altera a tipagem do defensor para o tipo do golpe de dano sofrido após a resolução completa do ataque e seus efeitos secundários.
+   - Dano recebido é calculado utilizando a tipagem anterior à ativação (não altera dano retroativamente).
+   - Em golpes multi-hit (ex: Bullet Seed), ativa somente após a conclusão de todos os impactos (`MULTI_HIT_COMPLETE`).
+   - Não ativa contra golpes de status, dano absorvido por Substitute (a menos que bypassado), erros, imunidades, se já possuir o tipo recebido, se o Pokémon desmaiar ou se estiver Terastallizado.
+   - Permite ativações sucessivas sem limite por entrada.
+   - Portadores: Kecleon (#352).
+
+**Regras canônicas transversais de H6-B:**
 - Não são ignoradas pelo Mold Breaker do defensor (`breakable: false`).
-- Suprimíveis por Core Enforcer / Gastro Acid (`abilitySuppressed: true`).
-- Integradas dinamicamente ao avaliador da IA (`battle-evaluator.js`), exibição visual dos botões de combate (`battle-view.js`) e duplas com redirecionamento de golpes de área (`doubles-battle.js`).
+- Suprimíveis por `abilitySuppressed: true` (Gastro Acid, Neutralizing Gas); supressão impede novas ativações mas não reverte tipos temporários até a troca.
+- Reversão garantida na saída de campo (`leave`) e término de batalha para os tipos originais da espécie (`specialOriginal.types`), sem mutação de save ou catálogo.
+- IA avalia STAB dinamicamente sem mutação de estado real.
 
-**Aceite:** Limiares de HP, tipo anterior, habilidades indissociáveis da forma, banco de reservas, Dynamax/Tera/Transform, retorno ao normal e invariância do elenco e save após a batalha.
-
-**Lista restante de H6 (18 pendentes):** `color-change`, `forecast`, `multitype`, `zen-mode`, `illusion`, `protean`, `stance-change`, `schooling`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `libero`, `shields-down`, `zero-to-hero`, `gulp-missile`.
+**Lista restante de H6 (15 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `schooling`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `shields-down`, `zero-to-hero`, `gulp-missile`.
 
 ### H7 — Cópia, troca e supressão de habilidades
 
