@@ -3116,8 +3116,84 @@ body.campaign-fullscreen-active .draft-grid {
   /* In landscape, disable portrait tabs and show complete preparation content */
   .campaign-shell.is-picker .mobile-picker-top-section,
   .wild-encounter-screen.is-picker .mobile-picker-top-section,
-  .mobile-tab-empty-hint {
+  .mobile-tab-empty-hint,
+  .campaign-equipment-editor.campaign-desktop-loadout {
     display: none !important;
+  }
+
+  /* Compact Team Equipment Strip in Landscape */
+  .picker-team-equipment-strip {
+    margin: 2px 0 6px 0 !important;
+    padding: 6px 10px !important;
+  }
+  .picker-equipment-strip-header {
+    margin-bottom: 4px !important;
+    padding-bottom: 2px !important;
+  }
+  .picker-equipment-strip-title {
+    font-size: 0.72rem !important;
+  }
+  .picker-equipment-strip-hint {
+    font-size: 0.62rem !important;
+  }
+  .picker-equipment-card {
+    padding: 4px 8px !important;
+    gap: 4px !important;
+  }
+  .picker-equipment-card__sprite {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .picker-equipment-card__name {
+    font-size: 0.76rem !important;
+  }
+  .picker-equipment-card__item-label {
+    font-size: 0.65rem !important;
+  }
+  .picker-equipment-card__btn {
+    min-height: 26px !important;
+    font-size: 0.68rem !important;
+    padding: 3px 6px !important;
+  }
+
+  /* Equipment Modal tuning in Landscape */
+  .campaign-equipment-modal {
+    max-height: min(300px, 92vh) !important;
+    padding: 10px 12px !important;
+    gap: 6px !important;
+  }
+  .campaign-equipment-modal__mon-banner {
+    padding: 4px 8px !important;
+    gap: 8px !important;
+  }
+  .campaign-equipment-modal__avatar-wrap {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .campaign-equipment-modal__mon-sprite {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .campaign-equipment-modal__mon-name {
+    font-size: 0.85rem !important;
+  }
+  .campaign-equipment-modal__quick-pills {
+    max-height: 52px !important;
+  }
+  .campaign-equipment-modal__pill {
+    padding: 2px 6px !important;
+    font-size: 0.62rem !important;
+  }
+  .campaign-equipment-modal__select {
+    padding: 5px 8px !important;
+    font-size: 0.76rem !important;
+  }
+  .campaign-equipment-modal__desc-card {
+    padding: 6px 8px !important;
+  }
+  .campaign-equipment-modal__actions button {
+    min-height: 32px !important;
+    font-size: 0.72rem !important;
   }
 
   .campaign-shell.is-picker > #pickerBack,

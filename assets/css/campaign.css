@@ -1429,3 +1429,599 @@
 
 /* Post-Shadow challenge selection. */
 .postgame-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;margin:24px 0}.postgame-card{--postgame-color:#b991ff;display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid color-mix(in srgb,var(--postgame-color),transparent 45%);border-radius:18px;background:radial-gradient(ellipse at top,color-mix(in srgb,var(--postgame-color),transparent 91%),#0d1325);color:#edf1ff}.postgame-card h3{font-size:24px;margin:0}.postgame-card>p{margin:0;line-height:1.6}.postgame-card .eyebrow{color:var(--postgame-color);font-size:11px;letter-spacing:.12em}.postgame-card--zygarde{--postgame-color:#7df58d}.postgame-card--kyurem{--postgame-color:#9fe9ff}.postgame-card--necrozma{--postgame-color:#ffd78f}.postgame-card--creation{--postgame-color:#e7abff}.postgame-card.is-locked{border-style:dashed}.postgame-card .campaign-primary{margin-top:auto;width:100%}.postgame-card__team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:start}.postgame-card__team figure{margin:0;text-align:center}.postgame-card__team img{width:100%;max-width:100px;aspect-ratio:1;object-fit:contain}.postgame-card__team figcaption{font-size:11px;line-height:1.4;overflow-wrap:anywhere}.postgame-card button:disabled{opacity:.45;cursor:not-allowed}.postgame-hub>.campaign-secondary{margin-top:12px}
+
+
+/* ==========================================================================
+   CAMPAIGN MOBILE BATTLE EQUIPMENT (TOUCH HUD & MODAL)
+   ========================================================================== */
+
+/* 1. Selected Team Equipment Strip */
+.picker-team-equipment-strip {
+  width: 100%;
+  max-width: 100%;
+  margin: 6px 0 10px 0;
+  padding: 8px 12px;
+  background: rgba(13, 19, 38, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.picker-equipment-strip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.picker-equipment-strip-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffd166;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.picker-equipment-strip-hint {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.picker-equipment-strip-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 8px;
+}
+
+.picker-equipment-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(22, 30, 58, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 6px 10px;
+  gap: 6px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.picker-equipment-card.has-item {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: linear-gradient(135deg, rgba(16, 42, 38, 0.85) 0%, rgba(13, 23, 44, 0.9) 100%);
+}
+
+.picker-equipment-card.is-guest {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.75);
+  opacity: 0.9;
+}
+
+.picker-equipment-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.picker-equipment-card__role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ffd166;
+  letter-spacing: 0.04em;
+}
+
+.picker-equipment-card__item-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.picker-equipment-card__item-tag.equipped {
+  background: rgba(52, 211, 153, 0.22);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.picker-equipment-card__item-tag.none {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.picker-equipment-card__body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.picker-equipment-card__sprite {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+.picker-equipment-card__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.picker-equipment-card__name {
+  font-size: 0.82rem;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-equipment-card__item-label {
+  font-size: 0.70rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-equipment-card__item-label strong {
+  color: #ffd166;
+}
+
+.picker-equipment-card__item-status.is-fixed {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.picker-equipment-card__btn {
+  width: 100%;
+  padding: 5px 8px !important;
+  font-size: 0.74rem !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 30px !important;
+  cursor: pointer;
+}
+
+.picker-equipment-card__btn.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 2. Item Badge on Draft Grid Cards */
+.campaign-mon .campaign-mon__item-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-top: 3px;
+  max-width: 95%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.campaign-mon .campaign-mon__item-badge.has-item {
+  background: rgba(52, 211, 153, 0.22);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+}
+
+.campaign-mon .campaign-mon__item-badge.no-item {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* 3. Dedicated RPG Equipment Modal Backdrop */
+.campaign-equipment-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(5, 9, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  animation: modalFadeIn 0.18s ease-out;
+}
+
+.campaign-equipment-modal-backdrop.is-closing {
+  animation: modalFadeOut 0.16s ease-in forwards;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Modal Window */
+.campaign-equipment-modal {
+  width: min(540px, 95vw);
+  max-height: min(440px, 94vh);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(180deg, #18223c 0%, #0d1326 100%);
+  border: 1.5px solid #ffd166;
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(255, 209, 102, 0.25);
+  padding: 14px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #f1f5f9;
+  animation: modalSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(14px) scale(0.97); }
+  to { transform: translateY(0) scale(1); }
+}
+
+/* Modal Header */
+.campaign-equipment-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 209, 102, 0.3);
+}
+
+.campaign-equipment-modal__title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campaign-equipment-modal__icon {
+  font-size: 1.1rem;
+  color: #ffd166;
+}
+
+.campaign-equipment-modal__header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffd166;
+}
+
+.campaign-equipment-modal__close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.campaign-equipment-modal__close-btn:hover {
+  color: #f8fafc;
+  transform: scale(1.1);
+}
+
+/* Team Switch Tabs */
+.campaign-equipment-modal__tabs-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.campaign-equipment-modal__tab {
+  flex: 1;
+  min-width: 100px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.campaign-equipment-modal__tab.is-active {
+  background: rgba(255, 209, 102, 0.18);
+  border-color: #ffd166;
+  color: #ffd166;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.2);
+}
+
+.campaign-equipment-modal__tab-role {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+.campaign-equipment-modal__tab-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.campaign-equipment-modal__tab-item {
+  font-size: 0.60rem;
+  opacity: 0.8;
+}
+
+/* Mon Banner */
+.campaign-equipment-modal__mon-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.campaign-equipment-modal__avatar-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.2) 0%, rgba(15, 23, 42, 0.9) 80%);
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.campaign-equipment-modal__mon-sprite {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.campaign-equipment-modal__mon-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.campaign-equipment-modal__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campaign-equipment-modal__mon-name {
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.campaign-equipment-modal__role-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ffd166;
+  text-transform: uppercase;
+}
+
+.campaign-equipment-modal__types-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.campaign-equipment-modal__types-row .type-chip {
+  font-size: 0.60rem;
+  padding: 1px 4px;
+}
+
+.campaign-equipment-modal__bst {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-left: 4px;
+}
+
+.campaign-equipment-modal__current-item-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  margin-top: 2px;
+  color: #cbd5e1;
+}
+
+.campaign-equipment-modal__current-item-box strong.item-equipped {
+  color: #34d399;
+}
+
+.campaign-equipment-modal__current-item-box strong.item-none {
+  color: #94a3b8;
+}
+
+/* Guest Alert */
+.campaign-equipment-modal__guest-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 8px;
+  color: #fde68a;
+  font-size: 0.78rem;
+}
+
+.campaign-equipment-modal__guest-alert p {
+  margin: 4px 0 0 0;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+/* Sections & Titles */
+.campaign-equipment-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.campaign-equipment-modal__section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffd166;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.03em;
+}
+
+/* Quick Pills */
+.campaign-equipment-modal__quick-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 80px;
+  overflow-y: auto;
+  padding-bottom: 2px;
+}
+
+.campaign-equipment-modal__pill {
+  padding: 4px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.campaign-equipment-modal__pill:hover {
+  background: rgba(255, 209, 102, 0.14);
+  border-color: rgba(255, 209, 102, 0.5);
+  color: #f8fafc;
+}
+
+.campaign-equipment-modal__pill.is-active {
+  background: #ffd166;
+  color: #0d1326;
+  font-weight: 800;
+  border-color: #ffd166;
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
+}
+
+/* Full Select Dropdown */
+.campaign-equipment-modal__select {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #0d1326;
+  border: 1px solid rgba(255, 209, 102, 0.45);
+  color: #f8fafc;
+  font-size: 0.82rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.campaign-equipment-modal__select:focus {
+  border-color: #ffd166;
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.35);
+}
+
+/* Dynamic Lore Description Card */
+.campaign-equipment-modal__desc-card {
+  background: rgba(11, 16, 32, 0.88);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.campaign-equipment-modal__desc-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  font-size: 0.74rem;
+  color: #ffd166;
+}
+
+.campaign-equipment-modal__desc-card p {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+
+/* Feedback alert */
+.campaign-equipment-modal__feedback {
+  font-size: 0.74rem;
+  font-weight: 700;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.campaign-equipment-modal__feedback.is-success {
+  color: #34d399;
+}
+
+.campaign-equipment-modal__feedback.is-error {
+  color: #f87171;
+}
+
+/* Modal Actions */
+.campaign-equipment-modal__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.campaign-equipment-modal__actions button {
+  flex: 1 1 120px;
+  min-height: 36px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+}
