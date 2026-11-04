@@ -606,7 +606,7 @@
           routeClass += ' is-active';
         }
 
-        return `<path id="${route.routeId}" class="${routeClass}" d="${route.pathD}" />`;
+        return `<path class="map-route-bed" d="${route.pathD}" aria-hidden="true" /><path id="${route.routeId}" class="${routeClass}" d="${route.pathD}" /><path class="map-route-pips ${routeClass}" d="${route.pathD}" aria-hidden="true" />`;
       }).join('');
 
       let visibleNodeIndex = 0;
@@ -645,11 +645,25 @@
         if (isSelected) stateClass += ' is-selected';
         if (!node.canChallenge) stateClass += ' is-locked';
 
+        let typeCrest = '';
+        if (node.type && TYPE_ICONS[node.type]) {
+          typeCrest = `<span class="node-type-gem type-${node.type}" title="Especialidade: Tipo ${node.type}"><i class="node-type-icon">${TYPE_ICONS[node.type]}</i></span>`;
+        }
+
         let badgeOverlay = '';
         if (node.isDefeated) {
           badgeOverlay = `<span class="node-status-badge is-defeated" title="Derrotado"><i class="fa-solid fa-check"></i></span>`;
         } else if (node.isRecommended) {
-          badgeOverlay = `<span class="node-recommended-pill">★ Sugerido</span>`;
+          badgeOverlay = `
+            <span class="node-recommended-pill">★ Sugerido</span>
+            <div class="node-objective-beacon" aria-hidden="true">
+              <span class="objective-beacon-gem"><i class="fa-solid fa-exclamation"></i></span>
+            </div>
+            <div class="node-destination-flag" aria-hidden="true">
+              <span class="destination-flag-pennant"><i class="fa-solid fa-flag"></i> DESTINO</span>
+              <span class="destination-flag-pole"></span>
+            </div>
+          `;
         } else if (!node.canChallenge) {
           badgeOverlay = `<span class="node-status-badge is-locked" title="${node.cannotChallengeReason || 'Bloqueado'}"><i class="fa-solid fa-lock"></i></span>`;
         }
@@ -680,7 +694,11 @@
                   data-node-index="${staggerIndex}"
                   aria-label="${node.ariaLabel}"
                   title="${titleAttr}">
-            ${innerImage}
+            <span class="campaign-map-node__frame" aria-hidden="true"></span>
+            ${typeCrest}
+            <span class="campaign-map-node__avatar-wrap">
+              ${innerImage}
+            </span>
             ${badgeOverlay}
           </button>
         `;
@@ -700,7 +718,7 @@
           const completed = count >= limit;
           const buttonId = point.id === wildConfig.defaultPointId
             ? 'wildEncounterZone' : `wildEncounterZone-${point.id}`;
-          return `<button type="button" id="${buttonId}" class="campaign-map-wild-zone"
+          return `<button type="button" id="${buttonId}" class="campaign-map-wild-zone ${completed ? 'is-completed' : 'is-active'}"
              data-region="${region.id}" data-wild-point="${point.id}"
              style="left: ${point.zonePosition.x}%; top: ${point.zonePosition.y}%;"
              aria-label="${completed
@@ -768,8 +786,13 @@
             ${gatewaysHtml}
             ${wildZoneHtml}
             ${avatarNode ? `
+              <div class="campaign-map-avatar-pedestal ${this._travel ? 'is-walking' : ''}" style="left: ${avatarNode.position.x}%; top: ${avatarNode.position.y}%;" aria-hidden="true">
+                <span class="avatar-pedestal-ring"></span>
+              </div>
               <div id="campaignPlayerAvatar" class="campaign-map-player-avatar ${this._travel ? 'is-walking' : ''} is-direction-down"
                    style="left: ${avatarNode.position.x}%; top: ${avatarNode.position.y}%;" aria-hidden="true">
+                <span class="avatar-locator-marker" aria-hidden="true">▼</span>
+                <span class="avatar-position-badge" aria-hidden="true"><i class="fa-solid fa-location-arrow"></i> Sua posição</span>
                 <img class="campaign-map-player-avatar__stride-a" data-direction="horizontal" data-step="a" src="${this.assetPrefix}assets/images/campaign/player-traveler.png" alt="" width="48" height="48" draggable="false">
                 <img class="campaign-map-player-avatar__stride-b" data-direction="horizontal" data-step="b" src="${this.assetPrefix}assets/images/campaign/player-traveler-step-b.png" alt="" width="48" height="48" draggable="false">
                 <img class="campaign-map-player-avatar__stride-a" data-direction="down" data-step="a" src="${this.assetPrefix}assets/images/campaign/player-traveler-down-a.png" alt="" width="48" height="48" draggable="false">

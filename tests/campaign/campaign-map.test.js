@@ -4163,3 +4163,28 @@ test('Avatar Phase 4 — modo Lista e movimento reduzido trocam direto; sair can
   assert.equal(view._travel, null);
   assert.equal(view.activeRegionId, 'region-1', 'Desmontar a tela não completa transferência pendente');
 });
+
+test('Avatar Singleton — renderização do mapa garante estritamente 1 avatar, 1 pedestal e 1 badge', () => {
+  const mgr = freshManager();
+  startCampaign(mgr);
+  const container = {
+    innerHTML: '',
+    querySelector: () => null,
+    querySelectorAll: () => []
+  };
+  const view = new CampaignMapView({ manager: mgr, container, initialViewMode: 'MAP' });
+  view.render();
+
+  const html = container.innerHTML;
+  const avatarMatches = html.match(/id="campaignPlayerAvatar"/g) || [];
+  const pedestalMatches = html.match(/class="campaign-map-avatar-pedestal/g) || [];
+  const badgeMatches = html.match(/class="avatar-position-badge"/g) || [];
+  const locatorMatches = html.match(/class="avatar-locator-marker"/g) || [];
+
+  assert.equal(avatarMatches.length, 1, 'Deve haver estritamente 1 elemento #campaignPlayerAvatar');
+  assert.equal(pedestalMatches.length, 1, 'Deve haver estritamente 1 pedestal de avatar');
+  assert.equal(badgeMatches.length, 1, 'Deve haver estritamente 1 badge "Sua posição"');
+  assert.equal(locatorMatches.length, 1, 'Deve haver estritamente 1 marcador de localização');
+
+  view.destroy();
+});

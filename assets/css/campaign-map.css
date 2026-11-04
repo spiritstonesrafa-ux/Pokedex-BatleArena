@@ -382,7 +382,7 @@
   background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.28) 100%);
 }
 
-/* Subtitle & Biome Banner inside map */
+/* Subtitle & Biome Banner inside map (Town Map Plaque style) */
 .map-region-info-overlay {
   position: absolute;
   top: 14px;
@@ -390,21 +390,31 @@
   z-index: 3;
   pointer-events: none;
   max-width: 65%;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(24, 34, 58, 0.88));
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(234, 179, 8, 0.4);
+  border-left: 4px solid var(--map-gold, #facc15);
+  border-radius: 8px 18px 18px 8px;
+  padding: 6px 16px 6px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75);
 }
 
 .map-region-info-overlay .region-name {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 900;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  color: #fef08a;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .map-region-info-overlay .region-subtitle {
   margin: 0.15rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: #cbd5e1;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* Fallback Thematic Backgrounds */
@@ -458,30 +468,83 @@
 
 .campaign-map-player-avatar {
   position: absolute;
-  z-index: 4;
+  z-index: 5;
   width: 48px;
   height: 48px;
-  transform: translate(-50%, -92%);
+  transform: translate(calc(-50% - 32px), calc(-50% + 14px));
   pointer-events: none;
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.8));
+}
+
+.campaign-map-player-avatar.is-walking {
+  transform: translate(-50%, -92%);
+}
+
+.campaign-map-player-avatar.is-walking .avatar-locator-marker,
+.campaign-map-player-avatar.is-walking .avatar-position-badge {
+  display: none;
+}
+
+.campaign-map-avatar-pedestal.is-walking {
+  display: none;
+}
+
+/* Avatar Floating Locator Marker */
+.avatar-locator-marker {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #38bdf8;
+  font-size: 11px;
+  filter: drop-shadow(0 0 4px #0284c7);
+  animation: avatarLocatorBob 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes avatarLocatorBob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+/* Avatar "Sua posição" Pill Badge */
+.avatar-position-badge {
+  position: absolute;
+  left: -88px;
+  top: 14px;
+  padding: 3px 8px;
+  background: linear-gradient(135deg, rgba(15, 43, 72, 0.94), rgba(10, 25, 45, 0.96));
+  border: 1px solid #38bdf8;
+  border-radius: 999px;
+  color: #e0f2fe;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 8px rgba(56, 189, 248, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 6;
 }
 
 .campaign-map-gateway {
   position: absolute;
   z-index: 3;
-  transform: translate(16px, -68px);
+  transform: translate(14px, -64px);
   pointer-events: none;
-  padding: 3px 6px;
-  border: 1px solid #f6d365;
-  border-radius: 4px;
-  background: #172039;
-  color: #fff3c2;
+  padding: 3px 8px;
+  border: 1.2px solid #ca8a04;
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(24, 32, 54, 0.94));
+  backdrop-filter: blur(6px);
+  color: #fef08a;
   font-size: 10px;
   font-weight: 800;
   line-height: 1.2;
   white-space: nowrap;
   text-shadow: 0 1px 2px #000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.65), 0 0 8px rgba(202, 138, 4, 0.2);
 }
 
 .campaign-map-wild-zone {
@@ -490,17 +553,24 @@
   left: 28%;
   top: 44%;
   transform: translate(36px, 8px);
-  min-height: 44px;
-  padding: 8px 10px;
-  border: 2px solid #b9f68a;
-  border-radius: 8px;
-  background: #183527;
-  color: #f0ffe4;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1.2px solid rgba(234, 179, 8, 0.6);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(24, 32, 54, 0.92));
+  backdrop-filter: blur(8px);
+  color: #fef3c7;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65), 0 0 8px rgba(234, 179, 8, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.campaign-map-wild-zone:hover {
+  transform: translate(36px, 6px) scale(1.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.75), 0 0 12px rgba(234, 179, 8, 0.4);
 }
 
 .campaign-map-wild-zone[data-wild-point="r2-glacier"],
@@ -508,26 +578,75 @@
   transform: translate(calc(-100% - 16px), 8px);
 }
 
+.campaign-map-wild-zone[data-wild-point="r2-glacier"]:hover,
+.campaign-map-wild-zone[data-wild-point="r3-shrine"]:hover {
+  transform: translate(calc(-100% - 16px), 6px) scale(1.04);
+}
+
 .campaign-map-wild-zone:focus-visible {
-  outline: 3px solid #fff;
+  outline: 2px solid #fff;
   outline-offset: 3px;
 }
 
 .campaign-map-wild-zone[data-region="region-2"] {
-  border-color: #ffc27a;
-  background: #55351f;
+  border-color: rgba(234, 179, 8, 0.6);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(24, 32, 54, 0.92));
   color: #fff4df;
 }
 
 .campaign-map-wild-zone[data-region="region-3"] {
-  border-color: #d4b5ff;
-  background: #33244b;
+  border-color: rgba(234, 179, 8, 0.6);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(24, 32, 54, 0.92));
   color: #f7edff;
 }
 
+.campaign-map-wild-zone.is-completed {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #94a3b8 !important;
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
 .campaign-map-wild-zone:disabled {
-  opacity: 0.55;
+  opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* Avatar Waypoint Pedestal (Ground Halo) */
+.campaign-map-avatar-pedestal {
+  position: absolute;
+  z-index: 3;
+  width: 54px;
+  height: 22px;
+  transform: translate(calc(-50% - 32px), calc(-50% + 32px));
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-pedestal-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.85);
+  background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.35) 0%, rgba(56, 189, 248, 0.08) 60%, transparent 80%);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), inset 0 0 8px rgba(56, 189, 248, 0.45);
+  animation: avatarPedestalPulse 2.8s ease-in-out infinite;
+}
+
+@keyframes avatarPedestalPulse {
+  0%, 100% {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.9), inset 0 0 10px rgba(56, 189, 248, 0.6);
+  }
 }
 
 .campaign-map-player-avatar img {
@@ -615,37 +734,78 @@
   }
 }
 
-.map-route-path {
+.map-route-bed {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.28);
+  stroke: rgba(10, 15, 26, 0.6);
   stroke-width: 4.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 8 10;
+}
+
+.map-route-path {
+  fill: none;
+  stroke: rgba(234, 179, 8, 0.36);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
 
 .map-route-path.is-completed {
-  stroke: var(--map-gold);
-  stroke-width: 5;
-  stroke-dasharray: none;
-  filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.55));
+  stroke: #eab308;
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.5));
 }
 
 .map-route-path.is-active {
-  stroke: #63b3ed;
-  stroke-width: 4.5;
-  stroke-dasharray: 8 10;
-  animation: mapRouteDash 24s linear infinite;
+  stroke: #f59e0b;
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.65));
 }
 
-@keyframes mapRouteDash {
-  from { stroke-dashoffset: 200; }
-  to { stroke-dashoffset: 0; }
+.map-route-path.is-locked {
+  stroke: rgba(148, 163, 184, 0.2);
+  stroke-width: 1.8;
+  stroke-dasharray: 4 6;
+}
+
+/* Stepping Stone Waypoint Pips along path */
+.map-route-pips {
+  fill: none;
+  stroke: #fde047;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0 30;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
+  pointer-events: none;
+}
+
+.map-route-pips.is-completed {
+  stroke: #fef08a;
+  stroke-width: 4.5;
+  stroke-dasharray: 0 28;
+}
+
+.map-route-pips.is-active {
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-dasharray: 0 26;
+  animation: routePipShimmer 3s ease-in-out infinite alternate;
+}
+
+@keyframes routePipShimmer {
+  0% { opacity: 0.85; filter: drop-shadow(0 0 2px rgba(254, 240, 138, 0.6)); }
+  100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(254, 240, 138, 1)); }
+}
+
+.map-route-pips.is-locked {
+  stroke: rgba(148, 163, 184, 0.3);
+  stroke-width: 3.5;
+  stroke-dasharray: 0 36;
 }
 
 /* --------------------------------------------------------------------------
-   INTERACTIVE HTML NODES
+   INTERACTIVE HTML NODES (GYM MEDALLIONS)
    -------------------------------------------------------------------------- */
 .campaign-map-node {
   position: absolute;
@@ -655,25 +815,62 @@
   min-width: 44px;
   min-height: 44px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.45);
-  background: #141726;
+  border: 2.5px solid rgba(245, 197, 66, 0.85);
+  background: radial-gradient(circle at 35% 35%, #2a3447 0%, #111827 80%);
   color: #fff;
   cursor: pointer;
   padding: 0;
   display: grid;
   place-items: center;
   z-index: 2;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.75), 0 0 6px rgba(245, 197, 66, 0.3);
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.22s ease,
               border-color 0.22s ease;
   box-sizing: border-box;
 }
 
+/* Ground contact shadow under node */
+.campaign-map-node::before {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 72%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Sculpted metallic double bezel */
+.campaign-map-node__frame {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(254, 240, 138, 0.65);
+  pointer-events: none;
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Recessed vignette avatar cameo */
+.campaign-map-node__avatar-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.75);
+}
+
 .campaign-map-node:hover {
-  transform: translate(-50%, -50%) scale(1.16);
-  z-index: 5;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.75), 0 0 16px rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%) scale(1.15);
+  z-index: 6;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.8), 0 0 18px rgba(245, 197, 66, 0.45);
 }
 
 .campaign-map-node:focus-visible {
@@ -685,13 +882,36 @@
 
 /* Node States */
 .campaign-map-node.is-defeated {
-  border-color: var(--map-gold);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 209, 102, 0.4);
+  border-color: #facc15;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7), 0 0 12px rgba(250, 204, 21, 0.4);
+}
+
+.campaign-map-node.is-defeated .campaign-map-node__frame {
+  border-color: rgba(250, 204, 21, 0.7);
 }
 
 .campaign-map-node.is-recommended {
-  border-color: #38bdf8;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), 0 0 14px rgba(56, 189, 248, 0.55);
+  border-color: #fbbf24;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.85), 0 0 32px rgba(234, 179, 8, 0.45), 0 8px 20px rgba(0, 0, 0, 0.8);
+  animation: nodeRecommendedGleam 2.4s ease-in-out infinite;
+}
+
+.campaign-map-node.is-recommended .campaign-map-node__frame {
+  border-color: rgba(254, 240, 138, 0.9);
+}
+
+@keyframes nodeRecommendedGleam {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.75), 0 0 28px rgba(234, 179, 8, 0.35), 0 8px 20px rgba(0, 0, 0, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.95), 0 0 42px rgba(234, 179, 8, 0.6), 0 8px 24px rgba(0, 0, 0, 0.9);
+  }
+}
+
+.campaign-map-node.is-locked {
+  opacity: 0.85;
+  filter: saturate(0.65) brightness(0.85);
 }
 
 /* Staggered Entrance on Region Change */
@@ -727,7 +947,7 @@
 .campaign-map-node.is-selected {
   outline: 3px solid #fff;
   outline-offset: 3px;
-  z-index: 6;
+  z-index: 7;
   transform: translate(-50%, -50%) scale(1.18);
   animation: nodeSelectPulse 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -752,6 +972,44 @@
   font-weight: 900;
   pointer-events: none;
 }
+
+/* Elemental Type Jewel on Node */
+.node-type-gem {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  color: #fff;
+  z-index: 4;
+  border: 1.2px solid rgba(254, 240, 138, 0.75);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.node-type-gem.type-normal   { background: linear-gradient(135deg, #a8a878, #8a8a59); }
+.node-type-gem.type-fire     { background: linear-gradient(135deg, #f08030, #dd6610); }
+.node-type-gem.type-water    { background: linear-gradient(135deg, #6890f0, #386ceb); }
+.node-type-gem.type-grass    { background: linear-gradient(135deg, #78c850, #5ca935); }
+.node-type-gem.type-electric { background: linear-gradient(135deg, #f8d030, #e0b810); color: #222; text-shadow: none; }
+.node-type-gem.type-ice      { background: linear-gradient(135deg, #98d8d8, #69c6c6); color: #111; text-shadow: none; }
+.node-type-gem.type-fighting { background: linear-gradient(135deg, #c03028, #99231b); }
+.node-type-gem.type-poison   { background: linear-gradient(135deg, #a040a0, #802880); }
+.node-type-gem.type-ground   { background: linear-gradient(135deg, #e0c068, #c8a342); }
+.node-type-gem.type-flying   { background: linear-gradient(135deg, #a890f0, #8362ea); }
+.node-type-gem.type-psychic  { background: linear-gradient(135deg, #f85888, #e52864); }
+.node-type-gem.type-bug      { background: linear-gradient(135deg, #a8b820, #8d9a1b); }
+.node-type-gem.type-rock     { background: linear-gradient(135deg, #b8a038, #938024); }
+.node-type-gem.type-ghost    { background: linear-gradient(135deg, #705898, #553e7d); }
+.node-type-gem.type-dragon   { background: linear-gradient(135deg, #7038f8, #4c12df); }
+.node-type-gem.type-dark     { background: linear-gradient(135deg, #705848, #4e3a2e); }
+.node-type-gem.type-steel    { background: linear-gradient(135deg, #b8b8d0, #9393b3); color: #222; text-shadow: none; }
+.node-type-gem.type-fairy    { background: linear-gradient(135deg, #ee99ac, #e46e87); }
 
 /* Endgame Node Variants */
 .campaign-map-node.node-kind-trial {
@@ -796,12 +1054,101 @@
   color: #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   pointer-events: none;
+  z-index: 5;
 }
 
 .node-status-badge.is-defeated {
-  background: var(--map-gold);
-  color: #171724;
-  border-color: #fff;
+  background: linear-gradient(135deg, #facc15, #ca8a04);
+  color: #1a1608;
+  border: 1.5px solid #fef08a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 6px rgba(250, 204, 21, 0.5);
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+/* Objective Beacon Diamond with ! */
+.node-objective-beacon {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.objective-beacon-gem {
+  width: 19px;
+  height: 19px;
+  border-radius: 4px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  border: 1.5px solid #fef08a;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.75), 0 0 10px rgba(245, 158, 11, 0.7);
+  color: #fff;
+}
+
+.objective-beacon-gem i {
+  transform: rotate(-45deg);
+  font-size: 0.60rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+/* Town Map Destination Flag (BDSP-inspired) */
+.node-destination-flag {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 6;
+  animation: destinationFlagFloat 2.2s ease-in-out infinite;
+}
+
+.destination-flag-pennant {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  padding: 2px 6px 2px 5px;
+  border-radius: 4px 4px 4px 1px;
+  border: 1px solid #fecaca;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65), 0 0 10px rgba(239, 68, 68, 0.45);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.destination-flag-pennant i {
+  font-size: 0.5rem;
+  color: #fef08a;
+}
+
+.destination-flag-pole {
+  width: 2px;
+  height: 6px;
+  background: linear-gradient(to bottom, #fef08a, #ca8a04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes destinationFlagFloat {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-3px);
+  }
+}
+
+.campaign-map-node .node-recommended-pill {
+  display: none;
 }
 
 .node-recommended-pill {
@@ -2273,12 +2620,14 @@ body.campaign-fullscreen-active .campaign-map-stage {
 body.campaign-fullscreen-active .map-region-info-overlay {
   top: 8px !important;
   left: 10px !important;
-  padding: 3px 8px !important;
-  background: rgba(10, 15, 30, 0.65) !important;
+  padding: 4px 10px !important;
+  background: rgba(10, 15, 30, 0.82) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
-  border-radius: 8px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-left: 3.5px solid #facc15 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65) !important;
 }
 
 body.campaign-fullscreen-active .map-region-info-overlay .region-name {
