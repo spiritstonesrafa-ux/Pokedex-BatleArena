@@ -15,12 +15,12 @@
       },
       unlockCondition: Object.freeze({ kind: 'ALWAYS' }),
       routes: [
-        { routeId: 'r1-normal-grass', from: 'node-normal', to: 'node-grass', pathD: 'M 150 405 C 200 350, 240 300, 280 248' },
-        { routeId: 'r1-grass-bug', from: 'node-grass', to: 'node-bug', pathD: 'M 280 248 C 260 180, 230 150, 200 124' },
-        { routeId: 'r1-normal-water', from: 'node-normal', to: 'node-water', pathD: 'M 150 405 C 280 460, 420 465, 520 450' },
-        { routeId: 'r1-water-electric', from: 'node-water', to: 'node-electric', pathD: 'M 520 450 C 600 440, 680 380, 740 315' },
-        { routeId: 'r1-electric-flying', from: 'node-electric', to: 'node-flying', pathD: 'M 740 315 C 780 250, 820 190, 860 135' },
-        { routeId: 'r1-bug-flying', from: 'node-bug', to: 'node-flying', pathD: 'M 200 124 C 400 80, 650 90, 860 135' }
+        { routeId: 'r1-normal-grass', from: 'node-normal', to: 'node-grass', pathD: 'M 150 405 C 165 365, 190 335, 220 315 C 248 295, 265 275, 280 248' },
+        { routeId: 'r1-grass-bug', from: 'node-grass', to: 'node-bug', pathD: 'M 280 248 C 275 205, 255 175, 235 155 C 220 140, 205 130, 200 124' },
+        { routeId: 'r1-normal-water', from: 'node-normal', to: 'node-water', pathD: 'M 150 405 C 210 435, 285 450, 355 448 C 415 446, 470 470, 520 450' },
+        { routeId: 'r1-water-electric', from: 'node-water', to: 'node-electric', pathD: 'M 520 450 C 570 435, 620 405, 665 375 C 700 350, 722 332, 740 315' },
+        { routeId: 'r1-electric-flying', from: 'node-electric', to: 'node-flying', pathD: 'M 740 315 C 765 275, 795 235, 818 198 C 838 165, 850 148, 860 135' },
+        { routeId: 'r1-bug-flying', from: 'node-bug', to: 'node-flying', pathD: 'M 200 124 C 290 105, 380 98, 475 104 C 575 110, 675 125, 760 115 C 800 110, 835 120, 860 135' }
       ].map(Object.freeze),
       nodes: [
         {
@@ -92,13 +92,13 @@
       },
       unlockCondition: Object.freeze({ kind: 'ALWAYS' }),
       routes: [
-        { routeId: 'r2-fighting-ground', from: 'node-fighting', to: 'node-ground', pathD: 'M 160 394 C 240 430, 340 455, 420 461' },
-        { routeId: 'r2-fighting-poison', from: 'node-fighting', to: 'node-poison', pathD: 'M 160 394 C 150 320, 160 250, 180 191' },
-        { routeId: 'r2-ground-rock', from: 'node-ground', to: 'node-rock', pathD: 'M 420 461 C 520 470, 620 460, 720 428' },
-        { routeId: 'r2-poison-fire', from: 'node-poison', to: 'node-fire', pathD: 'M 180 191 C 260 170, 360 150, 460 158' },
-        { routeId: 'r2-rock-fire', from: 'node-rock', to: 'node-fire', pathD: 'M 720 428 C 640 340, 550 240, 460 158' },
-        { routeId: 'r2-rock-ice', from: 'node-rock', to: 'node-ice', pathD: 'M 720 428 C 760 330, 800 210, 840 101' },
-        { routeId: 'r2-fire-ice', from: 'node-fire', to: 'node-ice', pathD: 'M 460 158 C 580 110, 720 90, 840 101' }
+        { routeId: 'r2-fighting-ground', from: 'node-fighting', to: 'node-ground', pathD: 'M 160 394 C 215 415, 275 440, 345 452 C 375 457, 400 459, 420 461' },
+        { routeId: 'r2-fighting-poison', from: 'node-fighting', to: 'node-poison', pathD: 'M 160 394 C 152 340, 148 290, 162 245 C 168 225, 175 205, 180 191' },
+        { routeId: 'r2-ground-rock', from: 'node-ground', to: 'node-rock', pathD: 'M 420 461 C 485 470, 560 480, 625 470 C 665 462, 695 448, 720 428' },
+        { routeId: 'r2-poison-fire', from: 'node-poison', to: 'node-fire', pathD: 'M 180 191 C 240 198, 305 208, 370 198 C 410 190, 440 174, 460 158' },
+        { routeId: 'r2-rock-fire', from: 'node-rock', to: 'node-fire', pathD: 'M 720 428 C 685 365, 640 310, 585 260 C 540 220, 495 185, 460 158' },
+        { routeId: 'r2-rock-ice', from: 'node-rock', to: 'node-ice', pathD: 'M 720 428 C 755 350, 775 280, 800 210 C 818 165, 830 130, 840 101' },
+        { routeId: 'r2-fire-ice', from: 'node-fire', to: 'node-ice', pathD: 'M 460 158 C 520 145, 595 140, 675 130 C 740 120, 800 110, 840 101' }
       ].map(Object.freeze),
       nodes: [
         {
@@ -170,12 +170,12 @@
       },
       unlockCondition: Object.freeze({ kind: 'ALWAYS' }),
       routes: [
-        { routeId: 'r3-fairy-psychic', from: 'node-fairy', to: 'node-psychic', pathD: 'M 240 461 C 210 390, 190 310, 180 225' },
-        { routeId: 'r3-fairy-dark', from: 'node-fairy', to: 'node-dark', pathD: 'M 240 461 C 360 465, 480 445, 600 405' },
-        { routeId: 'r3-psychic-ghost', from: 'node-psychic', to: 'node-ghost', pathD: 'M 180 225 C 220 160, 280 120, 360 101' },
-        { routeId: 'r3-dark-steel', from: 'node-dark', to: 'node-steel', pathD: 'M 600 405 C 680 400, 760 365, 820 304' },
-        { routeId: 'r3-ghost-dragon', from: 'node-ghost', to: 'node-dragon', pathD: 'M 360 101 C 480 80, 620 85, 760 113' },
-        { routeId: 'r3-steel-dragon', from: 'node-steel', to: 'node-dragon', pathD: 'M 820 304 C 810 240, 790 170, 760 113' }
+        { routeId: 'r3-fairy-psychic', from: 'node-fairy', to: 'node-psychic', pathD: 'M 240 461 C 210 440, 175 390, 168 335 C 160 285, 170 250, 180 225' },
+        { routeId: 'r3-fairy-dark', from: 'node-fairy', to: 'node-dark', pathD: 'M 240 461 C 295 462, 350 455, 410 440 C 475 425, 540 415, 600 405' },
+        { routeId: 'r3-psychic-ghost', from: 'node-psychic', to: 'node-ghost', pathD: 'M 180 225 C 195 180, 230 155, 275 135 C 310 120, 338 110, 360 101' },
+        { routeId: 'r3-dark-steel', from: 'node-dark', to: 'node-steel', pathD: 'M 600 405 C 660 395, 715 375, 765 348 C 788 335, 806 320, 820 304' },
+        { routeId: 'r3-ghost-dragon', from: 'node-ghost', to: 'node-dragon', pathD: 'M 360 101 C 420 120, 490 125, 560 120 C 630 115, 700 110, 760 113' },
+        { routeId: 'r3-steel-dragon', from: 'node-steel', to: 'node-dragon', pathD: 'M 820 304 C 830 255, 825 210, 805 170 C 790 145, 775 125, 760 113' }
       ].map(Object.freeze),
       nodes: [
         {

@@ -736,7 +736,7 @@
 
 .map-route-bed {
   fill: none;
-  stroke: rgba(10, 15, 26, 0.6);
+  stroke: rgba(10, 15, 26, 0.55);
   stroke-width: 4.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -744,52 +744,56 @@
 
 .map-route-path {
   fill: none;
-  stroke: rgba(234, 179, 8, 0.36);
+  stroke: rgba(234, 179, 8, 0.45);
   stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-dasharray: 6 7;
   transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
 
 .map-route-path.is-completed {
-  stroke: #eab308;
+  stroke: #d4af37;
   stroke-width: 2.4;
-  filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.5));
+  stroke-dasharray: 6 6;
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.5));
 }
 
 .map-route-path.is-active {
-  stroke: #f59e0b;
+  stroke: #fbbf24;
   stroke-width: 2.6;
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.65));
+  stroke-dasharray: 7 6;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.75));
 }
 
 .map-route-path.is-locked {
-  stroke: rgba(148, 163, 184, 0.2);
+  stroke: rgba(148, 163, 184, 0.28);
   stroke-width: 1.8;
-  stroke-dasharray: 4 6;
+  stroke-dasharray: 4 7;
 }
 
-/* Stepping Stone Waypoint Pips along path */
+/* Stepping Stone Waypoint Pips along path — Occasional golden milestone beads */
 .map-route-pips {
   fill: none;
-  stroke: #fde047;
-  stroke-width: 4.5;
+  stroke: rgba(254, 240, 138, 0.6);
+  stroke-width: 3.5;
   stroke-linecap: round;
-  stroke-dasharray: 0 30;
+  stroke-dasharray: 0 110;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
   pointer-events: none;
 }
 
 .map-route-pips.is-completed {
-  stroke: #fef08a;
-  stroke-width: 4.5;
-  stroke-dasharray: 0 28;
+  stroke: rgba(254, 240, 138, 0.65);
+  stroke-width: 3.5;
+  stroke-dasharray: 0 110;
 }
 
 .map-route-pips.is-active {
-  stroke: #fff;
-  stroke-width: 5;
-  stroke-dasharray: 0 26;
+  stroke: #fef08a;
+  stroke-width: 4.5;
+  stroke-dasharray: 0 95;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.85));
   animation: routePipShimmer 3s ease-in-out infinite alternate;
 }
 
@@ -799,9 +803,9 @@
 }
 
 .map-route-pips.is-locked {
-  stroke: rgba(148, 163, 184, 0.3);
-  stroke-width: 3.5;
-  stroke-dasharray: 0 36;
+  stroke: rgba(148, 163, 184, 0.25);
+  stroke-width: 2.5;
+  stroke-dasharray: 0 130;
 }
 
 /* --------------------------------------------------------------------------
@@ -810,8 +814,8 @@
 .campaign-map-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   min-width: 44px;
   min-height: 44px;
   border-radius: 50%;
@@ -1043,8 +1047,8 @@
   position: absolute;
   bottom: -4px;
   right: -4px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #1e293b;
   border: 1.5px solid #fff;
@@ -1061,7 +1065,7 @@
   background: linear-gradient(135deg, #facc15, #ca8a04);
   color: #1a1608;
   border: 1.5px solid #fef08a;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 6px rgba(250, 204, 21, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 8px rgba(250, 204, 21, 0.6);
   font-size: 0.65rem;
   font-weight: 900;
 }

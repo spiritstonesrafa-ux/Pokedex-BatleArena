@@ -4188,3 +4188,32 @@ test('Avatar Singleton — renderização do mapa garante estritamente 1 avatar,
 
   view.destroy();
 });
+
+
+test('Organic Routes & Reduced Pips — geometria visual natural e espaçamento de waypoints', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const css = fs.readFileSync(path.resolve(__dirname, '../../assets/css/campaign-map.css'), 'utf8');
+
+  // 1. Waypoint pips devem ter espaçamento amplo (>= 90 unidades) para eliminar excesso de pontos brancos
+  const pipsSpacingMatch = css.match(/\.map-route-pips\s*\{[^}]*stroke-dasharray:\s*0\s+(\d+)/);
+  assert.ok(pipsSpacingMatch, 'stroke-dasharray dos pips deve estar definido');
+  assert.ok(parseInt(pipsSpacingMatch[1], 10) >= 90, 'Espaçamento dos pips deve ser >= 90 para evitar efeito de circuito');
+
+  // 2. Caminho da rota deve ser tracejado (dashed) com identidade de mapa de aventura
+  assert.match(css, /\.map-route-path\s*\{[^}]*stroke-dasharray:\s*6\s+7/);
+
+  // 3. Medalhões possuem alvo interativo >= 44px
+  assert.match(css, /\.campaign-map-node\s*\{[^}]*min-width:\s*44px/);
+  assert.match(css, /\.campaign-map-node\s*\{[^}]*min-height:\s*44px/);
+
+  // 4. Rotas das regiões 1, 2 e 3 possuem curvas orgânicas de múltiplos segmentos
+  const r1Grass = CAMPAIGN_MAP_CATALOG.regions[0].routes.find(r => r.routeId === 'r1-normal-grass');
+  assert.ok(r1Grass && r1Grass.pathD.includes(' C '), 'r1-normal-grass deve conter curva de terreno');
+
+  const r2Fire = CAMPAIGN_MAP_CATALOG.regions[1].routes.find(r => r.routeId === 'r2-poison-fire');
+  assert.ok(r2Fire && r2Fire.pathD.includes(' C '), 'r2-poison-fire deve contornar área vulcânica');
+
+  const r3Bridge = CAMPAIGN_MAP_CATALOG.regions[2].routes.find(r => r.routeId === 'r3-fairy-dark');
+  assert.ok(r3Bridge && r3Bridge.pathD.includes(' C '), 'r3-fairy-dark deve cruzar a ponte sobre o cânion');
+});
