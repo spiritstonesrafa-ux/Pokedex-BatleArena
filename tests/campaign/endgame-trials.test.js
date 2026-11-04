@@ -606,6 +606,32 @@ test('PBA-015H Shadow presentation preserves reveal, makes Shadow dominant and r
   assert.equal(manager.getState().status, 'COMPLETED');
 });
 
+test('PBA-015H Shadow and Final Stand mobile landscape layout CSS contracts prevent regression', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const campaignCss = fs.readFileSync(path.join(__dirname, '../../assets/css/campaign.css'), 'utf8');
+  const battleCss = fs.readFileSync(path.join(__dirname, '../../assets/css/battle-arena.css'), 'utf8');
+  const cinematicCss = fs.readFileSync(path.join(__dirname, '../../assets/css/cinematic-dialogue.css'), 'utf8');
+
+  // Problema A: Cinematic portrait in landscape mobile reaches >= 94vh and anchors cleanly
+  assert.match(cinematicCss, /\.cinematic-portrait-wrap\s*\{[^}]*height:\s*min\(94vh,\s*94dvh\)/);
+  assert.match(cinematicCss, /\.cinematic-dialogue-box\s*\{[^}]*max-width:\s*min\(530px,\s*62vw\)/);
+
+  // Problema B: Final Stand CTA bar is horizontally centered with left: 50% and transform: translateX(-50%)
+  assert.match(campaignCss, /\.campaign-shell\.is-picker\s+\.picker-action-bar\s*\{[^}]*left:\s*50%\s*!important/);
+  assert.match(campaignCss, /\.campaign-shell\.is-picker\s+\.picker-action-bar\s*\{[^}]*transform:\s*translateX\(-50%\)\s*!important/);
+
+  // Problema C: Opponent team preview renders exactly 3 equal columns without overflow
+  assert.ok(campaignCss.includes('.campaign-shell.is-picker .opponent-team-preview__grid'));
+  assert.match(campaignCss, /\.opponent-team-preview__grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)\s*!important/);
+
+  // Problema D: Shadow Aura is an absolute floating HUD pill not breaking stage height
+  assert.match(battleCss, /\.battle-arena-layout\.shadow-aura-active\s+\.shadow-aura-indicator\s*\{[^}]*position:\s*absolute\s*!important/);
+  assert.match(battleCss, /\.battle-arena-layout\.shadow-aura-active\s+\.shadow-aura-indicator\s*\{[^}]*top:\s*34px\s*!important/);
+
+  // Problema E: Compact 2x2 combat controls and hidden redundant paragraph
+  assert.match(battleCss, /\.campaign-battle-layout\s+\.action-controls-row\s+p\s*\{[^}]*display:\s*none\s*!important/);
+});
+
 test('PBA-015I derives temporary Final Stand guests from claimed canonical Trials without roster ownership changes', () => {
   const manager = fresh();
   unlock18(manager);

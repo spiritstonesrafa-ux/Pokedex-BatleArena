@@ -619,15 +619,15 @@
    horizontal draft carousel, sticky bottom CTA, clean mobile reward screen.
    ========================================================================== */
 
-/* Desktop Isolation: Mobile elements MUST NOT appear on screens > 768px */
-@media (min-width: 769px) {
+/* Desktop Isolation: Mobile elements MUST NOT appear on tall desktop screens */
+@media (min-width: 769px) and (min-height: 541px) {
   .mobile-picker-top-section,
   .mobile-tab-empty-hint {
     display: none !important;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: landscape) and (max-height: 540px), (max-height: 540px) {
   body.campaign-mobile-open {
     overflow: hidden !important;
     position: fixed;
@@ -1110,23 +1110,33 @@
     transform: none !important;
   }
 
-  /* Fixed Bottom CTA: LUTAR (FASE 6) */
+  /* Fixed Bottom Floating Dock: LUTAR / FINAL STAND (FASE 6) */
   .campaign-shell.is-picker .picker-action-bar {
     position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+    bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+    width: calc(100% - 24px) !important;
+    max-width: 520px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 46px !important;
     z-index: 1050 !important;
-    background: rgba(10, 13, 28, 0.96) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
-    padding: 0.6rem 1rem max(0.6rem, env(safe-area-inset-bottom)) !important;
+    background: rgba(10, 14, 28, 0.96) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 999px !important;
+    padding: 3px 6px 3px 12px !important;
     display: flex !important;
-    flex-direction: column !important;
-    gap: 0.35rem !important;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6) !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 209, 102, 0.2) !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .campaign-shell.is-picker .picker-action-bar .picker-status-hint {
@@ -1136,14 +1146,17 @@
 
   .campaign-shell.is-picker .picker-action-bar #startCampaignBattle {
     margin: 0 !important;
-    width: 100% !important;
-    padding: 0.85rem 1rem !important;
-    font-size: 0.96rem !important;
+    flex: 1 !important;
+    max-width: 270px !important;
+    width: auto !important;
+    padding: 5px 14px !important;
+    font-size: 0.86rem !important;
     font-weight: 900 !important;
-    letter-spacing: 0.06em !important;
-    border-radius: 12px !important;
-    min-height: 48px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.04em !important;
+    border-radius: 999px !important;
+    min-height: 38px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    white-space: nowrap !important;
   }
 
   .campaign-shell.is-picker .picker-action-bar #startCampaignBattle.ready-to-battle {
@@ -1179,6 +1192,187 @@
   }
   .campaign-shell.is-picker .campaign-matchup__grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Landscape Mobile Compact Layout for Top Section */
+  @media (orientation: landscape) and (max-height: 540px), (max-height: 540px) {
+    .mobile-picker-top-section {
+      padding: max(4px, env(safe-area-inset-top)) 0.75rem 3px !important;
+      gap: 3px !important;
+    }
+    .mobile-team-slots {
+      padding: 2px 6px !important;
+    }
+    .mobile-team-slots__bar {
+      margin-bottom: 2px !important;
+    }
+    .mobile-team-slot {
+      min-height: 42px !important;
+      padding: 2px 4px !important;
+    }
+    .mobile-slot-sprite {
+      width: 26px !important;
+      height: 26px !important;
+    }
+    .mobile-slot-badge {
+      font-size: 0.58rem !important;
+    }
+    .mobile-slot-name {
+      font-size: 0.62rem !important;
+    }
+    .mobile-picker-tabs-bar {
+      padding: 2px !important;
+      gap: 2px !important;
+    }
+    .mobile-picker-tab-btn {
+      min-height: 28px !important;
+      padding: 2px 4px !important;
+      font-size: 0.65rem !important;
+      gap: 1px !important;
+    }
+    .mobile-picker-tab-btn i {
+      font-size: 0.76rem !important;
+    }
+    .campaign-shell.is-picker .picker-action-bar {
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      padding: 4px 14px max(4px, env(safe-area-inset-bottom)) !important;
+      gap: 10px !important;
+      min-height: 44px !important;
+      max-height: 50px !important;
+    }
+    .campaign-shell.is-picker .picker-action-bar .picker-status-hint {
+      font-size: 0.72rem !important;
+      padding: 3px 8px !important;
+      margin: 0 !important;
+      max-width: 48% !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    .campaign-shell.is-picker .picker-action-bar #startCampaignBattle {
+      width: auto !important;
+      flex: 1 !important;
+      max-width: 290px !important;
+      min-height: 38px !important;
+      padding: 5px 14px !important;
+      font-size: 0.86rem !important;
+    }
+  }
+
+  /* Full opponent team preview responsiveness without horizontal clipping */
+  .campaign-shell.is-picker .campaign-preparation--shadow,
+  .campaign-preparation--shadow {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .campaign-shell.is-picker .campaign-preparation--shadow > .trainer-avatar {
+    --trainer-size: 72px !important;
+    margin: 0 auto !important;
+  }
+  .campaign-shell.is-picker .campaign-preparation--shadow .campaign-preparation__copy {
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .campaign-shell.is-picker .campaign-preparation--shadow .campaign-preparation__copy h2 {
+    font-size: 0.96rem !important;
+    margin: 0.2rem 0 !important;
+  }
+  .campaign-shell.is-picker .campaign-preparation--shadow .shadow-aura-callout {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    margin: 0.35rem auto !important;
+    padding: 3px 12px !important;
+    font-size: 0.74rem !important;
+    border-radius: 999px !important;
+    background: rgba(54, 18, 83, 0.85) !important;
+  }
+  .campaign-shell.is-picker .campaign-preparation--shadow .opponent-team-preview {
+    grid-column: auto !important;
+    width: 100% !important;
+    margin: 0.35rem 0 0 !important;
+  }
+  .campaign-shell.is-picker .opponent-team-preview__grid,
+  .opponent-team-preview__grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .campaign-shell.is-picker .opponent-preview-card,
+  .opponent-preview-card {
+    min-width: 0 !important;
+    padding: 4px 4px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: center !important;
+  }
+  .campaign-shell.is-picker .opponent-preview-card img,
+  .opponent-preview-card img {
+    width: 44px !important;
+    height: 44px !important;
+    object-fit: contain !important;
+    margin: 0 auto 2px !important;
+  }
+  .campaign-shell.is-picker .opponent-preview-card strong,
+  .opponent-preview-card strong {
+    font-size: 0.74rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+  }
+  .campaign-shell.is-picker .opponent-preview-card span,
+  .opponent-preview-card span {
+    margin: 2px 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    flex-wrap: wrap !important;
+  }
+  .campaign-shell.is-picker .opponent-preview-card .type-chip,
+  .opponent-preview-card .type-chip {
+    font-size: 0.58rem !important;
+    padding: 1px 4px !important;
+  }
+  .campaign-shell.is-picker .opponent-preview-card small,
+  .opponent-preview-card small {
+    font-size: 0.60rem !important;
+    color: #cbd5e1 !important;
+    display: block !important;
+  }
+
+  /* Final Stand Army Header & Content padding */
+  .campaign-shell.is-picker .final-stand-army {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px 16px !important;
+    padding: 6px 12px !important;
+    margin: 4px 0.75rem !important;
+    border-radius: 10px !important;
+    font-size: 0.74rem !important;
+    background: rgba(33, 16, 54, 0.75) !important;
+  }
+  .campaign-shell.is-picker .final-stand-army p {
+    margin: 0 !important;
+    font-size: 0.72rem !important;
+  }
+  .campaign-shell.is-picker .final-stand-army strong {
+    font-size: 0.72rem !important;
+  }
+  .campaign-shell.is-picker .draft-grid.final-stand-army-grid {
+    padding-bottom: 74px !important;
   }
 
   /* Reward Screen on Mobile (FASE 9) */

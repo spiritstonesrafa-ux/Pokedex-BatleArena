@@ -682,21 +682,122 @@ body.cinematic-dialogue-active {
   }
 }
 
-/* Telas muito baixas (Landscape mobile ou aparelhos curtos) */
-@media (max-height: 520px) {
-  .cinematic-portrait-wrap {
-    height: min(32vh, 180px);
-    margin-bottom: 6px;
+/* Telas Landscape Mobile / Telas Baixas (Jogabilidade Horizontal RPG) */
+@media (max-height: 540px), (orientation: landscape) and (max-height: 580px) {
+  .cinematic-scene-container {
+    padding: 8px 16px 8px 8px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    justify-content: flex-end !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
+  /* Retrato imponente do chefe no lado esquerdo, ocupando quase toda a altura */
+  .cinematic-portrait-wrap {
+    position: absolute !important;
+    left: max(6px, env(safe-area-inset-left)) !important;
+    bottom: 0 !important;
+    height: min(94vh, 94dvh) !important;
+    max-height: 96% !important;
+    width: auto !important;
+    aspect-ratio: 4 / 5 !important;
+    margin-bottom: 0 !important;
+    z-index: 3 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    animation: cinematicPortraitSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards !important;
+  }
+
+  .cinematic-portrait-frame {
+    height: 100% !important;
+    width: auto !important;
+    display: flex !important;
+    align-items: flex-end !important;
+  }
+
+  .cinematic-portrait-img {
+    height: 100% !important;
+    width: auto !important;
+    max-width: none !important;
+    object-fit: contain !important;
+    object-position: bottom left !important;
+    filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 35px rgba(168, 85, 247, 0.45)) !important;
+  }
+
+  /* Caixa de diálogo assentada no canto inferior direito */
   .cinematic-dialogue-box {
-    min-height: 95px;
-    padding: 12px 14px 10px 14px;
+    position: relative !important;
+    z-index: 5 !important;
+    width: 100% !important;
+    max-width: min(530px, 62vw) !important;
+    min-height: 84px !important;
+    margin: 0 0 4px 0 !important;
+    padding: 10px 14px 10px 14px !important;
+    border-radius: 8px !important;
+    background: rgba(8, 10, 20, 0.94) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(168, 85, 247, 0.25) !important;
+  }
+
+  .cinematic-nameplate {
+    top: -14px !important;
+    left: 12px !important;
+    padding: 3px 12px !important;
+    gap: 6px !important;
+  }
+
+  .cinematic-speaker-name {
+    font-size: 0.88rem !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  .cinematic-speaker-title {
+    font-size: 0.68rem !important;
+    display: inline-block !important;
   }
 
   .cinematic-text {
-    font-size: 0.88rem;
-    line-height: 1.4;
+    font-size: 0.86rem !important;
+    line-height: 1.4 !important;
+    margin: 4px 0 0 0 !important;
+  }
+
+  .cinematic-skip-btn {
+    top: max(8px, env(safe-area-inset-top) + 4px) !important;
+    right: max(10px, env(safe-area-inset-right) + 4px) !important;
+    padding: 5px 12px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (max-height: 360px) {
+  .cinematic-portrait-wrap {
+    height: min(96vh, 96dvh) !important;
+  }
+
+  .cinematic-dialogue-box {
+    max-width: min(440px, 60vw) !important;
+    min-height: 74px !important;
+    padding: 8px 12px 8px 12px !important;
+  }
+
+  .cinematic-text {
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .cinematic-speaker-name {
+    font-size: 0.80rem !important;
+  }
+
+  .cinematic-speaker-title {
+    font-size: 0.62rem !important;
   }
 }
 
