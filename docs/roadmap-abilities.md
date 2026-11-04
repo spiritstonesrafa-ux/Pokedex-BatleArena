@@ -136,7 +136,7 @@ Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída f
 
 ### H6 — Tipos e mudanças de forma
 
-**Inventário:** 15 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B); 45 registros com habilidade padrão afetados.
+**Inventário:** 14 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C); 44 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H2/H3/H4 conforme forma; base comum de exceções de H7.
 
@@ -216,7 +216,24 @@ Lote canônico focado na alteração dinâmica da tipagem do Pokémon ativo em c
 - Reversão garantida na saída de campo (`leave`) e término de batalha para os tipos originais da espécie (`specialOriginal.types`), sem mutação de save ou catálogo.
 - IA avalia STAB dinamicamente sem mutação de estado real.
 
-**Lista restante de H6 (15 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `schooling`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `shields-down`, `zero-to-hero`, `gulp-missile`.
+#### H6-C — Schooling e infraestrutura segura de formas (Wishiwashi) (CONCLUÍDO)
+
+Lote canônico focado na mecânica de alteração de formas e recalibração dinâmica de atributos em combate (Gen IX):
+
+1. **`schooling`** (Gen VII-IX, Regras Canônicas Gen IX):
+   - Ativação em Wishiwashi de nível >= 20 com HP superior a 25% (`currentHp > maxHp / 4`), assumindo a School Form (`#10127`).
+   - Se o nível for inferior a 20 ou se o HP for menor ou igual a 25% (`currentHp <= maxHp / 4`), permanece ou reverte para a Solo Form (`#746`).
+   - A verificação ocorre canonicamente na entrada em campo (`start` / `enter`, inclusive após dano de entry hazards) e no término do turno (`endTurn`, pós-resíduos e curas como Leftovers).
+   - Dano sofrido no meio do turno durante o cálculo de golpes NÃO provoca mudança prematura no meio do ataque.
+   - Atributos base canônicos: Solo Form (HP 45 / Atk 20 / Def 20 / SpA 25 / SpD 25 / Spe 40) vs School Form (HP 45 / Atk 140 / Def 130 / SpA 140 / SpD 135 / Spe 30).
+   - O HP base é idêntico em ambas as formas (45), garantindo que `maxHp` e `currentHp` nunca sejam artificialmente alterados.
+   - Estágios de atributos (`statStages`) são estritamente preservados através da mudança de forma.
+   - Tipagem do Pokémon (Water) permanece inalterada; caso esteja Terastallizado, preserva o tipo Tera ativo.
+   - Fotos, animatedPhoto, cries e sprites são atualizados no evento `FORM_CHANGED` sem corromper a espécie original.
+   - Insubstituível, não suprimível (`suppressible: false`, `breakable: false`), não copiável por Transform/Imposter (`copyable: false`) e não trocável (`swappable: false`).
+   - Coberto por 53 testes determinísticos em `tests/battle/abilities-h6c.test.js`.
+
+**Lista restante de H6 (14 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `shields-down`, `zero-to-hero`, `gulp-missile`.
 
 ### H7 — Cópia, troca e supressão de habilidades
 

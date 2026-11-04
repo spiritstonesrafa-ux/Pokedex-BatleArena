@@ -643,6 +643,25 @@
     }
   };
 
+  const H6C_METADATA = {
+    'schooling': {
+      id: 'schooling',
+      name: 'Schooling',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'ON_RESIDUAL_START']),
+      bearer: 'Wishiwashi (#746, #10127)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6c.test.js']),
+      description: 'Na entrada e no fim de cada turno, Wishiwashi com nível 20 ou superior e mais de 25% do HP máximo reúne um cardume e assume a School Form (#10127). Se o HP for reduzido a 25% ou menos, o cardume se dispersa e ele retorna à Solo Form (#746). Não pode ser suprimida, copiada, trocada ou ignorada por Mold Breaker.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -681,6 +700,11 @@
 
     if (H6B_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6B_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6C_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6C_METADATA[slug] }));
       continue;
     }
 

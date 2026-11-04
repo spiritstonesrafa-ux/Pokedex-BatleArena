@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 109,
+    "declaredSupported": 110,
     "assignedAbilities": 313,
-    "assignedPending": 205,
+    "assignedPending": 204,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 571
+    "recordsWithPendingDefault": 569
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 15,
-      "defaultRecordsImpacted": 45
+      "assignedPending": 14,
+      "defaultRecordsImpacted": 43
     },
     {
       "id": "H7",
@@ -15774,8 +15774,8 @@
     },
     {
       "name": "schooling",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
