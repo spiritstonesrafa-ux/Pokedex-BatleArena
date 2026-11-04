@@ -868,3 +868,60 @@ test('Wild arenas — legacy encounters use their region and unknown regions rem
   assert.equal(resolveArenaTheme({ mode: 'CAMPAIGN', kind: 'WILD', regionId: 'unknown', pointId: 'r2-volcano' }).key, 'default');
   assert.equal(resolveArenaTheme({ mode: 'QUICK', kind: 'WILD', regionId: 'region-2', pointId: 'r2-volcano' }).key, 'default');
 });
+
+test('Wild Mobile UX — sticky opponent HUD renders sprite, name, tags and dynamic CTA', () => {
+  const manager = fresh();
+  const buttons = new Map();
+  const container = {
+    innerHTML: '',
+    querySelector(selector) {
+      if (!buttons.has(selector)) buttons.set(selector, { onclick: null, disabled: false, textContent: '', classList: { add() {}, remove() {}, contains: () => false } });
+      return buttons.get(selector);
+    },
+    querySelectorAll: () => []
+  };
+  const view = new CampaignView({ manager, coordinator: { start: async () => {} }, container });
+  const encounter = manager.beginWildEncounter('region-1', 0, 'r1-forest');
+  assert.equal(encounter.ok, true);
+
+  const mon = Catalog.byId(encounter.pokemonId);
+  const monNameCap = String(mon.name).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  // 1. Verify Sticky Opponent HUD existence and content
+  assert.match(container.innerHTML, /class="[^"]*wild-picker-choice[^"]*"/);
+  assert.match(container.innerHTML, /class="[^"]*wild-opponent-hud__sprite[^"]*"/);
+  assert.match(container.innerHTML, new RegExp(mon.sprite));
+  assert.match(container.innerHTML, /POKÉMON SELVAGEM/);
+  assert.match(container.innerHTML, new RegExp(monNameCap));
+  assert.match(container.innerHTML, /Local: Mata/);
+  assert.match(container.innerHTML, /1º é Líder/);
+
+  // 2. Initial state (0/3): button is disabled with incomplete copy
+  assert.ok(container.innerHTML.includes('Enfrentar para tentar capturar ' + monNameCap + ' (0/3)'));
+  assert.match(container.innerHTML, /id="startCampaignBattle"[^>]*disabled/);
+
+  // 3. Selection of 3 Pokemon: CTA becomes active and names the opponent in uppercase
+  view.pick = manager.getRosterIds().slice(0, 3);
+  view.renderPicker();
+
+  assert.match(container.innerHTML, /class="[^"]*picker-counter-badge\s+is-ready[^"]*"/);
+  assert.match(container.innerHTML, /<span class="counter-num">3\/3<\/span> <span class="counter-label">selecionados<\/span>/);
+  assert.match(container.innerHTML, new RegExp(`ENFRENTAR ${monNameCap.toUpperCase()}`));
+  assert.doesNotMatch(container.innerHTML, /id="startCampaignBattle"[^>]*disabled/);
+
+  // 4. Special encounter with long name
+  manager.cancelWildEncounter();
+  const mythical = manager.beginWildEncounter('region-3', 0.999, 'r3-shrine');
+  const mythMon = Catalog.byId(mythical.pokemonId);
+  const mythNameCap = String(mythMon.name).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  view.pick = manager.getRosterIds().slice(0, 3);
+  view.renderPicker();
+
+  assert.match(container.innerHTML, new RegExp(mythNameCap));
+  assert.match(container.innerHTML, /wild-opponent-hud__rarity rarity-mythical/);
+  assert.match(container.innerHTML, new RegExp(`ENFRENTAR ${mythNameCap.toUpperCase()}`));
+  assert.match(container.innerHTML, /class="wild-start-btn-text"/);
+
+  view.deactivate();
+});

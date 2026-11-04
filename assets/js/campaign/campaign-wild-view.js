@@ -146,13 +146,33 @@
           </p>
           <p>Você pode deixar este Pokémon ir e explorar novamente, ou enfrentá-lo com 3 Pokémon contra 1 para tentar capturá-lo.</p>
         </div>
-        <div class="campaign-hero picker-choice">
-          <div class="picker-header-block">
-            <h2 class="picker-main-title">Escolha 3 Pokémon</h2>
-            <p class="picker-subtitle"><i class="fa-solid fa-crown"></i> O primeiro selecionado será o líder.</p>
+        <div class="campaign-hero picker-choice wild-picker-choice" id="wildPickerChoice" role="region" aria-label="Adversário selvagem e seleção da equipe">
+          <div class="wild-opponent-hud__main">
+            <div class="wild-opponent-hud__avatar" aria-hidden="true">
+              <img src="${pokemon.sprite}" alt="${cap(pokemon.name)}" class="wild-opponent-hud__sprite" width="44" height="44" loading="eager">
+            </div>
+            <div class="wild-opponent-hud__identity">
+              <div class="wild-opponent-hud__badge-line">
+                <span class="wild-opponent-hud__tag">POKÉMON SELVAGEM</span>
+                <span class="wild-opponent-hud__rarity rarity-${rarity?.toLowerCase() || 'common'}">${rarityLabel}</span>
+              </div>
+              <h3 class="wild-opponent-hud__name picker-main-title" title="${cap(pokemon.name)}">${cap(pokemon.name)}</h3>
+            </div>
           </div>
-          <div class="picker-counter-badge ${ready ? 'is-ready' : ''}" role="status" aria-live="polite">
-            <span class="counter-num">${this.pick.length}/3</span> selecionados
+
+          <div class="wild-opponent-hud__context">
+            <span class="wild-opponent-hud__location" title="Local: ${point?.name || region.biome}">
+              <i class="fa-solid fa-location-dot"></i> ${point?.name || region.biome}
+            </span>
+            <span class="wild-opponent-hud__leader-hint picker-subtitle">
+              <i class="fa-solid fa-crown"></i> 1º é Líder
+            </span>
+          </div>
+
+          <div class="wild-opponent-hud__counter-block">
+            <div class="picker-counter-badge ${ready ? 'is-ready' : ''}" role="status" aria-live="polite">
+              <span class="counter-num">${this.pick.length}/3</span> <span class="counter-label">selecionados</span>
+            </div>
           </div>
         </div>
         <div class="campaign-grid draft-grid">
@@ -163,8 +183,10 @@
             <i class="fa-solid fa-users"></i>
             <span>Equipe: <strong>${this.pick.length}/3</strong></span>
           </div>
-          <button id="startCampaignBattle" class="campaign-primary picker-dock-btn ${ready ? 'ready-to-battle' : ''}" type="button" ${ready ? '' : 'disabled'}>
-            ${ready ? '<i class="fa-solid fa-play"></i> ENFRENTAR PARA TENTAR CAPTURAR' : `<i class="fa-solid fa-lock"></i> Enfrentar para tentar capturar (${this.pick.length}/3)`}
+          <button id="startCampaignBattle" class="campaign-primary picker-dock-btn ${ready ? 'ready-to-battle' : ''}" type="button" ${ready ? '' : 'disabled'} title="Enfrentar ${cap(pokemon.name)} para tentar capturar">
+            ${ready
+              ? `<i class="fa-solid fa-play"></i> <span class="wild-start-btn-text">ENFRENTAR ${cap(pokemon.name).toUpperCase()}</span>`
+              : `<i class="fa-solid fa-lock"></i> <span class="wild-start-btn-text">Enfrentar para tentar capturar ${cap(pokemon.name)} (${this.pick.length}/3)</span>`}
           </button>
         </div>
       </section>`;
