@@ -136,7 +136,7 @@ Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída f
 
 ### H6 — Tipos e mudanças de forma
 
-**Inventário:** 14 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C); 44 registros com habilidade padrão afetados.
+**Inventário:** 13 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C, 1 em H6-D); 29 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H2/H3/H4 conforme forma; base comum de exceções de H7.
 
@@ -233,7 +233,23 @@ Lote canônico focado na mecânica de alteração de formas e recalibração din
    - Insubstituível, não suprimível (`suppressible: false`, `breakable: false`), não copiável por Transform/Imposter (`copyable: false`) e não trocável (`swappable: false`).
    - Coberto por 53 testes determinísticos em `tests/battle/abilities-h6c.test.js`.
 
-**Lista restante de H6 (14 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `shields-down`, `zero-to-hero`, `gulp-missile`.
+#### H6-D — Shields Down e imunidades de forma (Minior) (CONCLUÍDO)
+
+Lote canônico focado na mecânica de proteção contra status e alteração dinâmica de atributos e peso do Minior (Gen IX):
+
+1. **`shields-down`** (Gen VII-IX, Regras Canônicas Gen IX):
+   - **Limiar exato de HP (50%):** Com `currentHp > maxHp / 2`, Minior assume sua Meteor Form (#774, #10130-#10135). Com `currentHp <= maxHp / 2`, sua carapaça se rompe e ele assume a Core Form (#10136-#10142).
+   - **Preservação rigorosa de cores (7 pares determinísticos):** Red (774 ↔ 10136), Orange (10130 ↔ 10137), Yellow (10131 ↔ 10138), Green (10132 ↔ 10139), Blue (10133 ↔ 10140), Indigo (10134 ↔ 10141), Violet (10135 ↔ 10142). A cor original do Pokémon é imutável.
+   - **Momento da verificação:** Ocorre na entrada em campo (`start` / `enter`, pós-hazards) e no encerramento do turno (`endTurn`, pós-resíduos/Leftovers). Dano sofrido no meio do ataque NÃO dispara mudança prematura.
+   - **Atributos canônicos:** Meteor Form (HP 60 / Atk 60 / Def 100 / SpA 60 / SpD 100 / Spe 60) vs Core Form (HP 60 / Atk 100 / Def 60 / SpA 100 / SpD 60 / Spe 120).
+   - **Preservação de HP e estágios:** O HP base é 60 em ambas as formas, garantindo que `maxHp` e `currentHp` nunca sejam artificialmente alterados. `statStages` e IVs são estritamente preservados.
+   - **Peso dinâmico:** Meteor Form possui 40,0 kg; Core Form possui 0,3 kg. Atualiza dinamicamente movimentos baseados em peso (Low Kick, Grass Knot, Heavy Slam, Heat Crash).
+   - **Imunidades a status na Meteor Form:** Bloqueia aplicação de novas condições não voláteis (Burn, Poison, Toxic, Paralysis, Sleep, Freeze) e Yawn. Não bloqueia confusão nem reduções de atributos.
+   - **Não cura status pré-existente:** Caso Minior receba status em Core Form e cure seu HP acima de 50%, retorna à Meteor Form mantendo a condição pré-existente.
+   - **Proteções canônicas:** Insubstituível, não suprimível (`suppressible: false`), não ignorável por Mold Breaker (`breakable: false`), não trocável (`swappable: false`) e não copiável por Transform para mudar forma (`copyable: false`).
+   - **Compatibilidade total:** Testado com Terastallization, Dynamax, Transform, Imposter, batalhas em Duplas e IA determinística pura.
+
+**Lista restante de H6 (13 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `zero-to-hero`, `gulp-missile`.
 
 ### H7 — Cópia, troca e supressão de habilidades
 

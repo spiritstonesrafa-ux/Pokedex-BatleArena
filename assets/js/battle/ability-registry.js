@@ -662,6 +662,25 @@
     }
   };
 
+  const H6D_METADATA = {
+    'shields-down': {
+      id: 'shields-down',
+      name: 'Shields Down',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'ON_RESIDUAL_START']),
+      bearer: 'Minior (#774, #10130-#10142)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6d.test.js']),
+      description: 'Na entrada e no fim de cada turno, Minior com mais de 50% do HP máximo assume a Meteor Form (#774, #10130-#10135), ficando imune a condições de status não voláteis e a Yawn. Se o HP for reduzido a 50% ou menos, a carapaça se rompe e ele assume a Core Form (#10136-#10142) correspondente à sua cor original, ganhando maior Ataque, Ataque Especial e Velocidade. Não pode ser suprimida, copiada por Transform para alterar forma, trocada ou ignorada por Mold Breaker.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -705,6 +724,11 @@
 
     if (H6C_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6C_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6D_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6D_METADATA[slug] }));
       continue;
     }
 

@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 110,
+    "declaredSupported": 111,
     "assignedAbilities": 313,
-    "assignedPending": 204,
+    "assignedPending": 203,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 569
+    "recordsWithPendingDefault": 555
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 14,
-      "defaultRecordsImpacted": 43
+      "assignedPending": 13,
+      "defaultRecordsImpacted": 29
     },
     {
       "id": "H7",
@@ -16896,8 +16896,8 @@
     },
     {
       "name": "shields-down",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
