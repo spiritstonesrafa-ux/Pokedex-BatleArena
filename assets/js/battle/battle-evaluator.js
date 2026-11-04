@@ -163,7 +163,7 @@
       const damageClass = constants.P8.damageClass(attacker,move,constants);
       const moveType = constants.P8.moveType(attacker,move,constants.P7.moveType(context.battleState,attacker,move,constants.P5.type(move,attacker))) || 'normal';
       let power = p5 ? constants.P5.power(move,attacker,defender,constants,{...context,faintCount:context.faintCount??context.attackerTeam?.filter(m=>m.currentHp<=0).length??0}) : Number(move.power) || 0;
-      power=constants.P7.power(context.battleState,attacker,defender,{...move,type:moveType},power,constants);
+      power=constants.P7.power(context.battleState,attacker,defender,{...move,type:moveType,originalType:move.originalType||move.type},power,constants);
       power=constants.P8.power(attacker,defender,{...move,type:moveType},power,constants);
       const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
@@ -185,7 +185,7 @@
         else if ((defender.substituteHp>0||defender.substitute)&&!(constants.P7?.ability(attacker)==='infiltrator'&&!attacker.abilitySuppressed)&&!constants.MoveFlags?.isSoundMove?.(move)&&move.target!=='self'&&move.target!=='foeSide'){expectedStatusBenefit=0;statusChance=0;}
         else if (move.statusEffect) {
           if (move.statusEffect === 'confusion') {
-            const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
+            const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune({ ...move, type: moveType }, defender.types) : false;
             isEligible = !immune && !(defender.confusionTurns > 0) && (Number(defender.currentHp) || 0) > 0;
             if (isEligible) {
               let accuracyFactor = 1.0;
@@ -205,7 +205,7 @@
               expectedStatusBenefit = Math.round(statusChance * 20);
             }
           } else {
-            const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune(move, defender.types) : false;
+            const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune({ ...move, type: moveType }, defender.types) : false;
             isEligible = !immune && !defender.statusCondition && (Number(defender.currentHp) || 0) > 0;
             if (isEligible) {
               let accuracyFactor = 1.0;

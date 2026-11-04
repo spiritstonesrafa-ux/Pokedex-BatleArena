@@ -136,15 +136,61 @@ Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída f
 
 ### H6 — Tipos e mudanças de forma
 
-**Inventário:** 24 habilidades pendentes; 54 registros com habilidade padrão afetados.
+**Inventário:** 18 habilidades pendentes (6 concluídas em H6-A); 47 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H2/H3/H4 conforme forma; base comum de exceções de H7.
 
 Separar conversão de tipo de golpe, mudança de tipos, disfarce visual e mudança de forma/atributos. Ter identidade estável do Pokémon capturado e identidade da forma em combate. Espécies/alternativas já selecionáveis não devem ganhar trocas de ID que corrompam reservas, recibos ou recompensas. Formas já iniciadas transformadas exigem contrato explícito. Battle Bond precisa escolher uma versão de regras.
 
+#### H6-A — Conversão de tipos dos golpes (CONCLUÍDO)
+
+Lote canônico concluído e coberto por 33 testes determinísticos em `tests/battle/abilities-h6a.test.js`:
+
+1. **`normalize`** (Gen IV, Regras Canônicas Gen VII-IX):
+   - Converte todos os golpes elegíveis para o tipo Normal.
+   - Aplica multiplicador canônico de 1.2x (4915/4096) no dano de golpes elegíveis (inclusive naturalmente Normal).
+   - Golpes de dano tornam-se Normal (com imunidade de Ghost); golpes de status seguem regras individuais (Thunder Wave torna-se Normal e é bloqueado por Ghost, mas atinge Ground; auto-buffs como Swords Dance e reduções de atributo como Strength Sap operam normalmente).
+   - Portadores: Skitty (#300), Delcatty (#301). STAB Normal de 1.5x aplicado.
+
+2. **`refrigerate`** (Gen VI-IX):
+   - Converte golpes elegíveis do tipo Normal para Ice.
+   - Aplica bônus de 1.2x no dano base de golpes convertidos.
+   - Golpes não-Normal (ex: Ice Beam, Ancient Power) não são convertidos nem recebem bônus.
+   - Portadores: Amaura (#698), Aurorus (#699), Mega Glalie (#10074). STAB Ice de 1.5x aplicado.
+
+3. **`pixilate`** (Gen VI-IX):
+   - Converte golpes elegíveis do tipo Normal para Fairy.
+   - Aplica bônus de 1.2x no dano base de golpes convertidos.
+   - Dragões sofrem dano super efetivo (2x) de golpes convertidos para Fairy; o tipo Fairy é imune (0x) a golpes do tipo Dragon.
+   - Portadores: Sylveon (#700), Mega Gardevoir (#10051), Mega Altaria (#10067). STAB Fairy de 1.5x (2.0x com Tera Fairy).
+   - Tera Blast (#851): converte para Fairy se sem Tera; mantém tipo Tera se terastallizado.
+
+4. **`aerilate`** (Gen VI-IX):
+   - Converte golpes elegíveis do tipo Normal para Flying.
+   - Aplica bônus de 1.2x no dano base de golpes convertidos.
+   - Portadores: Mega Pinsir (#10040), Mega Salamence (#10089). STAB Flying de 1.5x aplicado.
+
+5. **`galvanize`** (Gen VII-IX):
+   - Converte golpes elegíveis do tipo Normal para Electric.
+   - Aplica bônus de 1.2x no dano base de golpes convertidos.
+   - Tipo Ground é imune; Volt Absorb e Lightning Rod absorvem dano convertido.
+   - Portadores: Geodude de Alola (#10109), Graveler de Alola (#10110), Golem de Alola (#10111). STAB Electric de 1.5x aplicado.
+
+6. **`liquid-voice`** (Gen VII-IX):
+   - Converte golpes baseados em som (sound-based moves: Hyper Voice, Boomburst, Disarming Voice, Sing, etc.) para o tipo Water.
+   - Sem bônus de poder base (multiplicador 1.0x).
+   - Water Absorb e Storm Drain absorvem golpes convertidos; ultrapassa Substitute preservando a propriedade sonora.
+   - Portadores: Popplio (#728), Brionne (#729), Primarina (#730). STAB Water de 1.5x aplicado.
+
+**Regras canônicas transversais:**
+- Exceções canônicas imunes à conversão: Struggle (#165), Judgment (#449), Techno Blast (#546), Multi-Attack (#718), Weather Ball (#311), Terrain Pulse (#805), Revelation Dance (#756), Natural Gift (#236), Tera Blast terastallizado (#851) e golpes Z de dano.
+- Não são ignoradas pelo Mold Breaker do defensor (`breakable: false`).
+- Suprimíveis por Core Enforcer / Gastro Acid (`abilitySuppressed: true`).
+- Integradas dinamicamente ao avaliador da IA (`battle-evaluator.js`), exibição visual dos botões de combate (`battle-view.js`) e duplas com redirecionamento de golpes de área (`doubles-battle.js`).
+
 **Aceite:** Limiares de HP, tipo anterior, habilidades indissociáveis da forma, banco de reservas, Dynamax/Tera/Transform, retorno ao normal e invariância do elenco e save após a batalha.
 
-**Lista completa da família:** `color-change`, `forecast`, `multitype`, `normalize`, `zen-mode`, `illusion`, `protean`, `refrigerate`, `pixilate`, `aerilate`, `galvanize`, `stance-change`, `liquid-voice`, `schooling`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `libero`, `shields-down`, `zero-to-hero`, `gulp-missile`.
+**Lista restante de H6 (18 pendentes):** `color-change`, `forecast`, `multitype`, `zen-mode`, `illusion`, `protean`, `stance-change`, `schooling`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `libero`, `shields-down`, `zero-to-hero`, `gulp-missile`.
 
 ### H7 — Cópia, troca e supressão de habilidades
 

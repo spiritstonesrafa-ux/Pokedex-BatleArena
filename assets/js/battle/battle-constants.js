@@ -1719,6 +1719,10 @@
       case 'will-o-wisp':
         return isStatusConditionImmune('burn', types);
       case 'thunder-wave':
+        const effType = move?.type || 'electric';
+        if (effType === 'normal') {
+          return isStatusConditionImmune('paralysis', types) || types.includes('ghost');
+        }
         return isStatusConditionImmune('paralysis', types) || types.includes('ground');
       default:
         return false;

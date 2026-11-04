@@ -941,7 +941,7 @@
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
       attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';defender.p7KeenEyeAccuracyBlock=constants.P7.defenderAbility(attacker,defender,selectedMove)==='keen-eye';
       const actualDamageType=constants.P8.moveType(attacker,selectedMove,constants.P7.moveType(state,attacker,selectedMove,constants.P5.type(selectedMove,attacker)));
-      const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType};
+      const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType,originalType:selectedMove.originalType||selectedMove.type};
       const continuingBide=Boolean(attacker.bideState);
       // Validação de PP
       if (!calledMove && !continuingBide && !continuingTwoTurn && !continuingLocked && !isStruggle && selectedMove.currentPp <= 0) {
@@ -1684,7 +1684,7 @@
         }
 
         if (selectedMove.statusEffect) {
-          const isImmune = defender.safeguarded || constants.P7.statusImmune(defender,selectedMove.statusEffect) || constants.isStatusMoveImmune(selectedMove, defender.types);
+          const isImmune = defender.safeguarded || constants.P7.statusImmune(defender,selectedMove.statusEffect) || constants.isStatusMoveImmune(damageMove, defender.types);
           const blocked = isImmune
             ? 'IMMUNE'
             : defender.statusCondition

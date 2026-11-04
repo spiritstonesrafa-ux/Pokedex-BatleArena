@@ -491,6 +491,106 @@
     }
   };
 
+  // H6-A Canonical Type-Conversion Abilities (FULL status)
+  const H6A_METADATA = {
+    'normalize': {
+      id: 'normalize',
+      name: 'Normalize',
+      generation: 4,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_TYPE', 'ON_BASE_POWER']),
+      bearer: 'Skitty (#300), Delcatty (#301)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6a.test.js']),
+      description: 'Converte todos os golpes elegíveis do portador para o tipo Normal. Na Gen VII-IX, concede um multiplicador de 1.2x (4915/4096) no dano base de golpes elegíveis (mesmo aqueles originalmente Normal). Golpes de dano tornam-se Normal (com imunidade de Ghost); golpes de status seguem suas regras individuais (Thunder Wave torna-se Normal e é bloqueado por Ghost, mas atinge Ground; auto-buffs e reduções de atributo operam normalmente).'
+    },
+    'refrigerate': {
+      id: 'refrigerate',
+      name: 'Refrigerate',
+      generation: 6,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_TYPE', 'ON_BASE_POWER']),
+      bearer: 'Amaura (#698), Aurorus (#699), Mega Glalie (#10074)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6a.test.js']),
+      description: 'Converte golpes elegíveis do tipo Normal para o tipo Ice e concede um multiplicador de 1.2x (4915/4096) no dano base de golpes convertidos. Golpes de status Normal tornam-se Ice.'
+    },
+    'pixilate': {
+      id: 'pixilate',
+      name: 'Pixilate',
+      generation: 6,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_TYPE', 'ON_BASE_POWER']),
+      bearer: 'Sylveon (#700), Mega Gardevoir (#10051), Mega Altaria (#10067)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6a.test.js']),
+      description: 'Converte golpes elegíveis do tipo Normal para o tipo Fairy e concede um multiplicador de 1.2x (4915/4096) no dano base de golpes convertidos. Golpes de status Normal tornam-se Fairy.'
+    },
+    'aerilate': {
+      id: 'aerilate',
+      name: 'Aerilate',
+      generation: 6,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_TYPE', 'ON_BASE_POWER']),
+      bearer: 'Mega Pinsir (#10040), Mega Salamence (#10089)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6a.test.js']),
+      description: 'Converte golpes elegíveis do tipo Normal para o tipo Flying e concede um multiplicador de 1.2x (4915/4096) no dano base de golpes convertidos. Golpes de status Normal tornam-se Flying.'
+    },
+    'galvanize': {
+      id: 'galvanize',
+      name: 'Galvanize',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_TYPE', 'ON_BASE_POWER']),
+      bearer: 'Alolan Geodude (#10109), Alolan Graveler (#10110), Alolan Golem (#10111)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6a.test.js']),
+      description: 'Converte golpes elegíveis do tipo Normal para o tipo Electric e concede um multiplicador de 1.2x (4915/4096) no dano base de golpes convertidos. Golpes de status Normal tornam-se Electric.'
+    },
+    'liquid-voice': {
+      id: 'liquid-voice',
+      name: 'Liquid Voice',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_TYPE']),
+      bearer: 'Popplio (#728), Brionne (#729), Primarina (#730)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6a.test.js']),
+      description: 'Converte golpes baseados em som (sound-based moves) para o tipo Water. Não concede bônus próprio de poder base.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -519,6 +619,11 @@
 
     if (H4A_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H4A_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6A_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6A_METADATA[slug] }));
       continue;
     }
 

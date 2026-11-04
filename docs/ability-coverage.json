@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 100,
+    "declaredSupported": 106,
     "assignedAbilities": 313,
-    "assignedPending": 214,
+    "assignedPending": 208,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 580
+    "recordsWithPendingDefault": 573
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 24,
-      "defaultRecordsImpacted": 54
+      "assignedPending": 18,
+      "defaultRecordsImpacted": 47
     },
     {
       "id": "H7",
@@ -217,8 +217,8 @@
     },
     {
       "name": "aerilate",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -5035,8 +5035,8 @@
     },
     {
       "name": "galvanize",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -9700,8 +9700,8 @@
     },
     {
       "name": "liquid-voice",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -11141,8 +11141,8 @@
     },
     {
       "name": "normalize",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -12471,8 +12471,8 @@
     },
     {
       "name": "pixilate",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -14240,8 +14240,8 @@
     },
     {
       "name": "refrigerate",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
