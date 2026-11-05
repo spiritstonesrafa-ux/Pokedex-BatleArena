@@ -1291,6 +1291,138 @@
       description: 'Quando o HP cai para 50% ou menos por um ataque, aumenta Attack, Sp. Atk e Speed em +1, e reduz Defense e Sp. Def em -1.'
     }
   };
+
+  // H1-D Implemented Abilities (FULL status)
+  const H1D_METADATA = {
+    'beast-boost': {
+      id: 'beast-boost',
+      name: 'Beast Boost',
+      generation: 7,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DIRECT_KO']),
+      bearer: 'Nihilego (#793), Buzzwole (#794), Pheromosa (#795), Xurkitree (#796), Celesteela (#797), Kartana (#798), Guzzlord (#799), Poipole (#803), Naganadel (#804), Stakataka (#805), Blacephalon (#806)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-beast-boost.test.js']),
+      description: 'Aumenta em +1 estágio o maior atributo efetivo elegível (Attack, Defense, Sp. Atk, Sp. Def ou Speed) ao nocautear diretamente um oponente com um ataque. Desempate canônico: Atk > Def > SpA > SpD > Spe.'
+    },
+    'cotton-down': {
+      id: 'cotton-down',
+      name: 'Cotton Down',
+      generation: 8,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Gossifleur (#829), Eldegoss (#830)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-cotton-down.test.js']),
+      description: 'Ao sofrer dano de um ataque direto, reduz a Velocidade de todos os outros Pokémon ativos em campo em 1 estágio (-1), incluindo aliados em duplas.'
+    },
+    'download': {
+      id: 'download',
+      name: 'Download',
+      generation: 4,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY']),
+      bearer: 'Porygon (#137), Porygon2 (#233), Porygon-Z (#474), Genesect (#649)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-download.test.js']),
+      description: 'Na entrada em campo, compara a soma das Defesas física e especial dos adversários ativos: se a Defesa for maior ou igual à Defesa Especial, ganha +1 Special Attack; se a Defesa Especial for maior, ganha +1 Attack.'
+    },
+    'moody': {
+      id: 'moody',
+      name: 'Moody',
+      generation: 5,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL_END']),
+      bearer: 'Smeargle (#235), Octillery (#224), Glalie (#362), Bibarel (#400), Scovillain (#951)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-moody.test.js']),
+      description: 'No final de cada turno, escolhe aleatoriamente um atributo para aumentar em +2 estágios e outro para reduzir em -1 estágio (excluindo Precisão e Evasão na Gen IX). Respeita RNG determinístico.'
+    },
+    'speed-boost': {
+      id: 'speed-boost',
+      name: 'Speed Boost',
+      generation: 3,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL_END']),
+      bearer: 'Ninjask (#291), Yanma (#193), Yanmega (#469), Blaziken (#257), Venipede (#543), Whirlipede (#544), Scolipede (#545), Espurr (#677)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-speed-boost.test.js']),
+      description: 'Aumenta a Velocidade em 1 estágio (+1) ao final de cada turno em que o portador esteve ativo em campo (não ativa no turno em que entra por troca).'
+    },
+    'thermal-exchange': {
+      id: 'thermal-exchange',
+      name: 'Thermal Exchange',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_STATUS_CHECK', 'AFTER_DAMAGING_HIT']),
+      bearer: 'Frigibax (#996), Arctibax (#997), Baxcalibur (#998)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-thermal-exchange.test.js']),
+      description: 'Imunidade a queimadura (cura queimaduras pré-existentes na ativação). Ao sofrer dano de um ataque do tipo Fire, aumenta seu Ataque em 1 estágio (+1).'
+    },
+    'wind-power': {
+      id: 'wind-power',
+      name: 'Wind Power',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT', 'ON_TAILWIND', 'MODIFY_POWER']),
+      bearer: 'Wattrel (#940), Kilowattrel (#941)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-wind-power.test.js']),
+      description: 'Ao sofrer dano de um ataque com flag de vento ou quando Tailwind é ativado no seu lado do campo, ganha o estado Charge, dobrando o poder do seu próximo ataque Electric.'
+    },
+    'wind-rider': {
+      id: 'wind-rider',
+      name: 'Wind Rider',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT', 'ON_TAILWIND', 'ON_ENTRY']),
+      bearer: 'Bramblin (#946), Brambleghast (#947)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1d-wind-rider.test.js']),
+      description: 'Concede imunidade a movimentos com a flag de vento e aumenta o Ataque em 1 estágio (+1) ao ser alvejado por um ou quando Tailwind é ativado (ou já está ativo ao entrar em campo).'
+    }
+  };
   // Registry map
   const registry = new Map();
 
@@ -1369,6 +1501,11 @@
 
     if (H1C_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H1C_METADATA[slug] }));
+      continue;
+    }
+
+    if (H1D_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H1D_METADATA[slug] }));
       continue;
     }
 

@@ -276,7 +276,7 @@
         })),
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
-        ability:constants.P7.normalizeAbility(raw.ability),originalAbility:null,neutralizingGasSuppressed:false,item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,charge:Boolean(raw.charge),proteanUsed:false,battleBondTriggered:false,zeroToHeroTransformed:false,mimicryOriginalTypes:null,
+        ability:constants.P7.normalizeAbility(raw.ability),originalAbility:null,neutralizingGasSuppressed:false,item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,charge:Boolean(raw.charge),switchedInThisTurn:Boolean(raw.switchedInThisTurn),proteanUsed:false,battleBondTriggered:false,zeroToHeroTransformed:false,mimicryOriginalTypes:null,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
@@ -513,6 +513,7 @@
       targetPokemon.twoTurnMove = null;
       targetPokemon.entryMoveAttempts = 0;
       targetPokemon.toxicStage = 0;
+      if (reason !== 'REPLACEMENT') targetPokemon.switchedInThisTurn = true;
 
       side.activeIndex = targetIndex;
 
@@ -2343,6 +2344,7 @@
               newPokemonId: newActive.id,
               reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FORCED : 'FORCED'
             });
+            newActive.switchedInThisTurn = true;
             constants.P7.leave(state,defenderRole,previousActive,constants,events);
             constants.P8.restore(previousActive);
             constants.P6.leave(state,defenderRole,previousActive);

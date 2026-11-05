@@ -1617,6 +1617,7 @@
     'substitute': Object.freeze({ id: 164, name: 'substitute', type: 'normal', power: 0, accuracy: null, pp: 10, damageClass: 'status', target: 'self' }),
     'taunt': Object.freeze({ id: 269, name: 'taunt', type: 'dark', power: 0, accuracy: 100, pp: 20, damageClass: 'status', target: 'normal' }),
     'strength-sap': Object.freeze({ id: 668, name: 'strength-sap', type: 'grass', power: 0, accuracy: 100, pp: 10, damageClass: 'status', target: 'normal' }),
+    'tailwind': Object.freeze({ id: 366, name: 'tailwind', type: 'flying', power: null, pp: 15, accuracy: null, priority: 0, damageClass: 'status', target: 'self' }),
     ...P6.statusMoves,
     ...P7.statusMoves,
     ...P8.statusMoves

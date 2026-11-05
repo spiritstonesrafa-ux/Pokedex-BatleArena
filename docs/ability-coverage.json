@@ -4,19 +4,19 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 148,
+    "declaredSupported": 156,
     "assignedAbilities": 313,
-    "assignedPending": 166,
+    "assignedPending": 158,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 481
+    "recordsWithPendingDefault": 455
   },
   "phases": [
     {
       "id": "H1",
       "name": "Bônus de entrada, nocaute e reações",
-      "assignedPending": 9,
-      "defaultRecordsImpacted": 26
+      "assignedPending": 1,
+      "defaultRecordsImpacted": 0
     },
     {
       "id": "H2",
@@ -1029,8 +1029,8 @@
     },
     {
       "name": "beast-boost",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -2614,8 +2614,8 @@
     },
     {
       "name": "cotton-down",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -3421,8 +3421,8 @@
     },
     {
       "name": "download",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -10541,8 +10541,8 @@
     },
     {
       "name": "moody",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -17765,8 +17765,8 @@
     },
     {
       "name": "speed-boost",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -20754,8 +20754,8 @@
     },
     {
       "name": "thermal-exchange",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -23002,8 +23002,8 @@
     },
     {
       "name": "wind-power",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -23027,8 +23027,8 @@
     },
     {
       "name": "wind-rider",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {

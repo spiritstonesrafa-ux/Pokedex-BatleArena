@@ -67,6 +67,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H1-A | Justified, Moxie, Chilling Neigh, As One Glastrier, Dauntless Shield | Keldeo, Calyrex Glacial e Zamazenta; reação ao dano, autoria de KO e entrada. Reusar Unnerve para berries, sem copiar Grim Neigh para o atributo errado. |
 | H1-B | Defiant, Competitive, Contrary, Mirror Armor, Opportunist, Guard Dog, Anger Point, Rattled | Reações canônicas a reduções de atributo por oponentes, inversão de estágios, cópia de bônus, bloqueio de troca forçada/Intimidate e respostas a acertos críticos/tipos Bug/Ghost/Dark. |
 | H1-C | Stamina, Water Compaction, Weak Armor, Steam Engine, Motor Drive, Electromorphosis, Berserk, Anger Shell | Reações canônicas a dano, tipos elementais, absorção de Electric, estado Charge e cruzamento do limiar de 50% de HP. |
+| H1-D | Beast Boost, Cotton Down, Download, Moody, Speed Boost, Thermal Exchange, Wind Power, Wind Rider | Ultra Beasts, Gossifleur, Porygon, Moody/Speed Boost em fim de turno, Baxcalibur imune a Burn, e interação com golpes de vento e Tailwind. |
 | H2-A | Marvel Scale, Hustle, Keen Eye, Steadfast (H1) | Milotic, Togekiss, Pelipper/Skarmory e Lucario aparecem na campanha e nas instalações; revisar defesa, precisão, ataques físicos/especiais e flinch. Entregar em commits separados por família. |
 | H3-A | Rough Skin, Iron Barbs, Effect Spore, Synchronize, Shed Skin | Reações de contato, imunidades e cura; testar quem recebe cada efeito e se um KO impede ativações posteriores. |
 | H4-A | Dark Aura, Fairy Aura, Aura Break, Prism Armor e Neuroforce (H2) | **Implementado (FULL)**. Efeitos canônicos para Yveltal (#717), Xerneas (#716), Zygarde (#718), Necrozma (#800) e Ultra Necrozma (#10157). |
@@ -78,7 +79,7 @@ A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes c
 
 ### H1 — Bônus de entrada, nocaute e reações
 
-**Inventário:** 9 habilidades pendentes (H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8 concluídas, H1-C: 8 concluídas); 51 registros com habilidade padrão afetados.
+**Inventário:** 1 habilidade pendente (Supreme Overlord; H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8 concluídas, H1-C: 8 concluídas, H1-D: 8 concluídas); 0 registros com habilidade padrão afetados.
 
 **Dependências:** H0; autoria de KO, estágios e eventos de entrada existentes.
 
@@ -222,6 +223,77 @@ Lote unificado de oito habilidades canônicas de reações a dano sofrido, espec
    - Não ativa por dano residual nem em caso de nocaute.
    - Suprimido por Neutralizing Gas.
    - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-anger-shell.test.js`.
+
+#### H1-D — Bônus de KO, Entrada, Fim de Turno, Clima e Vento (Beast Boost, Cotton Down, Download, Moody, Speed Boost, Thermal Exchange, Wind Power, Wind Rider) (CONCLUÍDO)
+
+Lote unificado de oito habilidades canônicas de Ultra Beasts, reações a dano em área, comparação de defesas adversárias, alteração e aceleração ao fim de turno, imunidade e resposta térmica, e interações completas com movimentos de vento e Tailwind na Geração IX:
+
+1. **`beast-boost`** (Gen VII-IX):
+   - Aumenta em +1 estágio o maior atributo efetivo elegível do portador (Attack, Defense, Special Attack, Special Defense ou Speed) ao nocautear diretamente um Pokémon adversário com um ataque direto.
+   - Avalia atributos efetivos calculados (base * multiplicadores de item/habilidade), ignorando estágios de atributos preexistentes.
+   - Desempate canônico em caso de empate entre atributos: Attack > Defense > Special Attack > Special Defense > Speed.
+   - Não ativa por dano residual (veneno, queimadura, clima) nem se o próprio atacante desmaiar simultaneamente (recuo).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-beast-boost.test.js`.
+
+2. **`cotton-down`** (Gen VIII-IX):
+   - Ao sofrer dano de um ataque direto, reduz a Velocidade de todos os outros Pokémon ativos no campo em 1 estágio (-1).
+   - Em duplas, afeta os dois adversários e o aliado, poupando exclusivamente o próprio portador.
+   - Não ativa em danos totalmente absorvidos por Substitute ou dano residual.
+   - Ativa mesmo que o portador seja nocauteado pelo golpe (regra `isUnbreakable` / `onDamagingHit` canônica).
+   - Invertido por Contrary (+1 Speed) e reage normalmente com Defiant/Competitive em adversários.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-cotton-down.test.js`.
+
+3. **`download`** (Gen IV-IX):
+   - Na entrada em campo, compara a soma das Defesas física e especial dos adversários ativos (valores efetivos considerando estágios e itens).
+   - Se a soma da Defesa for maior ou igual à soma da Defesa Especial (`totalDef >= totalSpD`), ganha +1 Special Attack.
+   - Se a soma da Defesa Especial for estritamente maior (`totalSpD > totalDef`), ganha +1 Attack.
+   - Em duplas, soma os atributos de ambos os adversários elegíveis ativos.
+   - Reativa em cada reentrada em campo.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-download.test.js`.
+
+4. **`moody`** (Gen V-IX):
+   - Ao final de cada turno elegível, eleva aleatoriamente um atributo em +2 estágios e reduz outro atributo em -1 estágio.
+   - Regra canônica da Gen IX: exclui Accuracy e Evasion da seleção (opera exclusivamente sobre Atk, Def, SpA, SpD, Spe).
+   - Não seleciona o mesmo atributo simultaneamente para aumento e redução no mesmo turno.
+   - Não seleciona atributos que já atingiram seus respectivos limites (+6 para aumento, -6 para redução).
+   - Utiliza gerador pseudoaleatório determinístico (PRNG) reproduzível por seed/ação.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-moody.test.js`.
+
+5. **`speed-boost`** (Gen III-IX):
+   - Aumenta a Velocidade em 1 estágio (+1) ao encerramento de cada turno em que o portador esteve ativamente no campo.
+   - Regra canônica: não ativa no turno em que o Pokémon é enviado a campo por troca voluntária ou forçada.
+   - Ativa no final do turno 1 se o Pokémon for o líder inicial da batalha.
+   - Ativa no final de turnos subsequentes à entrada por troca ou nocaute prévio.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-speed-boost.test.js`.
+
+6. **`thermal-exchange`** (Gen IX):
+   - Imunidade total à condição de queimadura (Burn); cura queimaduras pré-existentes na entrada ou ao reativar a habilidade.
+   - Ao sofrer dano de um ataque do tipo Fire (físico ou especial), eleva o Attack em +1 estágio.
+   - O portador sofre o dano do ataque Fire normalmente (não concede imunidade a golpes Fire).
+   - Quebrável por Mold Breaker (a menos que segure Ability Shield).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-thermal-exchange.test.js`.
+
+7. **`wind-power`** (Gen IX):
+   - Ao sofrer dano direto de um golpe com a flag canônica `wind` (ex: Hurricane, Blizzard, Heat Wave, Bleakwind Storm, Icy Wind) ou quando Tailwind é ativado no seu lado do campo, ganha o estado volátil `Charge`.
+   - O estado `Charge` dobra a potência base (2.0x) do próximo ataque do tipo Electric desferido pelo portador.
+   - O estado é consumido após desferir o ataque Electric e é limpo na substituição.
+   - Não concede imunidade a golpes de vento (o dano é sofrido normalmente).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-wind-power.test.js`.
+
+8. **`wind-rider`** (Gen IX):
+   - Concede imunidade total a movimentos ofensivos e de status que possuam a flag canônica `wind` (anula o golpe e evita dano/efeitos).
+   - Ao anular um golpe de vento, eleva o Attack em +1 estágio.
+   - Quando Tailwind é ativado no seu lado do campo, ou se entrar em campo enquanto Tailwind já estiver ativo em seu lado, eleva o Attack em +1 estágio.
+   - Quebrado por Mold Breaker (a menos que segure Ability Shield).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h1d-wind-rider.test.js`.
 
 ### H2 — Dano, atributos, precisão e críticos
 
