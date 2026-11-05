@@ -1160,6 +1160,137 @@
       description: 'Aumenta a Velocidade em 1 estágio ao ser atingido por ataques dos tipos Bug, Ghost ou Dark, ou ao ser intimidado.'
     }
   };
+
+  const H1C_METADATA = {
+    'stamina': {
+      id: 'stamina',
+      name: 'Stamina',
+      generation: 7,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Mudbray (#749), Mudsdale (#750)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-stamina.test.js']),
+      description: 'Aumenta a Defesa em 1 estágio (+1) sempre que o portador sofre dano direto de um ataque.'
+    },
+    'water-compaction': {
+      id: 'water-compaction',
+      name: 'Water Compaction',
+      generation: 7,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Sandygast (#769), Palossand (#770)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-water-compaction.test.js']),
+      description: 'Aumenta a Defesa em 2 estágios (+2) ao ser atingido por um movimento do tipo Water que cause dano.'
+    },
+    'weak-armor': {
+      id: 'weak-armor',
+      name: 'Weak Armor',
+      generation: 5,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Skarmory (#227), Polteageist (#855), Armarouge (#935)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-weak-armor.test.js']),
+      description: 'Ao receber dano de um ataque físico, reduz a Defesa em 1 estágio e aumenta a Velocidade em 2 estágios.'
+    },
+    'steam-engine': {
+      id: 'steam-engine',
+      name: 'Steam Engine',
+      generation: 8,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Rolycoly (#837), Carkol (#838), Coalossal (#839)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-steam-engine.test.js']),
+      description: 'Ao sofrer dano de um ataque do tipo Fire ou Water, sua Velocidade aumenta em 6 estágios (+6).'
+    },
+    'motor-drive': {
+      id: 'motor-drive',
+      name: 'Motor Drive',
+      generation: 4,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      bearer: 'Electivire (#466), Blitzle (#522), Zebstrika (#523)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-motor-drive.test.js']),
+      description: 'Concede imunidade a movimentos do tipo Electric e aumenta a Velocidade em 1 estágio (+1) ao ser alvejado por um.'
+    },
+    'electromorphosis': {
+      id: 'electromorphosis',
+      name: 'Electromorphosis',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT', 'MODIFY_POWER']),
+      bearer: 'Bellibolt (#939)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-electromorphosis.test.js']),
+      description: 'Ao receber dano de um ataque direto, o portador ganha o estado Charge, dobrando o poder do seu próximo ataque do tipo Electric.'
+    },
+    'berserk': {
+      id: 'berserk',
+      name: 'Berserk',
+      generation: 7,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Drampa (#780), Galarian Moltres (#10173)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-berserk.test.js']),
+      description: 'Aumenta o Ataque Especial em 1 estágio (+1) quando o HP cai para 50% ou menos após sofrer um ataque.'
+    },
+    'anger-shell': {
+      id: 'anger-shell',
+      name: 'Anger Shell',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Klawf (#950)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1c-anger-shell.test.js']),
+      description: 'Quando o HP cai para 50% ou menos por um ataque, aumenta Attack, Sp. Atk e Speed em +1, e reduz Defense e Sp. Def em -1.'
+    }
+  };
   // Registry map
   const registry = new Map();
 
@@ -1233,6 +1364,11 @@
 
     if (H1B_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H1B_METADATA[slug] }));
+      continue;
+    }
+
+    if (H1C_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H1C_METADATA[slug] }));
       continue;
     }
 

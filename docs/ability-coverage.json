@@ -4,19 +4,19 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 140,
+    "declaredSupported": 148,
     "assignedAbilities": 313,
-    "assignedPending": 174,
+    "assignedPending": 166,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 498
+    "recordsWithPendingDefault": 481
   },
   "phases": [
     {
       "id": "H1",
       "name": "Bônus de entrada, nocaute e reações",
-      "assignedPending": 17,
-      "defaultRecordsImpacted": 43
+      "assignedPending": 9,
+      "defaultRecordsImpacted": 26
     },
     {
       "id": "H2",
@@ -503,8 +503,8 @@
     },
     {
       "name": "anger-shell",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -1117,8 +1117,8 @@
     },
     {
       "name": "berserk",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -3889,8 +3889,8 @@
     },
     {
       "name": "electromorphosis",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -10599,8 +10599,8 @@
     },
     {
       "name": "motor-drive",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -18029,8 +18029,8 @@
     },
     {
       "name": "stamina",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -18479,8 +18479,8 @@
     },
     {
       "name": "steam-engine",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -22633,8 +22633,8 @@
     },
     {
       "name": "water-compaction",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -22759,8 +22759,8 @@
     },
     {
       "name": "weak-armor",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {

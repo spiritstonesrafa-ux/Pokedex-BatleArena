@@ -3,7 +3,7 @@
 const Special=typeof module!=='undefined'&&module.exports?require('./p8-special.js'):window.PBAP8Special;
 const Data=typeof module!=='undefined'&&module.exports?require('./p7-pokemon-data.js'):window.PBAP7PokemonData;
 const MoveFlags=typeof module!=='undefined'&&module.exports?require('./move-flags.js'):(typeof window!=='undefined'?window.PBAMoveFlags:null);
-const abilityNames=Object.freeze(["pressure","intrepid-sword","unnerve","grim-neigh","as-one-spectrier","justified","moxie","chilling-neigh","as-one-glastrier","dauntless-shield","marvel-scale","hustle","keen-eye","steadfast","rough-skin","iron-barbs","effect-spore","synchronize","shed-skin","dark-aura","fairy-aura","aura-break","prism-armor","neuroforce","overgrow","blaze","torrent","swarm","levitate","intimidate","clear-body","white-smoke","hyper-cutter","full-metal-body","inner-focus","own-tempo","immunity","limber","insomnia","vital-spirit","water-veil","magma-armor","sturdy","water-absorb","volt-absorb","flash-fire","sap-sipper","lightning-rod","storm-drain","guts","huge-power","pure-power","adaptability","technician","thick-fat","filter","solid-rock","multiscale","regenerator","natural-cure","magic-guard","unseen-fist","mold-breaker","teravolt","turboblaze","drizzle","drought","sand-stream","snow-warning","swift-swim","chlorophyll","sand-rush","slush-rush","sand-veil","snow-cloak","electric-surge","grassy-surge","misty-surge","psychic-surge","rain-dish","solar-power","sand-force","cloud-nine","air-lock","static","flame-body","poison-point","shadow-tag","arena-trap","magnet-pull","prankster","infiltrator","magic-bounce","normalize","refrigerate","pixilate","aerilate","galvanize","liquid-voice","protean","libero","color-change","schooling","shields-down","battle-bond","forecast","zen-mode","mimicry","zero-to-hero","trace","mummy","receiver","power-of-alchemy","wandering-spirit","neutralizing-gas","lingering-aroma","soul-heart","defiant","competitive","contrary","mirror-armor","opportunist","guard-dog","anger-point","rattled"]);
+const abilityNames=Object.freeze(["pressure","intrepid-sword","unnerve","grim-neigh","as-one-spectrier","justified","moxie","chilling-neigh","as-one-glastrier","dauntless-shield","marvel-scale","hustle","keen-eye","steadfast","rough-skin","iron-barbs","effect-spore","synchronize","shed-skin","dark-aura","fairy-aura","aura-break","prism-armor","neuroforce","overgrow","blaze","torrent","swarm","levitate","intimidate","clear-body","white-smoke","hyper-cutter","full-metal-body","inner-focus","own-tempo","immunity","limber","insomnia","vital-spirit","water-veil","magma-armor","sturdy","water-absorb","volt-absorb","flash-fire","sap-sipper","lightning-rod","storm-drain","guts","huge-power","pure-power","adaptability","technician","thick-fat","filter","solid-rock","multiscale","regenerator","natural-cure","magic-guard","unseen-fist","mold-breaker","teravolt","turboblaze","drizzle","drought","sand-stream","snow-warning","swift-swim","chlorophyll","sand-rush","slush-rush","sand-veil","snow-cloak","electric-surge","grassy-surge","misty-surge","psychic-surge","rain-dish","solar-power","sand-force","cloud-nine","air-lock","static","flame-body","poison-point","shadow-tag","arena-trap","magnet-pull","prankster","infiltrator","magic-bounce","normalize","refrigerate","pixilate","aerilate","galvanize","liquid-voice","protean","libero","color-change","schooling","shields-down","battle-bond","forecast","zen-mode","mimicry","zero-to-hero","trace","mummy","receiver","power-of-alchemy","wandering-spirit","neutralizing-gas","lingering-aroma","soul-heart","defiant","competitive","contrary","mirror-armor","opportunist","guard-dog","anger-point","rattled","stamina","water-compaction","weak-armor","steam-engine","motor-drive","electromorphosis","berserk","anger-shell"]);
 const unsuppressibleAbilities=Object.freeze(['as-one-spectrier','as-one-glastrier','schooling','shields-down','battle-bond','zen-mode','zero-to-hero','multitype','rks-system','stance-change','power-construct','neutralizing-gas']);
 const unsuppressibleGasAbilities=Object.freeze([...unsuppressibleAbilities,'disguise','ice-face','tera-shift','tera-shell','teraform-zero','commander','comatose']);
 const untraceableAbilities=Object.freeze(['as-one-spectrier','as-one-glastrier','battle-bond','commander','disguise','flower-gift','forecast','gulp-missile','hunger-switch','ice-face','illusion','imposter','multitype','neutralizing-gas','power-construct','power-of-alchemy','protosynthesis','quark-drive','receiver','rks-system','schooling','shields-down','stance-change','trace','wonder-guard','zen-mode','zero-to-hero','tera-shift','tera-shell','teraform-zero','embody-aspect','poison-puppeteer']);
@@ -182,7 +182,7 @@ function setWeather(s,id,source,C,events,r){if(s.weather?.id===id)return false;c
 function setTerrain(s,id,source,C,events,r){if(s.terrain?.id===id)return false;s.terrain={id,turns:held(source,'terrain-extender')?8:5};sync(s);tell(C,events,r,source,'P7_TERRAIN',id);Special.updateFieldAbilities(s,C,events);return true;}
 function start(s,C){if(s.p7Started)return;s.p7Started=true;Special.start(s);s.weather=null;s.terrain=null;s.initialP7Events=[];sync(s);for(const r of ['player','enemy'])for(const m of activeMons(s,r))if(m&&m.currentHp>0&&m.ability==='neutralizing-gas'&&!s.neutralizingGasAnnounced){s.neutralizingGasAnnounced=true;s.neutralizingGasActive=true;s.initialP7Events.push({type:'NEUTRALIZING_GAS_STARTED',source:r,pokemonName:m.name});tell(C,s.initialP7Events,r,m,'P7_ABILITY','neutralizing-gas');sync(s);Special.updateFieldAbilities(s,C,s.initialP7Events);}const order=['player','enemy'].sort((a,b)=>C.getEffectiveStat(get(s,b),'speed')-C.getEffectiveStat(get(s,a),'speed'));if(s.battleFormat==='DOUBLES'){const entries=['player','enemy'].flatMap(r=>s[r].activeIndices.map(i=>({r,i,m:s[r].team[i]}))).sort((a,b)=>C.getEffectiveStat(b.m,'speed')-C.getEffectiveStat(a.m,'speed'));for(const p of entries){s[p.r].activeIndex=p.i;enter(s,p.r,C,s.initialP7Events);}for(const r of ['player','enemy'])s[r].activeIndex=s[r].activeIndices[0];}else for(const r of order)enter(s,r,C,s.initialP7Events);sync(s);}
 function enter(s,r,C,events){const m=get(s,r);if(m.currentHp<=0)return;const a=ability(m),other=get(s,foe(r));m.abilityIgnored=false;m.proteanUsed=false;if((a==='neutralizing-gas'||m.ability==='neutralizing-gas')&&!s.neutralizingGasAnnounced){s.neutralizingGasAnnounced=true;s.neutralizingGasActive=true;events.push({type:'NEUTRALIZING_GAS_STARTED',source:r,pokemonName:m.name});tell(C,events,r,m,'P7_ABILITY','neutralizing-gas');sync(s);Special.updateFieldAbilities(s,C,events);}if(a==='trace'){checkTrace(s,r,m,C,events);}else{triggerOnEntryAbility(s,r,m,a,C,events);}checkItem(s,r,C,events);Special.enter(s,r,C,events);sync(s);refreshBerries(s,C,events);}
-function leave(s,r,m,C,events){Special.leave(m,false);const a=ability(m);if(m.currentHp>0&&a==='regenerator')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/3)));if(m.currentHp>0&&a==='natural-cure'&&m.statusCondition){const status=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:status,reason:'NATURAL_CURE'});}if(m.currentHp>0&&!m.transformOriginal&&(m.id===964||m.speciesId===964||m.name==='palafin-zero')&&a==='zero-to-hero'&&!m.zeroToHeroTransformed){Special.triggerZeroToHero(m,s,r,C,events);}if(m.originalAbility){m.ability=m.originalAbility;m.originalAbility=null;}if(m.ability==='neutralizing-gas'){gasEndsCheck(s,m,C,events);}m.choiceLock=null;m.abilitySuppressed=false;m.neutralizingGasSuppressed=false;m.flashFire=false;m.abilityIgnored=false;m.p7AbilityTrap=false;m.proteanUsed=false;}
+function leave(s,r,m,C,events){Special.leave(m,false);const a=ability(m);if(m.currentHp>0&&a==='regenerator')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/3)));if(m.currentHp>0&&a==='natural-cure'&&m.statusCondition){const status=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:status,reason:'NATURAL_CURE'});}if(m.currentHp>0&&!m.transformOriginal&&(m.id===964||m.speciesId===964||m.name==='palafin-zero')&&a==='zero-to-hero'&&!m.zeroToHeroTransformed){Special.triggerZeroToHero(m,s,r,C,events);}if(m.originalAbility){m.ability=m.originalAbility;m.originalAbility=null;}if(m.ability==='neutralizing-gas'){gasEndsCheck(s,m,C,events);}m.choiceLock=null;m.abilitySuppressed=false;m.neutralizingGasSuppressed=false;m.flashFire=false;m.charge=false;m.abilityIgnored=false;m.p7AbilityTrap=false;m.proteanUsed=false;}
 function stat(m,key){let f=1;const a=ability(m,Boolean(m.abilityIgnored)),w=m.envWeather;
  if(key==='attack'){if(held(m,'choice-band'))f*=1.5;if(['huge-power','pure-power'].includes(a))f*=2;if(a==='guts'&&m.statusCondition)f*=1.5;if(a==='hustle')f*=1.5;}
  if(key==='defense'&&a==='marvel-scale'&&m.statusCondition&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(m.statusCondition))f*=1.5;
@@ -248,6 +248,7 @@ function power(s,a,d,m,n){const w=s?fieldWeather(s):a.envWeather,t=s?.terrain?.i
  if(m.id===282&&d.item&&removable(d))f*=1.5;
  if((ab==='overgrow'&&type==='grass'||ab==='blaze'&&type==='fire'||ab==='torrent'&&type==='water'||ab==='swarm'&&type==='bug')&&a.currentHp<=a.maxHp/3)f*=1.5;
  if(ab==='technician'&&n<=60)f*=1.5;if(ab==='sand-force'&&w==='sand'&&['rock','ground','steel'].includes(type))f*=1.3;if(a.flashFire&&ab==='flash-fire'&&type==='fire')f*=1.5;
+ if(a.charge&&type==='electric')f*=2;
  if(items[a.item]?.kind==='plate'&&items[a.item].type===type)f*=1.2;
  if(grounded(a)&&((t==='electric'&&type==='electric')||(t==='grassy'&&type==='grass')||(t==='psychic'&&type==='psychic')))f*=1.3;
  if(typeof n==='number'&&n>0&&!isTypeChangerExempt(a,m)){
@@ -277,11 +278,12 @@ function cure(C,events,r,m){if(m.statusCondition){const status=m.statusCondition
 function berryEffect(m,item,C,events,r){if(item==='sitrus-berry')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/4)));else if(item==='oran-berry')C.P6.heal(events,r,m,10);else if(item==='lum-berry'||({'chesto-berry':'sleep','pecha-berry':'poison','rawst-berry':'burn','aspear-berry':'freeze','cheri-berry':'paralysis'}[item]===m.statusCondition)||item==='pecha-berry'&&m.statusCondition==='toxic')cure(C,events,r,m);}
 function checkItem(s,r,C,events,m=get(s,r)){if(m.currentHp<=0||m.item?.endsWith('-berry')&&berriesBlocked(s,r))return;const item=m.item;if((['sitrus-berry','oran-berry'].includes(item)&&m.currentHp<=m.maxHp/2)||(item==='lum-berry'&&(m.statusCondition||m.confusionTurns))||({'chesto-berry':'sleep','pecha-berry':'poison','rawst-berry':'burn','aspear-berry':'freeze','cheri-berry':'paralysis'}[item]===m.statusCondition&&m.statusCondition)||item==='pecha-berry'&&m.statusCondition==='toxic'){consume(C,events,r,m,item);berryEffect(m,item,C,events,r);}}
 function tryHit(s,r,m,C,events){const a=get(s,r),d=get(s,foe(r)),ab=defenderAbility(a,d,m);if(m.target==='self'||m.target==='foeSide')return false;
- const immunities={'water-absorb':'water','volt-absorb':'electric','flash-fire':'fire','sap-sipper':'grass','lightning-rod':'electric','storm-drain':'water'};
+ const immunities={'water-absorb':'water','volt-absorb':'electric','motor-drive':'electric','flash-fire':'fire','sap-sipper':'grass','lightning-rod':'electric','storm-drain':'water'};
  let blocked=immunities[ab]===m.type||ab==='levitate'&&m.type==='ground'||ab==='sturdy'&&C.P5.ohko(m);
  if(s.terrain?.id==='psychic'&&grounded(d)&&priority(a,m,C)>0)blocked=true;
  if(!blocked)return false;
  if(['water-absorb','volt-absorb'].includes(ab)&&immunities[ab]===m.type)C.P6.heal(events,foe(r),d,Math.max(1,Math.floor(Special.baseMaxHp(d)/4)));
+ if(ab==='motor-drive')modifyStages(s,foe(r),d,{speed:1},r,a,'motor-drive',C,events);
  if(ab==='flash-fire')d.flashFire=true;if(ab==='sap-sipper')C.P6.stage(C,events,foe(r),d,'attack',1);if(['lightning-rod','storm-drain'].includes(ab))C.P6.stage(C,events,foe(r),d,'specialAttack',1);
  events.push({type:'MOVE_FAILED',actor:r,target:foe(r),pokemonName:a.name,moveId:m.id,moveName:m.name,reason:'P7_IMMUNE',label:ab||'psychic-terrain'});tell(C,events,foe(r),d,'P7_ABILITY',ab||'psychic-terrain');return true;
 }
@@ -400,11 +402,47 @@ function afterHit(s,r,m,action,C,events,n,attacker=null,defender=null){if(n<=0)r
    tell(C,events,foe(r),d,'P7_ABILITY','rattled');
    checkOpportunist(s,foe(r),d,'speed',1,C,events);
   }
+  if(dAb==='stamina'){
+   modifyStages(s,foe(r),d,{defense:1},r,a,'stamina',C,events);
+   tell(C,events,foe(r),d,'P7_ABILITY','stamina');
+  }
+  if(moveTypeVal==='water'&&dAb==='water-compaction'){
+   modifyStages(s,foe(r),d,{defense:2},r,a,'water-compaction',C,events);
+   tell(C,events,foe(r),d,'P7_ABILITY','water-compaction');
+  }
+  if(m.damageClass==='physical'&&dAb==='weak-armor'){
+   modifyStages(s,foe(r),d,{defense:-1,speed:2},r,a,'weak-armor',C,events);
+   tell(C,events,foe(r),d,'P7_ABILITY','weak-armor');
+  }
+  if(['fire','water'].includes(moveTypeVal)&&dAb==='steam-engine'){
+   modifyStages(s,foe(r),d,{speed:6},r,a,'steam-engine',C,events);
+   tell(C,events,foe(r),d,'P7_ABILITY','steam-engine');
+  }
+  if(dAb==='electromorphosis'){
+   d.charge=true;
+   tell(C,events,foe(r),d,'P7_ABILITY','electromorphosis');
+  }
+  const halfHp=Math.floor(d.maxHp/2);
+  const prevHp=d.currentHp+n;
+  if(prevHp>halfHp&&d.currentHp<=halfHp){
+   if(dAb==='berserk'){
+    modifyStages(s,foe(r),d,{specialAttack:1},foe(r),d,'berserk',C,events);
+    tell(C,events,foe(r),d,'P7_ABILITY','berserk');
+   }else if(dAb==='anger-shell'){
+    modifyStages(s,foe(r),d,{attack:1,specialAttack:1,speed:1,defense:-1,specialDefense:-1},foe(r),d,'anger-shell',C,events);
+    tell(C,events,foe(r),d,'P7_ABILITY','anger-shell');
+   }
+  }
  }
  if(m.id===687&&d.actedThisTurn&&d.currentHp>0&&!held(d,'ability-shield')&&!['multitype','rks-system','stance-change','schooling','disguise','shields-down','comatose','ice-face','gulp-missile','tera-shift','zero-to-hero','zen-mode','battle-bond','power-construct','as-one-spectrier','as-one-glastrier'].includes(d.ability)){d.abilitySuppressed=true;tell(C,events,foe(r),d,'P7_ABILITY','suppressed');}
  if(m.id===861&&s.terrain){s.terrain=null;tell(C,events,r,get(s,r),'P7_TERRAIN','ended');Special.updateFieldAbilities(s,C,events);}contact(s,r,m,action,C,events,a,d);refreshBerries(s,C,events);sync(s);
 }
 function afterMove(s,r,events,C,batch){const m=get(s,r);if(batch.some(e=>e.type==='MOVE_USED'&&e.actor===r)&&!m.dynamax&&['choice-band','choice-specs','choice-scarf'].includes(m.item)){const used=batch.find(e=>e.type==='MOVE_USED'&&e.actor===r);m.choiceLock=used.moveId;}
+ const used=batch.find(e=>e.type==='MOVE_USED'&&e.actor===r);
+ if(m.charge&&used){
+  const usedMoveType=used.moveType||originalMoveType({id:used.moveId,type:used.moveType});
+  if(usedMoveType==='electric')m.charge=false;
+ }
  if(!['PLAYER_WIN','ENEMY_WIN'].includes(s.status)&&held(m,'life-orb')&&ability(m)!=='magic-guard'&&m.currentHp>0&&batch.some(e=>e.type==='DAMAGE_APPLIED'&&e.source===r&&e.damage>0)){const previousHp=m.currentHp,damage=Math.min(previousHp,Math.max(1,Math.floor(Special.baseMaxHp(m)/10)));m.currentHp-=damage;events.push({type:'RECOIL_APPLIED',target:r,pokemonName:m.name,damage,previousHp,currentHp:m.currentHp,maxHp:m.maxHp,reason:'LIFE_ORB'});}
  refreshBerries(s,C,events);sync(s);
 }

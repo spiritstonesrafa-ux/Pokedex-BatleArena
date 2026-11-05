@@ -66,6 +66,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | --- | --- | --- |
 | H1-A | Justified, Moxie, Chilling Neigh, As One Glastrier, Dauntless Shield | Keldeo, Calyrex Glacial e Zamazenta; reação ao dano, autoria de KO e entrada. Reusar Unnerve para berries, sem copiar Grim Neigh para o atributo errado. |
 | H1-B | Defiant, Competitive, Contrary, Mirror Armor, Opportunist, Guard Dog, Anger Point, Rattled | Reações canônicas a reduções de atributo por oponentes, inversão de estágios, cópia de bônus, bloqueio de troca forçada/Intimidate e respostas a acertos críticos/tipos Bug/Ghost/Dark. |
+| H1-C | Stamina, Water Compaction, Weak Armor, Steam Engine, Motor Drive, Electromorphosis, Berserk, Anger Shell | Reações canônicas a dano, tipos elementais, absorção de Electric, estado Charge e cruzamento do limiar de 50% de HP. |
 | H2-A | Marvel Scale, Hustle, Keen Eye, Steadfast (H1) | Milotic, Togekiss, Pelipper/Skarmory e Lucario aparecem na campanha e nas instalações; revisar defesa, precisão, ataques físicos/especiais e flinch. Entregar em commits separados por família. |
 | H3-A | Rough Skin, Iron Barbs, Effect Spore, Synchronize, Shed Skin | Reações de contato, imunidades e cura; testar quem recebe cada efeito e se um KO impede ativações posteriores. |
 | H4-A | Dark Aura, Fairy Aura, Aura Break, Prism Armor e Neuroforce (H2) | **Implementado (FULL)**. Efeitos canônicos para Yveltal (#717), Xerneas (#716), Zygarde (#718), Necrozma (#800) e Ultra Necrozma (#10157). |
@@ -77,7 +78,7 @@ A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes c
 
 ### H1 — Bônus de entrada, nocaute e reações
 
-**Inventário:** 17 habilidades pendentes (H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8 concluídas); 75 registros com habilidade padrão afetados.
+**Inventário:** 9 habilidades pendentes (H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8 concluídas, H1-C: 8 concluídas); 51 registros com habilidade padrão afetados.
 
 **Dependências:** H0; autoria de KO, estágios e eventos de entrada existentes.
 
@@ -140,6 +141,87 @@ Lote unificado de oito habilidades canônicas de reações a alterações de atr
    - Ao ser alvo de Intimidate de um oponente, além da redução normal de Attack, ganha imediatamente +1 em Speed.
    - Não ativa em acertos que forem totalmente absorvidos por um Substitute.
    - Coberto por 8 testes determinísticos em `tests/battle/abilities-h1b-rattled.test.js`.
+
+#### H1-C — Reações a Dano, Tipos, Carga e Limiares de HP (Stamina, Water Compaction, Weak Armor, Steam Engine, Motor Drive, Electromorphosis, Berserk, Anger Shell) (CONCLUÍDO)
+
+Lote unificado de oito habilidades canônicas de reações a dano sofrido, especificidade elemental, imunidade com aceleração, estado volátil Charge e cruzamento de limiar de 50% de HP na Geração IX:
+
+1. **`stamina`** (Gen VII-IX):
+   - Aumenta a Defense do portador em +1 estágio sempre que sofre dano de um ataque direto (`actualDamageDealt > 0`).
+   - Ativa por golpe em movimentos multi-hit (ex: 3 acertos = +3 de Defense).
+   - Não ativa se o dano for absorvido por Substitute (`actualDamageDealt === 0`).
+   - Não ativa por dano residual (veneno, queimadura, clima, recuo).
+   - Não ativa se o portador for nocauteado pelo golpe.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-stamina.test.js`.
+
+2. **`water-compaction`** (Gen VII-IX):
+   - Aumenta a Defense em +2 estágios ao ser atingido por um movimento do tipo Water que cause dano real.
+   - Aplica-se a golpes Water físicos e especiais. Não concede imunidade a Water (o dano é aplicado normalmente).
+   - Reage ao tipo efetivo do golpe no momento do impacto (incluindo conversões de tipo).
+   - Ativa por acerto em multi-hit do tipo Water.
+   - Não ativa se absorvido por Substitute ou se o portador for nocauteado.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-water-compaction.test.js`.
+
+3. **`weak-armor`** (Gen V-IX):
+   - Ao receber dano direto de um ataque da categoria Física (`damageClass === 'physical'`), reduz a Defense em 1 estágio e aumenta a Speed em 2 estágios.
+   - Não ativa por ataques Especiais ou movimentos de Status.
+   - Ativa por acerto em movimentos multi-hit físicos.
+   - Se a Defense já estiver no limite mínimo (-6), a Speed ainda aumenta em +2; se a Speed já estiver em +6, a Defense ainda reduz em -1.
+   - Invertido por Contrary (+1 Defense, -2 Speed).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-weak-armor.test.js`.
+
+4. **`steam-engine`** (Gen VIII-IX):
+   - Ao receber dano de um ataque dos tipos Fire ou Water (físico ou especial), aumenta a Speed em 6 estágios (+6), maximizando a velocidade.
+   - Não requer contato físico. Não concede imunidade aos tipos Fire ou Water.
+   - Não ativa por dano residual nem se o golpe for absorvido por Substitute.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-steam-engine.test.js`.
+
+5. **`motor-drive`** (Gen IV-IX):
+   - Concede imunidade canônica a movimentos do tipo Electric (ofensivos e de status direcionados, como Thunder Wave).
+   - Ao anular o movimento Electric, aumenta a Speed do portador em +1 estágio.
+   - A imunidade é mantida mesmo se a Speed já estiver no estágio máximo (+6).
+   - Quebrado por Mold Breaker, Teravolt e Turboblaze (a menos que o portador segure Ability Shield).
+   - Suprimido por Neutralizing Gas (a menos que segure Ability Shield).
+   - Em duplas, absorve movimentos Electric de oponentes e aliados.
+   - Coberto por 8 testes determinísticos em `tests/battle/abilities-h1c-motor-drive.test.js`.
+
+6. **`electromorphosis`** (Gen IX):
+   - Ao receber dano direto de um ataque, concede ao portador o estado volátil `Charge`.
+   - O estado `Charge` dobra a potência base (multiplicador 2.0x) do próximo ataque do tipo Electric desferido pelo portador.
+   - O efeito é consumido após a execução do próximo ataque Electric.
+   - Não acumula múltiplos bônus por ativações sucessivas sem consumo intermediário (mantém 2.0x).
+   - Não concede bônus de Special Defense (distinção canônica em relação ao movimento Charge).
+   - Perdido ao ser substituído (`leave`).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-electromorphosis.test.js`.
+
+7. **`berserk`** (Gen VII-IX):
+   - Concede +1 estágio de Special Attack quando o HP do portador cruza o limiar de 50% (cai para $\le 50\%$ tendo estado $> 50\%$ antes do ataque).
+   - Não ativa repetidamente enquanto o portador já estiver abaixo de 50%.
+   - Se for curado para $> 50\%$ (por item como Sitrus Berry ou movimento) e sofrer novo golpe cruzando o limiar, pode ativar novamente.
+   - Não ativa por dano residual (veneno, queimadura, clima, recuo).
+   - Não ativa se o golpe nocautear o portador (`currentHp === 0`).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-berserk.test.js`.
+
+8. **`anger-shell`** (Gen IX):
+   - Quando o HP do portador cruza o limiar de 50% após sofrer um ataque direto elegível, aplica:
+     - Attack +1
+     - Special Attack +1
+     - Speed +1
+     - Defense -1
+     - Special Defense -1
+   - As reduções de Defesa são tratadas como autoinfligidas pela habilidade (não são refletidas por Mirror Armor adversário).
+   - Se um atributo atingir o teto (+6) ou piso (-6), os demais atributos continuam sendo modificados normalmente.
+   - Invertido integralmente por Contrary (-1 Atk, -1 SpA, -1 Spe, +1 Def, +1 SpD).
+   - Pode reativar se curado para $> 50\%$ e novamente reduzido a $\le 50\%$.
+   - Não ativa por dano residual nem em caso de nocaute.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1c-anger-shell.test.js`.
 
 ### H2 — Dano, atributos, precisão e críticos
 
