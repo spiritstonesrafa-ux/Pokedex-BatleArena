@@ -1397,7 +1397,7 @@
         return;
       }
       if (defender.twoTurnMove?.state && !isSelfTarget && selectedMove.target!=='foeSide') {
-        const canHit = constants.canHitSemiInvulnerable?.(selectedMove, defender.twoTurnMove.state, attacker);
+        const canHit = constants.canHitSemiInvulnerable?.(selectedMove, defender.twoTurnMove.state, attacker, defender);
         if (!canHit) {
           attacker.lastMoveFailed = true;
           events.push({
@@ -1884,6 +1884,7 @@
       let baseDamage;
       let finalDamage;
       let critical=false;
+      let criticalMultiplier=1;
       if (isP5Fixed) {
         baseDamage = effectiveMultiplier===0?0:constants.P5.fixedAmount(selectedMove,attacker,defender,action);
         finalDamage = Math.min(defender.currentHp,baseDamage);
@@ -1899,7 +1900,7 @@
         baseDamage = effectiveMultiplier === 0 ? 0 : constantAmount;
         finalDamage = effectiveMultiplier === 0 ? 0 : Math.min(defender.currentHp, constantAmount);
       } else {
-        critical=constants.Critical.resolve(damageMove,action?.criticalRoll!==undefined?action.criticalRoll:action?.hitCriticalRolls?.[0]??24,constants);
+        critical=constants.Critical.resolve(damageMove,action?.criticalRoll!==undefined?action.criticalRoll:action?.hitCriticalRolls?.[0]??24,constants,attacker,defender);
         const criticalStats=constants.Critical.stats(attacker,defender,damageMove,constants);
         baseDamage = DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat, critical?criticalStats.defense:defenseStat, effectivePower);
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
@@ -1925,9 +1926,10 @@
             if(index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
           const hitEff=constants.P8.effectiveness(actualDamageType,defender,TypeEffectiveness,attacker,damageMove,constants);const hitMultiplier=BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(hitEff.multiplier,{attackerSide:attackerRole,modifiers:state.modifiers||{}}):hitEff.multiplier;
           const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
-          const critical=constants.Critical.resolve(damageMove,criticalRolls[index],constants);
+          const critical=constants.Critical.resolve(damageMove,criticalRolls[index],constants,attacker,defender);
           const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat,critical?criticalStats.defense:defenseStat,hitPower);
-          let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical,attacker)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*(critical?1.5:1), hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
+          const hitCritMult = critical ? (constants.Critical?.multiplier ? constants.Critical.multiplier(attacker, damageMove, constants) : 1.5) : 1;
+          let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical,attacker)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*hitCritMult, hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
             hitDamage=Math.max(hitMultiplier===0?0:1,Math.floor(hitDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,hitMultiplier)));
             hitDamage=constants.P7.survive(state,attackerRole,damageMove,hitDamage,constants,events);
             const hasMultiSub = Boolean(defender.substituteHp > 0 || defender.substitute);
@@ -1952,7 +1954,7 @@
           afterDirectHit(attacker,defender,attackerRole,defenderRole,damageMove,events,hitActualDamage);
             events.push({ type: BATTLE_EVENTS.DAMAGE_APPLIED, source: attackerRole, target: defenderRole,
               attackType: actualDamageType, damageClass: actualDamageClass, defenderTypes: defenderTypesList,
-              moveName: selectedMove.name, power: hitPower, baseDamage:hitBaseDamage, critical, criticalMultiplier:critical?1.5:1, damageRoll: damageRolls[index],
+              moveName: selectedMove.name, power: hitPower, baseDamage:hitBaseDamage, critical, criticalMultiplier:critical?hitCritMult:1, damageRoll: damageRolls[index],
               stabMultiplier, typeMultiplier: hitMultiplier, multiplier: hitMultiplier,
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
             constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp,attacker,defender);
@@ -1967,7 +1969,7 @@
             }
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
-            moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical)});
+            moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical && !constants.Critical?.isCriticalBlocked?.(defender, attacker, damageMove, constants))});
           if (defender.currentHp > 0 && totalDamage > 0) {
             if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, totalDamage, false, false)) {
               constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events);
@@ -1979,8 +1981,9 @@
           if (faintedRolesMulti.length > 0) resolveFaints(state, events, faintedRolesMulti, defender.currentHp === 0 ? 'move' : 'recoil');
           return;
         }
+        criticalMultiplier = critical ? (constants.Critical?.multiplier ? constants.Critical.multiplier(attacker, damageMove, constants) : 1.5) : 1;
         finalDamage = constants.applyBurnPenalty(
-          DamageCalculator.applyModifier(baseDamage*(critical?1.5:1), effectiveMultiplier, stabMultiplier, damageRoll),
+          DamageCalculator.applyModifier(baseDamage*criticalMultiplier, effectiveMultiplier, stabMultiplier, damageRoll),
           attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier;
       }
 
@@ -2025,7 +2028,7 @@
         power: isFixedDamage ? (selectedMove.power ?? null) : effectivePower,
         baseDamage,
         critical:critical&&effectiveMultiplier>0,
-        criticalMultiplier:critical&&effectiveMultiplier>0?1.5:1,
+        criticalMultiplier:critical&&effectiveMultiplier>0?criticalMultiplier:1,
         damageRoll: isFixedDamage ? 100 : damageRoll,
         stabMultiplier: isFixedDamage ? 1 : stabMultiplier,
         typeMultiplier: effectiveMultiplier,

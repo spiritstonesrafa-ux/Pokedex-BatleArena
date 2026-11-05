@@ -85,7 +85,8 @@
         if(defHasMagicBounce&&constants.MoveFlags?.isReflectableMove?.(id)&&move.target!=='self'&&!constants.P5?.ohko?.(move))benefit=-50;
         const attackerInfiltrates=(constants.P7?.ability(attacker)==='infiltrator'&&!attacker.abilitySuppressed);
         if((defender.substituteHp>0||defender.substitute)&&!attackerInfiltrates&&!constants.MoveFlags?.isSoundMove?.(move)&&move.target!=='self'&&move.target!=='foeSide')benefit=0;
-        const factor=move.accuracy===null?1:constants.getEffectiveAccuracy(move,attacker,defender)/100;
+        const acc=constants.getEffectiveAccuracy?constants.getEffectiveAccuracy(move,attacker,defender):move.accuracy;
+        const factor=move.accuracy===null||acc===null?1:acc/100;
         if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0||attacker.statusCondition==='freeze')benefit=0;
         return {moveId:id,moveName:move.name,damageClass:'status',power:null,accuracy:move.accuracy,currentPp:move.currentPp,priority:constants.P7?.priority(attacker,move,constants)??constants.getMovePriority(move),expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:Math.round(benefit*factor),statusChance:factor};
       }
@@ -437,7 +438,7 @@
       }
       if(defender.maxGuard&&move.target!=='self'){actionFactor=0;baseDamage=minDamage=maxDamage=averageDamage=damageIfHit=0;}
       if (defender.twoTurnMove?.state && move.target !== 'self' && move.damageClass !== 'status_self') {
-        const canHit = constants.canHitSemiInvulnerable?.(move, defender.twoTurnMove.state, attacker);
+        const canHit = constants.canHitSemiInvulnerable?.(move, defender.twoTurnMove.state, attacker, defender);
         if (!canHit) {
           actionFactor = 0;
           baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
@@ -453,7 +454,7 @@
       if(constants.P6.consecutive.includes(move.id)&&attacker.lastP6Move===move.id){actionFactor=0;minDamage=maxDamage=averageDamage=damageIfHit=0;}
       // Keep ordinary minimum damage for guaranteed KOs; rare criticals only raise the possible maximum/mean.
       const criticalMove={...move,type:moveType,damageClass};
-      const criticalChance=constants.Critical.chance(criticalMove,constants);
+      const criticalChance=constants.Critical.chance(criticalMove,constants,attacker,defender);
       let criticalMaxDamage=0;
       if(criticalChance>0&&criticalChance<1&&!entryRestricted&&typeMultiplier>0&&actionFactor>0&&averageDamage>0){
         const cs=constants.Critical.stats(attacker,defender,criticalMove,constants),n=multiHit?.maxHits||1;
@@ -464,7 +465,8 @@
           const eff=i>0&&BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(rawEff,context):rawEff;
           const hitPower=multiHit?.escalating?power*(i+1):power,base=DamageCalculator.calculateBaseDamage(cs.attack,cs.defense,hitPower);
           const values=Array.from({length:16},(_,j)=>{
-            let amount=constants.applyBurnPenalty(DamageCalculator.applyModifier(base*1.5,eff,stabMultiplier,j+85),attacker,criticalMove);
+            const critMult=constants.Critical?.multiplier?constants.Critical.multiplier(attacker,criticalMove,constants):1.5;
+            let amount=constants.applyBurnPenalty(DamageCalculator.applyModifier(base*critMult,eff,stabMultiplier,j+85),attacker,criticalMove);
             if(defender.twoTurnMove?.state)amount*=constants.getSemiInvulnerableDamageMultiplier(move,defender.twoTurnMove.state);
             amount=Math.max(eff===0?0:1,Math.floor(amount*constants.P7.damageMultiplier(context.battleState,attacker,d,criticalMove,eff)));
             amount=Math.max(eff===0?0:1,Math.floor(amount*constants.P8.finalMultiplier(attacker,d,criticalMove)));

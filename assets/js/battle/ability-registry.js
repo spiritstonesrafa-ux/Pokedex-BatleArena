@@ -1555,6 +1555,138 @@
       description: 'Multiplica os atributos ofensivos (Attack e Special Attack) do portador por 1.5× ao executar movimentos do tipo Rock.'
     }
   };
+  // H2-B Implemented Abilities (FULL status: Critical & Accuracy mechanics)
+  const H2B_CRIT_ACCURACY_METADATA = {
+    'battle-armor': {
+      id: 'battle-armor',
+      name: 'Battle Armor',
+      generation: 3,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_CRITICAL_HIT']),
+      bearer: 'Kabuto (#140), Kabutops (#141), Armaldo (#348), Skorupi (#451), Drapion (#452), Type: Null (#772), Falinks (#870)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-battle-armor.test.js']),
+      description: 'Protege o portador contra golpes críticos recebidos. Pode ser quebrada por Mold Breaker, Teravolt e Turboblaze (salvo Ability Shield).'
+    },
+    'shell-armor': {
+      id: 'shell-armor',
+      name: 'Shell Armor',
+      generation: 3,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_CRITICAL_HIT']),
+      bearer: 'Shellder (#90), Cloyster (#91), Lapras (#131), Omanyte (#138), Omastar (#139), Corphish (#341), Crawdaunt (#342), Clamperl (#366), Torkoal (#324), Torterra (#389), Samurott (#503), Escavalier (#589), Drednaw (#834), Klawf (#950)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-shell-armor.test.js']),
+      description: 'Protege o portador contra golpes críticos recebidos. Compartilha as regras canônicas de Battle Armor, sendo ignorada por Mold Breaker.'
+    },
+    'super-luck': {
+      id: 'super-luck',
+      name: 'Super Luck',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_CRIT_RATIO']),
+      bearer: 'Murkrow (#198), Honchkrow (#430), Absol (#359), Togepi (#175), Togetic (#176), Togekiss (#468), Tranquill (#520), Unfezant (#521)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-super-luck.test.js']),
+      description: 'Aumenta em 1 estágio (+1) a taxa de acertos críticos dos movimentos executados pelo portador.'
+    },
+    'sniper': {
+      id: 'sniper',
+      name: 'Sniper',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_CRIT_DAMAGE']),
+      bearer: 'Beedrill (#15), Spearow (#21), Fearow (#22), Horsea (#116), Seadra (#117), Kingdra (#230), Remoraid (#223), Octillery (#224), Skorupi (#451), Drapion (#452), Binacle (#688), Barbaracle (#689), Inteleon (#818), Spidops (#918)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-sniper.test.js']),
+      description: 'Amplifica em 1.5× o dano de acertos críticos efetuados pelo portador (multiplicador crítico efetivo de 2.25× em vez de 1.5×).'
+    },
+    'merciless': {
+      id: 'merciless',
+      name: 'Merciless',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_CRIT_RATIO']),
+      bearer: 'Mareanie (#747), Toxapex (#748)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-merciless.test.js']),
+      description: 'Garante acerto crítico automático para ataques contra alvos que estejam envenenados (Poison) ou gravemente envenenados (Toxic).'
+    },
+    'compound-eyes': {
+      id: 'compound-eyes',
+      name: 'Compound Eyes',
+      generation: 3,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_ACCURACY']),
+      bearer: 'Butterfree (#12), Venonat (#48), Yanma (#193), Nincada (#290), Joltik (#595), Galvantula (#596), Scatterbug (#664), Vivillon (#666), Blipbug (#824), Dottler (#825)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-compound-eyes.test.js']),
+      description: 'Multiplica por 5325/4096 (aprox. 1.3×) a precisão de movimentos com precisão numérica executados pelo portador.'
+    },
+    'no-guard': {
+      id: 'no-guard',
+      name: 'No Guard',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['BYPASS_ACCURACY', 'BYPASS_SEMI_INVULNERABILITY']),
+      bearer: 'Machop (#66), Machoke (#67), Machamp (#68), Karrablast (#588), Honedge (#679), Doublade (#680), Lycanroc-Midnight (#745-Midnight)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-no-guard.test.js']),
+      description: 'Faz com que todos os movimentos executados pelo portador ou direcionados ao portador ignorem as verificações de precisão e evasão e possam atingir turnos semi-invulneráveis (Fly, Dig, Dive, etc.). Não ignora Protect nem imunidades de tipo.'
+    },
+    'tangled-feet': {
+      id: 'tangled-feet',
+      name: 'Tangled Feet',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_ACCURACY']),
+      bearer: 'Pidgey (#16), Pidgeotto (#17), Pidgeot (#18), Spinda (#327), Chatot (#441)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2b-tangled-feet.test.js']),
+      description: 'Enquanto o portador estiver confuso, a precisão de movimentos direcionados a ele é multiplicada por 0.5 (reduzida pela metade). Ignorada por Mold Breaker.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -1643,6 +1775,11 @@
 
     if (H2A_OFFENSIVE_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H2A_OFFENSIVE_METADATA[slug] }));
+      continue;
+    }
+
+    if (H2B_CRIT_ACCURACY_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H2B_CRIT_ACCURACY_METADATA[slug] }));
       continue;
     }
 

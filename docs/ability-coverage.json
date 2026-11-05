@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 164,
+    "declaredSupported": 172,
     "assignedAbilities": 313,
-    "assignedPending": 150,
+    "assignedPending": 142,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 427
+    "recordsWithPendingDefault": 399
   },
   "phases": [
     {
@@ -21,8 +21,8 @@
     {
       "id": "H2",
       "name": "Dano, atributos, precisão e críticos",
-      "assignedPending": 37,
-      "defaultRecordsImpacted": 101
+      "assignedPending": 29,
+      "defaultRecordsImpacted": 73
     },
     {
       "id": "H3",
@@ -902,8 +902,8 @@
     },
     {
       "name": "battle-armor",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -2347,8 +2347,8 @@
     },
     {
       "name": "compound-eyes",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -10180,8 +10180,8 @@
     },
     {
       "name": "merciless",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -11038,8 +11038,8 @@
     },
     {
       "name": "no-guard",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -16586,8 +16586,8 @@
     },
     {
       "name": "shell-armor",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -17205,8 +17205,8 @@
     },
     {
       "name": "sniper",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -19233,8 +19233,8 @@
     },
     {
       "name": "super-luck",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -20213,8 +20213,8 @@
     },
     {
       "name": "tangled-feet",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {

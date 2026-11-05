@@ -408,6 +408,9 @@
   function getEffectiveAccuracy(move, attacker, defender) {
     if (P5.ohko(move)) return P5.accuracy(move,attacker,defender);
     if(defender?.minimized&&P6.minimizeHits.includes(Number(move.id)))return null;
+    const hasNoGuard = Boolean(attacker && !attacker.abilitySuppressed && P7.ability(attacker) === 'no-guard') ||
+                       Boolean(defender && !defender.abilitySuppressed && P7.ability(defender) === 'no-guard');
+    if (hasNoGuard) return null;
     const weatherAccuracy=P7.accuracy(move,attacker,defender,move.accuracy);
     if(weatherAccuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
@@ -765,8 +768,10 @@
     return Object.values(TWO_TURN_MOVES).find(m => m.name === name) || null;
   }
 
-  function canHitSemiInvulnerable(move, state, attacker = null) {
+  function canHitSemiInvulnerable(move, state, attacker = null, defender = null) {
     if (!move || !state) return false;
+    if (attacker && !attacker.abilitySuppressed && P7.ability(attacker) === 'no-guard') return true;
+    if (defender && !defender.abilitySuppressed && P7.ability(defender) === 'no-guard') return true;
     const id = Number(move.id);
     const name = String(move.name || '').trim().toLowerCase();
 

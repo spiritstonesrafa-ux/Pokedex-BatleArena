@@ -348,9 +348,49 @@ Lote unificado de oito habilidades canônicas de cálculo de dano, modificadores
    - Suprimido por Neutralizing Gas.
    - Coberto por testes determinísticos em `tests/battle/abilities-h2a-rocky-payload.test.js`.
 
+#### H2-B — Precisão, Evasão e Golpes Críticos (Battle Armor, Shell Armor, Super Luck, Sniper, Merciless, Compound Eyes, No Guard, Tangled Feet) (CONCLUÍDO)
+
+Lote conjunto de oito habilidades canônicas de cálculo de precisão, evasão, modificação de estágios críticos, amplificação de dano crítico e prevenção contra acertos críticos na Geração IX:
+
+1. **`battle-armor`** (Gen III-IX):
+   - Impede que o portador receba golpes críticos de ataques diretos elegíveis.
+   - Habilidade quebrável (`flags: { breakable: 1 }`), sendo contornada por atacantes portando Mold Breaker, Teravolt ou Turboblaze (salvo Ability Shield no defensor).
+   - Suprimível por Neutralizing Gas.
+
+2. **`shell-armor`** (Gen III-IX):
+   - Compartilha o contrato canônico idêntico de prevenção contra acertos críticos recebidos de Battle Armor.
+   - Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
+
+3. **`super-luck`** (Gen IV-IX):
+   - Aumenta a taxa de acertos críticos de todos os ataques executados pelo portador em 1 estágio (+1).
+   - Escalonamento canônico Gen IX: Estágio 0 = 1/24 (4.17%), Estágio 1 = 1/8 (12.5%), Estágio 2 = 1/2 (50%), Estágio 3+ = 100%.
+
+4. **`sniper`** (Gen IV-IX):
+   - Amplifica em 1.5× o dano de acertos críticos desferidos pelo portador, elevando o multiplicador de dano crítico de 1.5× para 2.25× (`1.5 * 1.5`).
+   - Não altera a probabilidade de acerto crítico e não afeta golpes não críticos.
+
+5. **`merciless`** (Gen VII-IX):
+   - Garante 100% de acerto crítico para ataques executados contra alvos afetados por envenenamento (`poison`) ou envenenamento grave (`toxic`).
+   - Não garante críticos contra alvos sem status ou com outros status (Burn, Paralysis, Sleep, Freeze).
+   - Bloqueada canonicamente por Battle Armor ou Shell Armor (exceto se o atacante tiver Mold Breaker).
+
+6. **`compound-eyes`** (Gen III-IX):
+   - Multiplica a precisão de movimentos com precisão numérica por `5325 / 4096` (~1.3×).
+   - Não afeta movimentos sem precisão numérica (`null` ou `'ALWAYS_HIT'`).
+
+7. **`no-guard`** (Gen IV-IX):
+   - Faz com que todos os movimentos executados pelo portador ou direcionados ao portador ignorem as verificações normais de precisão e evasão (não podem errar).
+   - Permite atingir alvos em semi-invulnerabilidade (Fly, Bounce, Dive, Dig).
+   - Não burla Protect, Detect ou King's Shield.
+   - Não burla imunidades elementares de tipo (ex: Normal vs Ghost) nem imunidades de status.
+
+8. **`tangled-feet`** (Gen IV-IX):
+   - Enquanto o portador estiver confuso (`confusionTurns > 0`), a precisão de movimentos direcionados a ele é multiplicada por 0.5 (reduzida pela metade).
+   - Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
+
 ### H2 — Dano, atributos, precisão e críticos
 
-**Inventário:** 37 habilidades pendentes (44 antes do lote H2-A); 101 registros com habilidade padrão afetados.
+**Inventário:** 29 habilidades pendentes (37 antes do lote H2-B, 44 antes do lote H2-A); 73 registros com habilidade padrão afetados.
 
 **Dependências:** H0; flags canônicas e regras de críticos/efeitos secundários.
 
