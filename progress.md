@@ -2,7 +2,76 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
-## Atualização — 05/11/2026: Publicação H2-B e Implementação Local H2-C (8 habilidades de dano)
+## Atualização — 05/11/2026: Nova Governança de Lotes (10 Habilidades) e Planejamento H2-E / H2-F
+
+- **Decisão do Responsável pelo Projeto (05/11/2026):**
+  > Decisão do responsável pelo projeto: a partir da H2-E, os novos lotes de implementação de habilidades Pokémon deverão conter 10 habilidades por lote, exceto o lote final de uma fase quando restarem menos de 10 habilidades elegíveis. O histórico dos lotes anteriores deve ser preservado. A alteração de quantidade não reduz os critérios de testes, auditoria, documentação ou governança Git.
+
+- **Regras Obrigatórias da Nova Governança:**
+  1. Cada novo lote deverá conter exatamente 10 habilidades quando houver quantidade suficiente de pendências elegíveis.
+  2. Quando restarem menos de 10 habilidades na fase, o lote final poderá conter a quantidade restante.
+  3. A distribuição deve respeitar dependências técnicas e a ordem do roadmap oficial.
+  4. Não incluir habilidades já suportadas apenas para completar artificialmente o lote.
+  5. Não dividir uma habilidade em múltiplos registros para atingir a quantidade.
+  6. Não incluir habilidades fora da fase sem aprovação.
+  7. Não reduzir um lote futuro para oito por conveniência.
+  8. Preservação histórica integral: os lotes H1-B (8), H1-C (8), H1-D (8), H2-A (8), H2-B (8), H2-C (8) e H2-D (8) permanecem registrados exatamente como implementados e homologados. A H2-D mantém suas oito habilidades e não sofre alteração retroativa.
+
+- **Planejamento Oficial dos Próximos Lotes (H2-E e H2-F):**
+  - **Inventário Auditado:** 188 habilidades suportadas, 126 pendentes atribuídas, **13 pendências restantes na família H2**, 0 pendências em H1.
+  - **Lote H2-E (10 habilidades planejadas — não implementadas nesta etapa):**
+    1. `illuminate` (Gen III-IX): Previne perda de Accuracy e ignora estágios de Evasion do defensor em Gen IX SV.
+    2. `skill-link` (Gen IV-IX): Garante 5 acertos máximos para movimentos multi-hit (2 a 5 golpes).
+    3. `quick-feet` (Gen IV-IX): Multiplica Speed por 1.5× sob status e ignora penalidade de 50% de paralisia.
+    4. `unaware` (Gen IV-IX): Ao atacar, ignora estágios defensivos adversários; ao defender, ignora estágios ofensivos do atacante.
+    5. `sheer-force` (Gen V-IX): Remove efeitos secundários com chance percentual em troca de 1.3× de poder base e cancela recoil de Life Orb.
+    6. `heavy-metal` (Gen V-IX): Dobra o peso corporal efetivo do combatente.
+    7. `light-metal` (Gen V-IX): Reduz pela metade (0.5×) o peso corporal efetivo do combatente.
+    8. `rivalry` (Gen IV-IX): Multiplica o dano por 1.25× contra mesmo gênero e 0.75× contra gênero oposto (neutro se genderless).
+    9. `minds-eye` (Gen IX): Normal/Fighting acertam Ghost com dano neutro; ignora Evasion e previne perda de Accuracy.
+    10. `long-reach` (Gen VII-IX): Executa movimentos sem contato físico, evitando Rough Skin, Rocky Helmet, Flame Body, etc.
+  - **Lote H2-F (3 habilidades planejadas — lote final de encerramento da fase H2):**
+    11. `scrappy` (Gen IV-IX): Normal/Fighting acertam Ghost com dano neutro; imunidade a Intimidate.
+    12. `serene-grace` (Gen III-IX): Dobra as chances percentuais de efeitos secundários de movimentos.
+    13. `simple` (Gen IV-IX): Dobra a magnitude das alterações de estágio de atributos (+1 vira +2, etc.).
+
+- **Próxima Ação Imediata:** Aguardar autorização expressa do usuário para publicação da H2-D (`git add`, `git commit` e `git push`).
+
+## Atualização — 05/11/2026: Auditoria Canônica e Validação Pré-Publicação H2-D (8 habilidades)
+
+- **Auditoria Canônica e Validação Pré-Publicação H2-D (8 habilidades de modificadores de dano, status e turnos):**
+  - **Estado Git:** Trabalho estritamente local mantido (sem commit/push/deploy/staging). Baseline HEAD: `83d9a1e35e8561e56cbc42f8438bb886131ec171` (`origin/main`).
+  - **Formação do Lote:** Investigação detalhada confirmou que o planejamento macro original agrupou 49 habilidades na família `H2` sem ordenação alfabética prévia. A criação de sublotes operacionais (H2-A, H2-B, H2-C, H2-D) decorreu da diretriz operacional vigente à época (lotes H1-B a H2-D) de oito habilidades por lote para garantir gates rigorosos, rastreabilidade e integridade arquitetural.
+  - **1. `reckless` (Correção Canônica Chloroblast):** Multiplica o poder de movimentos com recuo proporcional de HP ou crash damage por 4915/4096 (~1.2×) em `P7.power`. Corrigido para NÃO bonificar Chloroblast (#835), que opera como perda fixa de 50% do HP máximo do usuário. Mantido bônus canônico para Double-Edge, Head Smash, Brave Bird, Wave Crash, High Jump Kick e Supercell Slam (#916). Suprimível por Neutralizing Gas.
+  - **2. `rock-head` (Conformidade Chloroblast):** Previne integralmente dano de recuo de movimentos próprios em `battle-engine.js` (Double-Edge, Head Smash, Wave Crash, etc.) e previne canonicamente o dano de recuo de 50% do HP máximo de Chloroblast (#835). Struggle (165) e Life Orb mantêm dano autoinfligido inalterado. Suprimível por Neutralizing Gas.
+  - **3. `toxic-boost`:** Multiplica o poder de golpes físicos por 1.5× em `P7.power` quando o atacante está sob `poison` ou `toxic`. Suprimível por Neutralizing Gas.
+  - **4. `flare-boost`:** Multiplica o poder de golpes especiais por 1.5× em `P7.power` quando o atacante está sob `burn`. Suprimível por Neutralizing Gas.
+  - **5. `analytic`:** Multiplica o poder de movimentos por 5325/4096 (~1.3×) em `P7.power` quando o defensor já agiu ou trocou no turno. Prioridade avaliada corretamente (ataques de prioridade com usuário mais lento que agem primeiro não recebem bônus). Suprimível por Neutralizing Gas.
+  - **6. `stakeout` (Correção Canônica do Ciclo de Vida):** Alinhado com Pokémon Showdown Gen IX (`data/abilities.ts`). Stakeout opera em `onModifyAtk` e `onModifySpA` (`this.chainModify(2)`), dobrando o atributo ofensivo Attack ou Special Attack em `P7.stat` quando `defender.switchedInThisTurn === true`. Corrigido o ciclo de vida: `switchedInThisTurn` é resetado para `false` no início de cada turno e na entrada de substitutos entre turnos após um desmaio (`resolveReplacement`), impedindo ativação espúria no turno seguinte a uma troca ou contra substitutos pós-KO. Ativação mantida para trocas voluntárias no mesmo turno, pivôs mid-turn e trocas forçadas (Dragon Tail).
+  - **7. `defeatist`:** Reduz pela metade (0.5×) Attack e Special Attack em `P7.stat` quando o HP atual for <= 50% do HP máximo. Testado com HP ímpar (199 HP) e restauração após cura acima do limiar. Suprimível por Neutralizing Gas.
+  - **8. `gorilla-tactics`:** Multiplica Attack físico por 1.5× em `P7.stat` e aplica Choice Lock no primeiro golpe utilizado. Assegurado que Struggle (moveId 165) nunca aplique Choice Lock (`used.moveId !== 165`). Troca de campo limpa o Choice Lock. Multiplica cumulativamente com Choice Band (2.25×). Suprimível por Neutralizing Gas.
+
+- **Inventário e Cobertura Oficial:**
+  - Auditado via `audit-abilities.js`: 374 habilidades conhecidas, **188 declaradas suportadas (+8)**, **126 atribuídas pendentes (-8)**, **13 pendências restantes em H2 (-8)**, **0 pendências em H1**.
+  - Documentação sincronizada em `ability-coverage.json` e `roadmap-abilities.md`.
+
+- **Validação Automatizada e Regressão Global:**
+  - 8 suítes dedicadas H2-D:
+    - `tests/battle/abilities-h2d-analytic.test.js`: 9/9 PASS
+    - `tests/battle/abilities-h2d-defeatist.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2d-flare-boost.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2d-gorilla-tactics.test.js`: 9/9 PASS
+    - `tests/battle/abilities-h2d-reckless.test.js`: 10/10 PASS (+1 teste)
+    - `tests/battle/abilities-h2d-rock-head.test.js`: 12/12 PASS (+3 testes)
+    - `tests/battle/abilities-h2d-stakeout.test.js`: 11/11 PASS (+2 testes)
+    - `tests/battle/abilities-h2d-toxic-boost.test.js`: 8/8 PASS
+    - **Total específico H2-D:** **76/76 PASS** (100%).
+  - Regressões cruzadas H2-A, H2-B, H2-C e Neutralizing Gas: **203/203 PASS**.
+  - Regressão global completa (`npm.cmd test`): **4.083 testes aprovados em 42 suítes, zero falhas, exit code 0**.
+  - Auditorias `audit-abilities.js --check`, `audit-p8.js` e `git diff --check`: 100% aprovadas.
+  - Parecer de auditoria: **APROVADO PARA PUBLICAÇÃO** (aptidão técnica estrita, sem commit/push).
+
+## Atualização — 05/11/2026: Publicação H2-B e Publicação H2-C (8 habilidades de dano)
 
 - **Publicação Controlada H2-B (8 habilidades de precisão e críticos):**
   - **Commit publicado:** `a00e6e89b9f485cdf1cf0ff7b6893d85e272a90c` (parent `239709d210b90f67059a4457fafd1f5e203232a2`).
@@ -42,7 +111,8 @@ Arquivo de governança técnica para alinhamento e continuidade entre diferentes
   - Auditorias `audit-abilities.js --check`, `audit-p8.js` e `git diff --check`: 100% aprovadas.
 
 - **Governança Git:**
-  - H2-C mantido **estritamente local no working tree** (sem `git add`, sem `git commit`, sem `git push`).
+  - Lote H2-C **homologado e publicado com sucesso** na branch `main` (`origin/main`) sob o commit `83d9a1e35e8561e56cbc42f8438bb886131ec171` (parent `a00e6e89b9f485cdf1cf0ff7b6893d85e272a90c`), sincronizado via fast-forward e auditado.
+  - Artefato visual paralelo `tests/visual/minior-shields-down-harness.html` mantido intacto e não rastreado.
 
 ## Atualização — 02/11/2026: Homologação final e publicação H0–H4-A
 

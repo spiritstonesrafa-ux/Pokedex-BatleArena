@@ -513,7 +513,7 @@
       targetPokemon.twoTurnMove = null;
       targetPokemon.entryMoveAttempts = 0;
       targetPokemon.toxicStage = 0;
-      if (reason !== 'REPLACEMENT') targetPokemon.switchedInThisTurn = true;
+      targetPokemon.switchedInThisTurn = true;
 
       side.activeIndex = targetIndex;
 
@@ -709,7 +709,7 @@
       for(const role of ['player','enemy'])constants.P8.prepare(nextState,role,actions[role],constants,events);
       nextState.turnActions = actions;
       for(const role of ['player','enemy'])for(const mon of (nextState.version===2?nextState[role].team:[nextState[role]])){
-        mon.actedThisTurn=false;mon.damagedThisTurn=false;mon.lastDirectHit=null;mon.beakBlastReady=false;mon.shellTrapReady=false;mon.shellTrapTriggered=false;mon.focusLost=false;
+        mon.actedThisTurn=false;mon.damagedThisTurn=false;mon.lastDirectHit=null;mon.beakBlastReady=false;mon.shellTrapReady=false;mon.shellTrapTriggered=false;mon.focusLost=false;mon.switchedInThisTurn=false;
       }
       for(const role of ['player','enemy']){const side=nextState[role];for(const mon of (nextState.version===2?side.team:[side]))mon.statsRaisedThisTurn=false;}
 
@@ -918,7 +918,7 @@
 
       // 1. Seleciona o golpe a ser executado
       let selectedMove;
-      const isStruggle=(constants.P6.mustStruggle(attacker)||constants.P7.mustStruggle(attacker)||constants.P8.mustStruggle(attacker)||state.battleFormat==='DOUBLES'&&!attacker.moves.some(m=>m.currentPp>0&&constants.P7.legalMove(attacker,m)));
+      const isStruggle=(Number(action?.moveId)===165||String(action?.moveName).trim().toLowerCase()==='struggle'||constants.P6.mustStruggle(attacker)||constants.P7.mustStruggle(attacker)||constants.P8.mustStruggle(attacker)||state.battleFormat==='DOUBLES'&&!attacker.moves.some(m=>m.currentPp>0&&constants.P7.legalMove(attacker,m)));
       if(isStruggle)selectedMove={...constants.P6.struggle};
       else if (action && (action.moveId !== undefined || action.moveName !== undefined)) {
         selectedMove = attacker.moves.find(m =>
@@ -943,7 +943,7 @@
       const ppMove=selectedMove;
       selectedMove=constants.P8.activeMove(attacker,selectedMove,constants);
       if(!calledMove && constants.P6.consecutive.includes(selectedMove.id)&&attacker.lastP6Move===selectedMove.id)throw new Error('ACTION_REJECTED: este golpe não pode ser usado consecutivamente.');
-      if(!calledMove && !attacker.dynamax && attacker.choiceLock && ['choice-band','choice-specs','choice-scarf'].includes(attacker.item)&&selectedMove.id!==attacker.choiceLock&&!isStruggle)throw new Error('ACTION_REJECTED: item Choice bloqueia outro golpe.');
+      if(!calledMove && !attacker.dynamax && attacker.choiceLock && (['choice-band','choice-specs','choice-scarf'].includes(attacker.item)||constants.P7.ability(attacker)==='gorilla-tactics')&&selectedMove.id!==attacker.choiceLock&&!isStruggle)throw new Error('ACTION_REJECTED: item Choice ou Gorilla Tactics bloqueia outro golpe.');
       if(!calledMove && attacker.item==='assault-vest'&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
       const actualDamageClass = constants.P8.damageClass(attacker,selectedMove,constants);
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
@@ -1852,14 +1852,14 @@
       let defenseStat;
       if (actualDamageClass === MOVE_DAMAGE_CLASSES.PHYSICAL) {
         attackStat = constants.usesDefenseAsAttack?.(selectedMove)
-          ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense', damageMove) : attacker.defense)
-          : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack', damageMove) : attacker.attack);
-        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'defense', damageMove) : defender.defense;
+          ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense', damageMove, defender) : attacker.defense)
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack', damageMove, defender) : attacker.attack);
+        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'defense', damageMove, attacker) : defender.defense;
       } else {
-        attackStat = constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack', damageMove) : attacker.specialAttack;
+        attackStat = constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack', damageMove, defender) : attacker.specialAttack;
         defenseStat = constants.targetsDefenseWithSpAtk?.(selectedMove)
-          ? (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', damageMove) : defender.defense)
-          : (constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'specialDefense', damageMove) : defender.specialDefense);
+          ? (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', damageMove, attacker) : defender.defense)
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'specialDefense', damageMove, attacker) : defender.specialDefense);
       }
 
       let resolvedPower=constants.P5.get(selectedMove)?constants.P5.power(selectedMove,attacker,defender,constants,p5Context):selectedMove.power;
@@ -2085,27 +2085,35 @@
         }
       }
 
-      // 10. Efeitos de Recuo de HP (Recoil Moves: recuo proporcional ao dano efetivamente causado)
+      // 10. Efeitos de Recuo de HP (Recoil Moves: recuo proporcional ao dano efetivamente causado ou Chloroblast)
       let attackerFaintedFromRecoil = false;
-      if (actualDamageDealt > 0 && (isStruggle || constants.getRecoilRatio?.(selectedMove) > 0)) {
-        const recoilRatio = constants.getRecoilRatio(selectedMove);
-        const rawRecoil = isStruggle?Math.max(1,Math.round(attacker.maxHp/4)):Math.max(1, Math.floor(actualDamageDealt * recoilRatio));
-        const previousAttackerHp = attacker.currentHp;
-        const newAttackerHp = Math.max(0, previousAttackerHp - rawRecoil);
-        const actualRecoil = previousAttackerHp - newAttackerHp;
-        attacker.currentHp = newAttackerHp;
-        events.push({
-          type: BATTLE_EVENTS.RECOIL_APPLIED,
-          target: attackerRole,
-          pokemonName: attacker.name,
-          moveName: selectedMove.name,
-          damage: actualRecoil,
-          previousHp: previousAttackerHp,
-          currentHp: newAttackerHp,
-          maxHp: attacker.maxHp
-        });
-        if (newAttackerHp === 0) {
-          attackerFaintedFromRecoil = true;
+      const isChloroblast = selectedMove.id === 835 || String(selectedMove.name || '').trim().toLowerCase() === 'chloroblast' || selectedMove.recoilMaxHpRatio > 0;
+      if (actualDamageDealt > 0 && (isStruggle || selectedMove.id === 165 || constants.getRecoilRatio?.(selectedMove) > 0 || isChloroblast)) {
+        const hasRockHead = !isStruggle && selectedMove.id !== 165 && constants.P7?.ability?.(attacker) === 'rock-head';
+        if (!hasRockHead) {
+          const recoilRatio = constants.getRecoilRatio(selectedMove);
+          const rawRecoil = isStruggle
+            ? Math.max(1, Math.round(attacker.maxHp / 4))
+            : isChloroblast
+              ? Math.max(1, Math.ceil(attacker.maxHp * (selectedMove.recoilMaxHpRatio || 0.5)))
+              : Math.max(1, Math.floor(actualDamageDealt * recoilRatio));
+          const previousAttackerHp = attacker.currentHp;
+          const newAttackerHp = Math.max(0, previousAttackerHp - rawRecoil);
+          const actualRecoil = previousAttackerHp - newAttackerHp;
+          attacker.currentHp = newAttackerHp;
+          events.push({
+            type: BATTLE_EVENTS.RECOIL_APPLIED,
+            target: attackerRole,
+            pokemonName: attacker.name,
+            moveName: selectedMove.name,
+            damage: actualRecoil,
+            previousHp: previousAttackerHp,
+            currentHp: newAttackerHp,
+            maxHp: attacker.maxHp
+          });
+          if (newAttackerHp === 0) {
+            attackerFaintedFromRecoil = true;
+          }
         }
       }
 
@@ -2457,6 +2465,7 @@
           target.isProtected = false;
           target.stallCount = 0;
           target.twoTurnMove = null;
+          target.switchedInThisTurn = false;
           side.activeIndex = targetIndex;
           replacedAny = true;
 

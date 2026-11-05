@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 180,
+    "declaredSupported": 188,
     "assignedAbilities": 313,
-    "assignedPending": 134,
+    "assignedPending": 126,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 385
+    "recordsWithPendingDefault": 364
   },
   "phases": [
     {
@@ -21,8 +21,8 @@
     {
       "id": "H2",
       "name": "Dano, atributos, precisão e críticos",
-      "assignedPending": 21,
-      "defaultRecordsImpacted": 59
+      "assignedPending": 13,
+      "defaultRecordsImpacted": 38
     },
     {
       "id": "H3",
@@ -339,8 +339,8 @@
     },
     {
       "name": "analytic",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -3180,8 +3180,8 @@
     },
     {
       "name": "defeatist",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -4189,8 +4189,8 @@
     },
     {
       "name": "flare-boost",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -5392,8 +5392,8 @@
     },
     {
       "name": "gorilla-tactics",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -14148,8 +14148,8 @@
     },
     {
       "name": "reckless",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -14648,8 +14648,8 @@
     },
     {
       "name": "rock-head",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -17909,8 +17909,8 @@
     },
     {
       "name": "stakeout",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -21433,8 +21433,8 @@
     },
     {
       "name": "toxic-boost",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {

@@ -422,9 +422,9 @@
     return Math.min(100,Math.floor(Number(weatherAccuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
   }
 
-  function getEffectiveStat(combatant, statKey, move = null) {
+  function getEffectiveStat(combatant, statKey, move = null, defender = null) {
     if (!combatant || typeof combatant !== 'object') return 1;
-    const base = Number(combatant[statKey])*P7.stat(combatant,statKey,move);
+    const base = Number(combatant[statKey])*P7.stat(combatant,statKey,move,defender);
     if (!Number.isFinite(base) || base <= 0) return 1;
     if (!STAT_STAGE_KEYS.includes(statKey)) return Math.max(1, Math.floor(base));
 

@@ -1818,6 +1818,137 @@
     }
   };
 
+  const H2D_DAMAGE_METADATA = {
+    'reckless': {
+      id: 'reckless',
+      name: 'Reckless',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER']),
+      bearer: 'Hitmonlee (#106), Rhyhorn (#111), Rhydon (#112), Rhyperior (#464), Staraptor (#398), Emboar (#500), Bouffalant (#626), Basculin (#550)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-reckless.test.js']),
+      description: 'Aumenta em 1.2x (4915/4096) o poder de movimentos que causam dano de recuo (recoil) ou dano por colisão (crash).'
+    },
+    'rock-head': {
+      id: 'rock-head',
+      name: 'Rock Head',
+      generation: 3,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGE_RECOIL']),
+      bearer: 'Geodude (#074), Graveler (#075), Golem (#076), Onix (#095), Cubone (#104), Marowak (#105), Aerodactyl (#142), Steelix (#208), Aggron (#304), Relicanth (#369), Bagon (#371), Shelgon (#372), Basculin-Blue-Striped (#10016)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-rock-head.test.js']),
+      description: 'Protege o portador contra o dano de recuo de seus próprios movimentos (exceto Struggle).'
+    },
+    'toxic-boost': {
+      id: 'toxic-boost',
+      name: 'Toxic Boost',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER']),
+      bearer: 'Zangoose (#335)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-toxic-boost.test.js']),
+      description: 'Aumenta em 1.5x o poder base de movimentos físicos quando o portador está envenenado (Poison ou Toxic).'
+    },
+    'flare-boost': {
+      id: 'flare-boost',
+      name: 'Flare Boost',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER']),
+      bearer: 'Drifloon (#425), Drifblim (#426)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-flare-boost.test.js']),
+      description: 'Aumenta em 1.5x o poder base de movimentos especiais quando o portador está sob queimadura (Burn).'
+    },
+    'analytic': {
+      id: 'analytic',
+      name: 'Analytic',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER']),
+      bearer: 'Magnemite (#081), Magneton (#082), Magnezone (#462), Staryu (#120), Starmie (#121), Porygon (#137), Porygon2 (#233), Porygon-Z (#474), Beheeyem (#606)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-analytic.test.js']),
+      description: 'Aumenta o poder dos movimentos em 5325/4096 (~1.3x) se o portador agir por último ou após o alvo ter agido/entrado no turno.'
+    },
+    'stakeout': {
+      id: 'stakeout',
+      name: 'Stakeout',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_STAT_MODIFY', 'ON_MODIFY_ATK', 'ON_MODIFY_SPA']),
+      bearer: 'Yungoos (#734), Gumshoos (#735), Mabosstiff (#943)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-stakeout.test.js']),
+      description: 'Dobra o atributo ofensivo (Attack ou Special Attack) ao atacar um alvo que acabou de entrar em campo (trocou no mesmo turno).'
+    },
+    'defeatist': {
+      id: 'defeatist',
+      name: 'Defeatist',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_ATK', 'ON_MODIFY_SPA']),
+      bearer: 'Archen (#566), Archeops (#567)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-defeatist.test.js']),
+      description: 'Reduz pela metade (0.5x) o Attack e Special Attack do portador quando seu HP cai para 50% ou menos.'
+    },
+    'gorilla-tactics': {
+      id: 'gorilla-tactics',
+      name: 'Gorilla Tactics',
+      generation: 8,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_ATK', 'ON_DISABLE_MOVE']),
+      bearer: 'Darmanitan-Galar (#10177)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2d-gorilla-tactics.test.js']),
+      description: 'Aumenta o Attack físico em 1.5x, mas restringe o portador a usar apenas o primeiro golpe selecionado até que seja trocado.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -1916,6 +2047,11 @@
 
     if (H2C_DAMAGE_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H2C_DAMAGE_METADATA[slug] }));
+      continue;
+    }
+
+    if (H2D_DAMAGE_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H2D_DAMAGE_METADATA[slug] }));
       continue;
     }
 

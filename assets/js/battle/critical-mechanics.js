@@ -36,7 +36,7 @@ function resolve(move,value,C,attacker=null,defender=null){
   if(defender&&isCriticalBlocked(defender,attacker,move,C))return false;
   return roll(value)<=Math.round(chance(move,C,attacker,defender)*24);
 }
-function stats(a,d,move,C){d=C.Completion.defender(move,d);const physical=move.damageClass==='physical',atkKey=physical?(C.usesDefenseAsAttack(move)?'defense':'attack'):'specialAttack',defKey=physical||C.targetsDefenseWithSpAtk(move)?'defense':'specialDefense';const attacker={...a,statStages:{...a.statStages,[atkKey]:Math.max(0,a.statStages?.[atkKey]||0)}},defender={...d,statStages:{...d.statStages,[defKey]:Math.min(0,d.statStages?.[defKey]||0)}};return {attack:C.getEffectiveStat(attacker,atkKey,move),defense:C.getEffectiveStat(defender,defKey,move)};}
+function stats(a,d,move,C){d=C.Completion.defender(move,d);const physical=move.damageClass==='physical',atkKey=physical?(C.usesDefenseAsAttack(move)?'defense':'attack'):'specialAttack',defKey=physical||C.targetsDefenseWithSpAtk(move)?'defense':'specialDefense';const attacker={...a,statStages:{...a.statStages,[atkKey]:Math.max(0,a.statStages?.[atkKey]||0)}},defender={...d,statStages:{...d.statStages,[defKey]:Math.min(0,d.statStages?.[defKey]||0)}};return {attack:C.getEffectiveStat(attacker,atkKey,move,d),defense:C.getEffectiveStat(defender,defKey,move,a)};}
 const api=Object.freeze({highCriticalIds,guaranteedCritMoveIds,promote,eligible,isCriticalBlocked,multiplier,chance,roll,resolve,stats});
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else window.PBACriticalMechanics=api;
 })();

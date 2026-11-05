@@ -287,15 +287,15 @@
       let attackStat;
       let defenseStat;
       if (damageClass === 'special') {
-        attackStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack', evalMove) : attacker.specialAttack) || 1;
+        attackStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack', evalMove, defender) : attacker.specialAttack) || 1;
         defenseStat = Number(constants?.targetsDefenseWithSpAtk?.(move)
-          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', evalMove) : defender.defense)
-          : (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense', evalMove) : defender.specialDefense)) || 1;
+          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', evalMove, attacker) : defender.defense)
+          : (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense', evalMove, attacker) : defender.specialDefense)) || 1;
       } else {
         attackStat = Number(constants?.usesDefenseAsAttack?.(move)
-          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense', evalMove) : attacker.defense)
-          : (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack', evalMove) : attacker.attack)) || 1;
-        defenseStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', evalMove) : defender.defense) || 1;
+          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense', evalMove, defender) : attacker.defense)
+          : (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack', evalMove, defender) : attacker.attack)) || 1;
+        defenseStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', evalMove, attacker) : defender.defense) || 1;
       }
 
       // 2. STAB (Same-Type Attack Bonus)
@@ -508,10 +508,14 @@
           )
         : 0;
 
-      const recoilRatio = constants?.getRecoilRatio?.(move) || 0;
-      const expectedRecoil = (recoilRatio > 0 && cappedExpectedDamage > 0)
-        ? Math.max(1, Math.floor(cappedExpectedDamage * recoilRatio))
-        : 0;
+      const isChloroblast = move?.id === 835 || String(move?.name || '').trim().toLowerCase() === 'chloroblast' || move?.recoilMaxHpRatio > 0;
+      const hasRockHead = (constants?.P7?.ability?.(attacker) === 'rock-head');
+      const recoilRatio = hasRockHead ? 0 : (constants?.getRecoilRatio?.(move) || 0);
+      const expectedRecoil = hasRockHead
+        ? 0
+        : (isChloroblast
+          ? Math.max(1, Math.ceil((Number(attacker.maxHp) || 100) * (move?.recoilMaxHpRatio || 0.5)))
+          : (recoilRatio > 0 && cappedExpectedDamage > 0 ? Math.max(1, Math.floor(cappedExpectedDamage * recoilRatio)) : 0));
       const isContact = Boolean(constants?.MoveFlags?.isContactMove ? constants.MoveFlags.isContactMove(move, constants.P5?.contactIds) : constants.P5?.contactIds?.includes(move.id));
       const rawDefAbility = defender.abilitySuppressed ? '' : (defender.ability || '');
       const isRoughBarbs = isContact && ['rough-skin', 'iron-barbs'].includes(rawDefAbility) && constants?.P7?.ability?.(attacker) !== 'magic-guard';

@@ -434,9 +434,103 @@ Lote conjunto de oito habilidades canônicas de modificação de dano, atributos
    - Não ultrapassa nem altera imunidades elementares de tipo (`0×` continua causando 0 de dano).
    - Não afeta danos neutros ou super efetivos. Suprimível por Neutralizing Gas.
 
+#### H2-D — Modificadores Ofensivos, Recoil, Condições e Bloqueio (Reckless, Rock Head, Toxic Boost, Flare Boost, Analytic, Stakeout, Defeatist, Gorilla Tactics) (CONCLUÍDO)
+
+*Nota de Governança sobre a Formação do Lote:* O macroplanejamento original agrupou 49 habilidades na família H2 sem subdivisões alfabéticas prévias. O lote H2-D foi delimitado operacionalmente durante o avanço do projeto, selecionando as próximas oito habilidades elegíveis da família H2 conforme a diretriz operacional vigente à época (lotes H1-B a H2-D) de oito habilidades por lote para assegurar validação, testes determinísticos e rastreabilidade rigorosas.
+
+Lote conjunto de oito habilidades canônicas de modificação de poder, imunidade a recuo, ativação por status, cadência de turnos, troca adversária, mitigação por HP e Choice lock na Geração IX:
+
+1. **`reckless`** (Gen IV-IX):
+   - Multiplica o poder de movimentos com recuo de HP proporcional ao dano causado ou crash damage por 4915/4096 (~1.2×) em `P7.power`.
+   - Compatível com Double-Edge, Brave Bird, Head Charge, Wood Hammer, Head Smash, High Jump Kick, Jump Kick, Axe Kick e Supercell Slam.
+   - Não bonifica Chloroblast (#835), que opera como perda direta de metade do HP máximo e não recuo proporcional.
+   - Suprimível por Neutralizing Gas.
+
+2. **`rock-head`** (Gen III-IX):
+   - Previne integralmente o dano de recuo causado por movimentos do usuário (Double-Edge, Head Smash, Wave Crash e o dano de recuo de 50% max HP de Chloroblast #835) em `battle-engine.js` (recoil bypass).
+   - Não previne o dano de auto-recuo de Struggle, dano de crash por erro de High Jump Kick ou dano residual de Life Orb.
+   - Suprimível por Neutralizing Gas.
+
+3. **`toxic-boost`** (Gen V-IX):
+   - Multiplica o poder de movimentos físicos por 1.5× (`f *= 1.5`) em `P7.power` quando o portador estiver com status de envenenamento regular (`psn`) ou grave (`tox`).
+   - Não bonifica movimentos especiais nem ativa quando saudável ou com outros status.
+   - Suprimível por Neutralizing Gas.
+
+4. **`flare-boost`** (Gen V-IX):
+   - Multiplica o poder de movimentos especiais por 1.5× (`f *= 1.5`) em `P7.power` quando o portador estiver queimado (`brn`).
+   - Não bonifica movimentos físicos nem ativa quando saudável ou com outros status.
+   - Suprimível por Neutralizing Gas.
+
+5. **`analytic`** (Gen V-IX):
+   - Multiplica o poder do movimento por 5325/4096 (~1.3×) em `P7.power` se o defensor já tiver agido no turno (`actedThisTurn`) ou tiver entrado em campo via troca neste turno (`switchedInThisTurn`).
+   - Não bonifica se o atacante agir antes do defensor ou em movimentos de status.
+   - Suprimível por Neutralizing Gas.
+
+6. **`stakeout`** (Gen VII-IX):
+   - Dobra o atributo ofensivo efetivo (Attack ou Special Attack por 2.0× em `P7.stat` via estágios `onModifyAtk` e `onModifySpA` canônicos do Pokémon Showdown) contra um defensor que entrou em combate via troca voluntária, troca forçada ou pivô no mesmo turno corrente (`d.switchedInThisTurn === true`).
+   - Não ativa no turno seguinte a uma troca, contra substitutos enviados entre turnos após um desmaio, ou contra o lead no início do combate.
+   - Válido para ataques físicos e especiais; respeita a fórmula canônica onde a duplicação do stat ocorre antes da divisão pela Defesa e da constante `+ 2`.
+   - Suprimível por Neutralizing Gas.
+
+7. **`defeatist`** (Gen V-IX):
+   - Reduz os atributos Attack e Special Attack efetivos pela metade (`f *= 0.5`) em `P7.stat` quando o HP atual for menor ou igual a 50% do HP máximo (`currentHp <= maxHp / 2`).
+   - Não afeta Defense, Special Defense ou Speed. Restaura os atributos plenos quando o HP for recuperado acima de 50%.
+   - Suprimível por Neutralizing Gas.
+
+8. **`gorilla-tactics`** (Gen VIII-IX):
+   - Multiplica o atributo Attack físico efetivo por 1.5× (`f *= 1.5`) em `P7.stat` (incompatível com Dynamax).
+   - Trava o Pokémon no primeiro movimento selecionado (`choiceLock`), rejeitando a seleção de qualquer outro movimento (`ACTION_REJECTED`) até ser trocado de campo. Movimento Struggle (ID 165) não aplica trava.
+   - Multiplica cumulativamente com Choice Band (1.5 × 1.5 = 2.25× de Attack).
+   - Suprimível por Neutralizing Gas (ao ser suprimido, restaura o Attack original e libera a escolha de movimentos).
+
+#### Decisão de Governança — Nova Política de Lotes (05/11/2026)
+
+> **Decisão do responsável pelo projeto:** a partir da H2-E, os novos lotes de implementação de habilidades Pokémon deverão conter 10 habilidades por lote, exceto o lote final de uma fase quando restarem menos de 10 habilidades elegíveis. O histórico dos lotes anteriores deve ser preservado. A alteração de quantidade não reduz os critérios de testes, auditoria, documentação ou governança Git.
+
+- **Preservação Histórica:** Os lotes H1-B (8), H1-C (8), H1-D (8), H2-A (8), H2-B (8), H2-C (8) e H2-D (8) permanecem registrados exatamente como implementados e homologados. A H2-D mantém suas oito habilidades e não sofre alteração retroativa.
+- **Aplicação:** A nova regra de 10 habilidades passa a vigorar a partir de H2-E. Com 13 pendências restantes na fase H2, a divisão oficial para conclusão de H2 é:
+  - **H2-E (10 habilidades):** Lote padrão completo de dez habilidades.
+  - **H2-F (3 habilidades):** Lote residual de encerramento da fase H2 com as 3 habilidades finais.
+
+#### H2-E — Modificadores Ofensivos, Evasão, Peso e Mecânicas Especiais (PLANEJADO — 10 Habilidades)
+
+*Status: Planejamento oficial aprovado sob a nova política de 10 habilidades por lote. Não implementado nesta etapa.*
+
+1. **`illuminate`** (Gen III-IX):
+   - Em batalha (Gen IX SV): previne que a Accuracy do portador seja reduzida por movimentos adversários e ignora modificadores de Evasion do defensor (efeito idêntico a Keen Eye).
+2. **`skill-link`** (Gen IV-IX):
+   - Garante que movimentos de múltiplos acertos aleatórios (2 a 5 golpes, ex: Bullet Seed, Icicle Spear, Rock Blast, Tail Slap, Pin Missile) sempre atinjam o número máximo de 5 acertos.
+3. **`quick-feet`** (Gen IV-IX):
+   - Multiplica o Speed efetivo por 1.5× quando o portador sofre de uma condição de status principal (`brn`, `par`, `psn`, `tox`, `slp`, `frz`). Ignora a penalidade de 50% de velocidade de paralisia.
+4. **`unaware`** (Gen IV-IX):
+   - Ao atacar, ignora os estágios de Defense e Special Defense do defensor. Ao defender, ignora os estágios de Attack e Special Attack do atacante. Não ignora estágios de Speed.
+5. **`sheer-force`** (Gen V-IX):
+   - Aumenta em 1.3× (5325/4096) o poder base de movimentos que possuem efeitos secundários com chance percentual (`secondary.chance`), removendo a chance de ativação do efeito secundário. Nega o dano de recuo de Life Orb ao utilizar movimentos elegíveis.
+6. **`heavy-metal`** (Gen V-IX):
+   - Dobra o peso corporal efetivo do combatente em batalha (influencia Grass Knot, Low Kick, Heavy Slam e Heat Crash).
+7. **`light-metal`** (Gen V-IX):
+   - Reduz pela metade (0.5×) o peso corporal efetivo do combatente em batalha.
+8. **`rivalry`** (Gen IV-IX):
+   - Multiplica o dano por 1.25× contra alvos do mesmo gênero e por 0.75× contra alvos do gênero oposto. Permanece neutro (1.0×) se o atacante ou defensor for genderless.
+9. **`minds-eye`** (Gen IX):
+   - Permite que golpes Normal e Fighting causem dano neutro contra alvos Ghost; impede redução de Accuracy e ignora estágios de Evasion adversários (combina Scrappy + Keen Eye).
+10. **`long-reach`** (Gen VII-IX):
+    - Executa todos os movimentos do portador sem efetuar contato físico, prevenindo ativações de Rough Skin, Iron Barbs, Rocky Helmet, Flame Body, Static, Effect Spore, etc.
+
+#### H2-F — Efeitos Secundários, Imunidades e Estágios (PLANEJADO — 3 Habilidades — Fechamento H2)
+
+*Status: Planejamento oficial de encerramento da família H2 (lote residual final de 3 habilidades). Não implementado nesta etapa.*
+
+1. **`scrappy`** (Gen IV-IX):
+   - Permite que golpes Normal e Fighting atinjam Pokémon do tipo Ghost com efetividade normal de tipo. Concede imunidade a Intimidate (Gen VIII+).
+2. **`serene-grace`** (Gen III-IX):
+   - Dobra a probabilidade percentual de ativação de todos os efeitos secundários de movimentos do usuário (ex: 30% vira 60%, 10% vira 20%). Não aumenta dano direto.
+3. **`simple`** (Gen IV-IX):
+   - Dobra a magnitude de qualquer alteração de estágio de atributo recebida pelo usuário (+1 vira +2, -1 vira -2, etc.).
+
 ### H2 — Dano, atributos, precisão e críticos
 
-**Inventário:** 21 habilidades pendentes (29 antes do lote H2-C, 37 antes do lote H2-B, 44 antes do lote H2-A); 73 registros com habilidade padrão afetados.
+**Inventário:** 13 habilidades pendentes (21 antes do lote H2-D, 29 antes do lote H2-C, 37 antes do lote H2-B, 44 antes do lote H2-A); registros com habilidade padrão afetados atualizados.
 
 **Dependências:** H0; flags canônicas e regras de críticos/efeitos secundários.
 
