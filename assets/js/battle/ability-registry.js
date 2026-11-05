@@ -898,6 +898,137 @@
       description: 'Ao entrar em campo, assume a aparência visual (nome, sprite, arte e tipo aparente) do último Pokémon consciente da equipe do jogador. Preserva integralmente atributos, movimentos, tipo real para cálculos de dano e mecânicas verdadeiras. O disfarce se desfaz ao sofrer dano direto de um ataque adversário ou ao Teracristalizar.'
     }
   };
+
+  const H7A_METADATA = {
+    'trace': {
+      id: 'trace',
+      name: 'Trace',
+      generation: 3,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY']),
+      bearer: 'Gardevoir (#282), Porygon2 (#233)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-trace.test.js']),
+      description: 'Ao entrar em campo, copia a habilidade de um Pokémon adversário adjacente elegível. Respeita habilidades não copiáveis e Ability Shield.'
+    },
+    'mummy': {
+      id: 'mummy',
+      name: 'Mummy',
+      generation: 5,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_CONTACT_DEFENSE']),
+      bearer: 'Cofagrigus (#563), Yamask (#562)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-mummy.test.js']),
+      description: 'Quando o portador é atingido por um ataque que faz contato físico, a habilidade do agressor é alterada para Mummy. Não afeta habilidades protegidas ou portadores de Ability Shield.'
+    },
+    'receiver': {
+      id: 'receiver',
+      name: 'Receiver',
+      generation: 7,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ALLY_FAINT']),
+      bearer: 'Passimian (#766)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-receiver.test.js']),
+      description: 'Herda a habilidade de um aliado quando ele é nocauteado em batalha de duplas. Não herda habilidades excluídas ou protegidas.'
+    },
+    'power-of-alchemy': {
+      id: 'power-of-alchemy',
+      name: 'Power of Alchemy',
+      generation: 7,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ALLY_FAINT']),
+      bearer: 'Alolan Muk (#10113), Alolan Grimer (#10112)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-power-of-alchemy.test.js']),
+      description: 'Herda a habilidade de um aliado quando ele é nocauteado em batalha de duplas. Não herda habilidades excluídas ou protegidas.'
+    },
+    'wandering-spirit': {
+      id: 'wandering-spirit',
+      name: 'Wandering Spirit',
+      generation: 8,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_CONTACT_DEFENSE']),
+      bearer: 'Runerigus (#867), Galarian Yamask (#10179)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-wandering-spirit.test.js']),
+      description: 'Quando o portador é atingido por um ataque de contato, suas habilidades são trocadas com as do atacante de forma atômica. Respeita restrições canônicas de troca e Ability Shield.'
+    },
+    'neutralizing-gas': {
+      id: 'neutralizing-gas',
+      name: 'Neutralizing Gas',
+      generation: 8,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'ON_SWITCH', 'ON_FAINT']),
+      bearer: 'Weezing (#110), Galarian Weezing (#10167), Koffing (#109)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-neutralizing-gas.test.js']),
+      description: 'Enquanto o portador estiver consciente e ativo em campo, neutraliza os efeitos de todas as habilidades passíveis de supressão de todos os combatentes. Não suprime habilidades especiais protegidas nem portadores de Ability Shield.'
+    },
+    'lingering-aroma': {
+      id: 'lingering-aroma',
+      name: 'Lingering Aroma',
+      generation: 9,
+      phase: 'H7',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_CONTACT_DEFENSE']),
+      bearer: 'Oinkologne (#916), Lechonk (#915)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-lingering-aroma.test.js']),
+      description: 'Quando o portador é atingido por um ataque que faz contato físico, a habilidade do agressor é alterada para Lingering Aroma. Não afeta habilidades protegidas ou portadores de Ability Shield.'
+    },
+    'soul-heart': {
+      id: 'soul-heart',
+      name: 'Soul-Heart',
+      generation: 7,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ANY_FAINT']),
+      bearer: 'Magearna (#801, #10147)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h7a-soul-heart.test.js']),
+      description: 'Aumenta o Special Attack do portador em 1 estágio (+1) sempre que qualquer outro Pokémon desmaia no campo de batalha, independentemente de quem causou o nocaute.'
+    }
+  };
   // Registry map
   const registry = new Map();
 
@@ -961,6 +1092,11 @@
 
     if (H6G_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6G_METADATA[slug] }));
+      continue;
+    }
+
+    if (H7A_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H7A_METADATA[slug] }));
       continue;
     }
 

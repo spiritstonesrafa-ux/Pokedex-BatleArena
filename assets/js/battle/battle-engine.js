@@ -276,7 +276,7 @@
         })),
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
-        ability:constants.P7.normalizeAbility(raw.ability),item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,proteanUsed:false,battleBondTriggered:false,zeroToHeroTransformed:false,mimicryOriginalTypes:null,
+        ability:constants.P7.normalizeAbility(raw.ability),originalAbility:null,neutralizingGasSuppressed:false,item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,proteanUsed:false,battleBondTriggered:false,zeroToHeroTransformed:false,mimicryOriginalTypes:null,
         bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
@@ -546,6 +546,7 @@
         pokemon.confusionTurns = 0;
         pokemon.toxicStage = 0;
         events.push({ type: BATTLE_EVENTS.POKEMON_FAINTED, target: role, pokemonName: pokemon.name });
+        constants.P7.handleFaint?.(state, role, pokemon, constants, events);
       }
       if(state.battleFormat==='DOUBLES')return;
       const defeated = roles.filter(role => state.version === 1 ||

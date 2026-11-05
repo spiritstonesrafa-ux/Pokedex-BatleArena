@@ -76,7 +76,7 @@ A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes c
 
 ### H1 — Bônus de entrada, nocaute e reações
 
-**Inventário:** 32 habilidades pendentes; 75 registros com habilidade padrão afetados.
+**Inventário:** 25 habilidades pendentes (H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A); 75 registros com habilidade padrão afetados.
 
 **Dependências:** H0; autoria de KO, estágios e eventos de entrada existentes.
 
@@ -357,7 +357,64 @@ Lote unificado de quatro habilidades canônicas de alteração de forma e tipage
 
 ### H7 — Cópia, troca e supressão de habilidades
 
-**Inventário:** 7 habilidades pendentes; 11 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (concluído integralmente no lote H7-A); 11 registros com habilidade padrão afetados.
+
+**Dependências:** H0; registro de habilidades copiáveis/anuláveis; integração incremental com H1–H6.
+
+#### H7-A — Cópia, Troca, Supressão e Herança de Habilidades (Trace, Mummy, Lingering Aroma, Wandering Spirit, Receiver, Power of Alchemy, Neutralizing Gas, Soul-Heart) (CONCLUÍDO)
+
+Lote unificado de oito habilidades canônicas de cópia, troca, contágio, supressão e herança na Geração IX (incluindo Soul-Heart da fase H1):
+
+1. **`trace`** (Gen III-IX):
+   - Ao entrar em campo (`start` / `enter`), copia a habilidade de um oponente ativo no campo.
+   - Respeita rigorosamente a lista canônica de habilidades incopiáveis (`untraceableAbilities`: As One, Battle Bond, Comatose, Commander, Disguise, Gulp Missile, Ice Face, Illusion, Multitype, Neutralizing Gas, Power Construct, Protosynthesis, Quark Drive, RKS System, Receiver, Power of Alchemy, Schooling, Shields Down, Stance Change, Tera Shift, Tera Shell, Teraform Zero, Trace, Wonder Guard, Zero to Hero, Zen Mode, etc.).
+   - Dispara imediatamente habilidades de entrada copiadas (Intimidate, Drizzle, Drought, Sand Stream, Snow Warning, Electric/Grassy/Misty/Psychic Surge, Intrepid Sword, Dauntless Shield).
+   - Reverte para `trace` ao sair de campo ou ao final da batalha.
+   - Coberto por 10 testes determinísticos em `tests/battle/abilities-h7a-trace.test.js`.
+
+2. **`mummy`** (Gen V-IX):
+   - Ao receber dano de golpe com contato físico (`contact`), altera a habilidade do atacante para `mummy`.
+   - Respeita a lista canônica de habilidades inalteráveis (`unoverwritableAbilities`).
+   - Bloqueado por Ability Shield do atacante.
+   - Não ativa se o defensor já estiver nocauteado antes da resolução de contato.
+   - Reverte no fim da batalha.
+   - Coberto por 9 testes determinísticos em `tests/battle/abilities-h7a-mummy.test.js`.
+
+3. **`lingering-aroma`** (Gen IX):
+   - Ao receber dano de golpe de contato direto, substitui a habilidade do atacante por `lingering-aroma`.
+   - Respeita as mesmas proteções canônicas de Mummy e interação com Ability Shield.
+   - Coberto por 9 testes determinísticos em `tests/battle/abilities-h7a-lingering-aroma.test.js`.
+
+4. **`wandering-spirit`** (Gen VIII-IX):
+   - Ao receber dano de golpe de contato, troca mutuamente as habilidades entre o atacante e o defensor.
+   - Respeita a lista de habilidades que não podem ser trocadas (`unswappableAbilities`).
+   - Bloqueado se qualquer uma das partes segurar Ability Shield.
+   - Reverte na saída ou fim da batalha.
+   - Coberto por 9 testes determinísticos em `tests/battle/abilities-h7a-wandering-spirit.test.js`.
+
+5. **`receiver`** (Gen VII-IX):
+   - Em batalhas de duplas, ao desmaiar um aliado consciente, herda a habilidade do aliado nocauteado.
+   - Respeita a lista canônica de habilidades não herdáveis (`noReceiverAbilities`).
+   - Dispara efeitos de entrada se a habilidade herdada for de entrada.
+   - Coberto por 8 testes determinísticos em `tests/battle/abilities-h7a-receiver.test.js`.
+
+6. **`power-of-alchemy`** (Gen VII-IX):
+   - Mecânica canônica idêntica a Receiver (Alolan Muk #10113).
+   - Herda a habilidade do parceiro nocauteado em duplas, respeitando exceções canônicas.
+   - Coberto por 8 testes determinísticos em `tests/battle/abilities-h7a-power-of-alchemy.test.js`.
+
+7. **`neutralizing-gas`** (Gen VIII-IX):
+   - Ao entrar em campo ou iniciar combate com Weezing (#110) ou Galarian Weezing (#10167), neutraliza todas as habilidades dos demais Pokémon em campo (`neutralizingGasSuppressed`).
+   - Respeita estritamente a lista de habilidades imunes ao gás (`unsuppressibleGasAbilities`: As One, Battle Bond, Comatose, Commander, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Tera Shell, Teraform Zero, Zen Mode, Zero to Hero).
+   - Ao sair de campo ou desmaiar (inclusive último Weezing presente em campo se houver dois), o gás se dissipa (`NEUTRALIZING_GAS_ENDED`), recalculando o campo, reativando habilidades passivas/estáticas e verificando Trace para ativos elegíveis.
+   - Coberto por 11 testes determinísticos em `tests/battle/abilities-h7a-neutralizing-gas.test.js`.
+
+8. **`soul-heart`** (Gen VII-IX, Fase H1):
+   - Ao desmaiar qualquer Pokémon em campo (aliado ou adversário, por qualquer causa direta ou indireta), aumenta o Special Attack de Magearna (#801) em 1 estágio (+1 SpA).
+   - Não ativa se Magearna estiver com Special Attack em +6 ou se Magearna também tiver desmaiado.
+   - Coberto por 9 testes determinísticos em `tests/battle/abilities-h7a-soul-heart.test.js`.
+
+**Lista restante de H7 (0 pendentes):** Concluído integralmente.
 
 **Dependências:** H0; registro de habilidades copiáveis/anuláveis; integração incremental com H1–H6.
 
