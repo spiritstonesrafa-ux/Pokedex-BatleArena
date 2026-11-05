@@ -700,6 +700,73 @@
     }
   };
 
+  const H6F_METADATA = {
+    'forecast': {
+      id: 'forecast',
+      name: 'Forecast',
+      generation: 3,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'ON_WEATHER_CHANGE']),
+      bearer: 'Castform (#351, #10013-#10015)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6f-forecast.test.js']),
+      description: 'Castform muda de forma e tipo de acordo com as condições climáticas efetivas: Sunny Form (#10013, Fire) sob sol, Rainy Form (#10014, Water) sob chuva, Snowy Form (#10015, Ice) sob neve/granizo, e Normal (#351, Normal) em clima neutro, tempestade de areia ou sob anulação de clima por Cloud Nine/Air Lock. Reverte à forma Normal ao sair de campo ou sob supressão de habilidade.'
+    },
+    'zen-mode': {
+      id: 'zen-mode',
+      name: 'Zen Mode',
+      generation: 5,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL_START']),
+      bearer: 'Darmanitan (#555, #10017, #10177, #10178)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6f-zen-mode.test.js']),
+      description: 'No final do turno, se Darmanitan de Unova (#555) estiver com 50% ou menos de seu HP máximo, assume a Zen Mode (#10017, Fire/Psychic), recalculando seus atributos para alta capacidade especial e defensiva. Se curado acima de 50%, reverte ao Standard Mode. Para Darmanitan de Galar (#10177), assume a Galarian Zen Mode (#10178, Ice/Fire) com alta Velocidade e Ataque físico. Sempre retorna ao Standard Mode ao sair do campo. Não pode ser suprimida, copiada ou trocada.'
+    },
+    'mimicry': {
+      id: 'mimicry',
+      name: 'Mimicry',
+      generation: 8,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'ON_TERRAIN_CHANGE']),
+      bearer: 'Galarian Stunfisk (#10180)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h6f-mimicry.test.js']),
+      description: 'Altera a tipagem do usuário para um tipo único correspondente ao terreno ativo: Electric sob Electric Terrain, Grass sob Grassy Terrain, Fairy sob Misty Terrain e Psychic sob Psychic Terrain. Se o terreno expirar, for removido ou o usuário deixar o campo, restaura sua tipagem original (Ground/Steel). Não depende de estar no chão (grounded) e é sobreposta por Teracristalização.'
+    },
+    'zero-to-hero': {
+      id: 'zero-to-hero',
+      name: 'Zero to Hero',
+      generation: 9,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SWITCH_OUT', 'ON_ENTRY']),
+      bearer: 'Palafin (#964, #10256)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6f-zero-to-hero.test.js']),
+      description: 'Palafin inicia o combate na Zero Form (#964). Na primeira saída válida do campo de batalha (troca voluntária, movimento pivot ou troca forçada) sem desmaiar, transforma-se na Hero Form (#10256), ganhando atributos substancialmente aumentados que permanecem pelo restante do combate. Reentradas e trocas subsequentes preservam a Hero Form. Reverte à Zero Form em nova batalha. Não pode ser suprimida, copiada ou trocada.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -753,6 +820,11 @@
 
     if (H6E_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6E_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6F_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6F_METADATA[slug] }));
       continue;
     }
 

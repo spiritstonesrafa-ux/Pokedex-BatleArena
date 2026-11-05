@@ -136,7 +136,7 @@ Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída f
 
 ### H6 — Tipos e mudanças de forma
 
-**Inventário:** 12 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C, 1 em H6-D, 1 em H6-E); 27 registros com habilidade padrão afetados.
+**Inventário:** 8 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C, 1 em H6-D, 1 em H6-E, 4 em H6-F); 27 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H2/H3/H4 conforme forma; base comum de exceções de H7.
 
@@ -266,7 +266,46 @@ Lote canônico focado na mecânica de fortalecimento canônico de Greninja na Ge
    - **Compatibilidade total:** Coberto com Terastallization (mantém tipo Tera), Dynamax, Duplas (KOs em área ativam apenas uma vez), composição com itens de Choice (Choice Scarf, Specs, Band) e IA determinística pura.
    - Coberto por 48 testes determinísticos em `tests/battle/abilities-h6e.test.js`.
 
-**Lista restante de H6 (12 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `disguise`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `zero-to-hero`, `gulp-missile`.
+#### H6-F — Mudanças de Forma e Tipos Condicionais (Forecast, Zen Mode, Mimicry, Zero to Hero) (CONCLUÍDO)
+
+Lote unificado de quatro habilidades canônicas de alteração de forma e tipagem condicional na Geração IX:
+
+1. **`forecast`** (Gen III-IX):
+   - Transforma Castform (#351) dinamicamente conforme o clima ativo no campo: Sun -> Sunny Form (#10013, Fire), Rain -> Rainy Form (#10014, Water), Snow/Hail -> Snowy Form (#10015, Ice).
+   - Em clima neutro, Sandstorm ou sob anulação climática (Cloud Nine / Air Lock), Castform reverte à forma Normal (#351).
+   - Reversão instantânea ao expirar o clima, ser suprimida (Gastro Acid / Neutralizing Gas) ou ao sair do campo.
+   - Preserva tipagem Terastal ativa quando Terastallizado.
+   - Coberto por 14 testes determinísticos em `tests/battle/abilities-h6f-forecast.test.js`.
+
+2. **`zen-mode`** (Gen V-IX):
+   - Ativa no final do turno (`endTurn`) para Darmanitan com HP <= 50%:
+     - Unova (#555, Fire) -> Zen Mode (#10017, Fire/Psychic; Atk 30, Def 105, SpA 140, SpD 105, Spe 55).
+     - Galar (#10177, Ice) -> Galarian Zen Mode (#10178, Ice/Fire; Atk 160, Def 55, SpA 30, SpD 55, Spe 135).
+   - Ao ser curado para HP > 50%, reverte ao Standard Mode correspondente no fim do turno.
+   - Ao trocar para reserva ou desmaiar, reverte à forma Standard.
+   - Insuprimível (`suppressible: false`) e incopiável (`copyable: false`) na Geração IX.
+   - Coberto por 12 testes determinísticos em `tests/battle/abilities-h6f-zen-mode.test.js`.
+
+3. **`mimicry`** (Gen VIII-IX):
+   - Altera dinamicamente a tipagem do portador (Galarian Stunfisk #10180) conforme o terreno ativo em campo:
+     - Electric Terrain -> `['electric']`.
+     - Grassy Terrain -> `['grass']`.
+     - Misty Terrain -> `['fairy']`.
+     - Psychic Terrain -> `['psychic']`.
+   - Reverte para `['ground', 'steel']` quando o terreno expira, é destruído (Ice Spinner #861), limpo (Defog #432), ao sair de campo ou ao ter a habilidade suprimida.
+   - Terastallização sobrepõe e bloqueia a tipagem de Mimicry.
+   - Coberto por 14 testes determinísticos em `tests/battle/abilities-h6f-mimicry.test.js`.
+
+4. **`zero-to-hero`** (Gen IX):
+   - Palafin (#964) inicia em Zero Form (Atk 70, Def 72, SpA 53, SpD 62, Spe 100).
+   - Ao sair do campo vivo (`m.currentHp > 0`), seja por troca voluntária, pivot moves (Flip Turn #812, U-turn, Baton Pass, Chilly Reception) ou troca forçada (Dragon Tail, Roar), transforma-se em Hero Form (#10256; Atk 160, Def 97, SpA 106, SpD 87, Spe 100).
+   - Ao reentrar em campo em Hero Form, anuncia a ativação de `zero-to-hero`. A transformação permanece ativa em trocas subsequentes pelo restante da batalha.
+   - Nocaute antes da troca NÃO ativa a transformação.
+   - Insuprimível (`suppressible: false`) e incopiável (`copyable: false`).
+   - Reverte para Zero Form no fim da batalha; novas batalhas iniciam limpas na Zero Form.
+   - Coberto por 12 testes determinísticos em `tests/battle/abilities-h6f-zero-to-hero.test.js`.
+
+**Lista restante de H6 (8 pendentes):** `multitype`, `illusion`, `stance-change`, `disguise`, `power-construct`, `rks-system`, `ice-face`, `gulp-missile`.
 
 ### H7 — Cópia, troca e supressão de habilidades
 

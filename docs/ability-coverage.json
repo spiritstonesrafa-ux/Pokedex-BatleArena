@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 112,
+    "declaredSupported": 116,
     "assignedAbilities": 313,
-    "assignedPending": 202,
+    "assignedPending": 198,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 553
+    "recordsWithPendingDefault": 546
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 12,
-      "defaultRecordsImpacted": 27
+      "assignedPending": 8,
+      "defaultRecordsImpacted": 20
     },
     {
       "id": "H7",
@@ -4527,8 +4527,8 @@
     },
     {
       "name": "forecast",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -10205,8 +10205,8 @@
     },
     {
       "name": "mimicry",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -23118,8 +23118,8 @@
     },
     {
       "name": "zen-mode",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -23152,8 +23152,8 @@
     },
     {
       "name": "zero-to-hero",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
