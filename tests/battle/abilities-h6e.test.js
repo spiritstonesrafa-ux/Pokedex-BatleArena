@@ -293,6 +293,34 @@ test('H6-E Fresh Battle: novo combate reseta battleBondTriggered para false', ()
   assert.equal(combatant.battleBondTriggered, false);
 });
 
+test('H6-E FIX01: nova batalha reseta battleBondTriggered para false mesmo se raw contiver battleBondTriggered: true', () => {
+  // 1. Preparar Greninja-Bond #10116 com battle-bond
+  // 2. Fornecer um objeto raw contendo battleBondTriggered: true
+  const rawGreninja = greninja([56], { battleBondTriggered: true, specialAttack: 500 });
+  assert.equal(rawGreninja.battleBondTriggered, true);
+
+  // 3. Iniciar uma nova batalha por sua API pública
+  const s = E.createTeamBattle(
+    team(rawGreninja),
+    team(mon(2, [14], { hp: 1 }), mon(3), mon(4))
+  );
+
+  // 4. Confirmar se a flag é reiniciada para false
+  const combatant = s.player.team[0];
+  assert.equal(combatant.battleBondTriggered, false);
+
+  // 5. Executar um KO elegível, com adversários restantes
+  const r = turn(s, 56);
+  const postKoGreninja = r.state.player.team[0];
+
+  // 6. Confirmar se Battle Bond ativa normalmente, concedendo +1 Attack, +1 Special Attack e +1 Speed
+  assert.equal(postKoGreninja.battleBondTriggered, true);
+  assert.equal(postKoGreninja.statStages.attack, 1);
+  assert.equal(postKoGreninja.statStages.specialAttack, 1);
+  assert.equal(postKoGreninja.statStages.speed, 1);
+  assert.ok(r.events.some(e => e.reason === 'P7_ABILITY' && e.label === 'battle-bond'));
+});
+
 // ============================================================================
 // N.5: SIMULTANEOUS FAINT & RECOIL KO
 // ============================================================================
