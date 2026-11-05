@@ -388,9 +388,55 @@ Lote conjunto de oito habilidades canônicas de cálculo de precisão, evasão, 
    - Enquanto o portador estiver confuso (`confusionTurns > 0`), a precisão de movimentos direcionados a ele é multiplicada por 0.5 (reduzida pela metade).
    - Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
 
+#### H2-C — Modificadores de Dano e Atributos Defensivos (Fur Coat, Fluffy, Ice Scales, Heatproof, Shadow Shield, Water Bubble, Punk Rock, Tinted Lens) (CONCLUÍDO)
+
+Lote conjunto de oito habilidades canônicas de modificação de dano, atributos defensivos e ofensivos, efetividade e dano residual na Geração IX:
+
+1. **`fur-coat`** (Gen VI-IX):
+   - Dobra o atributo Defense efetivo do portador (`onModifyDef` -> `f *= 2`).
+   - Aplica-se a ataques físicos e golpes especiais que calculam dano contra Defense (ex: Psyshock, Secret Sword).
+   - Quebrável por Mold Breaker, Teravolt e Turboblaze (salvo Ability Shield). Suprimível por Neutralizing Gas.
+
+2. **`fluffy`** (Gen VII-IX):
+   - Reduz pela metade (`0.5×`) o dano recebido de golpes com a flag canônica `contact`.
+   - Dobra (`2.0×`) o dano recebido de ataques do tipo Fogo.
+   - Golpes de Fogo que façam contato combinam ambos os efeitos de forma neutra (`0.5 × 2.0 = 1.0×`).
+   - Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
+
+3. **`ice-scales`** (Gen VIII-IX):
+   - Reduz pela metade (`0.5×`) o dano recebido de movimentos de categoria `Special`.
+   - Baseia-se exclusivamente na categoria do movimento (`damageClass === 'special'`), protegendo inclusive contra especiais que miram na Defense.
+   - Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
+
+4. **`heatproof`** (Gen IV-IX):
+   - Reduz pela metade (`0.5×`) o dano de ataques do tipo Fogo recebidos.
+   - Reduz pela metade o dano residual por turno causado por Queimadura (`burn`), de 1/16 para 1/32 do HP máximo.
+   - Não concede imunidade a Burn. Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
+
+5. **`shadow-shield`** (Gen VII-IX):
+   - Reduz pela metade (`0.5×`) o dano de ataques sofridos quando o portador está com HP cheio (`currentHp === maxHp`).
+   - Habilidade inquebrável por Mold Breaker (`flags: {}`), mantendo a redução mesmo contra Moongeist Beam ou atacantes com Mold Breaker.
+   - Em golpes multi-hit, apenas o primeiro acerto com HP cheio é reduzido. Suprimível por Neutralizing Gas.
+
+6. **`water-bubble`** (Gen VII-IX):
+   - Dobra o atributo ofensivo efetivo (Attack e Sp. Attack) ao utilizar movimentos do tipo Água (`2.0×`).
+   - Reduz pela metade (`0.5×`) o poder ofensivo de golpes do tipo Fogo sofridos pelo portador.
+   - Concede imunidade completa à Queimadura (`burn`) e cura imediatamente a condição caso volte a ficar ativa.
+   - Quebrável por Mold Breaker e suprimível por Neutralizing Gas.
+
+7. **`punk-rock`** (Gen VIII-IX):
+   - Multiplica o poder de movimentos sonoros (flag `sound`) usados pelo portador por `5325 / 4096` (~1.3×).
+   - Reduz pela metade (`0.5×`) o dano recebido de movimentos sonoros adversários.
+   - Movimentos sonoros continuam transpassando Substitute. Quebrável por Mold Breaker na defesa.
+
+8. **`tinted-lens`** (Gen IV-IX):
+   - Dobra (`2.0×`) o dano de ataques que sofreriam resistência de tipo (efetividade `< 1.0` e `> 0`, ex: `0.5×` vira `1.0×`, `0.25×` vira `0.5×`).
+   - Não ultrapassa nem altera imunidades elementares de tipo (`0×` continua causando 0 de dano).
+   - Não afeta danos neutros ou super efetivos. Suprimível por Neutralizing Gas.
+
 ### H2 — Dano, atributos, precisão e críticos
 
-**Inventário:** 29 habilidades pendentes (37 antes do lote H2-B, 44 antes do lote H2-A); 73 registros com habilidade padrão afetados.
+**Inventário:** 21 habilidades pendentes (29 antes do lote H2-C, 37 antes do lote H2-B, 44 antes do lote H2-A); 73 registros com habilidade padrão afetados.
 
 **Dependências:** H0; flags canônicas e regras de críticos/efeitos secundários.
 

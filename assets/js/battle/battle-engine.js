@@ -613,9 +613,12 @@
           const previousStage = Number.isInteger(pokemon.toxicStage) ? pokemon.toxicStage : 0;
           pokemon.toxicStage = Math.min(15, Math.max(0, previousStage) + 1);
         }
-        const residual = pokemon.statusCondition === 'toxic'
+        let residual = pokemon.statusCondition === 'toxic'
           ? Math.max(1, Math.floor(constants.P8.baseMaxHp(pokemon) / 16)) * pokemon.toxicStage
           : Math.max(1, Math.floor(constants.P8.baseMaxHp(pokemon) / (pokemon.statusCondition === 'poison' ? 8 : 16)));
+        if (pokemon.statusCondition === 'burn' && constants.P7.ability(pokemon) === 'heatproof') {
+          residual = Math.max(1, Math.floor(residual / 2));
+        }
         const damage = Math.min(previousHp, residual);
         pokemon.currentHp -= damage;
         events.push({ type: BATTLE_EVENTS.STATUS_DAMAGE, target: role,

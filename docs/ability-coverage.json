@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 172,
+    "declaredSupported": 180,
     "assignedAbilities": 313,
-    "assignedPending": 142,
+    "assignedPending": 134,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 399
+    "recordsWithPendingDefault": 385
   },
   "phases": [
     {
@@ -21,8 +21,8 @@
     {
       "id": "H2",
       "name": "Dano, atributos, precisão e críticos",
-      "assignedPending": 29,
-      "defaultRecordsImpacted": 73
+      "assignedPending": 21,
+      "defaultRecordsImpacted": 59
     },
     {
       "id": "H3",
@@ -4476,8 +4476,8 @@
     },
     {
       "name": "fluffy",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -4982,8 +4982,8 @@
     },
     {
       "name": "fur-coat",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -5958,8 +5958,8 @@
     },
     {
       "name": "heatproof",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -6871,8 +6871,8 @@
     },
     {
       "name": "ice-scales",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -13600,8 +13600,8 @@
     },
     {
       "name": "punk-rock",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -16077,8 +16077,8 @@
     },
     {
       "name": "shadow-shield",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -21030,8 +21030,8 @@
     },
     {
       "name": "tinted-lens",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -22601,8 +22601,8 @@
     },
     {
       "name": "water-bubble",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {

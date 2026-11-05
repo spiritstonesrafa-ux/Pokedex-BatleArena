@@ -2,6 +2,48 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 05/11/2026: Publicação H2-B e Implementação Local H2-C (8 habilidades de dano)
+
+- **Publicação Controlada H2-B (8 habilidades de precisão e críticos):**
+  - **Commit publicado:** `a00e6e89b9f485cdf1cf0ff7b6893d85e272a90c` (parent `239709d210b90f67059a4457fafd1f5e203232a2`).
+  - **Mensagem:** `feat(battle): implement H2-B critical and accuracy abilities`.
+  - **Escopo publicado:** Exatamente 17 arquivos (9 arquivos de motor/metadados e 8 suítes de testes determinísticos).
+  - **Habilidades H2-B publicadas com status FULL:** Battle Armor, Shell Armor, Super Luck, Sniper, Merciless, Compound Eyes, No Guard, Tangled Feet.
+  - Sincronização via fast-forward com `origin/main` confirmada por `git ls-remote` e API do GitHub.
+  - Artefato visual paralelo `tests/visual/minior-shields-down-harness.html` preservado intacto e não rastreado.
+
+- **Implementação Local H2-C (8 habilidades de modificação de dano e atributos):**
+  - **1. `fur-coat`:** Dobra o atributo Defense efetivo do portador no estágio canônico `onModifyDef` (`f *= 2` em `P7.stat`). Aplica-se a ataques físicos e a golpes especiais que calculam dano contra Defense (ex: Psyshock, Secret Sword). Ignorada por Mold Breaker, Teravolt e Turboblaze (salvo Ability Shield). Suprimível por Neutralizing Gas.
+  - **2. `fluffy`:** Reduz pela metade (`0.5×`) o dano recebido de golpes de contato e dobra (`2.0×`) o dano de ataques Fire. Golpes de Fogo com contato combinam ambos os multiplicadores resultando em dano neutro (`1.0×`). Ignorada por Mold Breaker e suprimível por Neutralizing Gas.
+  - **3. `ice-scales`:** Reduz pela metade (`0.5×`) o dano recebido de ataques de categoria `Special`. Baseia-se exclusivamente na categoria do golpe (`damageClass === 'special'`), protegendo inclusive contra especiais que miram na Defense. Ignorada por Mold Breaker e suprimível por Neutralizing Gas.
+  - **4. `heatproof`:** Reduz pela metade (`0.5×`) o dano sofrido de ataques do tipo Fire. Reduz pela metade o dano residual por turno causado por Burn (de 1/16 para 1/32 do HP máximo). Não impede a aplicação de Burn. Ignorada por Mold Breaker e suprimível por Neutralizing Gas.
+  - **5. `shadow-shield`:** Reduz pela metade (`0.5×`) o dano de ataques recebidos quando o portador está com HP cheio (`currentHp === maxHp`). Canônico Showdown `flags: {}`: inquebrável por Mold Breaker, Teravolt, Turboblaze ou Moongeist Beam. Em ataques multi-hit, apenas o primeiro golpe com HP cheio é reduzido. Suprimível por Neutralizing Gas.
+  - **6. `water-bubble`:** Dobra o poder ofensivo efetivo (Attack e Sp. Attack) ao utilizar golpes do tipo Water (`2.0×`). Reduz pela metade (`0.5×`) o dano de ataques Fire recebidos. Concede imunidade a Burn e cura imediatamente a condição na entrada ou término de Neutralizing Gas. Ignorada por Mold Breaker na defesa e suprimível por Neutralizing Gas.
+  - **7. `punk-rock`:** Multiplica o poder de movimentos sonoros (flag `sound`) usados pelo portador por `5325 / 4096` (~1.3×). Reduz pela metade (`0.5×`) o dano recebido de movimentos sonoros adversários. Movimentos sonoros continuam transpassando Substitute. Quebrável por Mold Breaker na defesa e suprimível por Neutralizing Gas.
+  - **8. `tinted-lens`:** Dobra (`2.0×`) o dano de ataques ofensivos que sofrem resistência de tipo (efetividade `< 1.0` e `> 0`, ex: `0.5×` vira `1.0×`, `0.25×` vira `0.5×`). Não afeta imunidades elementares (`0×` continua causando 0 de dano). Não afeta danos neutros ou super efetivos. Suprimível por Neutralizing Gas.
+
+- **Inventário e Cobertura Oficial:**
+  - Auditado via [audit-abilities.js](file:///c:/pokemon/scripts/audit-abilities.js): 374 habilidades conhecidas, **180 declaradas suportadas (+8)**, **134 atribuídas pendentes (-8)**, **21 pendências restantes em H2 (-8)**, **0 pendências em H1**.
+  - Documentação sincronizada em [ability-coverage.json](file:///c:/pokemon/docs/ability-coverage.json) e [roadmap-abilities.md](file:///c:/pokemon/docs/roadmap-abilities.md).
+
+- **Validação Automatizada e Regressão Global:**
+  - Criadas 8 suítes dedicadas de testes determinísticos:
+    - `tests/battle/abilities-h2c-fur-coat.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-fluffy.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-ice-scales.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-heatproof.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-shadow-shield.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-water-bubble.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-punk-rock.test.js`: 8/8 PASS
+    - `tests/battle/abilities-h2c-tinted-lens.test.js`: 8/8 PASS
+    - **Total específico H2-C:** **64/64 PASS**.
+  - Regressões cruzadas H2-A, H2-B e Neutralizing Gas: **139/139 PASS**.
+  - Regressão global completa (`npm test`): **4.007 testes aprovados em 42 suítes, zero falhas, exit code 0**.
+  - Auditorias `audit-abilities.js --check`, `audit-p8.js` e `git diff --check`: 100% aprovadas.
+
+- **Governança Git:**
+  - H2-C mantido **estritamente local no working tree** (sem `git add`, sem `git commit`, sem `git push`).
+
 ## Atualização — 02/11/2026: Homologação final e publicação H0–H4-A
 
 - **Homologação Final das Entregas H0 a H4-A:**

@@ -1687,6 +1687,137 @@
     }
   };
 
+  const H2C_DAMAGE_METADATA = {
+    'fur-coat': {
+      id: 'fur-coat',
+      name: 'Fur Coat',
+      generation: 6,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_DEF']),
+      bearer: 'Furfrou (#676), Persian-Alola (#10108)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-fur-coat.test.js']),
+      description: 'Dobra o atributo Defense efetivo do portador. Ignorada por Mold Breaker.'
+    },
+    'fluffy': {
+      id: 'fluffy',
+      name: 'Fluffy',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SOURCE_MODIFY_DAMAGE']),
+      bearer: 'Stufful (#759), Bewear (#760), Wooloo (#831), Dubwool (#832)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-fluffy.test.js']),
+      description: 'Reduz o dano recebido de golpes de contato por 0.5x, mas dobra o dano recebido de golpes de Fogo (golpes de contato de Fogo causam dano normal 1x). Ignorada por Mold Breaker.'
+    },
+    'ice-scales': {
+      id: 'ice-scales',
+      name: 'Ice Scales',
+      generation: 8,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SOURCE_MODIFY_DAMAGE']),
+      bearer: 'Snom (#872), Frosmoth (#873)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-ice-scales.test.js']),
+      description: 'Reduz pela metade o dano recebido de movimentos de categoria Special. Ignorada por Mold Breaker.'
+    },
+    'heatproof': {
+      id: 'heatproof',
+      name: 'Heatproof',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SOURCE_MODIFY_DAMAGE', 'ON_DAMAGE_RESIDUAL']),
+      bearer: 'Bronzor (#436), Bronzong (#437), Sinistea (#854), Polteageist (#855), Sinistcha (#1013)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-heatproof.test.js']),
+      description: 'Reduz pela metade o dano de ataques de Fogo e o dano residual da queimadura (Burn). Ignorada por Mold Breaker.'
+    },
+    'shadow-shield': {
+      id: 'shadow-shield',
+      name: 'Shadow Shield',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SOURCE_MODIFY_DAMAGE']),
+      bearer: 'Lunala (#792)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-shadow-shield.test.js']),
+      description: 'Reduz pela metade o dano sofrido quando o portador está com HP cheio (100%). Não pode ser ignorada por Mold Breaker, Teravolt ou Turboblaze.'
+    },
+    'water-bubble': {
+      id: 'water-bubble',
+      name: 'Water Bubble',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_ATK', 'ON_MODIFY_SPA', 'ON_SOURCE_MODIFY_DAMAGE', 'ON_SET_STATUS']),
+      bearer: 'Dewpider (#751), Araquanid (#752)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-water-bubble.test.js']),
+      description: 'Dobra o poder ofensivo de golpes de Água, reduz pela metade o dano de golpes de Fogo recebidos e concede imunidade e cura imediata contra Burn. Ignorada por Mold Breaker.'
+    },
+    'punk-rock': {
+      id: 'punk-rock',
+      name: 'Punk Rock',
+      generation: 8,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER', 'ON_SOURCE_MODIFY_DAMAGE']),
+      bearer: 'Toxel (#848), Toxtricity (#849), Toxtricity-Low-Key (#10169)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-punk-rock.test.js']),
+      description: 'Aumenta o poder de movimentos sonoros usados pelo portador em ~1.3x (5325/4096) e reduz pela metade o dano recebido de movimentos sonoros. Ignorada por Mold Breaker na defesa.'
+    },
+    'tinted-lens': {
+      id: 'tinted-lens',
+      name: 'Tinted Lens',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_DAMAGE']),
+      bearer: 'Butterfree (#12), Venomoth (#49), Noctowl (#164), Illumise (#314), Mothim (#414), Yanmega (#469), Sigilyph (#561), Lokix (#919)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2c-tinted-lens.test.js']),
+      description: 'Dobra o dano de ataques que seriam pouco efetivos (eficácia < 1 e > 0). Não afeta imunidades de tipo.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -1780,6 +1911,11 @@
 
     if (H2B_CRIT_ACCURACY_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H2B_CRIT_ACCURACY_METADATA[slug] }));
+      continue;
+    }
+
+    if (H2C_DAMAGE_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H2C_DAMAGE_METADATA[slug] }));
       continue;
     }
 
