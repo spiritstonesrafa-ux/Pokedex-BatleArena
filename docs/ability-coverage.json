@@ -4,25 +4,25 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 156,
+    "declaredSupported": 164,
     "assignedAbilities": 313,
-    "assignedPending": 158,
+    "assignedPending": 150,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 455
+    "recordsWithPendingDefault": 427
   },
   "phases": [
     {
       "id": "H1",
       "name": "Bônus de entrada, nocaute e reações",
-      "assignedPending": 1,
+      "assignedPending": 0,
       "defaultRecordsImpacted": 0
     },
     {
       "id": "H2",
       "name": "Dano, atributos, precisão e críticos",
-      "assignedPending": 44,
-      "defaultRecordsImpacted": 129
+      "assignedPending": 37,
+      "defaultRecordsImpacted": 101
     },
     {
       "id": "H3",
@@ -8093,8 +8093,8 @@
     },
     {
       "name": "iron-fist",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -10121,8 +10121,8 @@
     },
     {
       "name": "mega-launcher",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -14814,8 +14814,8 @@
     },
     {
       "name": "rocky-payload",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -16154,8 +16154,8 @@
     },
     {
       "name": "sharpness",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -18518,8 +18518,8 @@
     },
     {
       "name": "steelworker",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -18775,8 +18775,8 @@
     },
     {
       "name": "strong-jaw",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -19322,8 +19322,8 @@
     },
     {
       "name": "supreme-overlord",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -21354,8 +21354,8 @@
     },
     {
       "name": "tough-claws",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {

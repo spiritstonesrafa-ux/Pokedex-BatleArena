@@ -79,7 +79,7 @@ A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes c
 
 ### H1 — Bônus de entrada, nocaute e reações
 
-**Inventário:** 1 habilidade pendente (Supreme Overlord; H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8 concluídas, H1-C: 8 concluídas, H1-D: 8 concluídas); 0 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (CONCLUÍDO DEFINITIVAMENTE: H1-A: 5, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8, H1-C: 8, H1-D: 8, Supreme Overlord em H2-A/H1-E); 0 registros com habilidade padrão afetados.
 
 **Dependências:** H0; autoria de KO, estágios e eventos de entrada existentes.
 
@@ -295,9 +295,62 @@ Lote unificado de oito habilidades canônicas de Ultra Beasts, reações a dano 
    - Suprimido por Neutralizing Gas.
    - Coberto por testes determinísticos em `tests/battle/abilities-h1d-wind-rider.test.js`.
 
+#### H2-A / H1-E — Fechamento Definitivo H1 e Modificadores Ofensivos H2 (Supreme Overlord, Iron Fist, Strong Jaw, Tough Claws, Sharpness, Mega Launcher, Steelworker, Rocky Payload) (CONCLUÍDO)
+
+Lote unificado de oito habilidades canônicas de cálculo de dano, modificadores de Base Power e atributos ofensivos na Geração IX, consolidando o encerramento total da macro-fase H1:
+
+1. **`supreme-overlord`** (Gen IX — Fechamento H1):
+   - Ao entrar em combate, o portador considera a contagem de aliados derrotados da própria equipe (excluindo adversários, o próprio portador e integrantes vivos).
+   - O multiplicador de poder base é fixado na entrada: `[4096, 4506, 4915, 5325, 5734, 6144] / 4096` conforme o número de aliados nocauteados (teto canônico de 5).
+   - Em duplas, nocautes de aliados ocorridos enquanto o portador já está ativo não aumentam o bônus até que ele saia e reentre no campo.
+   - Suprimível por Neutralizing Gas e reativável na dissipação do gás ou reentrada.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-supreme-overlord.test.js`.
+
+2. **`iron-fist`** (Gen IV-IX):
+   - Multiplica o poder de movimentos com a flag canônica `punch` por `4915 / 4096` (aprox. 1.2×).
+   - Aplica-se a cada acerto de golpes multi-hit elegíveis.
+   - Não aumenta golpes de contato sem a flag punch. Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-iron-fist.test.js`.
+
+3. **`strong-jaw`** (Gen VI-IX):
+   - Multiplica o poder de movimentos com a flag canônica `bite` por `1.5×` (ou `6144 / 4096`).
+   - Aplica-se a golpes físicos e especiais com a tag de mordida.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-strong-jaw.test.js`.
+
+4. **`tough-claws`** (Gen VI-IX):
+   - Multiplica o poder de movimentos que fazem contato físico (flag `contact`) por `5325 / 4096` (aprox. 1.3×).
+   - Aplica-se a ataques físicos de contato e especiais de contato.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-tough-claws.test.js`.
+
+5. **`sharpness`** (Gen IX):
+   - Multiplica o poder de movimentos com a flag canônica cortante (`slicing`) por `1.5×`.
+   - Aplica-se a cortes com e sem contato (ex: Air Slash, Razor Leaf, Sacred Sword, Aqua Cutter).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-sharpness.test.js`.
+
+6. **`mega-launcher`** (Gen VI-IX):
+   - Multiplica o poder de movimentos ofensivos com a flag de pulso/aura (`pulse`) por `1.5×`.
+   - Não altera movimentos de status. (Nota: Heal Pulse documentado como dependência não implementada no PBA).
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-mega-launcher.test.js`.
+
+7. **`steelworker`** (Gen VII-IX):
+   - Multiplica os atributos ofensivos (Attack e Special Attack) do portador por `1.5×` ao executar movimentos do tipo Steel.
+   - Preserva o estágio canônico de modificação de atributo, cumulativo com STAB e Terastallization.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-steelworker.test.js`.
+
+8. **`rocky-payload`** (Gen IX):
+   - Multiplica os atributos ofensivos (Attack e Special Attack) do portador por `1.5×` ao executar movimentos do tipo Rock.
+   - Preserva o estágio canônico de modificação de atributo, cumulativo com STAB e Terastallization.
+   - Suprimido por Neutralizing Gas.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h2a-rocky-payload.test.js`.
+
 ### H2 — Dano, atributos, precisão e críticos
 
-**Inventário:** 49 habilidades pendentes; 172 registros com habilidade padrão afetados.
+**Inventário:** 37 habilidades pendentes (44 antes do lote H2-A); 101 registros com habilidade padrão afetados.
 
 **Dependências:** H0; flags canônicas e regras de críticos/efeitos secundários.
 

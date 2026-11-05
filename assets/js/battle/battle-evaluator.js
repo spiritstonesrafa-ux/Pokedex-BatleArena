@@ -282,18 +282,19 @@
       }
 
       // 1. Seleção dos atributos ofensivos e defensivos
+      const evalMove = {...move, type: moveType};
       let attackStat;
       let defenseStat;
       if (damageClass === 'special') {
-        attackStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack') : attacker.specialAttack) || 1;
+        attackStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack', evalMove) : attacker.specialAttack) || 1;
         defenseStat = Number(constants?.targetsDefenseWithSpAtk?.(move)
-          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense)
-          : (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense') : defender.specialDefense)) || 1;
+          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', evalMove) : defender.defense)
+          : (constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'specialDefense', evalMove) : defender.specialDefense)) || 1;
       } else {
         attackStat = Number(constants?.usesDefenseAsAttack?.(move)
-          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense') : attacker.defense)
-          : (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack') : attacker.attack)) || 1;
-        defenseStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense) || 1;
+          ? (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense', evalMove) : attacker.defense)
+          : (constants?.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack', evalMove) : attacker.attack)) || 1;
+        defenseStat = Number(constants?.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', evalMove) : defender.defense) || 1;
       }
 
       // 2. STAB (Same-Type Attack Bonus)

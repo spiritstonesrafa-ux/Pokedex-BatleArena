@@ -1849,14 +1849,14 @@
       let defenseStat;
       if (actualDamageClass === MOVE_DAMAGE_CLASSES.PHYSICAL) {
         attackStat = constants.usesDefenseAsAttack?.(selectedMove)
-          ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense') : attacker.defense)
-          : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack') : attacker.attack);
-        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'defense') : defender.defense;
+          ? (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'defense', damageMove) : attacker.defense)
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'attack', damageMove) : attacker.attack);
+        defenseStat = constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'defense', damageMove) : defender.defense;
       } else {
-        attackStat = constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack') : attacker.specialAttack;
+        attackStat = constants.getEffectiveStat ? constants.getEffectiveStat(attacker, 'specialAttack', damageMove) : attacker.specialAttack;
         defenseStat = constants.targetsDefenseWithSpAtk?.(selectedMove)
-          ? (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense') : defender.defense)
-          : (constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'specialDefense') : defender.specialDefense);
+          ? (constants.getEffectiveStat ? constants.getEffectiveStat(defender, 'defense', damageMove) : defender.defense)
+          : (constants.getEffectiveStat ? constants.getEffectiveStat(constants.Completion.defender(selectedMove,defender), 'specialDefense', damageMove) : defender.specialDefense);
       }
 
       let resolvedPower=constants.P5.get(selectedMove)?constants.P5.power(selectedMove,attacker,defender,constants,p5Context):selectedMove.power;

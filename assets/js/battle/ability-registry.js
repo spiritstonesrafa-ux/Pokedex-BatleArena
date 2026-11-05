@@ -1423,6 +1423,138 @@
       description: 'Concede imunidade a movimentos com a flag de vento e aumenta o Ataque em 1 estágio (+1) ao ser alvejado por um ou quando Tailwind é ativado (ou já está ativo ao entrar em campo).'
     }
   };
+
+  // H2-A / H1-E Implemented Abilities (FULL status)
+  const H2A_OFFENSIVE_METADATA = {
+    'supreme-overlord': {
+      id: 'supreme-overlord',
+      name: 'Supreme Overlord',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'MODIFY_POWER']),
+      bearer: 'Kingambit (#983)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-supreme-overlord.test.js']),
+      description: 'Ao entrar em campo, o portador ganha um bônus que aumenta o poder base dos seus golpes de acordo com a quantidade de aliados derrotados na sua equipe naquele combate (até 5 aliados, com multiplicadores canônicos [4096, 4506, 4915, 5325, 5734, 6144]/4096).'
+    },
+    'iron-fist': {
+      id: 'iron-fist',
+      name: 'Iron Fist',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_POWER']),
+      bearer: 'Hitmonchan (#107), Ledian (#166), Infernape (#392), Golurk (#623), Pangoro (#675), Crabominable (#740), Melmetal (#809), Pawmot (#923)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-iron-fist.test.js']),
+      description: 'Multiplica o poder de movimentos com a flag de soco (punch) por 4915/4096 (aprox. 1.2×).'
+    },
+    'strong-jaw': {
+      id: 'strong-jaw',
+      name: 'Strong Jaw',
+      generation: 6,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_POWER']),
+      bearer: 'Tyrantrum (#697), Bruxish (#779), Drednaw (#834), Dracovish (#882), Boltund (#836)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-strong-jaw.test.js']),
+      description: 'Multiplica o poder de movimentos com a flag de mordida (bite) por 1.5×.'
+    },
+    'tough-claws': {
+      id: 'tough-claws',
+      name: 'Tough Claws',
+      generation: 6,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_POWER']),
+      bearer: 'Barbaracle (#689), Perrserker (#863), Lycanroc-Dusk (#745-Dusk)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-tough-claws.test.js']),
+      description: 'Multiplica o poder de movimentos que fazem contato físico (flag contact) por 5325/4096 (aprox. 1.3×).'
+    },
+    'sharpness': {
+      id: 'sharpness',
+      name: 'Sharpness',
+      generation: 9,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_POWER']),
+      bearer: 'Gallade (#475), Samurott-Hisui (#503-Hisui), Kleavor (#900), Veluza (#976), Iron Valiant (#1006)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-sharpness.test.js']),
+      description: 'Multiplica o poder de movimentos com a flag cortante (slicing) por 1.5×.'
+    },
+    'mega-launcher': {
+      id: 'mega-launcher',
+      name: 'Mega Launcher',
+      generation: 6,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_POWER']),
+      bearer: 'Clauncher (#692), Clawitzer (#693)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-mega-launcher.test.js']),
+      description: 'Multiplica o poder de movimentos de aura e pulso (flag pulse) por 1.5×.'
+    },
+    'steelworker': {
+      id: 'steelworker',
+      name: 'Steelworker',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_OFFENSIVE_STAT']),
+      bearer: 'Dhelmise (#781)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-steelworker.test.js']),
+      description: 'Multiplica os atributos ofensivos (Attack e Special Attack) do portador por 1.5× ao executar movimentos do tipo Steel.'
+    },
+    'rocky-payload': {
+      id: 'rocky-payload',
+      name: 'Rocky Payload',
+      generation: 9,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_OFFENSIVE_STAT']),
+      bearer: 'Bombirdier (#962)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2a-rocky-payload.test.js']),
+      description: 'Multiplica os atributos ofensivos (Attack e Special Attack) do portador por 1.5× ao executar movimentos do tipo Rock.'
+    }
+  };
   // Registry map
   const registry = new Map();
 
@@ -1506,6 +1638,11 @@
 
     if (H1D_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H1D_METADATA[slug] }));
+      continue;
+    }
+
+    if (H2A_OFFENSIVE_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H2A_OFFENSIVE_METADATA[slug] }));
       continue;
     }
 

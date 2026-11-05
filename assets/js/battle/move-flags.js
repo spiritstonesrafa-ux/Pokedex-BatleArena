@@ -152,6 +152,17 @@
     895   // Aqua Cutter
   ]);
 
+  // Pulse / aura moves (boosted by Mega Launcher)
+  const PULSE_MOVE_IDS = new Set([
+    352,  // Water Pulse
+    396,  // Aura Sphere
+    399,  // Dark Pulse
+    406,  // Dragon Pulse
+    505,  // Heal Pulse
+    618,  // Origin Pulse
+    805   // Terrain Pulse
+  ]);
+
   // Reflectable status moves (Magic Coat / Magic Bounce)
   const REFLECTABLE_MOVE_IDS = new Set([
     18,   // Whirlwind
@@ -223,6 +234,12 @@
     if (typeof PBAP5Mechanics !== 'undefined' && PBAP5Mechanics.contactIds) {
       return PBAP5Mechanics.contactIds.includes(id);
     }
+    if (typeof require !== 'undefined') {
+      try {
+        const p5 = require('./p5-mechanics.js');
+        if (p5 && p5.contactIds) return p5.contactIds.includes(id);
+      } catch (e) {}
+    }
     return false;
   }
 
@@ -250,6 +267,10 @@
     return SLICING_MOVE_IDS.has(getMoveId(move));
   }
 
+  function isPulseMove(move) {
+    return PULSE_MOVE_IDS.has(getMoveId(move));
+  }
+
   function isReflectableMove(move) {
     return REFLECTABLE_MOVE_IDS.has(getMoveId(move));
   }
@@ -265,6 +286,7 @@
       punch: PUNCH_MOVE_IDS.has(id),
       wind: WIND_MOVE_IDS.has(id),
       slicing: SLICING_MOVE_IDS.has(id),
+      pulse: PULSE_MOVE_IDS.has(id),
       reflectable: REFLECTABLE_MOVE_IDS.has(id)
     });
   }
@@ -276,6 +298,7 @@
     PUNCH_MOVE_IDS: Object.freeze(PUNCH_MOVE_IDS),
     WIND_MOVE_IDS: Object.freeze(WIND_MOVE_IDS),
     SLICING_MOVE_IDS: Object.freeze(SLICING_MOVE_IDS),
+    PULSE_MOVE_IDS: Object.freeze(PULSE_MOVE_IDS),
     REFLECTABLE_MOVE_IDS: Object.freeze(REFLECTABLE_MOVE_IDS),
     isContactMove,
     isSoundMove,
@@ -284,6 +307,7 @@
     isPunchMove,
     isWindMove,
     isSlicingMove,
+    isPulseMove,
     isReflectableMove,
     getMoveFlags
   });
