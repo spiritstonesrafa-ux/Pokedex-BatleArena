@@ -982,3 +982,157 @@ test('H6-D Presentation Mapper: FORM_CHANGED é mapeado para MOVE_FAIL_FEEDBACK'
   assert.equal(commands[0].reason, 'FORM_CHANGED');
   assert.equal(commands[0].label, 'minior-red');
 });
+
+test('H6-D Restauração: m.sprite é estritamente restaurado para o sprite original após leave()', () => {
+  const m = minior(774, {
+    currentHp: 120,
+    maxHp: 120,
+    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/774.png'
+  });
+  C.P8.initMon(m, {});
+
+  const snapshotBefore = {
+    id: m.id,
+    formSpeciesId: m.formSpeciesId,
+    sprite: m.sprite,
+    photo: m.photo,
+    animatedPhoto: m.animatedPhoto,
+    cry: m.cry,
+    weightKg: m.weightKg
+  };
+
+  // Transforma Meteor -> Core
+  C.P8.changeForm(m, 10136);
+  assert.equal(m.sprite, 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10136.png');
+  assert.equal(m.formSpeciesId, 10136);
+
+  // Retirada do campo (leave / troca)
+  C.P8.leave(m);
+  assert.equal(m.sprite, snapshotBefore.sprite, 'm.sprite deve ser estritamente restaurado para o sprite Meteor após leave');
+  assert.equal(m.formSpeciesId, null, 'm.formSpeciesId deve ser restaurado para null');
+  assert.equal(m.photo, snapshotBefore.photo);
+  assert.equal(m.animatedPhoto, snapshotBefore.animatedPhoto);
+  assert.equal(m.cry, snapshotBefore.cry);
+  assert.equal(m.weightKg, snapshotBefore.weightKg);
+
+  // Encerramento da batalha (restore completo)
+  C.P8.restore(m, true);
+  assert.equal(m.sprite, snapshotBefore.sprite);
+  assert.equal(m.formOriginal, null);
+});
+
+test('H6-D Restauração: m.sprite originalmente ausente é estritamente removido (delete m.sprite) após leave()', () => {
+  const m = minior(774, {
+    currentHp: 120,
+    maxHp: 120
+  });
+  delete m.sprite;
+  assert.equal(Object.prototype.hasOwnProperty.call(m, 'sprite'), false, 'Não deve possuir propriedade sprite inicialmente');
+
+  C.P8.initMon(m, {});
+
+  // Transforma Meteor -> Core
+  C.P8.changeForm(m, 10136);
+  assert.equal(m.sprite, 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10136.png');
+  assert.equal(Object.prototype.hasOwnProperty.call(m, 'sprite'), true);
+
+  // Retirada do campo (leave)
+  C.P8.leave(m);
+  assert.equal(Object.prototype.hasOwnProperty.call(m, 'sprite'), false, 'Propriedade sprite deve ser removida (delete) se era originalmente ausente');
+  assert.equal(m.sprite, undefined);
+});
+
+test('H6-D Restauração: Caminho inverso — Core inicial cura para Meteor e restaura identidade original na troca', () => {
+  const m = minior(10136, {
+    currentHp: 50,
+    maxHp: 120,
+    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10136.png'
+  });
+  C.P8.initMon(m, {});
+
+  const snapshotCore = {
+    id: 10136,
+    sprite: m.sprite,
+    photo: m.photo
+  };
+
+  // Cura e transforma para Meteor (774)
+  m.currentHp = 120;
+  C.P8.changeForm(m, 774);
+  assert.equal(m.sprite, 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/774.png');
+  assert.equal(m.formSpeciesId, 774);
+
+  // Troca para o banco (leave)
+  C.P8.leave(m);
+  assert.equal(m.sprite, snapshotCore.sprite, 'Deve restaurar sprite original da Core Form');
+  assert.equal(m.formSpeciesId, null);
+});
+
+test('H6-D Restauração: Wishiwashi Solo -> School Form -> leave restaura sprite Solo sem resíduos', () => {
+  const wishi = {
+    id: 746,
+    name: 'wishiwashi-solo',
+    types: ['water'],
+    currentHp: 100,
+    maxHp: 100,
+    level: 50,
+    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/746.png',
+    photo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/746.png',
+    animatedPhoto: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/746.gif',
+    cry: 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/746.ogg',
+    baseStats: { hp: 45, attack: 20, defense: 20, specialAttack: 25, specialDefense: 25, speed: 40 },
+    attack: 30, defense: 30, specialAttack: 35, specialDefense: 35, speed: 50,
+    ability: 'schooling',
+    moves: []
+  };
+
+  C.P8.initMon(wishi, {});
+  C.P8.changeForm(wishi, 10127);
+  assert.equal(wishi.sprite, 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10127.png');
+
+  C.P8.leave(wishi);
+  assert.equal(wishi.sprite, 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/746.png',
+    'Wishiwashi deve restaurar sprite Solo Form após leave()');
+});
+
+test('H6-D Status (Y04): Troca voluntária cancela sonolência pendente de Yawn antes da indução de sono', () => {
+  const m = minior(774, { currentHp: 50, maxHp: 135, formSpeciesId: 10136 });
+  const backup = dummy({ id: 98, name: 'backup-ally' });
+  const foe = dummy({ id: 101, name: 'foe-yawner', moves: [move(444)] });
+
+  const s = E.createTeamBattle(
+    [m, backup, dummy({ id: 99, name: 'ally-3' })],
+    [foe, dummy({ id: 102, name: 'foe-2' }), dummy({ id: 103, name: 'foe-3' })]
+  );
+
+  // Minior na Core Form recebe Yawn (drowsyTurns = 1)
+  s.player.team[0].drowsyTurns = 1;
+  assert.equal(s.player.team[0].drowsyTurns, 1);
+
+  // Minior troca para o banco antes da resolução
+  const res = E.resolveTurn(s, {
+    player: { type: 'SWITCH', targetIndex: 1 },
+    enemy: act(444)
+  });
+
+  assert.equal(res.state.player.activeIndex, 1, 'Backup entrou em campo');
+  assert.equal(res.state.player.team[0].drowsyTurns, 0, 'Drowsy deve ser zerado ao deixar o campo');
+  assert.equal(res.state.player.team[0].statusCondition, null, 'Minior no banco não deve dormir');
+});
+
+test('H6-D Status (Y06): Ditto transformado em Minior Meteor NÃO herda imunidade a status de Shields Down', () => {
+  const ditto = {
+    id: 132,
+    name: 'ditto',
+    types: ['rock', 'flying'],
+    ability: 'shields-down',
+    transformOriginal: { id: 132, ability: 'limber' }
+  };
+  const isSleepImmune = C.P7.statusImmune(ditto, 'sleep');
+  const isBurnImmune = C.P7.statusImmune(ditto, 'burn');
+  const isPoisonImmune = C.P7.statusImmune(ditto, 'poison');
+
+  assert.equal(isSleepImmune, false, 'Ditto transformado não deve receber imunidade a sono de Shields Down');
+  assert.equal(isBurnImmune, false, 'Ditto transformado não deve receber imunidade a queimadura');
+  assert.equal(isPoisonImmune, false, 'Ditto transformado não deve receber imunidade a veneno');
+});
