@@ -767,6 +767,137 @@
     }
   };
 
+
+  const H6G_METADATA = {
+    'multitype': {
+      id: 'multitype',
+      name: 'Multitype',
+      generation: 4,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_INIT', 'ON_ENTRY']),
+      bearer: 'Arceus (#493)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-multitype.test.js']),
+      description: 'Muda o tipo de Arceus de acordo com a Plate segurada. Não pode ser suprimida, copiada ou trocada. A Plate segurada não pode ser removida ou roubada por Thief, Knock Off ou Trick. Teracristalização altera temporariamente o tipo para o Tera Type correspondente.'
+    },
+    'rks-system': {
+      id: 'rks-system',
+      name: 'RKS System',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_INIT', 'ON_ENTRY']),
+      bearer: 'Silvally (#773)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-rks-system.test.js']),
+      description: 'Muda o tipo de Silvally de acordo com o Memory segurado. Não pode ser suprimida, copiada ou trocada. O Memory segurado não pode ser removido ou roubado. Teracristalização altera temporariamente o tipo para o Tera Type correspondente.'
+    },
+    'stance-change': {
+      id: 'stance-change',
+      name: 'Stance Change',
+      generation: 6,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['BEFORE_MOVE']),
+      bearer: 'Aegislash (#681, #10026)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-stance-change.test.js']),
+      description: "Alterna Aegislash para Blade Forme (#10026) antes de executar um golpe de dano e para Shield Forme (#681) ao usar King's Shield (#588). Recalcula imediatamente atributos ofensivos e defensivos. Reverte para Shield Forme ao ser trocado ou ao desmaiar. Não pode ser suprimida, copiada ou trocada."
+    },
+    'disguise': {
+      id: 'disguise',
+      name: 'Disguise',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGE']),
+      bearer: 'Mimikyu (#778, #10143)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-disguise.test.js']),
+      description: 'Protege Mimikyu contra o dano do primeiro golpe direto recebido na batalha. Ao ser quebrado, o dano do golpe torna-se 0, Mimikyu assume a Busted Form (#10143) e perde 1/8 de seu HP máximo como recoil canônico da Geração IX. Permanece quebrado pelo restante do combate. Pode ser ignorado por Mold Breaker e golpes correspondentes.'
+    },
+    'ice-face': {
+      id: 'ice-face',
+      name: 'Ice Face',
+      generation: 8,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGE', 'ON_WEATHER_CHANGE', 'ON_ENTRY']),
+      bearer: 'Eiscue (#875, #10185)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-ice-face.test.js']),
+      description: 'Bloqueia o primeiro golpe físico direto recebido enquanto na Ice Face Form (#875), anulando o dano e assumindo a Noice Face Form (#10185), com aumento de Velocidade e redução de Defesa. Reconstrói o bloco de gelo ao iniciar neve/granizo ou ao entrar em campo durante essas condições climáticas. Pode ser suprimida ou ignorada por Mold Breaker.'
+    },
+    'gulp-missile': {
+      id: 'gulp-missile',
+      name: 'Gulp Missile',
+      generation: 8,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_AFTER_MOVE', 'ON_DAMAGE']),
+      bearer: 'Cramorant (#845, #10182, #10183)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-gulp-missile.test.js']),
+      description: 'Após usar Surf (#57) ou Dive (#291), Cramorant apanha uma presa: Gulping Form (#10182) com HP > 50% ou Gorging Form (#10183) com HP <= 50%. Ao sofrer dano direto de um ataque, cospe a presa contra o atacante causando dano de 1/4 do HP máximo do adversário, reduzindo a Defesa em 1 estágio (Gulping) ou aplicando paralisia (Gorging), e reverte à forma padrão.'
+    },
+    'power-construct': {
+      id: 'power-construct',
+      name: 'Power Construct',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL_START']),
+      bearer: 'Zygarde (#718, #10118, #10120)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-power-construct.test.js']),
+      description: 'No final do turno, se Zygarde 50% (#718) ou 10% (#10118) estiver com HP <= 50%, transforma-se permanentemente na Complete Forme (#10120), aumentando expressivamente o HP máximo e atributos, adicionando a diferença de HP diretamente ao HP atual. A transformação persiste pelo restante da batalha e não reverte ao trocar de campo.'
+    },
+    'illusion': {
+      id: 'illusion',
+      name: 'Illusion',
+      generation: 5,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'ON_DAMAGE']),
+      bearer: 'Zorua e Zoroark (#570, #571, #10238, #10239)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6g-illusion.test.js']),
+      description: 'Ao entrar em campo, assume a aparência visual (nome, sprite, arte e tipo aparente) do último Pokémon consciente da equipe do jogador. Preserva integralmente atributos, movimentos, tipo real para cálculos de dano e mecânicas verdadeiras. O disfarce se desfaz ao sofrer dano direto de um ataque adversário ou ao Teracristalizar.'
+    }
+  };
   // Registry map
   const registry = new Map();
 
@@ -825,6 +956,11 @@
 
     if (H6F_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6F_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6G_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6G_METADATA[slug] }));
       continue;
     }
 

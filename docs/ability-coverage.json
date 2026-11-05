@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 116,
+    "declaredSupported": 124,
     "assignedAbilities": 313,
-    "assignedPending": 198,
+    "assignedPending": 190,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 546
+    "recordsWithPendingDefault": 526
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 8,
-      "defaultRecordsImpacted": 20
+      "assignedPending": 0,
+      "defaultRecordsImpacted": 0
     },
     {
       "id": "H7",
@@ -3362,8 +3362,8 @@
     },
     {
       "name": "disguise",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -5539,8 +5539,8 @@
     },
     {
       "name": "gulp-missile",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -6846,8 +6846,8 @@
     },
     {
       "name": "ice-face",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -6958,8 +6958,8 @@
     },
     {
       "name": "illusion",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -10782,8 +10782,8 @@
     },
     {
       "name": "multitype",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -12852,8 +12852,8 @@
     },
     {
       "name": "power-construct",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -14630,8 +14630,8 @@
     },
     {
       "name": "rks-system",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {
@@ -18059,8 +18059,8 @@
     },
     {
       "name": "stance-change",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {

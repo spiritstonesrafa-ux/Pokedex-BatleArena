@@ -305,7 +305,55 @@ Lote unificado de quatro habilidades canônicas de alteração de forma e tipage
    - Reverte para Zero Form no fim da batalha; novas batalhas iniciam limpas na Zero Form.
    - Coberto por 12 testes determinísticos em `tests/battle/abilities-h6f-zero-to-hero.test.js`.
 
-**Lista restante de H6 (8 pendentes):** `multitype`, `illusion`, `stance-change`, `disguise`, `power-construct`, `rks-system`, `ice-face`, `gulp-missile`.
+#### H6-G — Formas e Mecânicas Especiais Finais (Concluído)
+
+1. **`multitype`** (Gen IV-IX):
+   - Altera dinamicamente o tipo de Arceus (#493) conforme a Plate segurada (17 tipos).
+   - Insuprimível, incopiável e inalterável. A Plate segurada não pode ser removida ou roubada por Thief, Knock Off ou Trick.
+   - Teracristalização sobrepõe o tipo para o Tera Type correspondente.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-multitype.test.js`.
+
+2. **`rks-system`** (Gen VII-IX):
+   - Altera dinamicamente o tipo de Silvally (#773) conforme o Memory segurado (17 tipos).
+   - Insuprimível, incopiável e inalterável. O Memory segurado não pode ser removido ou roubado.
+   - Teracristalização sobrepõe o tipo para o Tera Type correspondente.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-rks-system.test.js`.
+
+3. **`stance-change`** (Gen VI-IX):
+   - Alterna Aegislash entre Shield Forme (#681; Def 140, SpD 140) e Blade Forme (#10026; Atk 140, SpA 140).
+   - Muda para Blade Forme antes de desferir qualquer golpe de dano e para Shield Forme ao executar King's Shield (#588).
+   - Reverte para Shield Forme ao ser trocado ou ao desmaiar. Insuprimível, incopiável e inalterável.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-stance-change.test.js`.
+
+4. **`disguise`** (Gen VII-IX):
+   - Bloqueia totalmente o primeiro golpe de dano sofrido por Mimikyu (#778) na batalha (dano = 0).
+   - Ao romper, assume a Busted Form (#10143) e sofre 1/8 do HP máximo em dano de recuo (mecânica Gen IX).
+   - Permanece quebrado pelo restante do combate. Pode ser ignorado por Mold Breaker e golpes correspondentes.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-disguise.test.js`.
+
+5. **`ice-face`** (Gen VIII-IX):
+   - Bloqueia o primeiro golpe físico direto recebido por Eiscue (#875), anulando o dano e assumindo Noice Face (#10185).
+   - Ganha Velocidade 130 e perde defesas enquanto em Noice Face.
+   - Reconstrói o bloco de gelo ao entrar em campo durante neve/granizo ou ao início do clima correspondente.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-ice-face.test.js`.
+
+6. **`gulp-missile`** (Gen VIII-IX):
+   - Após usar Surf (#57) ou Dive (#291), Cramorant (#845) apanha uma presa: Gulping Form (#10182) com HP > 50% ou Gorging Form (#10183) com HP <= 50%.
+   - Ao sofrer dano direto de um ataque, cospe a presa contra o atacante causando 25% de dano proporcional ao HP máximo do atacante, reduzindo sua Defesa em 1 estágio (Gulping) ou aplicando paralisia (Gorging), e reverte à forma padrão.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-gulp-missile.test.js`.
+
+7. **`power-construct`** (Gen VII-IX):
+   - No final do turno (`endTurn`), se Zygarde (#718 / #10118) estiver com HP <= 50%, transforma-se na Complete Forme (#10120).
+   - Aumenta o HP máximo para base 216 e adiciona a diferença ao HP atual. A transformação é permanente na batalha e não reverte na reserva.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-power-construct.test.js`.
+
+8. **`illusion`** (Gen V-IX):
+   - Assume a identidade visual (nome, sprite, arte e tipo aparente) do último integrante consciente da equipe.
+   - Preserva integralmente atributos reais, dano, STAB e tipagem autêntica para cálculos.
+   - Rompe-se ao receber dano de ataque direto ou ao Teracristalizar.
+   - Coberto por testes determinísticos em `tests/battle/abilities-h6g-illusion.test.js`.
+
+**Lista restante de H6 (0 pendentes):** Concluído integralmente.
 
 ### H7 — Cópia, troca e supressão de habilidades
 

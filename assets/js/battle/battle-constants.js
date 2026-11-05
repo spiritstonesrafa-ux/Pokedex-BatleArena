@@ -656,9 +656,10 @@
   // Modern Protect / Detect family (Gen VI+ consecutive failure mechanics).
   const PROTECT_MOVES = Object.freeze({
     182: Object.freeze({ id: 182, name: 'protect', type: 'normal', power: null, accuracy: null, pp: 10, damageClass: 'status', priority: 4, target: 'self' }),
-    197: Object.freeze({ id: 197, name: 'detect', type: 'fighting', power: null, accuracy: null, pp: 5, damageClass: 'status', priority: 4, target: 'self' })
+    197: Object.freeze({ id: 197, name: 'detect', type: 'fighting', power: null, accuracy: null, pp: 5, damageClass: 'status', priority: 4, target: 'self' }),
+    588: Object.freeze({ id: 588, name: 'kings-shield', type: 'steel', power: null, accuracy: null, pp: 10, damageClass: 'status', priority: 4, target: 'self' })
   });
-  const isProtectMove = move => Boolean(move?.p8MaxGuard)||Boolean(PROTECT_MOVES[Number(move?.id)] && (!move.name || move.name === PROTECT_MOVES[Number(move.id)].name)) || (typeof move?.name === 'string' && ['protect', 'detect'].includes(move.name.trim().toLowerCase()));
+  const isProtectMove = move => Boolean(move?.p8MaxGuard)||Boolean(PROTECT_MOVES[Number(move?.id)] && (!move.name || move.name === PROTECT_MOVES[Number(move.id)].name)) || (typeof move?.name === 'string' && ['protect', 'detect', 'kings-shield'].includes(move.name.trim().toLowerCase()));
 
   // Moves that bypass protection without breaking it (Hyper Drill #887)
   const PROTECT_BYPASSING_MOVES = Object.freeze([887]);
@@ -819,6 +820,7 @@
     269: Object.freeze({ id: 269, name: 'taunt', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'TAUNT'], knownPending: [], blockedReason: null, priority: 0 }),
     668: Object.freeze({ id: 668, name: 'strength-sap', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'STAT_DROP', 'HEAL'], knownPending: [], blockedReason: null, priority: 0 }),
     197: Object.freeze({ id: 197, name: 'detect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
+    588: Object.freeze({ id: 588, name: 'kings-shield', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
     49: Object.freeze({ id: 49, name: 'sonic-boom', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     82: Object.freeze({ id: 82, name: 'dragon-rage', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE', 'FIXED_DAMAGE_CONSTANT'], knownPending: [], blockedReason: null, priority: 0 }),
     69: Object.freeze({ id: 69, name: 'seismic-toss', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'FIXED_DAMAGE_LEVEL'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -1611,6 +1613,7 @@
       power: 0, accuracy: 90, pp: 20, damageClass: 'status', statusEffect: 'paralysis' }),
     'protect': PROTECT_MOVES[182],
     'detect': PROTECT_MOVES[197],
+    'kings-shield': PROTECT_MOVES[588],
     'substitute': Object.freeze({ id: 164, name: 'substitute', type: 'normal', power: 0, accuracy: null, pp: 10, damageClass: 'status', target: 'self' }),
     'taunt': Object.freeze({ id: 269, name: 'taunt', type: 'dark', power: 0, accuracy: 100, pp: 20, damageClass: 'status', target: 'normal' }),
     'strength-sap': Object.freeze({ id: 668, name: 'strength-sap', type: 'grass', power: 0, accuracy: 100, pp: 10, damageClass: 'status', target: 'normal' }),

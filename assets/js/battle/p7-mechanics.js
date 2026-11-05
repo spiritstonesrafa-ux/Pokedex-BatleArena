@@ -12,7 +12,7 @@ const pending={13:['HIGH_CRITICAL_PHASE_P1'],143:['HIGH_CRITICAL_PHASE_P1'],856:
 const definitions=Object.freeze(Object.fromEntries(Object.values(moves).map(m=>[m.id,Object.freeze({id:m.id,name:m.name,supportLevel:pending[m.id]?'PARTIAL':'FULL',requiredMechanics:Object.freeze([m.damageClass==='status'?'STATUS_MOVE':m.damageClass==='physical'?'PHYSICAL_DAMAGE':'SPECIAL_DAMAGE',weatherMoves[m.id]?'WEATHER':terrainMoves[m.id]?'TERRAIN':'P7_INTERACTION']),knownPending:Object.freeze(pending[m.id]||[]),blockedReason:null,priority:m.priority})])));
 const statusMoves=Object.freeze(Object.fromEntries(Object.values(moves).filter(m=>m.damageClass==='status').map(m=>[m.name,m])));
 const get=(s,r)=>s[r]?.team?s[r].team[s[r].activeIndex||0]:s[r],foe=r=>r==='player'?'enemy':'player';
-function ability(m,ignored=false){return !m||m.currentHp<=0||((m.abilitySuppressed||ignored)&&!['as-one-spectrier','as-one-glastrier','schooling','shields-down','battle-bond','zen-mode','zero-to-hero'].includes(m.ability))||!supportedAbilities.has(m.ability)?'':m.ability;}
+function ability(m,ignored=false){return !m||m.currentHp<=0||((m.abilitySuppressed||ignored)&&!['as-one-spectrier','as-one-glastrier','schooling','shields-down','battle-bond','zen-mode','zero-to-hero','multitype','rks-system','stance-change','power-construct'].includes(m.ability))||!supportedAbilities.has(m.ability)?'':m.ability;}
 function held(m,name){return m?.item===name&&!(m.dynamax&&['choice-band','choice-specs','choice-scarf'].includes(name));}
 function ignored(a,d,move){return !held(d,'ability-shield')&&([714,722,723].includes(Number(move?.id))||['mold-breaker','teravolt','turboblaze'].includes(ability(a)));}
 function defenderAbility(a,d,move){return ability(d)==='full-metal-body'?'full-metal-body':ability(d,ignored(a,d,move));}
@@ -28,7 +28,7 @@ function refreshBerries(s,C,events){for(const r of ['player','enemy'])for(const 
 function pressureCost(s,r,move){
  // Canonical all-field moves retain their Pressure targets despite legacy self-target metadata.
  if([114,195,201,240,241,258,580,581,604,678,883,191,390,446,851].includes(move.id))return activeMons(s,foe(r)).filter(m=>ability(m)==='pressure').length;
- if([165,14,156,214,347,182,197].includes(move.id)||move.damageClass==='status_self'||['self','allySide','allyTeam','foeSide'].includes(move.target))return 0;
+ if([165,14,156,214,347,182,197,588].includes(move.id)||move.damageClass==='status_self'||['self','allySide','allyTeam','foeSide'].includes(move.target))return 0;
  // A doubles pair can refer to an ally; use the actual action target set.
  const targets=s.pressureTargets||(s.doublesAllyTarget?[]:[get(s,foe(r))]);
  return targets.filter(m=>ability(m)==='pressure').length;
@@ -74,7 +74,7 @@ function enter(s,r,C,events){const m=get(s,r);if(m.currentHp<=0)return;const a=a
  const weather={drizzle:'rain',drought:'sun','sand-stream':'sand','snow-warning':'snow'}[a];if(weather)setWeather(s,weather,m,C,events,r);
  const terrain={'electric-surge':'electric','grassy-surge':'grassy','misty-surge':'misty','psychic-surge':'psychic'}[a];if(terrain)setTerrain(s,terrain,m,C,events,r);checkItem(s,r,C,events);Special.enter(s,r,C,events);sync(s);refreshBerries(s,C,events);
 }
-function leave(s,r,m,C,events){Special.endDynamax(m);const a=ability(m);if(m.currentHp>0&&a==='regenerator')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/3)));if(m.currentHp>0&&a==='natural-cure'&&m.statusCondition){const status=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:status,reason:'NATURAL_CURE'});}if(m.currentHp>0&&!m.transformOriginal&&(m.id===964||m.speciesId===964||m.name==='palafin-zero')&&a==='zero-to-hero'&&!m.zeroToHeroTransformed){Special.triggerZeroToHero(m,s,r,C,events);}m.choiceLock=null;m.abilitySuppressed=false;m.flashFire=false;m.abilityIgnored=false;m.p7AbilityTrap=false;m.proteanUsed=false;}
+function leave(s,r,m,C,events){Special.leave(m,false);const a=ability(m);if(m.currentHp>0&&a==='regenerator')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/3)));if(m.currentHp>0&&a==='natural-cure'&&m.statusCondition){const status=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:status,reason:'NATURAL_CURE'});}if(m.currentHp>0&&!m.transformOriginal&&(m.id===964||m.speciesId===964||m.name==='palafin-zero')&&a==='zero-to-hero'&&!m.zeroToHeroTransformed){Special.triggerZeroToHero(m,s,r,C,events);}m.choiceLock=null;m.abilitySuppressed=false;m.flashFire=false;m.abilityIgnored=false;m.p7AbilityTrap=false;m.proteanUsed=false;}
 function stat(m,key){let f=1;const a=ability(m,Boolean(m.abilityIgnored)),w=m.envWeather;
  if(key==='attack'){if(held(m,'choice-band'))f*=1.5;if(['huge-power','pure-power'].includes(a))f*=2;if(a==='guts'&&m.statusCondition)f*=1.5;if(a==='hustle')f*=1.5;}
  if(key==='defense'&&a==='marvel-scale'&&m.statusCondition&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(m.statusCondition))f*=1.5;

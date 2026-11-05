@@ -310,6 +310,7 @@
       // Metadados visuais e sonoros passivos (preservação limpa sem acoplamento de DOM, fetch ou resolução de imagem)
       if (raw.photo && typeof raw.photo === 'string') combatant.photo = raw.photo;
       if (raw.animatedPhoto && typeof raw.animatedPhoto === 'string') combatant.animatedPhoto = raw.animatedPhoto;
+      if (raw.sprite && typeof raw.sprite === 'string') combatant.sprite = raw.sprite;
       if (raw.cry && typeof raw.cry === 'string') combatant.cry = raw.cry;
 
       constants.P8.initMon(combatant,raw);
@@ -829,6 +830,8 @@
      */
     function afterDirectHit(attacker,defender,attackerRole,defenderRole,move,events,damage){
       if(damage<=0)return;
+      if(defender.illusionDisguise){constants.P8.breakIllusion?.(defender,events,defenderRole,constants);}
+      if(defender.ability==='gulp-missile'){constants.P8.checkGulpMissileDamage?.(attacker,defender,damage,constants,events,defenderRole,attackerRole);}
       if(defender.shellTrapReady && move.damageClass==='physical')defender.shellTrapTriggered=true;
       defender.focusLost=true;
       if(defender.bideState)defender.bideState.damage+=damage;
@@ -1250,6 +1253,7 @@
         if (constants.P7?.canActivateProtean?.(attacker, selectedMove, actualDamageType)) {
           constants.P7.activateProtean(state, attackerRole, attacker, selectedMove, actualDamageType, constants, events);
         }
+        constants.P8.checkStanceChange?.(attacker, selectedMove, constants, events, attackerRole);
       }
       if (!immobilized && !entryRestricted && !isTwoTurnCharging) {
         // Mantém a ordem histórica MOVE_USED → PP_CHANGED nos golpes executados.
@@ -1914,6 +1918,9 @@
             hitDamage=constants.P7.survive(state,attackerRole,damageMove,hitDamage,constants,events);
             const hasMultiSub = Boolean(defender.substituteHp > 0 || defender.substitute);
             const bypassesMultiSub = attackerInfiltrates || (constants.MoveFlags?.isSoundMove?.(damageMove) ?? false);
+            const disguiseMulti = constants.P8.checkDisguiseDamage?.(attacker, defender, damageMove, actualDamageClass, hasMultiSub && !bypassesMultiSub, constants, events, defenderRole);
+            const iceFaceMulti = !disguiseMulti && constants.P8.checkIceFaceDamage?.(attacker, defender, damageMove, actualDamageClass, hasMultiSub && !bypassesMultiSub, constants, events, defenderRole);
+            if (disguiseMulti || iceFaceMulti) hitDamage = 0;
             let hitActualDamage = 0;
             const previousHp = defender.currentHp;
             if (hasMultiSub && !bypassesMultiSub) {
@@ -1971,6 +1978,9 @@
       // 7. Aplicação do dano ao HP
       const hasActiveSub = Boolean(defender.substituteHp > 0 || defender.substitute);
       const bypassesSubDamage = attackerInfiltrates || (constants.MoveFlags?.isSoundMove?.(damageMove) ?? false);
+      const disguiseAbsorbed = effectiveMultiplier > 0 && constants.P8.checkDisguiseDamage?.(attacker, defender, damageMove, actualDamageClass, hasActiveSub && !bypassesSubDamage, constants, events, defenderRole);
+      const iceFaceAbsorbed = effectiveMultiplier > 0 && !disguiseAbsorbed && constants.P8.checkIceFaceDamage?.(attacker, defender, damageMove, actualDamageClass, hasActiveSub && !bypassesSubDamage, constants, events, defenderRole);
+      if (disguiseAbsorbed || iceFaceAbsorbed) finalDamage = 0;
       let previousHp = defender.currentHp;
       let currentHp = defender.currentHp;
       let actualDamageDealt = 0;
@@ -2316,6 +2326,7 @@
       }
 
       constants.P6.afterDamage(state,attackerRole,selectedMove,action||{},constants,events,actualDamageDealt);
+      constants.P8.checkGulpMissileMove?.(attacker, selectedMove, constants, events, attackerRole);
       // 12. Nocaute (Faint Detection - defensor e/ou atacante por recuo)
       const faintedRoles = [];
       if (currentHp === 0) {constants.P7.directKO(state,attackerRole,defender,constants,events,attacker);faintedRoles.push(defenderRole);}
