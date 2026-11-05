@@ -136,7 +136,7 @@ Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída f
 
 ### H6 — Tipos e mudanças de forma
 
-**Inventário:** 13 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C, 1 em H6-D); 29 registros com habilidade padrão afetados.
+**Inventário:** 12 habilidades pendentes (6 concluídas em H6-A, 3 em H6-B, 1 em H6-C, 1 em H6-D, 1 em H6-E); 27 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H2/H3/H4 conforme forma; base comum de exceções de H7.
 
@@ -249,7 +249,24 @@ Lote canônico focado na mecânica de proteção contra status e alteração din
    - **Proteções canônicas:** Insubstituível, não suprimível (`suppressible: false`), não ignorável por Mold Breaker (`breakable: false`), não trocável (`swappable: false`) e não copiável por Transform para mudar forma (`copyable: false`).
    - **Compatibilidade total:** Testado com Terastallization, Dynamax, Transform, Imposter, batalhas em Duplas e IA determinística pura.
 
-**Lista restante de H6 (13 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `disguise`, `battle-bond`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `zero-to-hero`, `gulp-missile`.
+#### H6-E — Battle Bond (Greninja) (CONCLUÍDO)
+
+Lote canônico focado na mecânica de fortalecimento canônico de Greninja na Geração IX (Scarlet/Violet):
+
+1. **`battle-bond`** (Gen VII-IX, Regras Canônicas Gen IX):
+   - **Mecânica canônica Gen IX (SV):** Ao derrotar diretamente um adversário por dano de movimento (`directKO`), se ainda restarem Pokémon não derrotados na equipe adversária (`foesRemaining > 0`), Battle Bond ativa **exatamente uma vez por batalha** (`once per battle`), concedendo **+1 Ataque, +1 Ataque Especial e +1 Velocidade**.
+   - **Sem transformação para Ash-Greninja:** Na Gen IX, Greninja **NÃO** altera forma, **NÃO** altera sprite, **NÃO** recalibra Base Stats para 640 BST e **NÃO** emite evento `FORM_CHANGED`.
+   - **Ativação estritamente única:** Controlada pela flag `battleBondTriggered: true` no combatente ativo. A flag persiste entre trocas de Pokémon e não é resetada por trocas, desmaio/reanimação ou movimentos de remoção de estágios (ex: Clear Smog). É reiniciada para `false` apenas no início de uma nova batalha limpa.
+   - **Exclusão de dano residual:** Nocautes decorrentes de condições de status (Poison, Burn), clima (Sandstorm, Hail), hazards (Stealth Rock, Spikes) ou recoil em que o atacante desmaia simultaneamente NÃO ativam Battle Bond.
+   - **Sobrevivência obrigatória:** O usuário deve estar vivo no momento da resolução (`m.currentHp > 0`). Se desmaiar por recuo (Double-Edge, Struggle) ou dano de contato fatal (Rocky Helmet), Battle Bond não dispara. Se sobreviver ao nocaute, ativa antes do dano pós-ataque de Life Orb.
+   - **Condição de oponentes restantes:** Se o golpe nocauteia o último Pokémon adversário da equipe ou em combate individual 1v1 sem reservas (`foesRemaining === 0`), Battle Bond não ativa.
+   - **Isolamento de Transform / Imposter:** Dittos transformados em Greninja (#10116) possuem `transformOriginal` e não ativam Battle Bond. Greninja transformado em outro Pokémon também é inelegível.
+   - **Elegibilidade estrita de espécie:** Aplicável exclusivamente à forma canônica portadora `#10116` (`greninja-battle-bond`). O registro legado `#10117` (`greninja-ash`), a forma base `#658` (Torrent/Protean) e espécies não-Greninja com Battle Bond injetado são inelegíveis e rejeitados canonicamente.
+   - **Proteções canônicas:** Insubstituível, não suprimível (`suppressible: false`, imune a Core Enforcer e Neutralizing Gas), inquebrável por Mold Breaker (`breakable: false`), não copiável (`copyable: false`) e não trocável por Skill Swap (`swappable: false`).
+   - **Compatibilidade total:** Coberto com Terastallization (mantém tipo Tera), Dynamax, Duplas (KOs em área ativam apenas uma vez), composição com itens de Choice (Choice Scarf, Specs, Band) e IA determinística pura.
+   - Coberto por 48 testes determinísticos em `tests/battle/abilities-h6e.test.js`.
+
+**Lista restante de H6 (12 pendentes):** `forecast`, `multitype`, `zen-mode`, `illusion`, `stance-change`, `disguise`, `power-construct`, `rks-system`, `ice-face`, `mimicry`, `zero-to-hero`, `gulp-missile`.
 
 ### H7 — Cópia, troca e supressão de habilidades
 

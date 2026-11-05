@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 111,
+    "declaredSupported": 112,
     "assignedAbilities": 313,
-    "assignedPending": 203,
+    "assignedPending": 202,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 555
+    "recordsWithPendingDefault": 553
   },
   "phases": [
     {
@@ -45,8 +45,8 @@
     {
       "id": "H6",
       "name": "Tipos e mudanças de forma",
-      "assignedPending": 13,
-      "defaultRecordsImpacted": 29
+      "assignedPending": 12,
+      "defaultRecordsImpacted": 27
     },
     {
       "id": "H7",
@@ -986,8 +986,8 @@
     },
     {
       "name": "battle-bond",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H6",
       "pokemon": [
         {

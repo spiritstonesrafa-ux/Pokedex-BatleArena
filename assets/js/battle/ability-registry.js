@@ -681,6 +681,25 @@
     }
   };
 
+  const H6E_METADATA = {
+    'battle-bond': {
+      id: 'battle-bond',
+      name: 'Battle Bond',
+      generation: 7,
+      phase: 'H6',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DIRECT_KO']),
+      bearer: 'Greninja (#10116)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h6e.test.js']),
+      description: 'Na Geração IX (SV), quando Greninja com Battle Bond (#10116) derrota diretamente um oponente por dano de movimento, e ainda restarem Pokémon não derrotados na equipe adversária, Battle Bond é ativado exatamente uma vez por batalha, aumentando seu Ataque, Ataque Especial e Velocidade em 1 estágio. Não altera forma nem estatísticas base para Ash-Greninja. Não pode ser suprimida, copiada por Transform/Role Play/Trace nem trocada por Skill Swap.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -729,6 +748,11 @@
 
     if (H6D_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H6D_METADATA[slug] }));
+      continue;
+    }
+
+    if (H6E_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H6E_METADATA[slug] }));
       continue;
     }
 
