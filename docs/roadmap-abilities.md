@@ -65,6 +65,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | Lote | Habilidades | Motivo e validação principal |
 | --- | --- | --- |
 | H1-A | Justified, Moxie, Chilling Neigh, As One Glastrier, Dauntless Shield | Keldeo, Calyrex Glacial e Zamazenta; reação ao dano, autoria de KO e entrada. Reusar Unnerve para berries, sem copiar Grim Neigh para o atributo errado. |
+| H1-B | Defiant, Competitive, Contrary, Mirror Armor, Opportunist, Guard Dog, Anger Point, Rattled | Reações canônicas a reduções de atributo por oponentes, inversão de estágios, cópia de bônus, bloqueio de troca forçada/Intimidate e respostas a acertos críticos/tipos Bug/Ghost/Dark. |
 | H2-A | Marvel Scale, Hustle, Keen Eye, Steadfast (H1) | Milotic, Togekiss, Pelipper/Skarmory e Lucario aparecem na campanha e nas instalações; revisar defesa, precisão, ataques físicos/especiais e flinch. Entregar em commits separados por família. |
 | H3-A | Rough Skin, Iron Barbs, Effect Spore, Synchronize, Shed Skin | Reações de contato, imunidades e cura; testar quem recebe cada efeito e se um KO impede ativações posteriores. |
 | H4-A | Dark Aura, Fairy Aura, Aura Break, Prism Armor e Neuroforce (H2) | **Implementado (FULL)**. Efeitos canônicos para Yveltal (#717), Xerneas (#716), Zygarde (#718), Necrozma (#800) e Ultra Necrozma (#10157). |
@@ -76,7 +77,7 @@ A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes c
 
 ### H1 — Bônus de entrada, nocaute e reações
 
-**Inventário:** 25 habilidades pendentes (H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A); 75 registros com habilidade padrão afetados.
+**Inventário:** 17 habilidades pendentes (H1-A: 5 concluídas, Steadfast em H2-A, Soul-Heart em H7-A, H1-B: 8 concluídas); 75 registros com habilidade padrão afetados.
 
 **Dependências:** H0; autoria de KO, estágios e eventos de entrada existentes.
 
@@ -85,6 +86,60 @@ Dividir em entrada/KO, reações ao dano, reações a reduções e efeitos por e
 **Aceite:** Dano evitado, proteção e imunidade não geram gatilhos errados; limites de estágios; KO residual não atribuído ao último atacante; dois KOs e aliados corretos em duplas; reset de marcadores e contagem de baixas.
 
 **Lista completa da família:** `justified`, `moxie`, `chilling-neigh`, `as-one-glastrier`, `dauntless-shield`, `defiant`, `competitive`, `steadfast`, `rattled`, `weak-armor`, `stamina`, `berserk`, `anger-point`, `anger-shell`, `water-compaction`, `steam-engine`, `cotton-down`, `electromorphosis`, `wind-power`, `wind-rider`, `guard-dog`, `thermal-exchange`, `opportunist`, `download`, `beast-boost`, `soul-heart`, `supreme-overlord`, `contrary`, `mirror-armor`, `moody`, `motor-drive`, `speed-boost`.
+
+#### H1-B — Reações a Reduções, Inversão, Cópia e Respostas a Dano/Crítico (Defiant, Competitive, Contrary, Mirror Armor, Opportunist, Guard Dog, Anger Point, Rattled) (CONCLUÍDO)
+
+Lote unificado de oito habilidades canônicas de reações a alterações de atributos, inversão de estágios, duplicação de bônus adversários, imunidade a troca forçada e respostas a acertos críticos/dano na Geração IX:
+
+1. **`defiant`** (Gen V-IX):
+   - Quando um oponente reduz qualquer atributo do portador, seu Attack aumenta em +2 estágios por redução.
+   - Aplica-se a reduções causadas por movimentos ofensivos (efeitos secundários como Shadow Ball/Icy Wind), movimentos de status adversários (Growl, Fake Tears) e habilidades adversárias (Intimidate).
+   - Não ativa quando a redução é causada pelo próprio Pokémon (Close Combat, Curse) ou por aliados em duplas.
+   - Ativa mesmo quando o atributo reduzido já estava no piso (-6) se a redução tiver sido tentada por um oponente.
+   - Coberto por 8 testes determinísticos em `tests/battle/abilities-h1b-defiant.test.js`.
+
+2. **`competitive`** (Gen VI-IX):
+   - Quando um oponente reduz qualquer atributo do portador, seu Special Attack aumenta em +2 estágios por redução.
+   - Segue os mesmos contratos de origem adversária que Defiant.
+   - Não ativa por auto-reduções ou reduções infligidas por aliados.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1b-competitive.test.js`.
+
+3. **`contrary`** (Gen V-IX):
+   - Inverte todas as alterações de estágio de atributos recebidas pelo portador: bônus tornam-se penalidades e penalidades tornam-se bônus.
+   - Aplica-se a reduções e aumentos de movimentos próprios (Superpower, Overheat, Leaf Storm, Draco Meteor concedem +Attack/+Defense ou +Special Attack), movimentos adversários e habilidades como Intimidate (+1 Attack).
+   - Não inverte trocas diretas de atributos ou reset de estágios (Haze, Clear Smog).
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1b-contrary.test.js`.
+
+4. **`mirror-armor`** (Gen VIII-IX):
+   - Reflete exclusivamente reduções de atributos causadas por oponentes de volta para o atacante.
+   - Não reflete reduções auto-infligidas (Close Combat, Curse) nem perigos de entrada de campo sem atacante direto (Sticky Web).
+   - Se o adversário tiver Mirror Armor, Clear Body ou efeito protetor similar, a reflexão é bloqueada pelo alvo, sem loops infinitos.
+   - Coberto por 8 testes determinísticos em `tests/battle/abilities-h1b-mirror-armor.test.js`.
+
+5. **`opportunist`** (Gen IX):
+   - Sempre que um oponente ganha um aumento positivo de estágio de atributo, o portador copia exatamente o mesmo bônus no mesmo atributo.
+   - Aplica-se a bônus de movimentos (Swords Dance, Dragon Dance, Calm Mind) e habilidades de entrada/reação (Intrepid Sword, Moxie, Speed Boost).
+   - Protegido contra replicação mútua infinita entre múltiplos portadores de Opportunist via flag `isOpportunistCopy`.
+   - Ativa independentemente para cada atributo aumentado.
+   - Coberto por 7 testes determinísticos em `tests/battle/abilities-h1b-opportunist.test.js`.
+
+6. **`guard-dog`** (Gen IX):
+   - Imunidade canônica a movimentos ou itens que forçam a troca do portador (Roar, Whirlwind, Dragon Tail, Circle Throw, Red Card).
+   - Ao receber Intimidate de um adversário, inverte a penalidade de -1 para um bônus de +1 no Attack em vez de sofrer a redução.
+   - Em batalhas individuais e de duplas, o portador permanece no campo quando alvejado por efeito de troca forçada.
+   - Coberto por 6 testes determinísticos em `tests/battle/abilities-h1b-guard-dog.test.js`.
+
+7. **`anger-point`** (Gen IV-IX):
+   - Ao receber um acerto crítico de um ataque direto que cause dano real, eleva imediatamente o Attack ao estágio máximo (+6).
+   - Não ativa se o golpe crítico atingir e for totalmente absorvido por um Substitute.
+   - Não ativa se o portador desmaiar com o golpe.
+   - Coberto por 6 testes determinísticos em `tests/battle/abilities-h1b-anger-point.test.js`.
+
+8. **`rattled`** (Gen V-IX):
+   - Ao ser atingido por movimentos ofensivos dos tipos Bug, Ghost ou Dark, aumenta a Speed em +1 estágio por acerto.
+   - Ao ser alvo de Intimidate de um oponente, além da redução normal de Attack, ganha imediatamente +1 em Speed.
+   - Não ativa em acertos que forem totalmente absorvidos por um Substitute.
+   - Coberto por 8 testes determinísticos em `tests/battle/abilities-h1b-rattled.test.js`.
 
 ### H2 — Dano, atributos, precisão e críticos
 

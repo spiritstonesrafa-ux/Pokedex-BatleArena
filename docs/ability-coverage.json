@@ -4,19 +4,19 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 132,
+    "declaredSupported": 140,
     "assignedAbilities": 313,
-    "assignedPending": 182,
+    "assignedPending": 174,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 513
+    "recordsWithPendingDefault": 498
   },
   "phases": [
     {
       "id": "H1",
       "name": "Bônus de entrada, nocaute e reações",
-      "assignedPending": 25,
-      "defaultRecordsImpacted": 58
+      "assignedPending": 17,
+      "defaultRecordsImpacted": 43
     },
     {
       "id": "H2",
@@ -421,8 +421,8 @@
     },
     {
       "name": "anger-point",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -2245,8 +2245,8 @@
     },
     {
       "name": "competitive",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -2461,8 +2461,8 @@
     },
     {
       "name": "contrary",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -3205,8 +3205,8 @@
     },
     {
       "name": "defiant",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -5508,8 +5508,8 @@
     },
     {
       "name": "guard-dog",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -10301,8 +10301,8 @@
     },
     {
       "name": "mirror-armor",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -11362,8 +11362,8 @@
     },
     {
       "name": "opportunist",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {
@@ -13990,8 +13990,8 @@
     },
     {
       "name": "rattled",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H1",
       "pokemon": [
         {

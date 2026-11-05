@@ -1569,14 +1569,18 @@
         const targetAtk = Math.max(1, defender.stats?.attack || defender.attack || 50);
         const stageMod = constants.getStatStageMultiplier ? constants.getStatStageMultiplier(defender.statStages?.attack || 0) : 1;
         const effectiveAtk = Math.floor(targetAtk * stageMod);
-        const report = constants.applyStatStageChange(defender, 'attack', -1);
-        events.push({
-          type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
-          combatant: defenderRole,
-          pokemonName: defender.name,
-          statKey: 'attack',
-          ...report
-        });
+        if (constants.P7?.modifyStages) {
+          constants.P7.modifyStages(state, defenderRole, defender, { attack: -1 }, attackerRole, attacker, 'strength-sap', constants, events);
+        } else {
+          const report = constants.applyStatStageChange(defender, 'attack', -1);
+          events.push({
+            type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+            combatant: defenderRole,
+            pokemonName: defender.name,
+            statKey: 'attack',
+            ...report
+          });
+        }
         const previousHp = attacker.currentHp;
         attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + effectiveAtk);
         const healedAmount = attacker.currentHp - previousHp;
@@ -1651,7 +1655,11 @@
       if(selectedMove.id===599){
         if(!['poison','toxic'].includes(defender.statusCondition)){fail('VENOM_DRENCH');return;}
         if(['attack','specialAttack','speed'].every(k=>defender.statStages[k]<=-6)){fail('STAT_LIMIT');return;}
-        for(const statKey of ['attack','specialAttack','speed']){const report=constants.applyStatStageChange(defender,statKey,-1);events.push({type:BATTLE_EVENTS.STAT_STAGE_CHANGED,combatant:defenderRole,pokemonName:defender.name,statKey,...report});}
+        if(constants.P7?.modifyStages){
+          constants.P7.modifyStages(state,defenderRole,defender,{attack:-1,specialAttack:-1,speed:-1},attackerRole,attacker,'venom-drench',constants,events);
+        }else{
+          for(const statKey of ['attack','specialAttack','speed']){const report=constants.applyStatStageChange(defender,statKey,-1);events.push({type:BATTLE_EVENTS.STAT_STAGE_CHANGED,combatant:defenderRole,pokemonName:defender.name,statKey,...report});}
+        }
         return;
       }
       if (selectedMove.damageClass === MOVE_DAMAGE_CLASSES.STATUS) {
@@ -1739,19 +1747,23 @@
 
         const statBoosts = selectedMove.statBoosts || (constants.getStatBoosts && constants.getStatBoosts(selectedMove));
         if (statBoosts && typeof statBoosts === 'object') {
-          for (const [statKey, delta] of Object.entries(statBoosts)) {
-            const report = constants.applyStatStageChange(attacker, statKey, delta);
-            events.push({
-              type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
-              combatant: attackerRole,
-              pokemonName: attacker.name,
-              statKey: report.statKey,
-              previousStage: report.previousStage,
-              requestedDelta: report.requestedDelta,
-              appliedDelta: report.appliedDelta,
-              finalStage: report.finalStage,
-              blockedReason: report.blockedReason
-            });
+          if (constants.P7?.modifyStages) {
+            constants.P7.modifyStages(state, attackerRole, attacker, statBoosts, attackerRole, attacker, 'status-boost', constants, events);
+          } else {
+            for (const [statKey, delta] of Object.entries(statBoosts)) {
+              const report = constants.applyStatStageChange(attacker, statKey, delta);
+              events.push({
+                type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                combatant: attackerRole,
+                pokemonName: attacker.name,
+                statKey: report.statKey,
+                previousStage: report.previousStage,
+                requestedDelta: report.requestedDelta,
+                appliedDelta: report.appliedDelta,
+                finalStage: report.finalStage,
+                blockedReason: report.blockedReason
+              });
+            }
           }
           return;
         }
@@ -2093,19 +2105,23 @@
       // 10B. Auto-penalidades de Atributo (Self Stat Drops: Close Combat, Overheat, Draco Meteor)
       const selfDrops = constants.P5.drops[selectedMove.id] || selectedMove.selfStatDrops || (constants.getSelfStatDrops && constants.getSelfStatDrops(selectedMove));
       if (effectiveMultiplier > 0 && attacker.currentHp > 0 && selfDrops && typeof selfDrops === 'object') {
-        for (const [statKey, delta] of Object.entries(selfDrops)) {
-          const report = constants.applyStatStageChange(attacker, statKey, delta);
-          events.push({
-            type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
-            combatant: attackerRole,
-            pokemonName: attacker.name,
-            statKey: report.statKey,
-            previousStage: report.previousStage,
-            requestedDelta: report.requestedDelta,
-            appliedDelta: report.appliedDelta,
-            finalStage: report.finalStage,
-            blockedReason: report.blockedReason
-          });
+        if (constants.P7?.modifyStages) {
+          constants.P7.modifyStages(state, attackerRole, attacker, selfDrops, attackerRole, attacker, 'self-drop', constants, events);
+        } else {
+          for (const [statKey, delta] of Object.entries(selfDrops)) {
+            const report = constants.applyStatStageChange(attacker, statKey, delta);
+            events.push({
+              type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+              combatant: attackerRole,
+              pokemonName: attacker.name,
+              statKey: report.statKey,
+              previousStage: report.previousStage,
+              requestedDelta: report.requestedDelta,
+              appliedDelta: report.appliedDelta,
+              finalStage: report.finalStage,
+              blockedReason: report.blockedReason
+            });
+          }
         }
       }
 
@@ -2189,21 +2205,25 @@
 
           if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
             if ((!state.p6Sides[defenderRole].mist || attackerInfiltrates) && secondaryEffectRoll <= secEffect.chance) {
-              for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
-                const report = constants.applyStatStageChange(defender, statKey, delta);
-                events.push({
-                  type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
-                  combatant: defenderRole,
-                  pokemonName: defender.name,
-                  statKey: report.statKey,
-                  previousStage: report.previousStage,
-                  requestedDelta: report.requestedDelta,
-                  appliedDelta: report.appliedDelta,
-                  finalStage: report.finalStage,
-                  blockedReason: report.blockedReason
-                });
-                if (report.blockedReason === 'ABILITY' && report.statKey === 'accuracy' && constants.P7.ability(defender) === 'keen-eye') {
-                  events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: 'keen-eye' });
+              if (constants.P7?.modifyStages) {
+                constants.P7.modifyStages(state, defenderRole, defender, secEffect.statDrops, attackerRole, attacker, 'secondary-effect', constants, events);
+              } else {
+                for (const [statKey, delta] of Object.entries(secEffect.statDrops)) {
+                  const report = constants.applyStatStageChange(defender, statKey, delta);
+                  events.push({
+                    type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                    combatant: defenderRole,
+                    pokemonName: defender.name,
+                    statKey: report.statKey,
+                    previousStage: report.previousStage,
+                    requestedDelta: report.requestedDelta,
+                    appliedDelta: report.appliedDelta,
+                    finalStage: report.finalStage,
+                    blockedReason: report.blockedReason
+                  });
+                  if (report.blockedReason === 'ABILITY' && report.statKey === 'accuracy' && constants.P7.ability(defender) === 'keen-eye') {
+                    events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: 'keen-eye' });
+                  }
                 }
               }
             }
@@ -2213,19 +2233,23 @@
         // Efeitos no atacante (ex: Ancient Power): exigem sobrevivência do atacante (attacker.currentHp > 0)
         if (attacker.currentHp > 0 && secEffect.target === 'attacker' && secEffect.statBoosts && typeof secEffect.statBoosts === 'object') {
           if (secondaryEffectRoll <= secEffect.chance) {
-            for (const [statKey, delta] of Object.entries(secEffect.statBoosts)) {
-              const report = constants.applyStatStageChange(attacker, statKey, delta);
-              events.push({
-                type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
-                combatant: attackerRole,
-                pokemonName: attacker.name,
-                statKey: report.statKey,
-                previousStage: report.previousStage,
-                requestedDelta: report.requestedDelta,
-                appliedDelta: report.appliedDelta,
-                finalStage: report.finalStage,
-                blockedReason: report.blockedReason
-              });
+            if (constants.P7?.modifyStages) {
+              constants.P7.modifyStages(state, attackerRole, attacker, secEffect.statBoosts, attackerRole, attacker, 'secondary-boost', constants, events);
+            } else {
+              for (const [statKey, delta] of Object.entries(secEffect.statBoosts)) {
+                const report = constants.applyStatStageChange(attacker, statKey, delta);
+                events.push({
+                  type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                  combatant: attackerRole,
+                  pokemonName: attacker.name,
+                  statKey: report.statKey,
+                  previousStage: report.previousStage,
+                  requestedDelta: report.requestedDelta,
+                  appliedDelta: report.appliedDelta,
+                  finalStage: report.finalStage,
+                  blockedReason: report.blockedReason
+                });
+              }
             }
           }
         }
@@ -2276,53 +2300,57 @@
 
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)
       if (currentHp > 0 && finalDamage > 0 && state.version === 2 && state.battleFormat!=='DOUBLES' && !defender.dynamax && constants.isForcedSwitchMove?.(selectedMove)) {
-        const defenderSide = state[defenderRole];
-        const eligibleBench = defenderSide.team
-          .map((p, idx) => ({ pokemon: p, index: idx }))
-          .filter(item => item.index !== defenderSide.activeIndex && item.pokemon.currentHp > 0);
+        if (constants.P7?.ability(defender) === 'guard-dog') {
+          events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: 'guard-dog' });
+        } else {
+          const defenderSide = state[defenderRole];
+          const eligibleBench = defenderSide.team
+            .map((p, idx) => ({ pokemon: p, index: idx }))
+            .filter(item => item.index !== defenderSide.activeIndex && item.pokemon.currentHp > 0);
 
-        if (eligibleBench.length > 0) {
-          let targetIndex = eligibleBench[0].index;
-          if (action && action.forcedSwitchIndex !== undefined) {
-            const forced = eligibleBench.find(item => item.index === Number(action.forcedSwitchIndex));
-            if (forced) targetIndex = forced.index;
-          } else if (action && action.forcedSwitchTargetPokemonId !== undefined) {
-            const forced = eligibleBench.find(item => item.pokemon.id === Number(action.forcedSwitchTargetPokemonId));
-            if (forced) targetIndex = forced.index;
+          if (eligibleBench.length > 0) {
+            let targetIndex = eligibleBench[0].index;
+            if (action && action.forcedSwitchIndex !== undefined) {
+              const forced = eligibleBench.find(item => item.index === Number(action.forcedSwitchIndex));
+              if (forced) targetIndex = forced.index;
+            } else if (action && action.forcedSwitchTargetPokemonId !== undefined) {
+              const forced = eligibleBench.find(item => item.pokemon.id === Number(action.forcedSwitchTargetPokemonId));
+              if (forced) targetIndex = forced.index;
+            }
+
+            const previousActive = defender;
+            if (constants.resetStatStages) {
+              constants.resetStatStages(previousActive);
+            }
+            previousActive.isFlinched = false;
+            previousActive.confusionTurns = 0;
+            previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
+            previousActive.substitute = false;
+            previousActive.substituteHp = 0;
+            previousActive.tauntTurns = 0;
+            previousActive.entryMoveAttempts = 0;
+            previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
+            previousActive.toxicStage = 0;
+            defenderSide.activeIndex = targetIndex;
+            const newActive = defenderSide.team[targetIndex];
+            newActive.isFlinched = false;
+            newActive.entryMoveAttempts = 0;
+
+            events.push({
+              type: BATTLE_EVENTS.POKEMON_SWITCHED,
+              side: defenderRole,
+              previousPokemonId: previousActive.id,
+              newPokemonId: newActive.id,
+              reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FORCED : 'FORCED'
+            });
+            constants.P7.leave(state,defenderRole,previousActive,constants,events);
+            constants.P8.restore(previousActive);
+            constants.P6.leave(state,defenderRole,previousActive);
+            constants.P7.sync(state);
+            constants.P6.entry(state,defenderRole,constants,TypeEffectiveness,events);
+            if(newActive.currentHp>0)constants.P7.enter(state,defenderRole,constants,events);
+            if(newActive.currentHp<=0)resolveFaints(state,events,[defenderRole],'entry-hazard');
           }
-
-          const previousActive = defender;
-          if (constants.resetStatStages) {
-            constants.resetStatStages(previousActive);
-          }
-          previousActive.isFlinched = false;
-          previousActive.confusionTurns = 0;
-          previousActive.drowsyTurns=0;previousActive.drowsySleepDuration=0;
-          previousActive.substitute = false;
-          previousActive.substituteHp = 0;
-          previousActive.tauntTurns = 0;
-          previousActive.entryMoveAttempts = 0;
-          previousActive.rechargeMoveId=null;previousActive.lastMoveFailed=false;previousActive.lastDirectHit=null;previousActive.bideState=null;previousActive.twoTurnMove=null;previousActive.beakBlastReady=false;previousActive.shellTrapReady=false;
-          previousActive.toxicStage = 0;
-          defenderSide.activeIndex = targetIndex;
-          const newActive = defenderSide.team[targetIndex];
-          newActive.isFlinched = false;
-          newActive.entryMoveAttempts = 0;
-
-          events.push({
-            type: BATTLE_EVENTS.POKEMON_SWITCHED,
-            side: defenderRole,
-            previousPokemonId: previousActive.id,
-            newPokemonId: newActive.id,
-            reason: constants.SWITCH_REASON ? constants.SWITCH_REASON.FORCED : 'FORCED'
-          });
-          constants.P7.leave(state,defenderRole,previousActive,constants,events);
-          constants.P8.restore(previousActive);
-          constants.P6.leave(state,defenderRole,previousActive);
-          constants.P7.sync(state);
-          constants.P6.entry(state,defenderRole,constants,TypeEffectiveness,events);
-          if(newActive.currentHp>0)constants.P7.enter(state,defenderRole,constants,events);
-          if(newActive.currentHp<=0)resolveFaints(state,events,[defenderRole],'entry-hazard');
         }
       }
 

@@ -1029,6 +1029,137 @@
       description: 'Aumenta o Special Attack do portador em 1 estágio (+1) sempre que qualquer outro Pokémon desmaia no campo de batalha, independentemente de quem causou o nocaute.'
     }
   };
+
+  const H1B_METADATA = {
+    'defiant': {
+      id: 'defiant',
+      name: 'Defiant',
+      generation: 5,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_STAT_DROP']),
+      bearer: 'Kingambit (#983), Bisharp (#625), Primeape (#57)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-defiant.test.js']),
+      description: 'Aumenta o Ataque em 2 estágios (+2) sempre que qualquer atributo do portador for reduzido por uma ação ou efeito de um adversário.'
+    },
+    'competitive': {
+      id: 'competitive',
+      name: 'Competitive',
+      generation: 6,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_STAT_DROP']),
+      bearer: 'Wigglytuff (#40), Milotic (#350), Kilowattrel (#941)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-competitive.test.js']),
+      description: 'Aumenta o Ataque Especial em 2 estágios (+2) sempre que qualquer atributo do portador for reduzido por uma ação ou efeito de um adversário.'
+    },
+    'contrary': {
+      id: 'contrary',
+      name: 'Contrary',
+      generation: 5,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_STAT_STAGE_CHANGE']),
+      bearer: 'Serperior (#497), Malamar (#687), Lurantis (#754), Enamorus (#905)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-contrary.test.js']),
+      description: 'Inverte todas as alterações de estágios de atributos recebidas pelo portador: aumentos tornam-se reduções e reduções tornam-se aumentos.'
+    },
+    'mirror-armor': {
+      id: 'mirror-armor',
+      name: 'Mirror Armor',
+      generation: 8,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_STAT_DROP']),
+      bearer: 'Corviknight (#823)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-mirror-armor.test.js']),
+      description: 'Reflete de volta para o atacante adversário quaisquer reduções de atributos que ele tente infligir ao portador.'
+    },
+    'opportunist': {
+      id: 'opportunist',
+      name: 'Opportunist',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_FOE_STAT_BOOST']),
+      bearer: 'Espathra (#956), Flittle (#955)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-opportunist.test.js']),
+      description: 'Copia imediatamente quaisquer aumentos de atributos obtidos por um oponente ativo no campo.'
+    },
+    'guard-dog': {
+      id: 'guard-dog',
+      name: 'Guard Dog',
+      generation: 9,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_STAT_DROP', 'ON_FORCED_SWITCH']),
+      bearer: 'Mabosstiff (#943), Maschiff (#942), Okidogi (#1014)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-guard-dog.test.js']),
+      description: 'Imune a trocas forçadas. Além disso, ao ser alvo de Intimidate, seu Ataque é aumentado em 1 estágio em vez de ser reduzido.'
+    },
+    'anger-point': {
+      id: 'anger-point',
+      name: 'Anger Point',
+      generation: 4,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
+      bearer: 'Tauros (#128), Primeape (#57), Krookodile (#553), Crabominable (#740)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-anger-point.test.js']),
+      description: 'Ao sofrer um golpe crítico de dano direto, eleva imediatamente o Ataque ao estágio máximo (+6).'
+    },
+    'rattled': {
+      id: 'rattled',
+      name: 'Rattled',
+      generation: 5,
+      phase: 'H1',
+      status: 'FULL',
+      triggers: Object.freeze(['AFTER_DAMAGING_HIT', 'ON_STAT_DROP']),
+      bearer: 'Dunsparce (#206), Dudunsparce (#982), Magikarp (#129), Granbull (#210)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h1b-rattled.test.js']),
+      description: 'Aumenta a Velocidade em 1 estágio ao ser atingido por ataques dos tipos Bug, Ghost ou Dark, ou ao ser intimidado.'
+    }
+  };
   // Registry map
   const registry = new Map();
 
@@ -1097,6 +1228,11 @@
 
     if (H7A_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H7A_METADATA[slug] }));
+      continue;
+    }
+
+    if (H1B_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H1B_METADATA[slug] }));
       continue;
     }
 
