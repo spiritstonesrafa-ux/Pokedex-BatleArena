@@ -583,6 +583,304 @@
     }
   };
 
+    // Canonical H3-B Full Implementation Specifications (21 Abilities)
+  const H3B_METADATA = {
+    'oblivious': {
+      id: 'oblivious',
+      name: 'Oblivious',
+      generation: 3,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_UPDATE', 'ON_IMMUNITY', 'ON_TRY_BOOST']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-basic-protections.test.js']),
+      description: 'Imuniza o portador contra atração (Infatuation / Cute Charm), Taunt e quedas de Attack causadas por Intimidate.'
+    },
+    'aroma-veil': {
+      id: 'aroma-veil',
+      name: 'Aroma Veil',
+      generation: 6,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ALLY_TRY_ADD_VOLATILE']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-team-veils.test.js']),
+      description: 'Protege o portador e seus aliados em campo contra movimentos e efeitos que limitam escolhas: Taunt, Attract, Encore, Torment, Disable e Heal Block.'
+    },
+    'flower-veil': {
+      id: 'flower-veil',
+      name: 'Flower Veil',
+      generation: 6,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ALLY_BOOST', 'ON_ALLY_SET_STATUS']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-team-veils.test.js']),
+      description: 'Protege aliados do tipo Grass contra reduções de estatísticas provocadas por oponentes e contra condições de status não voláteis.'
+    },
+    'sweet-veil': {
+      id: 'sweet-veil',
+      name: 'Sweet Veil',
+      generation: 6,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ALLY_SET_STATUS', 'ON_ALLY_TRY_ADD_VOLATILE']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-team-veils.test.js']),
+      description: 'Impede o portador e aliados ativos de adormecer (Sleep) ou ficarem sonolentos por Yawn. Faz com que o movimento Rest falhe.'
+    },
+    'pastel-veil': {
+      id: 'pastel-veil',
+      name: 'Pastel Veil',
+      generation: 8,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START', 'ON_ALLY_SET_STATUS']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-team-veils.test.js']),
+      description: 'Imuniza o portador e aliados contra envenenamento (Poison e Toxic). Ao entrar em campo, cura imediatamente o veneno de si e dos aliados ativos.'
+    },
+    'purifying-salt': {
+      id: 'purifying-salt',
+      name: 'Purifying Salt',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SET_STATUS', 'ON_SOURCE_MODIFY_ATK', 'ON_SOURCE_MODIFY_SPA']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-special-immunities.test.js']),
+      description: 'Torna o portador imune a todas as condições de status primárias e reduz à metade (0,5x) o dano recebido de movimentos do tipo Ghost.'
+    },
+    'comatose': {
+      id: 'comatose',
+      name: 'Comatose',
+      generation: 7,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START', 'ON_SET_STATUS']),
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-status-advanced.test.js']),
+      description: 'O portador é permanentemente considerado em estado de sono (habilitando Sleep Talk, Snore, Hex, Bad Dreams), mas age livremente sem turnos de sono e é imune a todas as outras condições de status. Insuprimível canonicamente.'
+    },
+    'corrosion': {
+      id: 'corrosion',
+      name: 'Corrosion',
+      generation: 7,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_STATUS_ELIGIBILITY']),
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-status-advanced.test.js']),
+      description: 'Permite ao portador envenenar qualquer Pokémon com seus movimentos, ignorando as imunidades naturais de tipo de Pokémon Steel e Poison.'
+    },
+    'cursed-body': {
+      id: 'cursed-body',
+      name: 'Cursed Body',
+      generation: 5,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGING_HIT']),
+      breakable: false, // flags: {}
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-status-advanced.test.js']),
+      description: 'Possui 30% de chance canônica de desativar (Disable) por 4 turnos o movimento ofensivo utilizado pelo atacante ao sofrer dano direto.'
+    },
+    'toxic-debris': {
+      id: 'toxic-debris',
+      name: 'Toxic Debris',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGING_HIT']),
+      breakable: false, // flags: {}
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-hazards-poison.test.js']),
+      description: 'Ao sofrer dano de um ataque físico direto, espalha uma camada de Toxic Spikes no lado do campo do atacante (máximo de 2 camadas).'
+    },
+    'toxic-chain': {
+      id: 'toxic-chain',
+      name: 'Toxic Chain',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SOURCE_DAMAGING_HIT']),
+      breakable: false, // flags: {}
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-hazards-poison.test.js']),
+      description: 'Ao acertar qualquer movimento de dano direto, possui 30% de chance canônica de infligir envenenamento grave (Toxic) no alvo.'
+    },
+    'poison-puppeteer': {
+      id: 'poison-puppeteer',
+      name: 'Poison Puppeteer',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_SOURCE_SET_STATUS']),
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-hazards-poison.test.js']),
+      description: 'Quando o portador envenena ou causa toxic em um Pokémon adversário com um movimento, o alvo também fica confuso (Confusion).'
+    },
+    'overcoat': {
+      id: 'overcoat',
+      name: 'Overcoat',
+      generation: 5,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_IMMUNITY', 'ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-basic-protections.test.js']),
+      description: 'Protege o portador contra dano de tempestade de areia (Sandstorm) e granizo (Hail), além de conceder imunidade total a movimentos e esporos de pó.'
+    },
+    'wonder-skin': {
+      id: 'wonder-skin',
+      name: 'Wonder Skin',
+      generation: 5,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_ACCURACY']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-special-immunities.test.js']),
+      description: 'Reduz para 50% a precisão de todos os movimentos direcionados da categoria Status utilizados contra o portador cuja precisão base seja superior a 50%.'
+    },
+    'damp': {
+      id: 'damp',
+      name: 'Damp',
+      generation: 3,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ANY_TRY_MOVE', 'ON_DAMAGE']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-basic-protections.test.js']),
+      description: 'Impede o uso de movimentos autodestrutivos explosivos (Self-Destruct, Explosion, Mind Blown, Misty Explosion) por qualquer combatente e desativa Aftermath.'
+    },
+    'soundproof': {
+      id: 'soundproof',
+      name: 'Soundproof',
+      generation: 3,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-basic-protections.test.js']),
+      description: 'Concede imunidade completa a todos os movimentos baseados em som direcionados ao portador.'
+    },
+    'bulletproof': {
+      id: 'bulletproof',
+      name: 'Bulletproof',
+      generation: 6,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-basic-protections.test.js']),
+      description: 'Concede imunidade completa a todos os golpes de projétil, bola e bomba (bullet/bomb moves).'
+    },
+    'earth-eater': {
+      id: 'earth-eater',
+      name: 'Earth Eater',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-special-immunities.test.js']),
+      description: 'Absorve movimentos do tipo Ground, tornando o portador imune ao dano e recuperando 25% de seu HP máximo.'
+    },
+    'well-baked-body': {
+      id: 'well-baked-body',
+      name: 'Well-Baked Body',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-special-immunities.test.js']),
+      description: 'Absorve movimentos do tipo Fire, tornando o portador imune ao dano e aumentando sua Defense em 2 estágios.'
+    },
+    'good-as-gold': {
+      id: 'good-as-gold',
+      name: 'Good as Gold',
+      generation: 9,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-special-immunities.test.js']),
+      description: 'Concede imunidade absoluta a todos os movimentos direcionados da categoria Status utilizados por outros Pokémon. Quebrável por Mold Breaker.'
+    },
+    'wonder-guard': {
+      id: 'wonder-guard',
+      name: 'Wonder Guard',
+      generation: 3,
+      phase: 'H3',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HIT']),
+      breakable: true, // Ignored by Mold Breaker
+      suppressible: true,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h3b-special-immunities.test.js']),
+      description: 'O portador só pode sofrer dano de ataques diretos que sejam super efetivos contra sua tipagem atual. Danos indiretos, status e Struggle não são bloqueados. Quebrável por Mold Breaker.'
+    }
+  };
+
   // H4-A Implemented Abilities (FULL status)
   const H4A_METADATA = {
     'dark-aura': {
@@ -2410,6 +2708,11 @@
 
     if (H3A_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H3A_METADATA[slug] }));
+      continue;
+    }
+
+    if (H3B_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H3B_METADATA[slug] }));
       continue;
     }
 

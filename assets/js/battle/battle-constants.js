@@ -1755,12 +1755,15 @@
     return isDamagingFireMove(move);
   }
 
-  function isEligibleForStatusCondition(target, statusCondition) {
+  function isEligibleForStatusCondition(target, statusCondition, source = null) {
     if (!target || typeof target !== 'object') return false;
     if (Number(target.currentHp) <= 0) return false;
     if (target.statusCondition) return false;
     const types = Array.isArray(target.types) ? target.types : (target.type ? [target.type] : []);
-    return !P7.statusImmune(target,statusCondition) && !isStatusConditionImmune(statusCondition, types);
+    if (source && P7.hasEffectiveAbility(source, 'corrosion') && (statusCondition === 'poison' || statusCondition === 'toxic')) {
+      return !P7.statusImmune(target, statusCondition);
+    }
+    return !P7.statusImmune(target, statusCondition) && !isStatusConditionImmune(statusCondition, types);
   }
 
   function isConfused(combatant) {
@@ -1777,20 +1780,25 @@
     return Array.isArray(types) && (isStatusConditionImmune('poison', types) || types.includes('grass'));
   }
 
-  function isStatusMoveImmune(move, types) {
+  function isStatusMoveImmune(move, types, source = null, target = null) {
     if (!Array.isArray(types) || !move) return false;
     const name = String(move?.name || '').trim().toLowerCase();
+    const isPowder = ['cotton-spore', 'poison-powder', 'sleep-powder', 'spore', 'stun-spore', 'rage-powder', 'powder'].includes(name);
+    if (isPowder && target && (P7.hasEffectiveAbility(target, 'overcoat', P7.ignored(source, target, move)) || target.item === 'safety-goggles')) {
+      return true;
+    }
+    const hasCorrosion = Boolean(source && P7.hasEffectiveAbility(source, 'corrosion'));
     switch (name) {
       case 'stun-spore':
         return types.includes('grass')||isStatusConditionImmune('paralysis',types);
       case 'glare':
         return isStatusConditionImmune('paralysis',types);
       case 'poison-gas':
-        return isStatusConditionImmune('poison',types);
+        return hasCorrosion ? false : isStatusConditionImmune('poison',types);
       case 'toxic':
-        return isStatusConditionImmune('toxic', types);
+        return hasCorrosion ? false : isStatusConditionImmune('toxic', types);
       case 'poison-powder':
-        return isPoisonPowderImmune(types);
+        return types.includes('grass') || (hasCorrosion ? false : isPoisonPowderImmune(types));
       case 'sleep-powder':
       case 'spore':
         return isStatusConditionImmune('sleep', types) || types.includes('grass');

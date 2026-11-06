@@ -601,7 +601,7 @@ A Família H3 é estruturada em exatamente dois lotes de 21 habilidades como exc
 20. **`shield-dust`** (Gen III): Bloqueia 100% dos efeitos secundários de movimentos adversários no portador.
 21. **`big-pecks`** (Gen V): Imunidade a quedas de Defense infligidas por outros Pokémon.
 
-#### H3-B — Imunidades Categóricas, Véus de Equipe, Bloqueios Absolutos e Mecânicas Únicas (PLANEJADO — 21 Habilidades)
+#### H3-B — Imunidades Categóricas, Véus de Equipe, Bloqueios Absolutos e Mecânicas Únicas (CONCLUÍDO — 21 Habilidades)
 *Foco: Imunidades a categorias completas de golpes (som, projéteis, status direcionado), auras de equipe, absorções com cura e estados únicos.*
 1. **`oblivious`** (Gen III): Imunidade canônica a Attract/Infatuation, Taunt e Intimidate (Gen VIII+).
 2. **`aroma-veil`** (Gen VI): Protege portador e aliados contra Taunt, Torment, Encore, Disable, Cursed Body e Heal Block.

@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 217,
+    "declaredSupported": 238,
     "assignedAbilities": 313,
-    "assignedPending": 97,
+    "assignedPending": 76,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 260
+    "recordsWithPendingDefault": 190
   },
   "phases": [
     {
@@ -27,8 +27,8 @@
     {
       "id": "H3",
       "name": "Status, contato e imunidades",
-      "assignedPending": 21,
-      "defaultRecordsImpacted": 70
+      "assignedPending": 0,
+      "defaultRecordsImpacted": 0
     },
     {
       "id": "H4",
@@ -701,8 +701,8 @@
     },
     {
       "name": "aroma-veil",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -1520,8 +1520,8 @@
     },
     {
       "name": "bulletproof",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -2195,8 +2195,8 @@
     },
     {
       "name": "comatose",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -2554,8 +2554,8 @@
     },
     {
       "name": "corrosion",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -2693,8 +2693,8 @@
     },
     {
       "name": "cursed-body",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -2914,8 +2914,8 @@
     },
     {
       "name": "damp",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -3737,8 +3737,8 @@
     },
     {
       "name": "earth-eater",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -4430,8 +4430,8 @@
     },
     {
       "name": "flower-veil",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -5319,8 +5319,8 @@
     },
     {
       "name": "good-as-gold",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -11172,8 +11172,8 @@
     },
     {
       "name": "oblivious",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -11426,8 +11426,8 @@
     },
     {
       "name": "overcoat",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -12085,8 +12085,8 @@
     },
     {
       "name": "pastel-veil",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -12755,8 +12755,8 @@
     },
     {
       "name": "poison-puppeteer",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -13673,8 +13673,8 @@
     },
     {
       "name": "purifying-salt",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -17637,8 +17637,8 @@
     },
     {
       "name": "soundproof",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -19586,8 +19586,8 @@
     },
     {
       "name": "sweet-veil",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -21449,8 +21449,8 @@
     },
     {
       "name": "toxic-chain",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -21481,8 +21481,8 @@
     },
     {
       "name": "toxic-debris",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -22924,8 +22924,8 @@
     },
     {
       "name": "well-baked-body",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -23058,8 +23058,8 @@
     },
     {
       "name": "wonder-guard",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -23076,8 +23076,8 @@
     },
     {
       "name": "wonder-skin",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {

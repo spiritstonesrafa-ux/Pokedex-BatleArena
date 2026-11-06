@@ -83,6 +83,7 @@
         if (constants.P7?.ability(attacker) === 'prankster' && !attacker.abilitySuppressed && move.target !== 'self' && move.target !== 'foeSide' && ((defender.types || []).includes('dark') || constants.P8?.hasType?.(defender, 'dark'))) benefit = 0;
         const defHasMagicBounce = (constants.P7?.ability(defender) === 'magic-bounce' && !defender.abilitySuppressed && !constants.P7?.ignored(attacker, defender, 'magic-bounce'));
         if (defHasMagicBounce && constants.MoveFlags?.isReflectableMove?.(id) && move.target !== 'self' && !constants.P5?.ohko?.(move)) benefit = -50;
+        if (constants.P7?.defenderAbility?.(attacker, defender, move) === 'good-as-gold' && move.target !== 'self' && move.target !== 'foeSide') benefit = 0;
         const attackerInfiltrates = (constants.P7?.ability(attacker) === 'infiltrator' && !attacker.abilitySuppressed);
         if ((defender.substituteHp > 0 || defender.substitute) && !attackerInfiltrates && !constants.MoveFlags?.isSoundMove?.(move) && move.target !== 'self' && move.target !== 'foeSide') benefit = 0;
         const acc = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move, attacker, defender) : move.accuracy;
@@ -182,6 +183,7 @@
         let isEligible = false;
 
         if (constants.P7?.ability(attacker) === 'prankster' && !attacker.abilitySuppressed && move.target !== 'self' && move.target !== 'foeSide' && ((defender.types || []).includes('dark') || constants.P8?.hasType?.(defender, 'dark'))) { expectedStatusBenefit = 0; statusChance = 0; }
+        else if (constants.P7?.defenderAbility?.(attacker, defender, move) === 'good-as-gold' && move.target !== 'self' && move.target !== 'foeSide') { expectedStatusBenefit = 0; statusChance = 0; }
         else if ((constants.P7?.ability(defender) === 'magic-bounce' && !defender.abilitySuppressed && !constants.P7?.ignored(attacker, defender, 'magic-bounce')) && constants.MoveFlags?.isReflectableMove?.(move.id) && move.target !== 'self') { expectedStatusBenefit = -50; statusChance = 0; }
         else if ((defender.substituteHp > 0 || defender.substitute) && !(constants.P7?.ability(attacker) === 'infiltrator' && !attacker.abilitySuppressed) && !constants.MoveFlags?.isSoundMove?.(move) && move.target !== 'self' && move.target !== 'foeSide') { expectedStatusBenefit = 0; statusChance = 0; }
         else if (move.statusEffect) {
@@ -448,8 +450,12 @@
       if (context.battleState && !isFixedDamage) { const role = context.attackerSide === 'enemy' ? 'player' : 'enemy'; const f = constants.P6.barrierMultiplier(context.battleState, role, { ...move, damageClass }, Boolean(multiHit?.critical), attacker); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
       if (!isFixedDamage) { const f = constants.P7.damageMultiplier(context.battleState, attacker, defender, { ...move, type: moveType }, typeMultiplier); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
       if (!isFixedDamage) { const f = constants.P8.finalMultiplier(attacker, defender, move); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
-      const ab = constants.P7.defenderAbility(attacker, defender, move), absorbs = { 'water-absorb': 'water', 'volt-absorb': 'electric', 'flash-fire': 'fire', 'sap-sipper': 'grass', 'lightning-rod': 'electric', 'storm-drain': 'water' };
-      if (absorbs[ab] === moveType || ab === 'levitate' && moveType === 'ground' || ab === 'sturdy' && constants.P5.ohko(move) || defender.envTerrain === 'psychic' && constants.P7.grounded(defender) && constants.P7.priority(attacker, move, constants) > 0) { minDamage = maxDamage = averageDamage = damageIfHit = 0; }
+      const ab = constants.P7.defenderAbility(attacker, defender, move), absorbs = { 'water-absorb': 'water', 'volt-absorb': 'electric', 'flash-fire': 'fire', 'sap-sipper': 'grass', 'lightning-rod': 'electric', 'storm-drain': 'water', 'earth-eater': 'ground', 'well-baked-body': 'fire' };
+      const isSoundImmune = ab === 'soundproof' && constants.MoveFlags?.isSoundMove?.(move);
+      const isBulletImmune = ab === 'bulletproof' && constants.MoveFlags?.isBulletMove?.(move);
+      const isWonderGuardImmune = ab === 'wonder-guard' && move.damageClass !== 'status' && move.id !== 165 && (typeMultiplier <= 1.0);
+      if (absorbs[ab] === moveType || ab === 'levitate' && moveType === 'ground' || ab === 'sturdy' && constants.P5.ohko(move) || isSoundImmune || isBulletImmune || isWonderGuardImmune || defender.envTerrain === 'psychic' && constants.P7.grounded(defender) && constants.P7.priority(attacker, move, constants) > 0) { minDamage = maxDamage = averageDamage = damageIfHit = 0; }
+      if (ab === 'purifying-salt' && moveType === 'ghost') { minDamage = Math.floor(minDamage * 0.5); maxDamage = Math.floor(maxDamage * 0.5); averageDamage *= 0.5; damageIfHit = averageDamage; }
       if (!multiHit && defender.currentHp === defender.maxHp && (ab === 'sturdy' || defender.item === 'focus-sash')) { minDamage = Math.min(minDamage, defender.currentHp - 1); maxDamage = Math.min(maxDamage, defender.currentHp - 1); averageDamage = Math.min(averageDamage, defender.currentHp - 1); damageIfHit = averageDamage; }
       if (defender.minimized && constants.P6.minimizeHits.includes(move.id)) { minDamage *= 2; maxDamage *= 2; averageDamage *= 2; damageIfHit = averageDamage; accuracyFactor = 1; }
       if (constants.P6.consecutive.includes(move.id) && attacker.lastP6Move === move.id) { actionFactor = 0; minDamage = maxDamage = averageDamage = damageIfHit = 0; }

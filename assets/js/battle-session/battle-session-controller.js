@@ -139,13 +139,24 @@
   }
   function canInflict(move,status){const effect=battleConstants?.getSecondaryEffect?.(move)||sessionConstants?.getSecondaryEffect?.(move);return move?.statusEffect===status||effect?.statusCondition===status||Boolean(effect?.statusChoices?.includes(status));}
 
-  function canMoveApplyConfusion(move) {
+  function canMoveApplyConfusion(move, active = null) {
     if (!move || typeof move !== 'object') return false;
     if (move.statusEffect === 'confusion') return true;
     const getSec = (battleConstants && typeof battleConstants.getSecondaryEffect === 'function')
       ? battleConstants.getSecondaryEffect
       : (sessionConstants && typeof sessionConstants.getSecondaryEffect === 'function' ? sessionConstants.getSecondaryEffect : null);
-    return Boolean(getSec && getSec(move)?.confusion === true);
+    if (Boolean(getSec && getSec(move)?.confusion === true)) return true;
+    if (active && typeof active === 'object') {
+      const hasPuppeteer = Boolean(
+        battleConstants?.P7?.hasEffectiveAbility
+          ? battleConstants.P7.hasEffectiveAbility(active, 'poison-puppeteer')
+          : active.ability === 'poison-puppeteer' && !active.abilitySuppressed && !active.neutralizingGasSuppressed
+      ) && !active.transformOriginal;
+      if (hasPuppeteer && (canInflict(move, 'poison') || canInflict(move, 'toxic'))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function prepareMultiHit(active, action, rng) {
@@ -187,7 +198,7 @@
     }
     const move=candidates[action.sleepTalkChoice];
     if(canMoveApplySleep(move))action.sleepDuration=rng.rollSleepDuration?.()??2;
-    if(canMoveApplyConfusion(move)){action.confusionDuration=rng.rollConfusionDuration?.()??3;targetAction.confusionHitRoll??=rng.rollConfusionHit?.()??100;targetAction.confusionDamageRoll??=rng.rollConfusionDamage?.()??100;}
+    if(canMoveApplyConfusion(move, active)){action.confusionDuration=rng.rollConfusionDuration?.()??3;targetAction.confusionHitRoll??=rng.rollConfusionHit?.()??100;targetAction.confusionDamageRoll??=rng.rollConfusionDamage?.()??100;}
     if(battleConstants.isProtectMove(move)){
       const stall = Number(active.stallCount || 0);
       const denom = Math.min(729, Math.pow(3, stall));
@@ -630,8 +641,8 @@
 
         // Determina rolagens de confusão (duração, autoagressão e variância de dano)
         // Cobre combatentes já confusos ou que possam receber confusão antes de agir
-        const playerCanConfuse = canMoveApplyConfusion(playerMove);
-        const enemyCanConfuse = canMoveApplyConfusion(enemyMove);
+        const playerCanConfuse = canMoveApplyConfusion(playerMove, activePlayer);
+        const enemyCanConfuse = canMoveApplyConfusion(enemyMove, activeEnemy);
 
         const playerConfusionDuration = (playerCanConfuse && typeof this.randomSource.rollConfusionDuration === 'function')
           ? this.randomSource.rollConfusionDuration()
@@ -791,7 +802,7 @@
             }
           }
 
-          if (canMoveApplyConfusion(enemyMove) && typeof this.randomSource.rollConfusionDuration === 'function') {
+          if (canMoveApplyConfusion(enemyMove, activeEnemy) && typeof this.randomSource.rollConfusionDuration === 'function') {
             enemyAction.confusionDuration = this.randomSource.rollConfusionDuration();
           }
         }

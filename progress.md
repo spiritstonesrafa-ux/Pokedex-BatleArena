@@ -2,6 +2,57 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 06/11/2026: Correção Canônica Final, Homologação e Encerramento do Lote H3-B (21 Habilidades Canônicas Gen IX) — Família H3 Concluída
+
+- **Lote H3-B Homologado com Correções Canônicas Finais Gen IX (Showdown):**
+  - **Wonder Skin (Gen V):** Precisão base modificada incondicionalmente para 50 para qualquer golpe de Status com precisão numérica (`typeof accuracy === 'number'`), eliminando a restrição incorreta `accuracy > 50` (30 -> 50, 50 -> 50, 85 -> 50, 100 -> 50; movimentos infalíveis/null inalterados; golpes ofensivos e de auto-aplicação inalterados; Mold Breaker ignora a menos que segure Ability Shield; Neutralizing Gas suprime; multiplicadores de estágio aplicados sobre base 50).
+  - **Good as Gold (Gen IX):** Bloqueio estrito de golpes de Status com verificação canônica `target !== source`, protegendo Gholdengo contra golpes de status de oponentes e aliados em Doubles, sem bloquear golpes de auto-aplicação (Swords Dance), hazards de campo (`foeSide`, ex: Stealth Rock) ou golpes de campo inteiro (`all`, ex: Haze), nem efeitos secundários de golpes de dano. Mold Breaker quebra salvo Ability Shield; Neutralizing Gas suprime.
+  - **Poison Puppeteer (Gen IX):** Duração canônica de Confusão entre 2 e 5 turnos (`DEFAULT 3`), com validação rigorosa de limites rejeitando valores fora de [2, 5]. Testes determinísticos comprovam duração e momento exato de encerramento (`CONFUSION_ENDED (SNAPPED_OUT)`) para 2, 3, 4 e 5 turnos. Regra de Pecharunt respeitada (`!attacker.transformOriginal`, inativo se transformado via Imposter/Transform). Ativa exclusivamente via golpes (não por dano residual ou entrada em Toxic Spikes) e quando o veneno é efetivamente aplicado (bloqueado por tipos Steel/Poison, Purifying Salt, status prévio, Own Tempo, Safeguard e Misty Terrain no solo).
+  - **21 Habilidades Implementadas com Status FULL:**
+    1. oblivious (Gen III): Imunidade canônica a Taunt (#269), Attract/Infatuation e Intimidate (Gen VIII+).
+    2. aroma-veil (Gen VI): Protege portador e aliados contra Taunt, Torment, Encore, Disable e Cursed Body.
+    3. flower-veil (Gen VI): Aliados Grass têm atributos e condições primárias de status protegidos contra alterações adversárias.
+    4. sweet-veil (Gen VI): Portador e aliados em campo são imunes a adormecer (Sleep, Spore, Yawn, Rest falha).
+    5. pastel-veil (Gen VIII): Portador e aliados são imunes a envenenamento e curam envenenamento na entrada em campo.
+    6. purifying-salt (Gen IX): Imunidade total a status não voláteis + redução de 50% no dano sofrido por golpes Ghost.
+    7. comatose (Gen VII): Portador é tratado permanentemente como adormecido para golpes (Snore, Sleep Talk, Dream Eater), agindo livremente e imune a outros status não voláteis; insuprimível por Neutralizing Gas.
+    8. corrosion (Gen VII): Permite envenenar alvos dos tipos Poison e Steel com movimentos e pós.
+    9. cursed-body (Gen V): 30% de chance de desativar (Disable) o golpe ofensivo do atacante por 4 turnos ao sofrer dano (ativa mesmo em caso de desmaio do defensor).
+    10. toxic-debris (Gen IX): Ao receber golpe físico de dano, espalha uma camada de Toxic Spikes no campo adversário (máximo 2 camadas; ativa mesmo em caso de desmaio).
+    11. toxic-chain (Gen IX): 30% de chance de infligir toxic poison com qualquer ataque ofensivo de dano.
+    12. poison-puppeteer (Gen IX): Sempre que o portador envenena um alvo com movimentos, inflige também Confusão (2 a 5 turnos).
+    13. overcoat (Gen V): Imunidade a dano residual de clima (Sandstorm/Hail) e a golpes de pó e esporos (flags.powder).
+    14. wonder-skin (Gen V): Fixa a precisão de movimentos de status direcionados em 50%.
+    15. damp (Gen III): Impede o uso de movimentos autodestrutivos (Self-Destruct #120, Explosion #153, Mind Blown #720, Misty Explosion #802) e anula Aftermath.
+    16. soundproof (Gen III): Imunidade total a movimentos baseados em som (flags.sound).
+    17. bulletproof (Gen VI): Imunidade total a projéteis, bombas e balas (flags.bullet).
+    18. earth-eater (Gen IX): Imunidade a dano Ground, recuperando 25% do HP máximo ao ser atingido.
+    19. well-baked-body (Gen IX): Imunidade a dano Fire, aumentando Defense em +2 estágios ao ser atingido.
+    20. good-as-gold (Gen IX): Imunidade a qualquer movimento de status onde target !== source.
+    21. wonder-guard (Gen III): Imunidade total a dano direto não super efetivo (apenas movimentos superefetivos causam dano direto).
+- **Suítes de Testes H3-B (178 Testes — 100% PASS):**
+  - tests/battle/abilities-h3b-basic-protections.test.js: 35 testes PASS (Oblivious, Overcoat, Damp, Soundproof, Bulletproof)
+  - tests/battle/abilities-h3b-team-veils.test.js: 27 testes PASS (Aroma Veil, Flower Veil, Sweet Veil, Pastel Veil)
+  - tests/battle/abilities-h3b-special-immunities.test.js: 42 testes PASS (Purifying Salt, Wonder Skin, Earth Eater, Well-Baked Body, Good as Gold, Wonder Guard)
+  - tests/battle/abilities-h3b-status-advanced.test.js: 20 testes PASS (Comatose, Corrosion, Cursed Body)
+  - tests/battle/abilities-h3b-hazards-poison.test.js: 54 testes PASS (Toxic Debris, Toxic Chain, Poison Puppeteer + 19 testes integrados de sessão real)
+- **Validação Global e Regressões:**
+  - H3-B: 178 testes PASS (0 falhas).
+  - H3-A: 181 testes PASS (0 falhas).
+  - H2 (H2-A a H2-F): 463 testes PASS (0 falhas).
+  - H1 (H1-A a H1-D): 221 testes PASS (0 falhas).
+  - Testes de Confusão: 29 testes PASS (0 falhas).
+  - Testes de BattleSessionController: 18 testes PASS (0 falhas).
+  - Testes de Doubles: 32 testes PASS (0 falhas).
+  - Testes de IA: 43 testes PASS (0 falhas).
+  - Testes Globais do Projeto (npm test): 4.523 testes PASS (0 falhas).
+  - Auditoria de Habilidades (scripts/audit-abilities.js --check): 238 declaradas com suporte (+21), 76 pendentes associadas (-21), 0 pendências na Família H3.
+  - Auditoria P8 (scripts/audit-p8.js): 100% PASS (0 pendências P8 não resolvidas).
+  - git diff --check: 0 erros de formatação ou whitespace.
+- **Governança Git:**
+  - Working tree preservada intacta (incluindo testes visuais untracked e layouts mobile PBA-020).
+  - Nenhuma operação de staging (git add), commit, push ou deploy realizada.
+
 ## Atualização — 06/11/2026: Implementação Integral, Auditoria e Homologação do Lote H3-A (21 Habilidades Canônicas Gen IX)
 
 - **Lote H3-A Concluído com Sucesso:**

@@ -219,6 +219,17 @@
     810   // Corrosive Gas
   ]);
 
+  // Powder / Spore moves (blocked by Grass-types, Overcoat, Safety Goggles)
+  const POWDER_MOVE_IDS = new Set([
+    77,   // Poison Powder
+    78,   // Stun Spore
+    79,   // Sleep Powder
+    147,  // Spore
+    178,  // Cotton Spore
+    476,  // Rage Powder
+    600   // Powder
+  ]);
+
   function getMoveId(move) {
     if (!move) return 0;
     if (typeof move === 'number') return move;
@@ -275,6 +286,10 @@
     return REFLECTABLE_MOVE_IDS.has(getMoveId(move));
   }
 
+  function isPowderMove(move) {
+    return POWDER_MOVE_IDS.has(getMoveId(move));
+  }
+
   function getMoveFlags(move, contactIds) {
     const id = getMoveId(move);
     return Object.freeze({
@@ -287,7 +302,8 @@
       wind: WIND_MOVE_IDS.has(id),
       slicing: SLICING_MOVE_IDS.has(id),
       pulse: PULSE_MOVE_IDS.has(id),
-      reflectable: REFLECTABLE_MOVE_IDS.has(id)
+      reflectable: REFLECTABLE_MOVE_IDS.has(id),
+      powder: POWDER_MOVE_IDS.has(id)
     });
   }
 
@@ -300,6 +316,7 @@
     SLICING_MOVE_IDS: Object.freeze(SLICING_MOVE_IDS),
     PULSE_MOVE_IDS: Object.freeze(PULSE_MOVE_IDS),
     REFLECTABLE_MOVE_IDS: Object.freeze(REFLECTABLE_MOVE_IDS),
+    POWDER_MOVE_IDS: Object.freeze(POWDER_MOVE_IDS),
     isContactMove,
     isSoundMove,
     isBulletMove,
@@ -309,6 +326,7 @@
     isSlicingMove,
     isPulseMove,
     isReflectableMove,
+    isPowderMove,
     getMoveFlags
   });
 

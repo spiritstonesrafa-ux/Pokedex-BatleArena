@@ -500,6 +500,7 @@
           previousActive.substitute = false;
           previousActive.substituteHp = 0;
           previousActive.tauntTurns = 0;
+          previousActive.disabledMove = null;
           previousActive.entryMoveAttempts = 0;
           constants.P7.leave(state,role,previousActive,constants,events);
           constants.P8.restore(previousActive);
@@ -686,6 +687,19 @@
               });
             }
           }
+          if (mon.disabledMove) {
+            mon.disabledMove.turns--;
+            if (mon.disabledMove.turns <= 0) {
+              events.push({
+                type: 'DISABLE_ENDED',
+                target: role,
+                pokemonName: mon.name,
+                moveId: mon.disabledMove.id,
+                moveName: mon.disabledMove.name
+              });
+              mon.disabledMove = null;
+            }
+          }
         }
       }
 
@@ -868,6 +882,35 @@
         attacker.statusCondition='burn';
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,source:defenderRole,target:attackerRole,pokemonName:attacker.name,statusCondition:'burn',moveId:690,moveName:'beak-blast',chance:100});
         constants.P7.checkSynchronize?.(null,defenderRole,attackerRole,'burn',constants,events,defender,attacker);
+      }
+    }
+        function applyPoisonPuppeteerConfusion(attacker, defender, attackerRole, defenderRole, action, constants, events, state) {
+      if (constants.P7.hasEffectiveAbility(attacker, 'poison-puppeteer') &&
+          !attacker.transformOriginal &&
+          (defender.confusionTurns || 0) <= 0 &&
+          constants.P7.ability(defender) !== 'own-tempo' &&
+          !constants.P7.hasEffectiveAbility(defender, 'own-tempo') &&
+          !defender.safeguarded &&
+          !(state?.p6Sides?.[defenderRole]?.safeguard) &&
+          !(state?.terrain?.id === 'misty' && constants.P7.grounded(defender))) {
+        let duration = constants.DEFAULT_CONFUSION_TURNS?.DEFAULT || 3;
+        if (action && action.confusionDuration !== undefined) {
+          const parsed = Number(action.confusionDuration);
+          if (!Number.isInteger(parsed) || parsed < 2 || parsed > 5) {
+            throw new Error(`Duração de confusão inválida: ${action.confusionDuration}. Deve ser um inteiro entre 2 e 5.`);
+          }
+          duration = parsed;
+        }
+        defender.confusionTurns = duration;
+        events.push({
+          type: BATTLE_EVENTS.CONFUSION_APPLIED,
+          source: attackerRole,
+          target: defenderRole,
+          pokemonName: defender.name,
+          duration: defender.confusionTurns,
+          reason: 'poison-puppeteer'
+        });
+        constants.P6.feedback(events, attackerRole, attacker, 'P7_ABILITY', { label: 'poison-puppeteer' });
       }
     }
     function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
@@ -1078,6 +1121,33 @@
         pokemonName: attacker.name,
         action: BATTLE_ACTIONS.MOVE
       });
+
+      if (!calledMove && attacker.disabledMove && Number(attacker.disabledMove.id) === Number(selectedMove.id) && attacker.disabledMove.turns > 0) {
+        events.push({
+          type: BATTLE_EVENTS.MOVE_FAILED,
+          actor: attackerRole,
+          target: defenderRole,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'DISABLED'
+        });
+        return;
+      }
+
+      if (!calledMove && ([120, 153, 720, 802].includes(Number(selectedMove.id)) || ['self-destruct', 'explosion', 'mind-blown', 'misty-explosion'].includes(selectedMove.name))) {
+        const dampActive = ['player', 'enemy'].some(role => constants.P7.activeMons(state, role).some(mon => constants.P7.hasEffectiveAbility(mon, 'damp')));
+        if (dampActive) {
+          events.push({
+            type: BATTLE_EVENTS.MOVE_FAILED,
+            actor: attackerRole,
+            target: defenderRole,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            reason: 'DAMP'
+          });
+          return;
+        }
+      }
 
       // Verificação canônica de sono (Sleep: P4)
       // Precedência: Sono é checado antes de Flinch e Paralisia.
@@ -1644,6 +1714,20 @@
         return;
       }
       if (selectedMove.id === 269) {
+        const isTauntBlocked = constants.P7.hasEffectiveAbility(defender, ['oblivious', 'aroma-veil', 'good-as-gold'], constants.P7.ignored(attacker, defender, selectedMove)) ||
+          (state && constants.P7.activeMons(state, defenderRole).some(m => constants.P7.hasEffectiveAbility(m, 'aroma-veil', constants.P7.ignored(attacker, m, selectedMove))));
+        if (isTauntBlocked) {
+          events.push({
+            type: BATTLE_EVENTS.MOVE_FAILED,
+            actor: attackerRole,
+            target: defenderRole,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            reason: 'BLOCKED_BY_ABILITY',
+            label: constants.P7.ability(defender) || 'ability'
+          });
+          return;
+        }
         if (defender.tauntTurns > 0) {
           fail('ALREADY_TAUNTED');
           return;
@@ -1697,7 +1781,7 @@
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,target:attackerRole,pokemonName:attacker.name,statusCondition:'sleep',sleepDuration:2});
         events.push({type:BATTLE_EVENTS.HP_HEALED,target:attackerRole,pokemonName:attacker.name,previousHp,currentHp:attacker.currentHp,maxHp:attacker.maxHp,healedAmount:attacker.currentHp-previousHp});return;
       }
-      if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'){attacker.stallCount=0;fail('REQUIRES_SLEEP');return;}
+      if([173,214].includes(selectedMove.id)&&attacker.statusCondition!=='sleep'&&!constants.P7.hasEffectiveAbility(attacker,'comatose')){attacker.stallCount=0;fail('REQUIRES_SLEEP');return;}
       if(selectedMove.id===214){
         const candidates=attacker.moves.filter(m=>m.id!==214&&![117,166,264,690,704].includes(m.id)&&!constants.isTwoTurnMove(m)&&constants.getMoveCapability(m)?.supportLevel==='FULL');
         if(!candidates.length){attacker.stallCount=0;fail('NO_CALLABLE_MOVE');return;}
@@ -1705,15 +1789,29 @@
         if(!Number.isInteger(index)||index<0||index>=candidates.length)throw new Error('Escolha Sleep Talk inválida.');
         executeAction(attackerRole,defenderRole,state,events,{...action,moveId:candidates[index].id,moveName:undefined},true,calledMove?null:214);return;
       }
-      if(selectedMove.id===138&&defender.statusCondition!=='sleep'){fail('TARGET_NOT_ASLEEP');return;}
-      if(selectedMove.id===281 && (defender.safeguarded||constants.P7.statusImmune(defender,'sleep'))){fail('SAFEGUARD');return;}
+      if(selectedMove.id===138&&defender.statusCondition!=='sleep'&&!constants.P7.hasEffectiveAbility(defender,'comatose')){fail('TARGET_NOT_ASLEEP');return;}
+      if(selectedMove.id===281 && (defender.safeguarded||constants.P7.statusImmune(defender,'sleep',state,defenderRole,true))){fail(defender.safeguarded?'SAFEGUARD':'BLOCKED_BY_ABILITY');return;}
       if(selectedMove.id===281){
+        const sweetVeilProt = constants.P7.hasEffectiveAbility(defender, 'sweet-veil', constants.P7.ignored(attacker, defender, selectedMove)) ||
+          (state && constants.P7.activeMons(state, defenderRole).some(m => constants.P7.hasEffectiveAbility(m, 'sweet-veil', constants.P7.ignored(attacker, m, selectedMove))));
+        const isSleepBlocked = sweetVeilProt || constants.P7.statusImmune(defender, 'sleep', state, defenderRole, true);
+        if (isSleepBlocked) {
+          events.push({
+            type: BATTLE_EVENTS.MOVE_FAILED,
+            actor: attackerRole,
+            target: defenderRole,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            reason: 'BLOCKED_BY_ABILITY'
+          });
+          return;
+        }
         if(defender.statusCondition||defender.drowsyTurns>0){fail('ALREADY_STATUS');return;}
         const duration=action.sleepDuration??2;if(!Number.isInteger(duration)||duration<1||duration>3)throw new Error('Duração de Yawn inválida.');
         defender.drowsyTurns=2;defender.drowsySleepDuration=duration;events.push({type:BATTLE_EVENTS.DROWSY_APPLIED,target:defenderRole,pokemonName:defender.name});return;
       }
 
-      if(constants.P7.tryHit(state,attackerRole,damageMove,constants,events))return;
+      if(constants.P7.tryHit(state,attackerRole,damageMove,constants,events,attacker,defender,defenderRole))return;
       // 2. Resolução de Acurácia (Hit vs Miss)
       let isHit = true;
       const effectiveAccuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(selectedMove,attacker,defender) : selectedMove.accuracy;
@@ -1796,7 +1894,7 @@
         }
 
         if (selectedMove.statusEffect) {
-          const isImmune = defender.safeguarded || constants.P7.statusImmune(defender,selectedMove.statusEffect) || constants.isStatusMoveImmune(damageMove, defender.types);
+          const isImmune = defender.safeguarded || constants.P7.statusImmune(defender,selectedMove.statusEffect,state,defenderRole,true) || (constants.isStatusMoveImmune ? constants.isStatusMoveImmune(damageMove, defender.types, attacker, defender) : false);
           const blocked = isImmune
             ? 'IMMUNE'
             : defender.statusCondition
@@ -1815,6 +1913,9 @@
           } else {
             defender.statusCondition = selectedMove.statusEffect;
             defender.toxicStage = 0;
+            if (['poison', 'toxic'].includes(selectedMove.statusEffect)) {
+              applyPoisonPuppeteerConfusion(attacker, defender, attackerRole, defenderRole, action, constants, events, state);
+            }
             if (selectedMove.statusEffect === 'sleep') {
               let sleepDuration = constants.DEFAULT_SLEEP_TURNS || 2;
               if (action && action.sleepDuration !== undefined) {
@@ -2067,6 +2168,7 @@
                   pokemonName: defender.name, statusCondition: 'poison', moveId: selectedMove.id,
                   moveName: selectedMove.name, secondaryEffectRoll: poisonRolls[index], chance: poisonChance, hitIndex: hitCount});
                 constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, 'poison', constants, events, attacker, defender);
+                applyPoisonPuppeteerConfusion(attacker, defender, attackerRole, defenderRole, action, constants, events, state);
               }
             }
           }
@@ -2308,6 +2410,9 @@
                 chance: secEffect.chance
               });
               constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, secEffect.statusCondition, constants, events, attacker, defender);
+              if (['poison', 'toxic'].includes(secEffect.statusCondition)) {
+                applyPoisonPuppeteerConfusion(attacker, defender, attackerRole, defenderRole, action, constants, events, state);
+              }
             }
           }
 
