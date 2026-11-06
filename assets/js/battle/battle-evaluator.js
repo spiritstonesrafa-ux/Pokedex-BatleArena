@@ -502,7 +502,9 @@
       const cappedExpectedDamage = Math.min(defenderCurrentHp, expectedDamage);
 
       const drainRatio = constants?.getDrainRatio?.(move) || 0;
-      const expectedHeal = (drainRatio > 0 && cappedExpectedDamage > 0)
+      const defAb = constants.P7?.ability ? constants.P7.ability(defender) : (defender.abilitySuppressed ? '' : defender.ability);
+      const isLiquidOoze = defAb === 'liquid-ooze';
+      const expectedHeal = (drainRatio > 0 && cappedExpectedDamage > 0 && !isLiquidOoze)
         ? Math.min(
           Math.max(0, (Number(attacker.maxHp) || 0) - (Number(attacker.currentHp) || 0)),
           Math.max(1, Math.floor(cappedExpectedDamage * drainRatio))
@@ -522,11 +524,22 @@
       const isRoughBarbs = isContact && ['rough-skin', 'iron-barbs'].includes(rawDefAbility) && constants?.P7?.ability?.(attacker) !== 'magic-guard';
       const isRockyHelmet = isContact && defender.item === 'rocky-helmet' && constants?.P7?.ability?.(attacker) !== 'magic-guard';
       let contactRecoil = 0;
+      if (isLiquidOoze && drainRatio > 0 && cappedExpectedDamage > 0 && constants?.P7?.ability?.(attacker) !== 'magic-guard') {
+        contactRecoil += Math.max(1, Math.floor(cappedExpectedDamage * drainRatio));
+      }
       if (isRoughBarbs && cappedExpectedDamage > 0) {
         contactRecoil += Math.max(1, Math.floor((constants?.P8?.baseMaxHp ? constants.P8.baseMaxHp(attacker) : attacker.maxHp || 100) / 8));
       }
       if (isRockyHelmet && cappedExpectedDamage > 0) {
         contactRecoil += Math.max(1, Math.floor((constants?.P8?.baseMaxHp ? constants.P8.baseMaxHp(attacker) : attacker.maxHp || 100) / 6));
+      }
+      const isAftermath = isContact && rawDefAbility === 'aftermath' && guaranteedKo && constants?.P7?.ability?.(attacker) !== 'magic-guard';
+      if (isAftermath) {
+        contactRecoil += Math.max(1, Math.floor((constants?.P8?.baseMaxHp ? constants.P8.baseMaxHp(attacker) : attacker.maxHp || 100) / 4));
+      }
+      const isInnardsOut = rawDefAbility === 'innards-out' && guaranteedKo && constants?.P7?.ability?.(attacker) !== 'magic-guard';
+      if (isInnardsOut) {
+        contactRecoil += defenderCurrentHp;
       }
       const expectedCrash = move.id === 853 && constants.P7.ability(attacker) !== 'magic-guard' ? Math.min(attacker.currentHp, Math.max(1, Math.floor(constants.P8.baseMaxHp(attacker) / 2))) * (typeMultiplier === 0 || defender.isProtected || defender.twoTurnMove?.state ? 1 : 1 - accuracyFactor) : 0;
       const wouldRecoilKo = (recoilRatio > 0 || contactRecoil > 0) && (expectedRecoil + contactRecoil) >= (Number(attacker.currentHp) || 0);
@@ -540,11 +553,12 @@
       let expectedStatusBenefit = 0;
       let isEligibleForSecondary = false;
 
-      if (secEffect?.statusChoices && typeMultiplier > 0 && !guaranteedKo) {
+      const defHasShieldDust = (constants.P7?.defenderAbility ? constants.P7.defenderAbility(attacker, defender, move) : defender.ability) === 'shield-dust';
+      if (secEffect?.statusChoices && typeMultiplier > 0 && !guaranteedKo && !defHasShieldDust) {
         const eligible = secEffect.statusChoices.filter(status => constants.isEligibleForStatusCondition(defender, status)).length;
         isEligibleForSecondary = eligible > 0; expectedStatusChance = secEffect.chance / 100 * accuracyFactor * actionFactor * eligible / secEffect.statusChoices.length; expectedStatusBenefit = Math.round(expectedStatusChance * 25);
       }
-      if (secEffect && typeMultiplier > 0) {
+      if (secEffect && typeMultiplier > 0 && !defHasShieldDust) {
         if (secEffect.statusCondition) {
           isEligibleForSecondary = Boolean(
             constants.isEligibleForStatusCondition

@@ -284,6 +284,44 @@ test('Effect Spore: roll > 30 NÃO aplica nenhum status', () => {
   assert.equal(r.state.player.statusCondition, null, 'Roll 35 não deve aplicar status');
 });
 
+test('Effect Spore limites de fronteira: roll 1 e roll 9 aplicam Poison; roll 10 e roll 19 aplicam Paralysis; roll 20 e roll 30 aplicam Sleep; roll 31 e roll 100 não aplicam nada', () => {
+  // Poison boundaries (9%)
+  let s = battle({}, { ability: 'effect-spore' });
+  let r = turn(s, 33, { effectSporeRoll: 1 });
+  assert.equal(r.state.player.statusCondition, 'poison', 'Roll 1 (limite inferior Poison) deve aplicar Poison');
+
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 9 });
+  assert.equal(r.state.player.statusCondition, 'poison', 'Roll 9 (limite superior Poison) deve aplicar Poison');
+
+  // Paralysis boundaries (10%)
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 10 });
+  assert.equal(r.state.player.statusCondition, 'paralysis', 'Roll 10 (limite inferior Paralysis) deve aplicar Paralysis');
+
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 19 });
+  assert.equal(r.state.player.statusCondition, 'paralysis', 'Roll 19 (limite superior Paralysis) deve aplicar Paralysis');
+
+  // Sleep boundaries (11%)
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 20 });
+  assert.equal(r.state.player.statusCondition, 'sleep', 'Roll 20 (limite inferior Sleep) deve aplicar Sleep');
+
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 30 });
+  assert.equal(r.state.player.statusCondition, 'sleep', 'Roll 30 (limite superior Sleep) deve aplicar Sleep');
+
+  // No effect boundaries (70%)
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 31 });
+  assert.equal(r.state.player.statusCondition, null, 'Roll 31 (primeiro valor sem efeito) não deve aplicar status');
+
+  s = battle({}, { ability: 'effect-spore' });
+  r = turn(s, 33, { effectSporeRoll: 100 });
+  assert.equal(r.state.player.statusCondition, null, 'Roll 100 (limite superior absoluto) não deve aplicar status');
+});
+
 test('Effect Spore: Pokémon Grass-type é IMUNE a Effect Spore (Gen 6+)', () => {
   const s = battle({ types: ['grass'] }, { ability: 'effect-spore' });
   const r = turn(s, 33, { effectSporeRoll: 5 });
@@ -335,6 +373,12 @@ test('Effect Spore: supressão genuína (abilitySuppressed = true) desativa Effe
   const r = turn(s, 33, { effectSporeRoll: 5 });
 
   assert.equal(r.state.player.statusCondition, null, 'Effect Spore suprimida não deve aplicar status');
+});
+
+test('Effect Spore: suprimido sob Neutralizing Gas em campo', () => {
+  const s = battle({ ability: 'neutralizing-gas' }, { ability: 'effect-spore' });
+  const r = turn(s, 33, { effectSporeRoll: 5 });
+  assert.equal(r.state.player.statusCondition, null, 'Neutralizing Gas desativa Effect Spore do defensor');
 });
 
 /* ==========================================================================
@@ -504,18 +548,32 @@ test('Shed Skin: limites na escala 1..100 (roll 1 e roll 33 curam; roll 34 e rol
   assert.equal(r.state.player.statusCondition, 'paralysis', 'Roll 100 não deve curar');
 });
 
-test('Shed Skin: escala direta 1..3 (shedSkinScale: 3 -> roll 1 cura, rolls 2 e 3 falham)', () => {
-  let s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
-  let r = turn(s, 156, { shedSkinRoll: 1, shedSkinScale: 3 });
-  assert.equal(r.state.player.statusCondition, null, 'Escala 1..3: roll 1 cura');
+test('Shed Skin fronteira 1: roll 1 (mínimo) cura o status', () => {
+  const s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
+  const r = turn(s, 156, { shedSkinRoll: 1 });
+  assert.equal(r.state.player.statusCondition, null, 'Roll 1 deve curar o status');
+  assert.ok(r.events.some(e => e.type === 'STATUS_CURED' && e.reason === 'SHED_SKIN'));
+});
 
-  s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
-  r = turn(s, 156, { shedSkinRoll: 2, shedSkinScale: 3 });
-  assert.equal(r.state.player.statusCondition, 'burn', 'Escala 1..3: roll 2 falha');
+test('Shed Skin fronteira 2: roll 33 (limiar máximo de ativação) cura o status', () => {
+  const s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
+  const r = turn(s, 156, { shedSkinRoll: 33 });
+  assert.equal(r.state.player.statusCondition, null, 'Roll 33 deve curar o status');
+  assert.ok(r.events.some(e => e.type === 'STATUS_CURED' && e.reason === 'SHED_SKIN'));
+});
 
-  s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
-  r = turn(s, 156, { shedSkinRoll: 3, shedSkinScale: 3 });
-  assert.equal(r.state.player.statusCondition, 'burn', 'Escala 1..3: roll 3 falha');
+test('Shed Skin fronteira 3: roll 34 (primeiro valor acima do limiar) NÃO cura o status', () => {
+  const s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
+  const r = turn(s, 156, { shedSkinRoll: 34 });
+  assert.equal(r.state.player.statusCondition, 'burn', 'Roll 34 não deve curar o status');
+  assert.ok(!r.events.some(e => e.type === 'STATUS_CURED' && e.reason === 'SHED_SKIN'));
+});
+
+test('Shed Skin fronteira 4: roll 100 (máximo absoluto) NÃO cura o status', () => {
+  const s = battle({ ability: 'shed-skin', statusCondition: 'burn' });
+  const r = turn(s, 156, { shedSkinRoll: 100 });
+  assert.equal(r.state.player.statusCondition, 'burn', 'Roll 100 não deve curar o status');
+  assert.ok(!r.events.some(e => e.type === 'STATUS_CURED' && e.reason === 'SHED_SKIN'));
 });
 
 test('Shed Skin: ausência de status primário NÃO emite eventos de cura', () => {
@@ -701,9 +759,9 @@ test('Shed Skin em sessão real: BattleSessionController com rollShedSkin 1 cura
   assert.equal(active.statusCondition, null, 'Turno de sessão real com roll 1 deve curar o status via Shed Skin');
 });
 
-test('Shed Skin em sessão real: BattleSessionController com rollShedSkin 2 ou 3 preserva o status', async () => {
+test('Shed Skin em sessão real: BattleSessionController com rollShedSkin > 33 preserva o status', async () => {
   const rng = new DeterministicRandomSource();
-  rng.setShedSkinSequence([2, 2]);
+  rng.setShedSkinSequence([50, 50]);
   rng.setAccuracySequence([1, 1]);
   rng.setDamageSequence([100, 100]);
 
@@ -723,7 +781,7 @@ test('Shed Skin em sessão real: BattleSessionController com rollShedSkin 2 ou 3
 
   await controller.submitPlayerMove(33);
   const active = controller.engine.getActiveCombatant(controller.battleState, 'player');
-  assert.equal(active.statusCondition, 'burn', 'Turno de sessão real com roll 2 não deve curar o status');
+  assert.equal(active.statusCondition, 'burn', 'Turno de sessão real com roll 50 não deve curar o status');
 });
 
 test('Shed Skin em sessão real: troca voluntária (SWITCH) inclui rolagens e cura se favorável', async () => {
@@ -752,16 +810,16 @@ test('Shed Skin em sessão real: troca voluntária (SWITCH) inclui rolagens e cu
   assert.equal(active.statusCondition, null, 'Troca para portador de Shed Skin com roll 1 deve curar no final do turno');
 });
 
-test('Shed Skin distribuição: rollShedSkin() produz probabilidade canônica exata de 1/3', () => {
+test('Shed Skin distribuição: rollShedSkin() produz probabilidade canônica de 33% (escala 1..100)', () => {
   const randomSource = new BattleRandomSource();
-  let roll1 = 0;
+  let hits = 0;
   const trials = 30000;
   for (let i = 0; i < trials; i++) {
     const r = randomSource.rollShedSkin();
-    if (r === 1) roll1++;
+    if (r <= 33) hits++;
   }
-  const ratio = roll1 / trials;
-  assert.ok(Math.abs(ratio - (1 / 3)) < 0.01, `Taxa observada (${(ratio * 100).toFixed(2)}%) deve estar próxima de 33.33%`);
+  const ratio = hits / trials;
+  assert.ok(Math.abs(ratio - 0.33) < 0.01, `Taxa observada (${(ratio * 100).toFixed(2)}%) deve estar próxima de 33.00%`);
 });
 
 test('Shed Skin determinismo puro: ausência de roll na Engine não ativa a habilidade e não chama Math.random', () => {

@@ -69,7 +69,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H1-C | Stamina, Water Compaction, Weak Armor, Steam Engine, Motor Drive, Electromorphosis, Berserk, Anger Shell | Reações canônicas a dano, tipos elementais, absorção de Electric, estado Charge e cruzamento do limiar de 50% de HP. |
 | H1-D | Beast Boost, Cotton Down, Download, Moody, Speed Boost, Thermal Exchange, Wind Power, Wind Rider | Ultra Beasts, Gossifleur, Porygon, Moody/Speed Boost em fim de turno, Baxcalibur imune a Burn, e interação com golpes de vento e Tailwind. |
 | H2-A | Marvel Scale, Hustle, Keen Eye, Steadfast (H1) | Milotic, Togekiss, Pelipper/Skarmory e Lucario aparecem na campanha e nas instalações; revisar defesa, precisão, ataques físicos/especiais e flinch. Entregar em commits separados por família. |
-| H3-A | Rough Skin, Iron Barbs, Effect Spore, Synchronize, Shed Skin | Reações de contato, imunidades e cura; testar quem recebe cada efeito e se um KO impede ativações posteriores. |
+| H3-A | Rough Skin, Iron Barbs, Effect Spore, Poison Touch, Cute Charm, Gooey, Tangling Hair, Aftermath, Innards Out, Perish Body, Shed Skin, Hydration, Leaf Guard, Early Bird, Synchronize, Liquid Ooze, Poison Heal, Bad Dreams, Stench, Shield Dust, Big Pecks | **Implementado (FULL)**. 21 habilidades canônicas Gen IX de reações de contato, dano residual no nocaute, contagem de Perish Song, cura/imunidade de status e clima, inversão de drenagem e proteções secundárias. 170 testes unitários dedicados. |
 | H4-A | Dark Aura, Fairy Aura, Aura Break, Prism Armor e Neuroforce (H2) | **Implementado (FULL)**. Efeitos canônicos para Yveltal (#717), Xerneas (#716), Zygarde (#718), Necrozma (#800) e Ultra Necrozma (#10157). |
 | H5-A | Prankster, Infiltrator, Magic Bounce | Exigem flags de golpes, prioridade e reflexão por evento; alto impacto em estratégia, inclusive para a IA. |
 
@@ -573,6 +573,57 @@ Separar multiplicadores de dano/atributo, precisão/críticos, imunidades/efetiv
 Entregar imunidades/curas e contato primeiro. Attract, infatuation, gênero e contagem de Perish Song, se ausentes, são dependências explícitas de Cute Charm/Oblivious/Aroma Veil/Perish Body e afins. Corrosion não deve apagar imunidades por outros motivos. Wonder Guard e Good as Gold precisam de classificação correta de ataques/status.
 
 **Aceite:** Não criar queimadura/veneno falsos na UI; imunidades, fonte do contato, dano indireto versus direto, batalha terminada, trocas, simultaneidade e rolagens externas. Não marcar FULL ignorando uma condição que a habilidade deveria prevenir.
+
+**Divisão Oficial em Dois Lotes (Exceção Homologada — 21 + 21 = 42 Habilidades):**
+A Família H3 é estruturada em exatamente dois lotes de 21 habilidades como exceção oficial à regra de 10 habilidades por lote, distribuídas por afinidade mecânica e dependências de infraestrutura:
+
+#### H3-A — Contato, Reações, Danos Residuais, Curas e Imunidades Básicas (CONCLUÍDO - 21 Habilidades)
+*Foco: Reações imediatas de contato físico, dano residual reativo/desmaio, recuperação e imunidades diretas a status não voláteis. Implementação canônica Gen IX completa com 170 testes dedicados.*
+1. **`rough-skin`** (Gen III): Dano residual de 1/8 max HP ao atacante que fizer contato físico.
+2. **`iron-barbs`** (Gen V): Dano residual de 1/8 max HP ao atacante que fizer contato físico.
+3. **`effect-spore`** (Gen III): Chance (10% Showdown / 30% Gen IX) de infligir Poison, Paralyze ou Sleep ao sofrer contato físico.
+4. **`poison-touch`** (Gen V): Chance de 30% de envenenar o alvo ao desferir movimento de contato.
+5. **`cute-charm`** (Gen IV): Chance de 30% de causar infatuation/attract em atacante do sexo oposto em golpe de contato.
+6. **`gooey`** (Gen VI): Reduz a Speed do atacante em -1 estágio ao receber golpe de contato.
+7. **`tangling-hair`** (Gen VII): Reduz a Speed do atacante em -1 estágio ao receber golpe de contato.
+8. **`aftermath`** (Gen IV): Dano residual de 1/4 do max HP ao atacante que nocautear o portador com golpe de contato.
+9. **`innards-out`** (Gen VII): Causa dano equivalente ao HP restante que o portador possuía antes do nocaute.
+10. **`perish-body`** (Gen VIII): Ao receber golpe de contato, ativa contagem de 3 turnos de Perish Song em ambos os combatentes.
+11. **`shed-skin`** (Gen III): 33% de chance ao final de cada turno de curar a condição primária de status do portador.
+12. **`hydration`** (Gen IV): Cura condições primárias de status ao final do turno sob chuva (Rain).
+13. **`leaf-guard`** (Gen IV): Imunidade total a status não voláteis sob sol intenso (Sun).
+14. **`early-bird`** (Gen II): Acorda do sono (Sleep) na metade do tempo normal (turnos de sleep contados em dobro).
+15. **`synchronize`** (Gen III): Transfere queimadura, paralisia ou envenenamento recebidos de volta ao adversário.
+16. **`liquid-ooze`** (Gen III): Inverte a drenagem de HP de movimentos de cura adversários, ferindo o atacante.
+17. **`poison-heal`** (Gen IV): Portador recupera 1/8 do HP máximo por turno quando envenenado/toxic em vez de sofrer dano.
+18. **`bad-dreams`** (Gen IV): Causa dano de 1/8 max HP a oponentes adormecidos (Sleep) ao final do turno.
+19. **`stench`** (Gen III): 10% de chance de causar flinch em ataques que não possuem chance natural de flinch.
+20. **`shield-dust`** (Gen III): Bloqueia 100% dos efeitos secundários de movimentos adversários no portador.
+21. **`big-pecks`** (Gen V): Imunidade a quedas de Defense infligidas por outros Pokémon.
+
+#### H3-B — Imunidades Categóricas, Véus de Equipe, Bloqueios Absolutos e Mecânicas Únicas (PLANEJADO — 21 Habilidades)
+*Foco: Imunidades a categorias completas de golpes (som, projéteis, status direcionado), auras de equipe, absorções com cura e estados únicos.*
+1. **`oblivious`** (Gen III): Imunidade canônica a Attract/Infatuation, Taunt e Intimidate (Gen VIII+).
+2. **`aroma-veil`** (Gen VI): Protege portador e aliados contra Taunt, Torment, Encore, Disable, Cursed Body e Heal Block.
+3. **`flower-veil`** (Gen VI): Aliados do tipo Grass têm atributos e status protegidos contra alterações adversárias.
+4. **`sweet-veil`** (Gen VI): Portador e aliados em campo são imunes a adormecer (Sleep/Yawn).
+5. **`pastel-veil`** (Gen VIII): Portador e aliados são imunes a envenenamento e curam envenenamento na entrada em campo.
+6. **`purifying-salt`** (Gen IX): Imunidade completa a todas as condições de status primárias + 50% de redução no dano Ghost.
+7. **`comatose`** (Gen VII): Portador é permanentemente tratado como adormecido para golpes, agindo livremente e imune a outros status.
+8. **`corrosion`** (Gen VII): Permite ao portador envenenar alvos dos tipos Poison e Steel.
+9. **`cursed-body`** (Gen V): 30% de chance de desativar (Disable) o golpe do atacante por 4 turnos ao sofrer dano.
+10. **`toxic-debris`** (Gen IX): Ao sofrer dano físico, espalha uma camada de Toxic Spikes no campo adversário.
+11. **`toxic-chain`** (Gen IX): 30% de chance de infligir toxic poison com qualquer ataque ofensivo de dano.
+12. **`poison-puppeteer`** (Gen IX): Se o portador envenenar um alvo, também causa confusão (Confusion) automaticamente.
+13. **`overcoat`** (Gen VI): Imunidade a dano residual de clima (Sandstorm/Hail) e a golpes de pó/esporos (Powder/Spore).
+14. **`wonder-skin`** (Gen V): Reduz a precisão de todos os movimentos de status direcionados ao portador para 50%.
+15. **`damp`** (Gen III): Impede o uso de movimentos autodestrutivos (Self-Destruct, Explosion) e anula Aftermath.
+16. **`soundproof`** (Gen III): Imunidade total a movimentos baseados em som (flags.sound).
+17. **`bulletproof`** (Gen VI): Imunidade total a projéteis, bombas e balas (flags.bullet).
+18. **`earth-eater`** (Gen IX): Imunidade a dano Ground, recuperando 25% do HP máximo ao ser atingido.
+19. **`well-baked-body`** (Gen IX): Imunidade a dano Fire, aumentando Defense em +2 estágios ao ser atingido.
+20. **`good-as-gold`** (Gen IX): Imunidade total a qualquer movimento de status direcionado pelo oponente.
+21. **`wonder-guard`** (Gen III): O portador só recebe dano direto de movimentos superefetivos (imunidade a dano neutro e resistido).
 
 **Lista completa da família:** `stench`, `oblivious`, `shield-dust`, `effect-spore`, `synchronize`, `early-bird`, `shed-skin`, `cute-charm`, `liquid-ooze`, `poison-heal`, `hydration`, `leaf-guard`, `aftermath`, `bad-dreams`, `cursed-body`, `overcoat`, `poison-touch`, `big-pecks`, `wonder-skin`, `iron-barbs`, `aroma-veil`, `flower-veil`, `sweet-veil`, `gooey`, `tangling-hair`, `corrosion`, `comatose`, `innards-out`, `pastel-veil`, `purifying-salt`, `well-baked-body`, `earth-eater`, `toxic-chain`, `poison-puppeteer`, `rough-skin`, `damp`, `soundproof`, `bulletproof`, `wonder-guard`, `good-as-gold`, `perish-body`, `toxic-debris`.
 

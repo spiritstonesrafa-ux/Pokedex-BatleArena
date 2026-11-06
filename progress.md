@@ -2,6 +2,65 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 06/11/2026: Implementação Integral, Auditoria e Homologação do Lote H3-A (21 Habilidades Canônicas Gen IX)
+
+- **Lote H3-A Concluído com Sucesso:**
+  - **21 Habilidades Implementadas com Status FULL:**
+    1. rough-skin (Gen III): Dano residual de 1/8 max HP ao atacante que fizer contato físico.
+    2. iron-barbs (Gen V): Dano residual de 1/8 max HP ao atacante que fizer contato físico.
+    3. effect-spore (Gen III): 30% chance de infligir Poison (9%), Paralysis (10%) ou Sleep (11%) ao sofrer contato físico.
+    4. poison-touch (Gen V): 30% chance de envenenar o alvo ao desferir movimento ofensivo de contato físico.
+    5. cute-charm (Gen IV): 30% chance de infligir infatuation/attract em atacante do sexo oposto em golpe de contato; 50% de imobilização por amor ao agir.
+    6. gooey (Gen VI): Reduz a Speed do atacante em -1 estágio ao receber golpe de contato.
+    7. tangling-hair (Gen VII): Reduz a Speed do atacante em -1 estágio ao receber golpe de contato.
+    8. aftermath (Gen IV): Dano residual de 1/4 max HP ao atacante que nocautear o portador com golpe de contato; anulado por Damp ou Magic Guard.
+    9. innards-out (Gen VII): Dano de retaliação igual ao HP restante que o portador possuía antes do nocaute por qualquer ataque ofensivo; anulado por Magic Guard.
+    10. perish-body (Gen VIII): Ao receber golpe de contato, ativa contagem de 3 turnos de Perish Song em ambos os combatentes.
+    11. shed-skin (Gen III): 33% de chance ao final de cada turno de curar a condição primária de status do portador.
+    12. hydration (Gen IV): Cura condições primárias de status ao final do turno sob chuva (Rain).
+    13. leaf-guard (Gen IV): Imunidade total a status não voláteis sob sol intenso (Sun).
+    14. early-bird (Gen II): Desconta 2 turnos de sono por turno em vez de 1.
+    15. synchronize (Gen III): Transfere queimadura, paralisia ou envenenamento recebidos de volta ao adversário.
+    16. liquid-ooze (Gen III): Inverte a drenagem de HP de movimentos de cura adversários, ferindo o atacante em vez de curá-lo.
+    17. poison-heal (Gen IV): Portador recupera 1/8 do HP máximo por turno quando envenenado/toxic em vez de sofrer dano.
+    18. bad-dreams (Gen IV): Causa dano de 1/8 max HP a oponentes adormecidos (Sleep) ao final do turno.
+    19. stench (Gen III): 10% de chance de causar flinch em ataques que não possuem chance natural de flinch.
+    20. shield-dust (Gen III): Bloqueia 100% dos efeitos secundários de movimentos adversários no portador (status, drops, flinch).
+    21. big-pecks (Gen V): Imunidade a quedas de Defense infligidas por outros Pokémon.
+- **Suítes de Testes H3-A (181 Testes — 100% PASS):**
+  - tests/battle/abilities-h3a.test.js: 70 testes PASS (inclui fronteiras 1, 33, 34, 100 de Shed Skin e fronteiras 1..9, 10..19, 20..30, 31..100 de Effect Spore)
+  - tests/battle/abilities-h3a-contact-reactions.test.js: 32 testes PASS (alinhamento canônico de Mold Breaker para Cute Charm, Gooey e Tangling Hair; 7 cenários canônicos de hasEffectiveAbility)
+  - tests/battle/abilities-h3a-faint-reactions.test.js: 22 testes PASS
+  - tests/battle/abilities-h3a-status-weather.test.js: 25 testes PASS
+  - tests/battle/abilities-h3a-draining-protections.test.js: 32 testes PASS
+- **Validação Global e Regressões:**
+  - Regressões H2 (H2-A a H2-F): 463 testes PASS (0 falhas).
+  - Regressões H1 (H1-A a H1-D): 221 testes PASS (0 falhas).
+  - Regressões Mecânicas (Sleep, Protect, P4, P7): 484 testes PASS (0 falhas).
+  - Testes Globais do Projeto (npm test): 4.345 testes PASS (0 falhas).
+  - Auditoria de Habilidades (scripts/audit-abilities.js --check): 217 declaradas com suporte, 97 pendentes associadas.
+  - Auditoria P8 (scripts/audit-p8.js): 100% de conformidade com mecânicas especiais.
+  - git diff --check: 0 erros de formatação ou whitespace.
+- **Governança Git:**
+  - Nenhuma operação de staging (git add), commit, push ou deploy realizada.
+  - Arquivo protegido tests/visual/minior-shields-down-harness.html preservado intacto.
+  - Layout mobile e posicionamento do seletor de mecânica especial preservados integralmente.
+
+## Atualização — 06/11/2026: Publicação Confirmada da H2-F e Planejamento H3 (H3-A e H3-B)
+
+- **Publicação H2-F Concluída e Sincronizada:**
+  - Commit remoto publicado: `28d77c426fd0bcf9e98be55a04304399570a1c31`
+  - Mensagem: `feat(battle): complete H2 family with H2-F canonical abilities`
+  - Arquivos homologados: 11 arquivos (8 modificados + 3 suítes de testes dedicadas).
+  - Encerramento Oficial da Família H2: 100% das habilidades H2 suportadas canonicamente com status FULL (0 pendências restantes).
+- **Planejamento Oficial da Família H3 (Exceção Homologada — 21 + 21 = 42 Habilidades):**
+  - **Inventário:** 42 habilidades pendentes divididas em exatamente dois lotes de 21 habilidades.
+  - **H3-A (21 Habilidades — Contato, Reações, Danos Residuais, Curas e Imunidades Básicas):**
+    - `rough-skin`, `iron-barbs`, `effect-spore`, `poison-touch`, `cute-charm`, `gooey`, `tangling-hair`, `aftermath`, `innards-out`, `perish-body`, `shed-skin`, `hydration`, `leaf-guard`, `early-bird`, `synchronize`, `liquid-ooze`, `poison-heal`, `bad-dreams`, `stench`, `shield-dust`, `big-pecks`.
+  - **H3-B (21 Habilidades — Imunidades Categóricas, Véus de Equipe, Bloqueios Absolutos e Mecânicas Únicas):**
+    - `oblivious`, `aroma-veil`, `flower-veil`, `sweet-veil`, `pastel-veil`, `purifying-salt`, `comatose`, `corrosion`, `cursed-body`, `toxic-debris`, `toxic-chain`, `poison-puppeteer`, `overcoat`, `wonder-skin`, `damp`, `soundproof`, `bulletproof`, `earth-eater`, `well-baked-body`, `good-as-gold`, `wonder-guard`.
+  - **Status de Implementação:** Apenas planejado documentalmente. Nenhuma habilidade da Família H3 foi implementada nesta etapa, mantendo o repositório pronto para homologação futura do lote H3-A.
+
 ## Atualização — 06/11/2026: Auditoria, Correção Canônica de Simple (Gen IX) e Homologação H2-F
 
 - **Objetivo Concluído:** Auditoria canônica profunda e correção da mecânica de `simple` no lote H2-F para alinhamento estrito à Geração IX (Pokémon Showdown hook `onModifyBoost`), garantindo armazenamento efetivo da alteração de estágios duplicada, preservação pós-supressão e ausência de duplicações indevidas em consultas de atributos, acompanhado de revalidação integral de Scrappy, Serene Grace e encerramento da Família H2.

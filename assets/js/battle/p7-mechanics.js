@@ -3,7 +3,7 @@
 const Special=typeof module!=='undefined'&&module.exports?require('./p8-special.js'):window.PBAP8Special;
 const Data=typeof module!=='undefined'&&module.exports?require('./p7-pokemon-data.js'):window.PBAP7PokemonData;
 const MoveFlags=typeof module!=='undefined'&&module.exports?require('./move-flags.js'):(typeof window!=='undefined'?window.PBAMoveFlags:null);
-const abilityNames=Object.freeze(["pressure","intrepid-sword","unnerve","grim-neigh","as-one-spectrier","justified","moxie","chilling-neigh","as-one-glastrier","dauntless-shield","marvel-scale","hustle","keen-eye","steadfast","rough-skin","iron-barbs","effect-spore","synchronize","shed-skin","dark-aura","fairy-aura","aura-break","prism-armor","neuroforce","overgrow","blaze","torrent","swarm","levitate","intimidate","clear-body","white-smoke","hyper-cutter","full-metal-body","inner-focus","own-tempo","immunity","limber","insomnia","vital-spirit","water-veil","magma-armor","sturdy","water-absorb","volt-absorb","flash-fire","sap-sipper","lightning-rod","storm-drain","guts","huge-power","pure-power","adaptability","technician","thick-fat","filter","solid-rock","multiscale","regenerator","natural-cure","magic-guard","unseen-fist","mold-breaker","teravolt","turboblaze","drizzle","drought","sand-stream","snow-warning","swift-swim","chlorophyll","sand-rush","slush-rush","sand-veil","snow-cloak","electric-surge","grassy-surge","misty-surge","psychic-surge","rain-dish","solar-power","sand-force","cloud-nine","air-lock","static","flame-body","poison-point","shadow-tag","arena-trap","magnet-pull","prankster","infiltrator","magic-bounce","normalize","refrigerate","pixilate","aerilate","galvanize","liquid-voice","protean","libero","color-change","schooling","shields-down","battle-bond","forecast","zen-mode","mimicry","zero-to-hero","trace","mummy","receiver","power-of-alchemy","wandering-spirit","neutralizing-gas","lingering-aroma","soul-heart","defiant","competitive","contrary","mirror-armor","opportunist","guard-dog","anger-point","rattled","stamina","water-compaction","weak-armor","steam-engine","motor-drive","electromorphosis","berserk","anger-shell","beast-boost","cotton-down","download","moody","speed-boost","thermal-exchange","wind-power","wind-rider","supreme-overlord","iron-fist","strong-jaw","tough-claws","sharpness","mega-launcher","steelworker","rocky-payload","battle-armor","shell-armor","super-luck","sniper","merciless","compound-eyes","no-guard","tangled-feet","fur-coat","fluffy","ice-scales","heatproof","shadow-shield","water-bubble","punk-rock","tinted-lens","reckless","rock-head","toxic-boost","flare-boost","analytic","stakeout","defeatist","gorilla-tactics","illuminate","skill-link","quick-feet","unaware","sheer-force","heavy-metal","light-metal","rivalry","minds-eye","long-reach","scrappy","serene-grace","simple"]);
+const abilityNames=Object.freeze(["pressure","intrepid-sword","unnerve","grim-neigh","as-one-spectrier","justified","moxie","chilling-neigh","as-one-glastrier","dauntless-shield","marvel-scale","hustle","keen-eye","steadfast","rough-skin","iron-barbs","effect-spore","synchronize","shed-skin","dark-aura","fairy-aura","aura-break","prism-armor","neuroforce","overgrow","blaze","torrent","swarm","levitate","intimidate","clear-body","white-smoke","hyper-cutter","full-metal-body","inner-focus","own-tempo","immunity","limber","insomnia","vital-spirit","water-veil","magma-armor","sturdy","water-absorb","volt-absorb","flash-fire","sap-sipper","lightning-rod","storm-drain","guts","huge-power","pure-power","adaptability","technician","thick-fat","filter","solid-rock","multiscale","regenerator","natural-cure","magic-guard","unseen-fist","mold-breaker","teravolt","turboblaze","drizzle","drought","sand-stream","snow-warning","swift-swim","chlorophyll","sand-rush","slush-rush","sand-veil","snow-cloak","electric-surge","grassy-surge","misty-surge","psychic-surge","rain-dish","solar-power","sand-force","cloud-nine","air-lock","static","flame-body","poison-point","shadow-tag","arena-trap","magnet-pull","prankster","infiltrator","magic-bounce","normalize","refrigerate","pixilate","aerilate","galvanize","liquid-voice","protean","libero","color-change","schooling","shields-down","battle-bond","forecast","zen-mode","mimicry","zero-to-hero","trace","mummy","receiver","power-of-alchemy","wandering-spirit","neutralizing-gas","lingering-aroma","soul-heart","defiant","competitive","contrary","mirror-armor","opportunist","guard-dog","anger-point","rattled","stamina","water-compaction","weak-armor","steam-engine","motor-drive","electromorphosis","berserk","anger-shell","beast-boost","cotton-down","download","moody","speed-boost","thermal-exchange","wind-power","wind-rider","supreme-overlord","iron-fist","strong-jaw","tough-claws","sharpness","mega-launcher","steelworker","rocky-payload","battle-armor","shell-armor","super-luck","sniper","merciless","compound-eyes","no-guard","tangled-feet","fur-coat","fluffy","ice-scales","heatproof","shadow-shield","water-bubble","punk-rock","tinted-lens","reckless","rock-head","toxic-boost","flare-boost","analytic","stakeout","defeatist","gorilla-tactics","illuminate","skill-link","quick-feet","unaware","sheer-force","heavy-metal","light-metal","rivalry","minds-eye","long-reach","scrappy","serene-grace","simple","poison-touch","cute-charm","gooey","tangling-hair","aftermath","innards-out","perish-body","hydration","leaf-guard","early-bird","liquid-ooze","poison-heal","bad-dreams","stench","shield-dust","big-pecks"]);
 const unsuppressibleAbilities=Object.freeze(['as-one-spectrier','as-one-glastrier','schooling','shields-down','battle-bond','zen-mode','zero-to-hero','multitype','rks-system','stance-change','power-construct','neutralizing-gas']);
 const unsuppressibleGasAbilities=Object.freeze([...unsuppressibleAbilities,'disguise','ice-face','tera-shift','tera-shell','teraform-zero','commander','comatose']);
 const untraceableAbilities=Object.freeze(['as-one-spectrier','as-one-glastrier','battle-bond','commander','disguise','flower-gift','forecast','gulp-missile','hunger-switch','ice-face','illusion','imposter','multitype','neutralizing-gas','power-construct','power-of-alchemy','protosynthesis','quark-drive','receiver','rks-system','schooling','shields-down','stance-change','trace','wonder-guard','zen-mode','zero-to-hero','tera-shift','tera-shell','teraform-zero','embody-aspect','poison-puppeteer']);
@@ -19,6 +19,7 @@ const definitions=Object.freeze(Object.fromEntries(Object.values(moves).map(m=>[
 const statusMoves=Object.freeze(Object.fromEntries(Object.values(moves).filter(m=>m.damageClass==='status').map(m=>[m.name,m])));
 const get=(s,r)=>s[r]?.team?s[r].team[s[r].activeIndex||0]:s[r],foe=r=>r==='player'?'enemy':'player';
 function ability(m,ignored=false){if(!m||m.currentHp<=0)return '';const isSuppressed=((m.abilitySuppressed||m.neutralizingGasSuppressed||ignored)&&!unsuppressibleAbilities.includes(m.ability));if(isSuppressed)return '';return supportedAbilities.has(m.ability)?m.ability:'';}
+function hasEffectiveAbility(m,targetAbilities,ignored=false){if(!m||m.currentHp<=0)return false;const list=Array.isArray(targetAbilities)?targetAbilities:[targetAbilities];const isSuppressed=((m.abilitySuppressed||m.neutralizingGasSuppressed||ignored)&&!unsuppressibleAbilities.includes(m.ability));if(isSuppressed)return false;return list.includes(m.ability)||list.includes(ability(m,ignored));}
 function held(m,name){return m?.item===name&&!(m.dynamax&&['choice-band','choice-specs','choice-scarf'].includes(name));}
 function ignored(a,d,move){return !held(d,'ability-shield')&&([714,722,723].includes(Number(move?.id))||['mold-breaker','teravolt','turboblaze'].includes(ability(a)));}
 function defenderAbility(a,d,move){return ability(d)==='full-metal-body'?'full-metal-body':ability(d,ignored(a,d,move));}
@@ -96,8 +97,42 @@ function checkOpportunist(s,boostedRole,boostedMon,statKey,boost,C,events){
 }
 function modifyStages(s,targetRole,targetMon,statChanges,sourceRole,sourceMon,reason,C,events,options={}){
  if(!targetMon||targetMon.currentHp<=0||!statChanges||typeof statChanges!=='object')return {};
- const ab=ability(targetMon);
+ const ab=ability(targetMon,Boolean(targetMon.abilityIgnored));
  const isFoe=Boolean(sourceRole&&sourceRole!==targetRole);
+
+ if(isFoe&&['clear-body','white-smoke','full-metal-body'].includes(ab)){
+  const remainingChanges={};
+  let hadDrops=false;
+  for(const [statKey,delta] of Object.entries(statChanges)){
+   if(delta<0){
+    hadDrops=true;
+   }else{
+    remainingChanges[statKey]=delta;
+   }
+  }
+  if(hadDrops){
+   tell(C,events,targetRole,targetMon,'P7_ABILITY',ab);
+  }
+  statChanges=remainingChanges;
+  if(Object.keys(statChanges).length===0)return {};
+ }
+
+ if(isFoe&&ab==='big-pecks'){
+  const remainingChanges={};
+  let hadDefDrop=false;
+  for(const [statKey,delta] of Object.entries(statChanges)){
+   if(statKey==='defense'&&delta<0){
+    hadDefDrop=true;
+   }else{
+    remainingChanges[statKey]=delta;
+   }
+  }
+  if(hadDefDrop){
+   tell(C,events,targetRole,targetMon,'P7_ABILITY','big-pecks');
+  }
+  statChanges=remainingChanges;
+  if(Object.keys(statChanges).length===0)return {defense:{appliedDelta:0,blockedReason:'ABILITY'}};
+ }
 
  if(reason==='intimidate'&&ab==='scrappy'){
    tell(C,events,targetRole,targetMon,'P7_ABILITY','scrappy');
@@ -198,7 +233,7 @@ function setWeather(s,id,source,C,events,r){if(s.weather?.id===id)return false;c
 function setTerrain(s,id,source,C,events,r){if(s.terrain?.id===id)return false;s.terrain={id,turns:held(source,'terrain-extender')?8:5};sync(s);tell(C,events,r,source,'P7_TERRAIN',id);Special.updateFieldAbilities(s,C,events);return true;}
 function start(s,C){if(s.p7Started)return;s.p7Started=true;Special.start(s);s.weather=null;s.terrain=null;s.initialP7Events=[];sync(s);for(const r of ['player','enemy'])for(const m of activeMons(s,r))if(m&&m.currentHp>0&&m.ability==='neutralizing-gas'&&!s.neutralizingGasAnnounced){s.neutralizingGasAnnounced=true;s.neutralizingGasActive=true;s.initialP7Events.push({type:'NEUTRALIZING_GAS_STARTED',source:r,pokemonName:m.name});tell(C,s.initialP7Events,r,m,'P7_ABILITY','neutralizing-gas');sync(s);Special.updateFieldAbilities(s,C,s.initialP7Events);}const order=['player','enemy'].sort((a,b)=>C.getEffectiveStat(get(s,b),'speed')-C.getEffectiveStat(get(s,a),'speed'));if(s.battleFormat==='DOUBLES'){const entries=['player','enemy'].flatMap(r=>s[r].activeIndices.map(i=>({r,i,m:s[r].team[i]}))).sort((a,b)=>C.getEffectiveStat(b.m,'speed')-C.getEffectiveStat(a.m,'speed'));for(const p of entries){s[p.r].activeIndex=p.i;enter(s,p.r,C,s.initialP7Events);}for(const r of ['player','enemy'])s[r].activeIndex=s[r].activeIndices[0];}else for(const r of order)enter(s,r,C,s.initialP7Events);sync(s);}
 function enter(s,r,C,events){const m=get(s,r);if(m.currentHp<=0)return;const a=ability(m),other=get(s,foe(r));m.abilityIgnored=false;m.proteanUsed=false;if((a==='neutralizing-gas'||m.ability==='neutralizing-gas')&&!s.neutralizingGasAnnounced){s.neutralizingGasAnnounced=true;s.neutralizingGasActive=true;events.push({type:'NEUTRALIZING_GAS_STARTED',source:r,pokemonName:m.name});tell(C,events,r,m,'P7_ABILITY','neutralizing-gas');sync(s);Special.updateFieldAbilities(s,C,events);}if(a==='trace'){checkTrace(s,r,m,C,events);}else{triggerOnEntryAbility(s,r,m,a,C,events);}if(m.statusCondition==='burn'&&(a==='thermal-exchange'||a==='water-bubble')){m.statusCondition=null;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:'burn',reason:a==='water-bubble'?'WATER_BUBBLE':'THERMAL_EXCHANGE'});tell(C,events,r,m,'P7_ABILITY',a);}if(a==='supreme-overlord'){const team=(s.doublesTeams?.[r]||s[r])?.team||[m];const fallen=Math.min(5,team.filter(t=>t&&t!==m&&t.currentHp<=0).length);m.supremeOverlordFallen=fallen;if(fallen>0){events.push({type:'SUPREME_OVERLORD_ACTIVATED',target:r,pokemonName:m.name,fallen});tell(C,events,r,m,'P7_ABILITY','supreme-overlord');}}checkItem(s,r,C,events);Special.enter(s,r,C,events);sync(s);refreshBerries(s,C,events);}
-function leave(s,r,m,C,events){Special.leave(m,false);const a=ability(m);if(m.currentHp>0&&a==='regenerator')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/3)));if(m.currentHp>0&&a==='natural-cure'&&m.statusCondition){const status=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:status,reason:'NATURAL_CURE'});}if(m.currentHp>0&&!m.transformOriginal&&(m.id===964||m.speciesId===964||m.name==='palafin-zero')&&a==='zero-to-hero'&&!m.zeroToHeroTransformed){Special.triggerZeroToHero(m,s,r,C,events);}if(m.originalAbility){m.ability=m.originalAbility;m.originalAbility=null;}if(m.ability==='neutralizing-gas'){gasEndsCheck(s,m,C,events);}delete m.supremeOverlordFallen;m.choiceLock=null;m.abilitySuppressed=false;m.neutralizingGasSuppressed=false;m.flashFire=false;m.charge=false;m.abilityIgnored=false;m.p7AbilityTrap=false;m.proteanUsed=false;m.switchedInThisTurn=false;}
+function leave(s,r,m,C,events){Special.leave(m,false);const a=ability(m);if(m.currentHp>0&&a==='regenerator')C.P6.heal(events,r,m,Math.max(1,Math.floor(Special.baseMaxHp(m)/3)));if(m.currentHp>0&&a==='natural-cure'&&m.statusCondition){const status=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:status,reason:'NATURAL_CURE'});}if(m.currentHp>0&&!m.transformOriginal&&(m.id===964||m.speciesId===964||m.name==='palafin-zero')&&a==='zero-to-hero'&&!m.zeroToHeroTransformed){Special.triggerZeroToHero(m,s,r,C,events);}if(m.originalAbility){m.ability=m.originalAbility;m.originalAbility=null;}if(m.ability==='neutralizing-gas'){gasEndsCheck(s,m,C,events);}delete m.supremeOverlordFallen;m.choiceLock=null;m.abilitySuppressed=false;m.neutralizingGasSuppressed=false;m.flashFire=false;m.charge=false;m.abilityIgnored=false;m.p7AbilityTrap=false;m.proteanUsed=false;m.switchedInThisTurn=false;m.perishSong=null;m.infatuation=null;for(const side of ['player','enemy'])for(const mon of activeMons(s,side))if(mon&&mon.infatuation===r)mon.infatuation=null;}
 function stat(m,key,move=null,defender=null){let f=1;const a=ability(m,Boolean(m.abilityIgnored)),w=m.envWeather;
  if(key==='attack'){if(held(m,'choice-band'))f*=1.5;if(a==='gorilla-tactics'&&!m.dynamax)f*=1.5;if(['huge-power','pure-power'].includes(a))f*=2;if(a==='guts'&&m.statusCondition)f*=1.5;if(a==='hustle')f*=1.5;if(a==='steelworker'&&move?.type==='steel')f*=1.5;if(a==='rocky-payload'&&move?.type==='rock')f*=1.5;if(a==='water-bubble'&&move?.type==='water')f*=2;if(a==='stakeout'&&defender?.switchedInThisTurn)f*=2;}
  if(key==='defense'){if(a==='fur-coat')f*=2;if(a==='marvel-scale'&&m.statusCondition&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(m.statusCondition))f*=1.5;}
@@ -211,6 +246,7 @@ function stat(m,key,move=null,defender=null){let f=1;const a=ability(m,Boolean(m
 function priority(m,move,C){let p=move?.id===803&&m.envTerrain==='grassy'&&grounded(m)?1:C.getMovePriority(move);if(ability(m,Boolean(m.abilityIgnored))==='prankster'&&!m.abilitySuppressed&&move?.damageClass==='status')p+=1;return p;}
 function statusImmune(m,status){if(status==='freeze'&&m.envWeather==='sun')return true;const a=ability(m,Boolean(m.abilityIgnored));if(grounded(m)){if(m.envTerrain==='misty')return true;if(m.envTerrain==='electric'&&status==='sleep')return true;}
  if(a==='shields-down'&&[774,10130,10131,10132,10133,10134,10135].includes(Number(m.formSpeciesId||m.id))&&!m.transformOriginal&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(status))return true;
+ if(a==='leaf-guard'&&m.envWeather==='sun'&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(status))return true;
  return (status==='poison'||status==='toxic')&&a==='immunity'||status==='paralysis'&&a==='limber'||status==='sleep'&&['insomnia','vital-spirit'].includes(a)||status==='burn'&&(a==='water-veil'||a==='thermal-exchange'||a==='water-bubble')||status==='freeze'&&a==='magma-armor'||status==='confusion'&&a==='own-tempo';}
 const typeChangerExemptIds=new Set([449,546,718,311,805,165,756,236]);
 function isTypeChangerExempt(a,m){
@@ -425,7 +461,7 @@ function contact(s,r,m,action,C,events,attacker=null,defender=null){
    }
   }
   if(ab==='effect-spore'&&a.currentHp>0&&!a.statusCondition){
-   const isGrass=(a.types||[]).includes('grass'),hasOvercoat=a.ability==='overcoat'||ability(a)==='overcoat',hasSafetyGoggles=held(a,'safety-goggles');
+   const isGrass=(a.types||[]).includes('grass'),hasOvercoat=hasEffectiveAbility(a,'overcoat'),hasSafetyGoggles=held(a,'safety-goggles');
    if(!isGrass&&!hasOvercoat&&!hasSafetyGoggles&&!a.safeguarded&&!(s?.terrain?.id==='misty'&&grounded(a))){
     const roll=action.effectSporeRoll??action.abilityRoll??100;
     if(!Number.isInteger(roll)||roll<1||roll>100)throw new Error('Rolagem de habilidade inválida.');
@@ -445,6 +481,41 @@ function contact(s,r,m,action,C,events,attacker=null,defender=null){
     }
    }
   }
+  if(['gooey','tangling-hair'].includes(ab)&&a.currentHp>0){
+   modifyStages(s,r,a,{speed:-1},foe(r),d,ab,C,events);
+   tell(C,events,foe(r),d,'P7_ABILITY',ab);
+  }
+  if(ab==='cute-charm'&&a.currentHp>0&&!a.infatuation){
+   const gA=String(a.gender||'').trim().toUpperCase();
+   const gD=String(d.gender||'').trim().toUpperCase();
+   const isOpposite=(['M','MALE'].includes(gA)&&['F','FEMALE'].includes(gD))||(['F','FEMALE'].includes(gA)&&['M','MALE'].includes(gD));
+   const isImmune=hasEffectiveAbility(a,['oblivious','aroma-veil']);
+   if(isOpposite&&!isImmune){
+    const roll=action.cuteCharmRoll??action.abilityRoll??100;
+    if(!Number.isInteger(roll)||roll<1||roll>100)throw new Error('Rolagem de habilidade inválida.');
+    if(roll<=30){
+     a.infatuation=foe(r);
+     events.push({type:'INFATUATION_APPLIED',target:r,source:foe(r),pokemonName:a.name,sourceName:d.name,reason:'cute-charm'});
+     tell(C,events,foe(r),d,'P7_ABILITY','cute-charm');
+    }
+   }
+  }
+  if(ab==='perish-body'&&a.currentHp>0&&d.currentHp>0){
+   let applied=false;
+   if(typeof a.perishSong!=='number'){
+    a.perishSong=3;
+    events.push({type:'PERISH_SONG_APPLIED',target:r,pokemonName:a.name,duration:3,reason:'perish-body'});
+    applied=true;
+   }
+   if(typeof d.perishSong!=='number'){
+    d.perishSong=3;
+    events.push({type:'PERISH_SONG_APPLIED',target:foe(r),pokemonName:d.name,duration:3,reason:'perish-body'});
+    applied=true;
+   }
+   if(applied){
+    tell(C,events,foe(r),d,'P7_ABILITY','perish-body');
+   }
+  }
  }
  if(held(d,'rocky-helmet')&&a.currentHp>0&&ability(a)!=='magic-guard'){
   const previousHp=a.currentHp,dmg=Math.max(1,Math.floor(Special.baseMaxHp(a)/6)),recoil=Math.min(previousHp,dmg);
@@ -455,7 +526,44 @@ function contact(s,r,m,action,C,events,attacker=null,defender=null){
 }
 function statusAction(s,r,m,C,events){const a=get(s,r);if(m.id===366){s.p6Sides||={player:{},enemy:{}};s.p6Sides[r]||={};s.p6Sides[r].tailwind=4;sync(s);events.push({type:'TAILWIND_STARTED',side:r,pokemonName:a.name});tell(C,events,r,a,'P7_SIDE_CONDITION','tailwind');for(const mon of activeMons(s,r)){if(mon&&mon.currentHp>0){const monAb=ability(mon);if(monAb==='wind-power'){mon.charge=true;tell(C,events,r,mon,'P7_ABILITY','wind-power');}else if(monAb==='wind-rider'){modifyStages(s,r,mon,{attack:1},r,mon,'wind-rider',C,events);tell(C,events,r,mon,'P7_ABILITY','wind-rider');}}}return true;}if(weatherMoves[m.id]){if(!setWeather(s,weatherMoves[m.id],a,C,events,r))events.push({type:'MOVE_FAILED',actor:r,pokemonName:a.name,moveName:m.name,reason:'P7_FIELD_EXISTS'});return true;}if(terrainMoves[m.id]){if(!setTerrain(s,terrainMoves[m.id],a,C,events,r))events.push({type:'MOVE_FAILED',actor:r,pokemonName:a.name,moveName:m.name,reason:'P7_FIELD_EXISTS'});return true;}if(m.id===881){setWeather(s,'snow',a,C,events,r);C.P6.requestPivot(s,r,m.id,events);return true;}if(m.id===432&&s.terrain){s.terrain=null;sync(s);tell(C,events,r,a,'P7_TERRAIN','ended');Special.updateFieldAbilities(s,C,events);}return false;}
 function afterHit(s,r,m,action,C,events,n,attacker=null,defender=null){if(n<=0)return;const a=attacker||get(s,r),d=defender||get(s,foe(r));if([168,282,450,510].includes(m.id))takeItem(s,r,m,C,events);
- const rawDAb=d.ability,isCottonDownActive=!d.abilitySuppressed&&!d.neutralizingGasSuppressed&&!d.abilityIgnored&&rawDAb==='cotton-down';
+ const attackerHasLongReach=Boolean(a&&!a.abilitySuppressed&&!a.neutralizingGasSuppressed&&ability(a)==='long-reach');
+ const isContact=!attackerHasLongReach&&Boolean(C.MoveFlags?.isContactMove?C.MoveFlags.isContactMove(m,C.P5?.contactIds):C.P5?.contactIds?.includes(m.id));
+ const rawDAb=d.ability;
+ if(isContact&&a.currentHp>0&&!a.abilitySuppressed&&!a.neutralizingGasSuppressed&&ability(a)==='poison-touch'&&d.currentHp>0){
+  const defAb=defenderAbility(a,d,m);
+  if(defAb!=='shield-dust'&&C.isEligibleForStatusCondition(d,'poison')&&!statusImmune(d,'poison')&&!d.safeguarded&&!(s?.terrain?.id==='misty'&&grounded(d))){
+   const roll=action.poisonTouchRoll??action.abilityRoll??100;
+   if(!Number.isInteger(roll)||roll<1||roll>100)throw new Error('Rolagem de habilidade inválida.');
+   if(roll<=30){
+    d.statusCondition='poison';
+    d.toxicStage=0;
+    events.push({type:'STATUS_APPLIED',target:foe(r),source:r,pokemonName:d.name,statusCondition:'poison',reason:'poison-touch'});
+    tell(C,events,r,a,'P7_ABILITY','poison-touch');
+    checkSynchronize(s,r,foe(r),'poison',C,events,a,d);
+   }
+  }
+ }
+ if(isContact&&d.currentHp<=0&&rawDAb==='aftermath'&&!d.abilitySuppressed&&!d.neutralizingGasSuppressed){
+  const dampActive=['player','enemy'].some(sideRole=>activeMons(s,sideRole).some(mon=>hasEffectiveAbility(mon,'damp')));
+  if(!dampActive&&a.currentHp>0&&ability(a)!=='magic-guard'){
+   const dmg=Math.max(1,Math.floor(Special.baseMaxHp(a)/4));
+   const recoil=Math.min(a.currentHp,dmg);
+   const prevHp=a.currentHp;
+   a.currentHp=Math.max(0,prevHp-recoil);
+   events.push({type:'RECOIL_APPLIED',target:r,pokemonName:a.name,damage:recoil,previousHp:prevHp,currentHp:a.currentHp,maxHp:a.maxHp,reason:'aftermath'});
+   tell(C,events,foe(r),d,'P7_ABILITY','aftermath');
+  }
+ }
+ if(d.currentHp<=0&&rawDAb==='innards-out'&&!d.abilitySuppressed&&!d.neutralizingGasSuppressed){
+  if(a.currentHp>0&&ability(a)!=='magic-guard'){
+   const dmg=Math.min(a.currentHp,n);
+   const prevHp=a.currentHp;
+   a.currentHp=Math.max(0,prevHp-dmg);
+   events.push({type:'RECOIL_APPLIED',target:r,pokemonName:a.name,damage:dmg,previousHp:prevHp,currentHp:a.currentHp,maxHp:a.maxHp,reason:'innards-out'});
+   tell(C,events,foe(r),d,'P7_ABILITY','innards-out');
+  }
+ }
+ const isCottonDownActive=!d.abilitySuppressed&&!d.neutralizingGasSuppressed&&!d.abilityIgnored&&rawDAb==='cotton-down';
  if(isCottonDownActive){let activated=false;for(const sideRole of ['player','enemy'])for(const activeMon of activeMons(s,sideRole))if(activeMon&&activeMon!==d&&activeMon.currentHp>0){if(!activated){tell(C,events,foe(r),d,'P7_ABILITY','cotton-down');activated=true;}modifyStages(s,sideRole,activeMon,{speed:-1},foe(r),d,'cotton-down',C,events);}}
  if(m.type==='dark'&&ability(d)==='justified'&&d.currentHp>0){C.P6.stage(C,events,foe(r),d,'attack',1);tell(C,events,foe(r),d,'P7_ABILITY','justified');checkOpportunist(s,foe(r),d,'attack',1,C,events);}
  if(d.currentHp>0){
@@ -535,9 +643,32 @@ function afterMove(s,r,events,C,batch){const m=get(s,r);if(batch.some(e=>e.type=
 function earlyResidual(s,C,events){sync(s);const w=fieldWeather(s);for(const r of ['player','enemy']){const m=get(s,r),ab=ability(m);if(m.currentHp<=0)continue;
  if(ab==='shed-skin'&&m.statusCondition&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(m.statusCondition)){
   const act=s.turnActions?.[r]||{},roll=act.shedSkinRoll??act.abilityRoll??100;
-  const isThreeScale=act.shedSkinScale===3||act.scale===3||(act.shedSkinRoll!==undefined&&act.shedSkinRoll<=3);
-  const activates=isThreeScale?(roll===1):(roll<=33);
+  const activates=(roll<=33);
   if(activates){const oldStatus=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:oldStatus,reason:'SHED_SKIN'});tell(C,events,r,m,'P7_ABILITY','shed-skin');}
+ }
+ if(ab==='hydration'&&w==='rain'&&m.statusCondition&&['burn','poison','toxic','paralysis','sleep','freeze'].includes(m.statusCondition)){
+  const oldStatus=m.statusCondition;m.statusCondition=null;m.sleepTurns=0;m.sleepCounter=0;m.toxicStage=0;
+  events.push({type:'STATUS_CURED',target:r,pokemonName:m.name,statusCondition:oldStatus,reason:'HYDRATION'});
+  tell(C,events,r,m,'P7_ABILITY','hydration');
+ }
+ if(ab==='bad-dreams'&&m.currentHp>0){
+  for(const opp of activeMons(s,foe(r))){
+   if(opp&&opp.currentHp>0&&opp.statusCondition==='sleep'&&ability(opp)!=='magic-guard'){
+    const dmg=Math.max(1,Math.floor(Special.baseMaxHp(opp)/8));
+    C.P6.hpDamage(events,foe(r),opp,dmg,'bad-dreams');
+    tell(C,events,r,m,'P7_ABILITY','bad-dreams');
+   }
+  }
+ }
+ if(typeof m.perishSong==='number'&&m.currentHp>0){
+  m.perishSong--;
+  events.push({type:'PERISH_SONG_COUNT',target:r,pokemonName:m.name,count:m.perishSong});
+  if(m.perishSong<=0){
+   const prevHp=m.currentHp;
+   m.currentHp=0;
+   events.push({type:'HP_DAMAGE',target:r,pokemonName:m.name,damage:prevHp,previousHp:prevHp,currentHp:0,maxHp:m.maxHp,reason:'perish-song'});
+   events.push({type:'FAINT',target:r,pokemonName:m.name});
+  }
  }
  if(w==='hail'&&!m.types.includes('ice')&&ab!=='magic-guard')C.P6.hpDamage(events,r,m,Special.baseMaxHp(m)/16,'hail');
  if(w==='sand'&&!m.types.some(t=>['rock','ground','steel'].includes(t))&&!['sand-rush','sand-veil','sand-force','magic-guard'].includes(ab))C.P6.hpDamage(events,r,m,Special.baseMaxHp(m)/16,'sandstorm');
@@ -673,6 +804,6 @@ function handleFaint(s,faintedRole,faintedMon,C,events){
   }
  }
 }
-const api=Object.freeze({berriesBlocked,refreshBerries,pressureCost,directKO,legalMove,mustStruggle,secondary,Data,abilityNames,items,moves,definitions,statusMoves,weatherMoves,terrainMoves,ability,held,ignored,defenderAbility,natural,defaultAbility,normalizeAbility,normalizeItem,validatePreference,fieldWeather,grounded,sync,start,enter,leave,stat,priority,statusImmune,moveType,power,damageMultiplier,accuracy,instantCharge,consume,removable,takeItem,checkItem,tryHit,survive,contact,checkSynchronize,statusAction,afterHit,afterMove,earlyResidual,endTurn,isConvertedByAbility,isTypeChangerExempt,originalMoveType,canActivateProtean,activateProtean,canActivateColorChange,activateColorChange,handleFaint,hasNeutralizingGas,checkTrace,checkTraceAll,gasEndsCheck,unsuppressibleAbilities,untraceableAbilities,unoverwritableAbilities,unswappableAbilities,noReceiverAbilities,modifyStages,checkOpportunist});
+const api=Object.freeze({berriesBlocked,refreshBerries,pressureCost,directKO,legalMove,mustStruggle,secondary,Data,abilityNames,items,moves,definitions,statusMoves,weatherMoves,terrainMoves,ability,hasEffectiveAbility,held,ignored,defenderAbility,natural,defaultAbility,normalizeAbility,normalizeItem,validatePreference,fieldWeather,grounded,sync,start,enter,leave,stat,priority,statusImmune,moveType,power,damageMultiplier,accuracy,instantCharge,consume,removable,takeItem,checkItem,tryHit,survive,contact,checkSynchronize,statusAction,afterHit,afterMove,earlyResidual,endTurn,isConvertedByAbility,isTypeChangerExempt,originalMoveType,canActivateProtean,activateProtean,canActivateColorChange,activateColorChange,handleFaint,hasNeutralizingGas,checkTrace,checkTraceAll,gasEndsCheck,unsuppressibleAbilities,untraceableAbilities,unoverwritableAbilities,unswappableAbilities,noReceiverAbilities,modifyStages,checkOpportunist});
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else if(typeof window!=='undefined')window.PBAP7Mechanics=api;
 })();

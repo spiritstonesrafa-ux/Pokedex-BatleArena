@@ -186,9 +186,9 @@
     rollShedSkin(){
       if(this.shedSkinSequence&&this.shedSkinSequence.length>0){
         const next=Math.floor(Number(this.shedSkinSequence.shift()));
-        return Math.max(1,Math.min(3,next));
+        return Math.max(1,Math.min(100,next));
       }
-      return Math.floor(this.rng()*3)+1;
+      return Math.floor(this.rng()*100)+1;
     }
 
     rollAbility(){const n=this.abilitySequence?.length?Number(this.abilitySequence.shift()):Math.floor(this.rng()*100)+1;if(!Number.isInteger(n)||n<1||n>100)throw new Error('Rolagem de habilidade inválida.');return n;}

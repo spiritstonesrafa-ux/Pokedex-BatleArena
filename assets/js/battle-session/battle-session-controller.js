@@ -150,8 +150,7 @@
 
   function prepareMultiHit(active, action, rng) {
     action.abilityRoll=rng.rollAbility?.()??100;
-    action.shedSkinRoll=(typeof rng.rollShedSkin==='function')?rng.rollShedSkin():(action.abilityRoll<=33?1:2);
-    action.shedSkinScale=3;
+    action.shedSkinRoll=(typeof rng.rollShedSkin==='function')?rng.rollShedSkin():(action.abilityRoll??100);
     if(action.moveId===290&&active.envTerrain==='grassy')action.sleepDuration=rng.rollSleepDuration?.()??2;
     if(active.lockedMove)action.moveId=active.lockedMove.id;
     if(active.twoTurnMove)action.moveId=active.twoTurnMove.id;
@@ -515,7 +514,7 @@
         const commands={player:JSON.parse(JSON.stringify(playerActions||{})),enemy:this.engine.chooseDoublesActions(this.battleState,'enemy')};
         for(const role of ['player','enemy'])for(const p of this.engine.doublesActive(this.battleState,role)){
           const action=commands[role][p.slot];if(!action||p.mon.commanding)continue;const rng=this.randomSource;
-          if(action.type!=='MOVE'){if(action.abilityRoll===undefined)action.abilityRoll=rng.rollAbility?.()??100;if(action.shedSkinRoll===undefined)action.shedSkinRoll=(typeof rng.rollShedSkin==='function')?rng.rollShedSkin():3;action.shedSkinScale=3;continue;}
+          if(action.type!=='MOVE'){if(action.abilityRoll===undefined)action.abilityRoll=rng.rollAbility?.()??100;if(action.shedSkinRoll===undefined)action.shedSkinRoll=(typeof rng.rollShedSkin==='function')?rng.rollShedSkin():100;continue;}
           action.accuracyRoll=rng.rollAccuracy();action.damageRoll=rng.rollDamage?.()??100;action.secondaryEffectRoll=rng.rollSecondaryEffect?.()??100;action.statusRoll=rng.rollStatus?.()??100;action.thawRoll=rng.rollThaw?.()??100;action.confusionHitRoll=rng.rollConfusionHit?.()??100;action.confusionDamageRoll=rng.rollConfusionDamage?.()??100;action.sleepDuration=rng.rollSleepDuration?.()??2;action.confusionDuration=rng.rollConfusionDuration?.()??3;
           prepareSleepCall(p.mon,action,{},rng);prepareCompoundSecondary(p.mon.moves.find(m=>m.id===action.moveId),action,rng);prepareMultiHit(p.mon,action,rng);
           const base=p.mon.moves.find(m=>m.id===action.moveId),preview={...this.battleState,[role]:{...this.battleState[role],activeIndex:p.index}};
@@ -802,8 +801,7 @@
             type: 'SWITCH',
             targetPokemonId: Number(targetPokemonId),
             abilityRoll: (typeof this.randomSource.rollAbility === 'function') ? this.randomSource.rollAbility() : 100,
-            shedSkinRoll: (typeof this.randomSource.rollShedSkin === 'function') ? this.randomSource.rollShedSkin() : 3,
-            shedSkinScale: 3
+            shedSkinRoll: (typeof this.randomSource.rollShedSkin === 'function') ? this.randomSource.rollShedSkin() : 100
           },
           enemy: enemyAction
         };

@@ -277,7 +277,7 @@
         rechargeMoveId:null,bideState:null,twoTurnMove:null,beakBlastReady:false,shellTrapReady:false,shellTrapTriggered:false,
         isProtected: false, stallCount: 0,
         ability:constants.P7.normalizeAbility(raw.ability),originalAbility:null,neutralizingGasSuppressed:false,item:constants.P7.normalizeItem(raw.item??raw.heldItem),abilitySuppressed:false,substituteHp:Number(raw.substituteHp)||0,substitute:Boolean(raw.substitute||(Number(raw.substituteHp)>0)),abilityIgnored:false,intrepidSwordUsed:false,dauntlessShieldUsed:false,choiceLock:null,flashFire:false,charge:Boolean(raw.charge),switchedInThisTurn:Boolean(raw.switchedInThisTurn),proteanUsed:false,battleBondTriggered:false,zeroToHeroTransformed:false,mimicryOriginalTypes:null,
-        bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,
+        bound:null,trapped:null,leechSeed:null,minimized:false,lockedMove:null,lastP6Move:null,focusLost:false,infatuation:raw.infatuation||null,perishSong:raw.perishSong!==undefined?raw.perishSong:null,gender:raw.gender||null,
         lastUsedMoveId:null,transformOriginal:null,
         actedThisTurn:false, damagedThisTurn:false, lastDirectHit:null, lastMoveFailed:false,
         types: normalizedTypes,
@@ -607,7 +607,29 @@
       for (const role of ['player', 'enemy']) {
         const pokemon = getActiveCombatant(state, role);
         if (pokemon.statusCondition !== 'toxic') pokemon.toxicStage = 0;
-        if (pokemon.currentHp <= 0 || constants.P7.ability(pokemon)==='magic-guard' || !['poison', 'toxic', 'burn'].includes(pokemon.statusCondition)) continue;
+        if (pokemon.currentHp <= 0 || !['poison', 'toxic', 'burn'].includes(pokemon.statusCondition)) continue;
+        const ab = constants.P7?.ability ? constants.P7.ability(pokemon) : pokemon.ability;
+        if (ab === 'magic-guard') continue;
+        if (ab === 'poison-heal' && ['poison', 'toxic'].includes(pokemon.statusCondition)) {
+          const healAmount = Math.max(1, Math.floor(constants.P8.baseMaxHp(pokemon) / 8));
+          const previousHp = pokemon.currentHp;
+          pokemon.currentHp = Math.min(pokemon.maxHp, previousHp + healAmount);
+          const actualHealed = pokemon.currentHp - previousHp;
+          if (actualHealed > 0) {
+            events.push({
+              type: BATTLE_EVENTS.HP_HEALED,
+              target: role,
+              pokemonName: pokemon.name,
+              previousHp,
+              currentHp: pokemon.currentHp,
+              maxHp: pokemon.maxHp,
+              healedAmount: actualHealed,
+              reason: 'poison-heal'
+            });
+            constants.P7?.tell?.(constants, events, role, pokemon, 'P7_ABILITY', 'poison-heal');
+          }
+          continue;
+        }
         const previousHp = pokemon.currentHp;
         // Modern Toxic: floor(maxHp / 16) * N, capped at N=15; switches reset N.
         if (pokemon.statusCondition === 'toxic') {
@@ -852,7 +874,7 @@
       const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
       if(attacker.currentHp<=0 || state.status!=='IN_PROGRESS')return;
       executeActionCore(attackerRole,defenderRole,state,events,action,calledMove,pressureCallerId);
-      attacker.abilityIgnored=false;originalTarget.abilityIgnored=false;attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;originalTarget.p7BlockDrop=false;originalTarget.p7BlockAttackDrop=false;originalTarget.p7KeenEyeAccuracyBlock=false;
+      attacker.abilityIgnored=false;originalTarget.abilityIgnored=false;attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7BlockDefenseDrop=false;attacker.p7KeenEyeAccuracyBlock=false;originalTarget.p7BlockDrop=false;originalTarget.p7BlockAttackDrop=false;originalTarget.p7BlockDefenseDrop=false;originalTarget.p7KeenEyeAccuracyBlock=false;
       constants.Completion.crash(state,attackerRole,attacker,action,events.slice(start),constants,events);
       if(!calledMove&&!state.doublesSpread)constants.P7.afterMove(state,attackerRole,events,constants,events.slice(start));
       if(attacker.currentHp<=0&&!events.slice(start).some(e=>e.type===BATTLE_EVENTS.POKEMON_FAINTED&&e.target===attackerRole))resolveFaints(state,events,[attackerRole],'item');
@@ -949,7 +971,12 @@
       if(!calledMove && attacker.item==='assault-vest'&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
       const actualDamageClass = constants.P8.damageClass(attacker,selectedMove,constants);
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
-      attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';defender.p7KeenEyeAccuracyBlock=['keen-eye','illuminate','minds-eye'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));
+      attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7BlockDefenseDrop=false;attacker.p7KeenEyeAccuracyBlock=false;
+      const defAb=constants.P7.defenderAbility(attacker,defender,selectedMove);
+      defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(defAb);
+      defender.p7BlockAttackDrop=defAb==='hyper-cutter';
+      defender.p7BlockDefenseDrop=defAb==='big-pecks';
+      defender.p7KeenEyeAccuracyBlock=['keen-eye','illuminate','minds-eye'].includes(defAb);
       const actualDamageType=constants.P8.moveType(attacker,selectedMove,constants.P7.moveType(state,attacker,selectedMove,constants.P5.type(selectedMove,attacker)));
       const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType,originalType:selectedMove.originalType||selectedMove.type};
       const continuingBide=Boolean(attacker.bideState);
@@ -1058,21 +1085,50 @@
       // Flinch pendente é descartado sem duplo anúncio. Nenhum PP é consumido.
       const sleepUsable=[173,214].includes(selectedMove.id);
       if (!calledMove && attacker.statusCondition === 'sleep') {
-        if (attacker.sleepTurns > 0) {
+        const hasEarlyBird = !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7?.ability?.(attacker) === 'early-bird';
+        if (hasEarlyBird) {
+          attacker.sleepTurns = Math.max(0, attacker.sleepTurns - 2);
+          attacker.sleepCounter = attacker.sleepTurns;
+          if (attacker.sleepTurns === 0) {
+            attacker.statusCondition = null;
+            attacker.sleepCounter = 0;
+            events.push({
+              type: BATTLE_EVENTS.STATUS_CURED,
+              actor: attackerRole,
+              target: attackerRole,
+              pokemonName: attacker.name,
+              statusCondition: 'sleep',
+              reason: 'WOKE_UP'
+            });
+            constants.P7?.tell?.(constants, events, attackerRole, attacker, 'P7_ABILITY', 'early-bird');
+          } else if (!sleepUsable) {
+            attacker.isFlinched = false;
+            attacker.stallCount = 0;
+            if (attacker.twoTurnMove) attacker.twoTurnMove = null;
+            events.push({
+              type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
+              actor: attackerRole,
+              pokemonName: attacker.name,
+              statusCondition: 'sleep',
+              remainingTurns: attacker.sleepTurns
+            });
+            return;
+          }
+        } else if (attacker.sleepTurns > 0) {
           attacker.sleepTurns -= 1;
           attacker.sleepCounter = attacker.sleepTurns;
           if(!sleepUsable){
-          attacker.isFlinched = false;
-          attacker.stallCount = 0;
-          if (attacker.twoTurnMove) attacker.twoTurnMove = null;
-          events.push({
-            type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
-            actor: attackerRole,
-            pokemonName: attacker.name,
-            statusCondition: 'sleep',
-            remainingTurns: attacker.sleepTurns
-          });
-          return;
+            attacker.isFlinched = false;
+            attacker.stallCount = 0;
+            if (attacker.twoTurnMove) attacker.twoTurnMove = null;
+            events.push({
+              type: BATTLE_EVENTS.STATUS_IMMOBILIZED,
+              actor: attackerRole,
+              pokemonName: attacker.name,
+              statusCondition: 'sleep',
+              remainingTurns: attacker.sleepTurns
+            });
+            return;
           }
         } else {
           attacker.statusCondition = null;
@@ -1216,6 +1272,38 @@
             if (currentHp === 0) {
               resolveFaints(state, events, [attackerRole], 'confusion');
             }
+            return;
+          }
+        }
+      }
+
+      // Verificação canônica de atração / infatuação (Infatuation / Cute Charm)
+      if (!calledMove && attacker.infatuation) {
+        const infatuationTarget = getActiveCombatant(state, attacker.infatuation);
+        if (!infatuationTarget || infatuationTarget.currentHp <= 0 || constants.P7.hasEffectiveAbility(attacker, 'oblivious')) {
+          attacker.infatuation = null;
+        } else {
+          events.push({
+            type: 'INFATUATION_CHECK',
+            actor: attackerRole,
+            target: attacker.infatuation,
+            pokemonName: attacker.name,
+            targetName: infatuationTarget.name
+          });
+          const infatuationRoll = action.infatuationRoll !== undefined ? Number(action.infatuationRoll) : 100;
+          if (!Number.isInteger(infatuationRoll) || infatuationRoll < 1 || infatuationRoll > 100) {
+            throw new Error('Rolagem de infatuação inválida.');
+          }
+          if (infatuationRoll <= 50) {
+            attacker.stallCount = 0;
+            if (attacker.twoTurnMove) attacker.twoTurnMove = null;
+            events.push({
+              type: 'IMMOBILIZED_BY_LOVE',
+              actor: attackerRole,
+              target: attacker.infatuation,
+              pokemonName: attacker.name,
+              targetName: infatuationTarget.name
+            });
             return;
           }
         }
@@ -2078,21 +2166,46 @@
       if (actualDamageDealt > 0 && constants.getDrainRatio?.(selectedMove) > 0) {
         const drainRatio = constants.getDrainRatio(selectedMove);
         const rawHeal = Math.max(1, Math.floor(actualDamageDealt * drainRatio));
-        const previousAttackerHp = attacker.currentHp;
-        const newAttackerHp = Math.min(attacker.maxHp, previousAttackerHp + rawHeal);
-        const actualHealed = newAttackerHp - previousAttackerHp;
-        attacker.currentHp = newAttackerHp;
-        if (actualHealed > 0) {
-          events.push({
-            type: BATTLE_EVENTS.DRAIN_APPLIED,
-            target: attackerRole,
-            pokemonName: attacker.name,
-            moveName: selectedMove.name,
-            healedAmount: actualHealed,
-            previousHp: previousAttackerHp,
-            currentHp: newAttackerHp,
-            maxHp: attacker.maxHp
-          });
+        const defAb = constants.P7?.ability ? constants.P7.ability(defender) : (defender.abilitySuppressed ? '' : defender.ability);
+        if (defAb === 'liquid-ooze') {
+          if (constants.P7?.ability(attacker) !== 'magic-guard') {
+            const previousAttackerHp = attacker.currentHp;
+            const newAttackerHp = Math.max(0, previousAttackerHp - rawHeal);
+            const actualRecoil = previousAttackerHp - newAttackerHp;
+            attacker.currentHp = newAttackerHp;
+            events.push({
+              type: BATTLE_EVENTS.RECOIL_APPLIED,
+              target: attackerRole,
+              pokemonName: attacker.name,
+              moveName: selectedMove.name,
+              damage: actualRecoil,
+              previousHp: previousAttackerHp,
+              currentHp: newAttackerHp,
+              maxHp: attacker.maxHp,
+              reason: 'liquid-ooze'
+            });
+            constants.P7?.tell?.(constants, events, defenderRole, defender, 'P7_ABILITY', 'liquid-ooze');
+            if (newAttackerHp === 0) {
+              events.push({ type: BATTLE_EVENTS.FAINT, target: attackerRole, pokemonName: attacker.name });
+            }
+          }
+        } else {
+          const previousAttackerHp = attacker.currentHp;
+          const newAttackerHp = Math.min(attacker.maxHp, previousAttackerHp + rawHeal);
+          const actualHealed = newAttackerHp - previousAttackerHp;
+          attacker.currentHp = newAttackerHp;
+          if (actualHealed > 0) {
+            events.push({
+              type: BATTLE_EVENTS.DRAIN_APPLIED,
+              target: attackerRole,
+              pokemonName: attacker.name,
+              moveName: selectedMove.name,
+              healedAmount: actualHealed,
+              previousHp: previousAttackerHp,
+              currentHp: newAttackerHp,
+              maxHp: attacker.maxHp
+            });
+          }
         }
       }
 
@@ -2159,14 +2272,22 @@
         attacker.sheerForceBoosted = true;
         secEffect = null;
       }
+      if (!attackerHasSheerForce && selectedMove.damageClass !== 'status' && constants.P7?.ability?.(attacker) === 'stench' && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed) {
+        if (!secEffect) {
+          secEffect = { chance: 10, flinch: true, flinchChance: 10 };
+        } else if (!secEffect.flinch) {
+          secEffect = { ...secEffect, flinch: true, flinchChance: 10 };
+        }
+      }
       if(secEffect?.statusChoices){
         const choice=action?.secondaryStatusChoice===undefined?1:Number(action.secondaryStatusChoice);
         if(!Number.isInteger(choice)||choice<1||choice>secEffect.statusChoices.length)throw new Error('Escolha secundária inválida.');
         secEffect={...secEffect,statusCondition:secEffect.statusChoices[choice-1]};
       }
+      const defenderHasShieldDust = constants.P7?.defenderAbility?.(attacker, defender, selectedMove) === 'shield-dust';
       if (secEffect && effectiveMultiplier > 0) {
         // Efeitos no defensor: exigem sobrevivência do defensor (currentHp > 0)
-        if (currentHp > 0) {
+        if (currentHp > 0 && !defenderHasShieldDust) {
           if (secEffect.statusCondition) {
             const canApply = constants.isEligibleForStatusCondition
               ? constants.isEligibleForStatusCondition(defender, secEffect.statusCondition)
@@ -2191,7 +2312,7 @@
           }
 
           if (secEffect.flinch) {
-            const flinchRoll=secEffect.flinchChance?(action?.secondaryEffectRoll2 ?? 100):secondaryEffectRoll;
+            const flinchRoll = action?.flinchRoll ?? (secEffect.flinchChance ? (action?.secondaryEffectRoll2 ?? (secEffect.statusCondition || secEffect.statDrops || secEffect.confusion ? 100 : secondaryEffectRoll)) : secondaryEffectRoll);
             if(!Number.isInteger(flinchRoll)||flinchRoll<1||flinchRoll>100)throw new Error('Rolagem secundária independente inválida.');
             if (!defender.dynamax && constants.P7.defenderAbility(attacker,defender,selectedMove)!=='inner-focus' && flinchRoll <= (secEffect.flinchChance || secEffect.chance)) {
               defender.isFlinched = true;

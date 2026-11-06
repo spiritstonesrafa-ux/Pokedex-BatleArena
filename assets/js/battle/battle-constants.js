@@ -56,7 +56,12 @@
     CONFUSION_BLOCKED: 'CONFUSION_BLOCKED',
     CONFUSION_CHECK: 'CONFUSION_CHECK',
     CONFUSION_DAMAGE: 'CONFUSION_DAMAGE',
-    CONFUSION_ENDED: 'CONFUSION_ENDED'
+    CONFUSION_ENDED: 'CONFUSION_ENDED',
+    INFATUATION_APPLIED: 'INFATUATION_APPLIED',
+    INFATUATION_CHECK: 'INFATUATION_CHECK',
+    IMMOBILIZED_BY_LOVE: 'IMMOBILIZED_BY_LOVE',
+    PERISH_SONG_APPLIED: 'PERISH_SONG_APPLIED',
+    PERISH_SONG_COUNT: 'PERISH_SONG_COUNT'
   });
 
   const BATTLE_ACTIONS = Object.freeze({
@@ -472,7 +477,7 @@
   }
 
   function applyStatStageChange(combatant, statKey, delta) {
-    if(delta<0&&(combatant.p7BlockDrop||statKey==='attack'&&combatant.p7BlockAttackDrop)){
+    if(delta<0&&(combatant.p7BlockDrop||(statKey==='attack'&&combatant.p7BlockAttackDrop)||(statKey==='defense'&&combatant.p7BlockDefenseDrop))){
       const previousStage=['accuracy','evasion'].includes(statKey)?combatant[statKey+'Stage']||0:combatant.statStages?.[statKey]||0;
       return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};
     }

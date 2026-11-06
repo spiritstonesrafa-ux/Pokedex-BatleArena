@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 201,
+    "declaredSupported": 217,
     "assignedAbilities": 313,
-    "assignedPending": 113,
+    "assignedPending": 97,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 326
+    "recordsWithPendingDefault": 260
   },
   "phases": [
     {
@@ -27,8 +27,8 @@
     {
       "id": "H3",
       "name": "Status, contato e imunidades",
-      "assignedPending": 37,
-      "defaultRecordsImpacted": 136
+      "assignedPending": 21,
+      "defaultRecordsImpacted": 70
     },
     {
       "id": "H4",
@@ -242,8 +242,8 @@
     },
     {
       "name": "aftermath",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -848,8 +848,8 @@
     },
     {
       "name": "bad-dreams",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -1149,8 +1149,8 @@
     },
     {
       "name": "big-pecks",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -2800,8 +2800,8 @@
     },
     {
       "name": "cute-charm",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -3623,8 +3623,8 @@
     },
     {
       "name": "early-bird",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -5337,8 +5337,8 @@
     },
     {
       "name": "gooey",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -6456,8 +6456,8 @@
     },
     {
       "name": "hydration",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -7227,8 +7227,8 @@
     },
     {
       "name": "innards-out",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -8708,8 +8708,8 @@
     },
     {
       "name": "leaf-guard",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -9663,8 +9663,8 @@
     },
     {
       "name": "liquid-ooze",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -12116,8 +12116,8 @@
     },
     {
       "name": "perish-body",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -12577,8 +12577,8 @@
     },
     {
       "name": "poison-heal",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -12773,8 +12773,8 @@
     },
     {
       "name": "poison-touch",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -16804,8 +16804,8 @@
     },
     {
       "name": "shield-dust",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -18552,8 +18552,8 @@
     },
     {
       "name": "stench",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
@@ -20279,8 +20279,8 @@
     },
     {
       "name": "tangling-hair",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H3",
       "pokemon": [
         {
