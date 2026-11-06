@@ -2112,6 +2112,57 @@
     }
   };
 
+  const H2F_METADATA = {
+    'scrappy': {
+      id: 'scrappy',
+      name: 'Scrappy',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_EFFECTIVENESS', 'ON_TRY_BOOST']),
+      bearer: 'Kangaskhan (#115), Miltank (#241), Taillow (#276), Swellow (#277), Lopunny (#428), Pancham (#674), Pangoro (#675), Decidueye-Hisui (#10244), Flamigo (#973)',
+      ruleset: 'Gen IX SV / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2f-scrappy.test.js']),
+      description: 'Permite que movimentos Normal e Fighting atinjam Pokémon do tipo Ghost com dano neutro e concede imunidade à redução de Ataque causada por Intimidate.'
+    },
+    'serene-grace': {
+      id: 'serene-grace',
+      name: 'Serene Grace',
+      generation: 3,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_MOVE']),
+      bearer: 'Chansey (#113), Blissey (#242), Togepi (#175), Togetic (#176), Togekiss (#468), Dunsparce (#206), Dudunsparce (#982), Jirachi (#385), Meloetta-Pirouette (#10018), Deerling (#585), Sawsbuck (#586), Happiny (#440)',
+      ruleset: 'Gen IX SV / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2f-serene-grace.test.js']),
+      description: 'Duplica a probabilidade de ativação dos efeitos secundários elegíveis causados pelos movimentos do usuário.'
+    },
+    'simple': {
+      id: 'simple',
+      name: 'Simple',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_CHANGE_BOOST', 'ON_MODIFY_BOOST']),
+      bearer: 'Numel (#322), Bidoof (#399), Bibarel (#400), Wooper-Paldea (#10253)',
+      ruleset: 'Gen IX SV / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2f-simple.test.js']),
+      description: 'Na Geração IX, duplica diretamente a alteração dos estágios de atributos (+1 vira +2, +2 vira +4, -1 vira -2) no momento da aplicação, armazenando o valor resultante no estado do Pokémon dentro dos limites de -6 a +6. Ao ser suprimida ou perdida, os estágios anteriormente acumulados são preservados.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -2220,6 +2271,11 @@
 
     if (H2E_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H2E_METADATA[slug] }));
+      continue;
+    }
+
+    if (H2F_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H2F_METADATA[slug] }));
       continue;
     }
 

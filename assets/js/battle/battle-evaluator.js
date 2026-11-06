@@ -534,7 +534,7 @@
 
       // 8. Avaliação de Efeito Secundário Canônico (Secondary Effects: P4)
       const attackerHasSheerForce = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7?.ability && constants.P7.ability(attacker) === 'sheer-force' && move.damageClass !== 'status');
-      const rawSecEffect = constants.P7.secondary(context.battleState || {}, move, constants.getSecondaryEffect(move));
+      const rawSecEffect = constants.P7.secondary(context.battleState || {}, move, constants.getSecondaryEffect(move), attacker);
       const secEffect = (attackerHasSheerForce && (constants.hasSecondaryEffect ? constants.hasSecondaryEffect(move) : Boolean(rawSecEffect))) ? null : rawSecEffect;
       let expectedStatusChance = 0;
       let expectedStatusBenefit = 0;

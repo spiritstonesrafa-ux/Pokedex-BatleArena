@@ -2,6 +2,41 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 06/11/2026: Auditoria, Correção Canônica de Simple (Gen IX) e Homologação H2-F
+
+- **Objetivo Concluído:** Auditoria canônica profunda e correção da mecânica de `simple` no lote H2-F para alinhamento estrito à Geração IX (Pokémon Showdown hook `onModifyBoost`), garantindo armazenamento efetivo da alteração de estágios duplicada, preservação pós-supressão e ausência de duplicações indevidas em consultas de atributos, acompanhado de revalidação integral de Scrappy, Serene Grace e encerramento da Família H2.
+- **Correção Canônica de Simple (Gen IX Showdown):**
+  - **Divergência Corrigida:** A implementação prévia duplicava estágios no momento do cálculo do atributo preservando estágios brutos (comportamento da Geração IV). Na Geração IX (desde Gen V), Simple opera no hook `onModifyBoost` no momento da alteração de atributos, dobrando a alteração solicitada (+1 vira +2, +2 vira +4, -1 vira -2, -2 vira -4) e gravando o valor resultante diretamente em `combatant.statStages`, `accuracyStage` e `evasionStage`.
+  - **Funções Refatoradas (`assets/js/battle/battle-constants.js`):**
+    - `applyStatStageChange`: Detecta `hasSimple` (ativo, não suprimido, não ignorado por Mold Breaker) e dobra `requestedDelta` antes de aplicar e gravar no estado.
+    - `getStatStageMultiplier`, `getEffectiveStat`, `getEffectiveAccuracy`: Removida qualquer duplicação secundária durante os cálculos de atributos e precisão. Os cálculos utilizam diretamente os estágios já gravados.
+  - **Comportamento Pós-Supressão e Mudança de Habilidade:** Ao ser suprimida (Neutralizing Gas, Gastro Acid) ou substituída (Mummy), os estágios anteriormente adquiridos permanecem intactos no estado (`statStages`) sem recuo; novas alterações deixam de ser duplicadas enquanto inativa. Ao ser restaurada, os estágios preexistentes não são retroativamente duplicados.
+  - **Interações Canônicas:**
+    - Unaware: Atacante ou defensor com Unaware ignora completamente os estágios de Simple do adversário.
+    - Critical Hits: Acertos críticos ignoram aumentos positivos de defesa acumulados por Simple.
+    - Mold Breaker: Ao receber quedas de atributo infligidas por atacante com Mold Breaker, Simple é ignorada (queda nominal de -2 em vez de -4), exceto se o defensor segurar Ability Shield.
+    - Haze: Reseta todos os estágios para 0 sem transformá-los em quedas dobradas.
+    - Baton Pass: Transfere os estágios armazenados (+4) no valor nominal sem redobrar no receptor.
+    - IA: Avaliador de IA calcula dano e ordem de turnos diretamente a partir dos estágios gravados, sem duplicações.
+- **Habilidades H2-F Revalidadas:**
+  1. `scrappy`: 12/12 PASS (Normal/Fighting contra Ghost neutro, bloqueio de Intimidate, supressão sob Gas).
+  2. `serene-grace`: 12/12 PASS (Duplicação de secundários, Twineedle 20% -> 40%, Sheer Force anula secundários).
+  3. `simple`: 15/15 PASS (Gen IX `onModifyBoost`, armazenamento de estágios, saturação +6/-6, Neutralizing Gas, Mummy, Unaware, Contrary, Haze, Baton Pass, Critical Hits, Mold Breaker, IA).
+- **Inventário Auditado (`audit-abilities.js`):**
+  - Conhecidas: 374
+  - Suportadas declaradas: **201**
+  - Pendentes atribuídas: **113**
+  - Pendências restantes na Família H2: **0 (100% CONCLUÍDA)**
+  - Pendências restantes na Família H1: **0 (100% CONCLUÍDA)**
+  - Próxima família do roadmap: **H3 (Status, contato e imunidades — 42 pendências)**.
+- **Resultados de Testes e Homologação:**
+  - Suíte dedicada H2-F (3 arquivos): **39/39 PASS (100%)**
+  - Suíte integral de regressões H2 (todos os lotes H2-A..F): **463/463 PASS (100%)**
+  - Suíte global do projeto (`npm.cmd test`): **4.229/4.229 PASS (100%)** em 42 suítes, zero falhas.
+  - Auditoria P8 (`audit-p8.js`): **PASS** (`p8ExplicitSinglesScopeComplete: true`, `unresolvedP8: 0`).
+  - Higiene Git: `git diff --check` limpo (zero erros de sintaxe ou whitespace).
+  - Proteção de repositório: Nenhuma operação Git destrutiva executada (zero `git add`, `git commit`, `git push`, deploy).
+
 ## Atualização — 05/11/2026: Redesign da Tela de Batalha Mobile & Ajuste do Seletor de Mecânica Especial (PBA-020)
 
 - **Objetivo Concluído:** Redesenho completo da interface de batalha mobile (especialmente orientação paisagem), eliminando o layout em duas colunas (Imagem 1 — Antes) e implementando a visualização de arena em tela cheia com controles flutuantes sobrepostos e pokémons em grande escala (Imagem 2 — Referência Desejada), seguido do refinamento do seletor de mecânica especial.

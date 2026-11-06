@@ -517,20 +517,44 @@ Lote conjunto de oito habilidades canônicas de modificação de poder, imunidad
 10. **`long-reach`** (Gen VII-IX):
     - Executa todos os movimentos do portador sem efetuar contato físico, prevenindo ativações de Rough Skin, Iron Barbs, Rocky Helmet, Flame Body, Static, Effect Spore, etc.
 
-#### H2-F — Efeitos Secundários, Imunidades e Estágios (PLANEJADO — 3 Habilidades — Fechamento H2)
+#### H2-F — Efeitos Secundários, Imunidades e Estágios (IMPLEMENTADO E HOMOLOGADO — 3 Habilidades — Conclusão Total H2)
 
-*Status: Planejamento oficial de encerramento da família H2 (lote residual final de 3 habilidades). Não implementado nesta etapa.*
+*Status: Implementado integralmente, auditado conforme regras canônicas da Geração IX e coberto com 39/39 testes determinísticos dedicados e 463/463 testes de regressão H2 PASS. Suporte FULL confirmado no Ability Registry (201 suportadas / 113 pendentes atribuídas / 0 pendentes em H2).*
 
 1. **`scrappy`** (Gen IV-IX):
-   - Permite que golpes Normal e Fighting atinjam Pokémon do tipo Ghost com efetividade normal de tipo. Concede imunidade a Intimidate (Gen VIII+).
+   - Permite que movimentos dos tipos Normal e Fighting atinjam Pokémon defensores do tipo Ghost com efetividade de tipo regular (1.0× para puro Ghost, 2.0× para Ghost/Steel, 0.5× para Ghost/Poison ou Ghost/Rock).
+   - Não burla outras imunidades de tipo não relacionadas (como Ground vs Flying ou Electric vs Ground).
+   - Concede imunidade canônica (Gen VIII+) à redução de Attack causada pela habilidade Intimidate de oponentes na entrada de combate, emitindo evento de habilidade `P7_ABILITY`.
+   - Não bloqueia reduções de Attack causadas por movimentos de status normais (Growl, Charm, etc.).
+   - Suprimível por Neutralizing Gas e Gastro Acid (imunidade de Ghost e suscetibilidade a Intimidate restauradas).
+   - Coberto por 12 testes determinísticos em `tests/battle/abilities-h2f-scrappy.test.js`.
+
 2. **`serene-grace`** (Gen III-IX):
-   - Dobra a probabilidade percentual de ativação de todos os efeitos secundários de movimentos do usuário (ex: 30% vira 60%, 10% vira 20%). Não aumenta dano direto.
-3. **`simple`** (Gen IV-IX):
-   - Dobra a magnitude de qualquer alteração de estágio de atributo recebida pelo usuário (+1 vira +2, -1 vira -2, etc.).
+   - Dobra a probabilidade percentual de ativação de todos os efeitos secundários de movimentos ofensivos utilizados pelo portador (`secEffect.chance * 2` e `flinchChance * 2`), com teto canônico em 100%.
+   - Aplica-se a status secundários (paralisia, congelamento, queimadura, envenenamento), flinch secundário e dano multi-hit com chance secundária (como Twineedle #41 cuja chance de envenenamento dobra de 20% para 40%).
+   - Não altera a precisão do movimento nem a taxa de acertos críticos.
+   - Não afeta movimentos de status primários (Thunder Wave, Will-O-Wisp), que não possuem efeitos secundários.
+   - Anulado canonicamente por Sheer Force quando combinados, priorizando a anulação de secundários de Sheer Force.
+   - Suprimível por Neutralizing Gas (restaura as probabilidades padrão).
+   - Totalmente integrado ao avaliador de IA para calcular valor esperado ampliado de status.
+   - Coberto por 12 testes determinísticos em `tests/battle/abilities-h2f-serene-grace.test.js`.
+
+3. **`simple`** (Gen IV-IX — Mecânica Canônica Gen IX):
+   - Conforme a regra canônica da Gen V/IX (Showdown hook `onModifyBoost`), Simple dobra diretamente a alteração dos estágios de atributos no momento da aplicação: +1 vira +2, +2 vira +4, -1 vira -2, -2 vira -4, respeitando os limites canônicos de -6 a +6.
+   - Os estágios resultantes são efetivamente armazenados no estado do combatente (`statStages`, `accuracyStage`, `evasionStage`). Swords Dance (+2) armazena +4 de Attack no combatente, produzindo o multiplicador canônico de 3.0× sem qualquer duplicação secundária durante os cálculos de dano.
+   - Ao ser suprimida (Neutralizing Gas, Gastro Acid) ou substituída (Mummy), os estágios anteriormente adquiridos permanecem armazenados e ativos no valor nominal já alcançado; novas alterações deixam de ser duplicadas enquanto inativa.
+   - Ao recuperar a habilidade, os estágios preexistentes não são retroativamente duplicados, aplicando-se o efeito apenas a novas alterações elegíveis.
+   - Ignorado canonicamente por atacantes e defensores portadores de Unaware ao calcular dano.
+   - Acertos críticos ignoram os bônus positivos de defesa acumulados por Simple.
+   - Ignorado por atacantes portando Mold Breaker / Teravolt / Turboblaze ao infligir reduções de atributos no portador de Simple, a menos que o portador segure Ability Shield.
+   - Reset de estágios (Haze, trocas) restaura os atributos a 0 sem transformar o reset em alterações dobradas.
+   - Baton Pass transfere os estágios acumulados no valor nominal (+4) sem redobrar para o receptor.
+   - Integrado ao avaliador de IA para previsões determinísticas de dano e ordem de velocidade.
+   - Coberto por 15 testes determinísticos em `tests/battle/abilities-h2f-simple.test.js`.
 
 ### H2 — Dano, atributos, precisão e críticos
 
-**Inventário:** 3 habilidades pendentes (`scrappy`, `serene-grace`, `simple` reservadas para H2-F); 13 antes do lote H2-E, 21 antes do lote H2-D, 29 antes do lote H2-C, 37 antes do lote H2-B, 44 antes do lote H2-A; registros com habilidade padrão afetados atualizados.
+**Inventário:** 0 habilidades pendentes (CONCLUÍDO DEFINITIVAMENTE: H2-A: 8, H2-B: 8, H2-C: 8, H2-D: 8, H2-E: 10, H2-F: 3; 45 habilidades da família implementadas e homologadas); 0 registros com habilidade padrão afetados em H2.
 
 **Dependências:** H0; flags canônicas e regras de críticos/efeitos secundários.
 

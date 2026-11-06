@@ -410,7 +410,7 @@
     return clean;
   }
 
-  function getStatStageMultiplier(stage) {
+  function getStatStageMultiplier(stage, combatant = null) {
     const s = Math.max(-6, Math.min(6, Math.trunc(Number(stage) || 0)));
     return s >= 0 ? (2 + s) / 2 : 2 / (2 - s);
   }
@@ -472,26 +472,52 @@
   }
 
   function applyStatStageChange(combatant, statKey, delta) {
-    if(delta<0&&(combatant.p7BlockDrop||statKey==='attack'&&combatant.p7BlockAttackDrop)){const previousStage=['accuracy','evasion'].includes(statKey)?combatant[statKey+'Stage']||0:combatant.statStages?.[statKey]||0;return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};}
+    if(delta<0&&(combatant.p7BlockDrop||statKey==='attack'&&combatant.p7BlockAttackDrop)){
+      const previousStage=['accuracy','evasion'].includes(statKey)?combatant[statKey+'Stage']||0:combatant.statStages?.[statKey]||0;
+      return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};
+    }
     // Keen Eye: block accuracy reductions caused by opponents
-    if(delta<0&&statKey==='accuracy'&&combatant.p7KeenEyeAccuracyBlock&&!combatant.abilityIgnored&&!combatant.abilitySuppressed){const previousStage=combatant.accuracyStage||0;return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};}
+    if(delta<0&&statKey==='accuracy'&&combatant.p7KeenEyeAccuracyBlock&&!combatant.abilityIgnored&&!combatant.abilitySuppressed){
+      const previousStage=combatant.accuracyStage||0;
+      return {statKey,previousStage,requestedDelta:delta,appliedDelta:0,finalStage:previousStage,blockedReason:'ABILITY'};
+    }
+    const hasSimple = Boolean(
+      combatant &&
+      !combatant.abilitySuppressed &&
+      !combatant.neutralizingGasSuppressed &&
+      !combatant.abilityIgnored &&
+      (P7?.ability ? P7.ability(combatant) === 'simple' : combatant.ability === 'simple')
+    );
+    let requestedDelta = Math.trunc(Number(delta) || 0);
+    if (hasSimple && requestedDelta !== 0) {
+      requestedDelta *= 2;
+    }
     if (['accuracy','evasion'].includes(statKey)) {
-      const key=statKey+'Stage', previousStage=Math.max(-6,Math.min(6,Number(combatant[key])||0)), requestedDelta=Math.trunc(Number(delta)||0);
-      const finalStage=Math.max(-6,Math.min(6,previousStage+requestedDelta));combatant[key]=finalStage;if(finalStage>previousStage)combatant.statsRaisedThisTurn=true;
-      return {statKey,previousStage,requestedDelta,appliedDelta:finalStage-previousStage,finalStage,blockedReason:finalStage===previousStage?(requestedDelta<0?'AT_MIN':'AT_MAX'):null};
+      const key=statKey+'Stage', previousStage=Math.max(-6,Math.min(6,Number(combatant[key])||0));
+      const finalStage=Math.max(-6,Math.min(6,previousStage+requestedDelta));
+      combatant[key]=finalStage;
+      if(finalStage>previousStage)combatant.statsRaisedThisTurn=true;
+      return {
+        statKey,
+        previousStage,
+        requestedDelta,
+        appliedDelta:finalStage-previousStage,
+        finalStage,
+        blockedReason:finalStage===previousStage?(requestedDelta<0?'AT_MIN':(requestedDelta>0?'AT_MAX':null)):null
+      };
     }
     if (!combatant || typeof combatant !== 'object') {
       throw new Error('Combatente inválido para alteração de estágio de atributo.');
     }
     if (!STAT_STAGE_KEYS.includes(statKey)) {
-      throw new Error(`Atributo inválido para alteração de estágio: "${statKey}".`);
+      throw new Error('Atributo inválido para alteração de estágio: "' + statKey + '".');
     }
     if (!combatant.statStages || typeof combatant.statStages !== 'object') {
-      combatant.accuracyStage=0;combatant.evasionStage=0;
-    combatant.statStages = createDefaultStatStages();
+      combatant.accuracyStage=0;
+      combatant.evasionStage=0;
+      combatant.statStages = createDefaultStatStages();
     }
     const previousStage = Number(combatant.statStages[statKey]) || 0;
-    const requestedDelta = Math.trunc(Number(delta) || 0);
 
     let targetStage = previousStage + requestedDelta;
     let blockedReason = null;

@@ -1969,13 +1969,17 @@
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
             constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp,attacker,defender);
             if (attacker.currentHp === 0 || defender.currentHp === 0) break;
-            if (poisonRolls && poisonRolls[index] <= 20 && constants.isEligibleForStatusCondition(defender, 'poison')) {
-              defender.statusCondition = 'poison';
-              defender.toxicStage = 0;
-              events.push({type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole, target: defenderRole,
-                pokemonName: defender.name, statusCondition: 'poison', moveId: selectedMove.id,
-                moveName: selectedMove.name, secondaryEffectRoll: poisonRolls[index], chance: 20, hitIndex: hitCount});
-              constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, 'poison', constants, events, attacker, defender);
+            if (poisonRolls) {
+              const sereneGraceActive = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'serene-grace');
+              const poisonChance = sereneGraceActive ? 40 : 20;
+              if (poisonRolls[index] <= poisonChance && constants.isEligibleForStatusCondition(defender, 'poison')) {
+                defender.statusCondition = 'poison';
+                defender.toxicStage = 0;
+                events.push({type: BATTLE_EVENTS.STATUS_APPLIED, source: attackerRole, target: defenderRole,
+                  pokemonName: defender.name, statusCondition: 'poison', moveId: selectedMove.id,
+                  moveName: selectedMove.name, secondaryEffectRoll: poisonRolls[index], chance: poisonChance, hitIndex: hitCount});
+                constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, 'poison', constants, events, attacker, defender);
+              }
             }
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
@@ -2149,7 +2153,7 @@
 
       // 10C. Resolução de Efeitos Secundários de Status e Atributos (Secondary Effects: P4)
       let secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
-      secEffect=constants.P7.secondary(state,selectedMove,secEffect);
+      secEffect=constants.P7.secondary(state,selectedMove,secEffect,attacker);
       const attackerHasSheerForce = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'sheer-force');
       if (attackerHasSheerForce && secEffect) {
         attacker.sheerForceBoosted = true;
