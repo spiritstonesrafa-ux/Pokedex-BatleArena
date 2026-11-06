@@ -54,41 +54,41 @@
       }
 
       // Preview activation on a private state: never spend the live team's budget or mutate its forms.
-      if(context.special && context.battleState && constants.P8.canActivate(context.battleState,context.attackerSide,context.special) && (context.special!=='z'||move.id===722)) {
-        const preview=JSON.parse(JSON.stringify(context.battleState)),role=context.attackerSide;
-        constants.P8.prepare(preview,role,{type:'MOVE',moveId:move.id,special:context.special},constants,[]);
-        const active=preview[role]?.team?preview[role].team[preview[role].activeIndex||0]:preview[role];
-        return evaluateMove(active,defender,move,{...context,battleState:preview,special:null});
+      if (context.special && context.battleState && constants.P8.canActivate(context.battleState, context.attackerSide, context.special) && (context.special !== 'z' || move.id === 722)) {
+        const preview = JSON.parse(JSON.stringify(context.battleState)), role = context.attackerSide;
+        constants.P8.prepare(preview, role, { type: 'MOVE', moveId: move.id, special: context.special }, constants, []);
+        const active = preview[role]?.team ? preview[role].team[preview[role].activeIndex || 0] : preview[role];
+        return evaluateMove(active, defender, move, { ...context, battleState: preview, special: null });
       }
-      if(attacker.rechargeMoveId)return {moveId:move.id,moveName:move.name,currentPp:move.currentPp,expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,averageDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:0,statusChance:0,isEligibleForSecondary:false,priority:0,recharging:true,requiresRecharge:false};
+      if (attacker.rechargeMoveId) return { moveId: move.id, moveName: move.name, currentPp: move.currentPp, expectedDamage: 0, damageIfHit: 0, minDamage: 0, maxDamage: 0, averageDamage: 0, guaranteedKo: false, possibleKo: false, wouldKo: false, expectedStatusBenefit: 0, statusChance: 0, isEligibleForSecondary: false, priority: 0, recharging: true, requiresRecharge: false };
 
-      attacker={...attacker};defender={...defender,abilityIgnored:constants.P7.ignored(attacker,defender,move)};
-      if(attacker.dynamax||attacker.zMovePending)move=constants.P8.activeMove(attacker,move,constants);
-      if([144,166].includes(move.id)){const eligible=move.id===144?constants.P8.canTransform(attacker,defender):!attacker.transformOriginal&&constants.P8.canSketch(constants,defender.lastUsedMoveId)&&!attacker.moves.some(m=>m.id===defender.lastUsedMoveId);const unable=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0||attacker.statusCondition==='freeze';const benefit=unable?0:eligible?40:move.id===166&&!attacker.transformOriginal&&!defender.lastUsedMoveId?10:0;return {moveId:move.id,moveName:move.name,damageClass:'status',currentPp:move.currentPp,expectedDamage:0,minDamage:0,maxDamage:0,damageIfHit:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:benefit,statusChance:eligible?1:0,priority:0};}
-      if(constants.P6.statusMoves[move.name]||constants.P7.statusMoves[move.name]){
-        const own=context.battleState?.p6Sides?.[context.attackerSide]||{},foe=context.battleState?.p6Sides?.[context.attackerSide==='enemy'?'player':'enemy']||{};
-        const id=move.id,shield=constants.P6.screens[id],hazard=constants.P6.hazards[id];let benefit=0;
-        if(shield)benefit=own[shield]?0:35;
-        if(constants.P7.weatherMoves[id])benefit=context.battleState?.weather?.id===constants.P7.weatherMoves[id]?0:25;
-        if(constants.P7.terrainMoves[id])benefit=context.battleState?.terrain?.id===constants.P7.terrainMoves[id]?0:25;
-        if(id===694)benefit=attacker.envWeather==='snow'&&!own.auroraVeil?40:0;
-        if(id===881)benefit=20;
-        if(hazard)benefit=(foe[hazard]||0)>=(id===191?3:id===390?2:1)?0:35;
-        if(id===73)benefit=defender.leechSeed||defender.types.includes('grass')?0:Math.floor(defender.maxHp/8);
-        if([169,212,335].includes(id))benefit=defender.trapped||defender.types.includes('ghost')?0:15;
-        if(id===107)benefit=(attacker.evasionStage||0)>=6?0:25;
-        if(id===432)benefit=Object.values(constants.P6.hazards).some(k=>own[k]||foe[k])?60:10;
-        if([100,226,575].includes(id))benefit=(context.attackerTeam||[]).some(m=>m.id!==attacker.id&&m.currentHp>0)?20:0;
-        if(move.target!=='self'&&move.target!=='foeSide'&&(defender.isProtected||defender.twoTurnMove?.state))benefit=0;
-        if(constants.P7?.ability(attacker)==='prankster'&&!attacker.abilitySuppressed&&move.target!=='self'&&move.target!=='foeSide'&&((defender.types||[]).includes('dark')||constants.P8?.hasType?.(defender,'dark')))benefit=0;
-        const defHasMagicBounce=(constants.P7?.ability(defender)==='magic-bounce'&&!defender.abilitySuppressed&&!constants.P7?.ignored(attacker,defender,'magic-bounce'));
-        if(defHasMagicBounce&&constants.MoveFlags?.isReflectableMove?.(id)&&move.target!=='self'&&!constants.P5?.ohko?.(move))benefit=-50;
-        const attackerInfiltrates=(constants.P7?.ability(attacker)==='infiltrator'&&!attacker.abilitySuppressed);
-        if((defender.substituteHp>0||defender.substitute)&&!attackerInfiltrates&&!constants.MoveFlags?.isSoundMove?.(move)&&move.target!=='self'&&move.target!=='foeSide')benefit=0;
-        const acc=constants.getEffectiveAccuracy?constants.getEffectiveAccuracy(move,attacker,defender):move.accuracy;
-        const factor=move.accuracy===null||acc===null?1:acc/100;
-        if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0||attacker.statusCondition==='freeze')benefit=0;
-        return {moveId:id,moveName:move.name,damageClass:'status',power:null,accuracy:move.accuracy,currentPp:move.currentPp,priority:constants.P7?.priority(attacker,move,constants)??constants.getMovePriority(move),expectedDamage:0,damageIfHit:0,minDamage:0,maxDamage:0,guaranteedKo:false,possibleKo:false,wouldKo:false,expectedStatusBenefit:Math.round(benefit*factor),statusChance:factor};
+      attacker = { ...attacker }; defender = { ...defender, abilityIgnored: constants.P7.ignored(attacker, defender, move) };
+      if (attacker.dynamax || attacker.zMovePending) move = constants.P8.activeMove(attacker, move, constants);
+      if ([144, 166].includes(move.id)) { const eligible = move.id === 144 ? constants.P8.canTransform(attacker, defender) : !attacker.transformOriginal && constants.P8.canSketch(constants, defender.lastUsedMoveId) && !attacker.moves.some(m => m.id === defender.lastUsedMoveId); const unable = attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0 || attacker.statusCondition === 'freeze'; const benefit = unable ? 0 : eligible ? 40 : move.id === 166 && !attacker.transformOriginal && !defender.lastUsedMoveId ? 10 : 0; return { moveId: move.id, moveName: move.name, damageClass: 'status', currentPp: move.currentPp, expectedDamage: 0, minDamage: 0, maxDamage: 0, damageIfHit: 0, guaranteedKo: false, possibleKo: false, wouldKo: false, expectedStatusBenefit: benefit, statusChance: eligible ? 1 : 0, priority: 0 }; }
+      if (constants.P6.statusMoves[move.name] || constants.P7.statusMoves[move.name]) {
+        const own = context.battleState?.p6Sides?.[context.attackerSide] || {}, foe = context.battleState?.p6Sides?.[context.attackerSide === 'enemy' ? 'player' : 'enemy'] || {};
+        const id = move.id, shield = constants.P6.screens[id], hazard = constants.P6.hazards[id]; let benefit = 0;
+        if (shield) benefit = own[shield] ? 0 : 35;
+        if (constants.P7.weatherMoves[id]) benefit = context.battleState?.weather?.id === constants.P7.weatherMoves[id] ? 0 : 25;
+        if (constants.P7.terrainMoves[id]) benefit = context.battleState?.terrain?.id === constants.P7.terrainMoves[id] ? 0 : 25;
+        if (id === 694) benefit = attacker.envWeather === 'snow' && !own.auroraVeil ? 40 : 0;
+        if (id === 881) benefit = 20;
+        if (hazard) benefit = (foe[hazard] || 0) >= (id === 191 ? 3 : id === 390 ? 2 : 1) ? 0 : 35;
+        if (id === 73) benefit = defender.leechSeed || defender.types.includes('grass') ? 0 : Math.floor(defender.maxHp / 8);
+        if ([169, 212, 335].includes(id)) benefit = defender.trapped || defender.types.includes('ghost') ? 0 : 15;
+        if (id === 107) benefit = (attacker.evasionStage || 0) >= 6 ? 0 : 25;
+        if (id === 432) benefit = Object.values(constants.P6.hazards).some(k => own[k] || foe[k]) ? 60 : 10;
+        if ([100, 226, 575].includes(id)) benefit = (context.attackerTeam || []).some(m => m.id !== attacker.id && m.currentHp > 0) ? 20 : 0;
+        if (move.target !== 'self' && move.target !== 'foeSide' && (defender.isProtected || defender.twoTurnMove?.state)) benefit = 0;
+        if (constants.P7?.ability(attacker) === 'prankster' && !attacker.abilitySuppressed && move.target !== 'self' && move.target !== 'foeSide' && ((defender.types || []).includes('dark') || constants.P8?.hasType?.(defender, 'dark'))) benefit = 0;
+        const defHasMagicBounce = (constants.P7?.ability(defender) === 'magic-bounce' && !defender.abilitySuppressed && !constants.P7?.ignored(attacker, defender, 'magic-bounce'));
+        if (defHasMagicBounce && constants.MoveFlags?.isReflectableMove?.(id) && move.target !== 'self' && !constants.P5?.ohko?.(move)) benefit = -50;
+        const attackerInfiltrates = (constants.P7?.ability(attacker) === 'infiltrator' && !attacker.abilitySuppressed);
+        if ((defender.substituteHp > 0 || defender.substitute) && !attackerInfiltrates && !constants.MoveFlags?.isSoundMove?.(move) && move.target !== 'self' && move.target !== 'foeSide') benefit = 0;
+        const acc = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move, attacker, defender) : move.accuracy;
+        const factor = move.accuracy === null || acc === null ? 1 : acc / 100;
+        if (attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0 || attacker.statusCondition === 'freeze') benefit = 0;
+        return { moveId: id, moveName: move.name, damageClass: 'status', power: null, accuracy: move.accuracy, currentPp: move.currentPp, priority: constants.P7?.priority(attacker, move, constants) ?? constants.getMovePriority(move), expectedDamage: 0, damageIfHit: 0, minDamage: 0, maxDamage: 0, guaranteedKo: false, possibleKo: false, wouldKo: false, expectedStatusBenefit: Math.round(benefit * factor), statusChance: factor };
       }
       if (constants.isProtectMove(move)) {
         const consecutive = Math.max(0, Number.isInteger(attacker.stallCount) ? attacker.stallCount : 0);
@@ -143,30 +143,30 @@
       }
       const planning = Boolean(context.planningTurn);
       if (planning) {
-        attacker={...attacker,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
-        defender={...defender,actedThisTurn:false,damagedThisTurn:false,lastDirectHit:null};
-        const other=defender.twoTurnMove ? (defender.moves||[]).find(m=>m.id===defender.twoTurnMove.id) : (defender.moves||[]).find(m=>m.currentPp!==0);
-        const speed=m=>Math.max(1,Math.floor(constants.getEffectiveStat(m,'speed')/(m.statusCondition==='paralysis'?2:1)));
-        if(other && (constants.getMovePriority(other)>constants.getMovePriority(move) || (constants.getMovePriority(other)===constants.getMovePriority(move)&&(speed(defender)>speed(attacker)||(speed(defender)===speed(attacker)&&context.attackerSide==='enemy'))))) defender.actedThisTurn=true;
-        if(defender.twoTurnMove && defender.actedThisTurn)defender.twoTurnMove=null;
-        if(move.id===704 && defender.actedThisTurn && other?.damageClass==='physical')attacker.shellTrapTriggered=true;
-        if((constants.P5.counterIds.includes(Number(move.id)) && defender.actedThisTurn) || move.id===117){
-          const possible=(defender.moves||[]).filter(m=>m.currentPp!==0&&m.damageClass!=='status'&&!constants.P5.counterIds.includes(m.id)&&(move.id!==68||m.damageClass==='physical')&&(move.id!==243||m.damageClass==='special'));
-          const previews=possible.map(m=>({move:m,data:evaluateMove(defender,attacker,m,{...context,planningTurn:false,attackerSide:context.attackerSide==='enemy'?'player':'enemy'})})).sort((a,b)=>b.data.expectedDamage-a.data.expectedDamage);
-          const preview=previews[0];
-          if(move.id===117 && preview)attacker.bideState={damage:Math.floor(preview.data.expectedDamage*2)};
-          if(preview&&preview.data.expectedDamage>0&&preview.data.maxDamage<attacker.currentHp)attacker.lastDirectHit={turn:context.turn,sourceId:defender.id,damage:Math.floor(preview.data.expectedDamage),damageClass:preview.data.damageClass};
+        attacker = { ...attacker, actedThisTurn: false, damagedThisTurn: false, lastDirectHit: null };
+        defender = { ...defender, actedThisTurn: false, damagedThisTurn: false, lastDirectHit: null };
+        const other = defender.twoTurnMove ? ((defender.moves || []).find(m => m.id === defender.twoTurnMove.id) || (constants.KNOWN_CATALOG_MOVES && constants.KNOWN_CATALOG_MOVES[defender.twoTurnMove.id]) || defender.twoTurnMove) : (defender.moves || []).find(m => m.currentPp !== 0);
+        const speed = m => Math.max(1, Math.floor(constants.getEffectiveStat(m, 'speed') / (m.statusCondition === 'paralysis' && !(m && !m.abilitySuppressed && !m.neutralizingGasSuppressed && constants.P7?.ability && constants.P7.ability(m) === 'quick-feet') ? 2 : 1)));
+        if (other && (constants.getMovePriority(other) > constants.getMovePriority(move) || (constants.getMovePriority(other) === constants.getMovePriority(move) && (speed(defender) > speed(attacker) || (speed(defender) === speed(attacker) && context.attackerSide === 'enemy'))))) defender.actedThisTurn = true;
+        if (defender.twoTurnMove && defender.actedThisTurn) defender.twoTurnMove = null;
+        if (move.id === 704 && defender.actedThisTurn && other?.damageClass === 'physical') attacker.shellTrapTriggered = true;
+        if ((constants.P5.counterIds.includes(Number(move.id)) && defender.actedThisTurn) || move.id === 117) {
+          const possible = (defender.moves || []).filter(m => m.currentPp !== 0 && m.damageClass !== 'status' && !constants.P5.counterIds.includes(m.id) && (move.id !== 68 || m.damageClass === 'physical') && (move.id !== 243 || m.damageClass === 'special'));
+          const previews = possible.map(m => ({ move: m, data: evaluateMove(defender, attacker, m, { ...context, planningTurn: false, attackerSide: context.attackerSide === 'enemy' ? 'player' : 'enemy' }) })).sort((a, b) => b.data.expectedDamage - a.data.expectedDamage);
+          const preview = previews[0];
+          if (move.id === 117 && preview) attacker.bideState = { damage: Math.floor(preview.data.expectedDamage * 2) };
+          if (preview && preview.data.expectedDamage > 0 && preview.data.maxDamage < attacker.currentHp) attacker.lastDirectHit = { turn: context.turn, sourceId: defender.id, damage: Math.floor(preview.data.expectedDamage), damageClass: preview.data.damageClass };
         }
       }
-      if(move.id===712&&!defender.isProtected&&!defender.twoTurnMove?.state&&constants.P8.effectiveness('ghost',defender,TypeEffectiveness,attacker,move,constants).multiplier>0){attacker={...attacker,statStages:{...attacker.statStages}};defender={...defender,statStages:{...defender.statStages}};constants.Completion.steal(attacker,defender,constants,[],context.attackerSide||'player',context.attackerSide==='enemy'?'player':'enemy');}
-      defender=constants.Completion.defender(move,defender);
+      if (move.id === 712 && !defender.isProtected && !defender.twoTurnMove?.state && constants.P8.effectiveness('ghost', defender, TypeEffectiveness, attacker, move, constants).multiplier > 0) { attacker = { ...attacker, statStages: { ...attacker.statStages } }; defender = { ...defender, statStages: { ...defender.statStages } }; constants.Completion.steal(attacker, defender, constants, [], context.attackerSide || 'player', context.attackerSide === 'enemy' ? 'player' : 'enemy'); }
+      defender = constants.Completion.defender(move, defender);
       const p5 = constants.P5.get(move);
-      const damageClass = constants.P8.damageClass(attacker,move,constants);
-      const moveType = constants.P8.moveType(attacker,move,constants.P7.moveType(context.battleState,attacker,move,constants.P5.type(move,attacker))) || 'normal';
-      let power = p5 ? constants.P5.power(move,attacker,defender,constants,{...context,faintCount:context.faintCount??context.attackerTeam?.filter(m=>m.currentHp<=0).length??0}) : Number(move.power) || 0;
-      power=constants.P7.power(context.battleState,attacker,defender,{...move,type:moveType,originalType:move.originalType||move.type},power,constants);
-      power=constants.P8.power(attacker,defender,{...move,type:moveType},power,constants);
-      const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move,attacker,defender) : move.accuracy;
+      const damageClass = constants.P8.damageClass(attacker, move, constants);
+      const moveType = constants.P8.moveType(attacker, move, constants.P7.moveType(context.battleState, attacker, move, constants.P5.type(move, attacker))) || 'normal';
+      let power = p5 ? constants.P5.power(move, attacker, defender, constants, { ...context, faintCount: context.faintCount ?? context.attackerTeam?.filter(m => m.currentHp <= 0).length ?? 0 }) : Number(move.power) || 0;
+      power = constants.P7.power(context.battleState, attacker, defender, { ...move, type: moveType, originalType: move.originalType || move.type }, power, constants);
+      power = constants.P8.power(attacker, defender, { ...move, type: moveType }, power, constants);
+      const accuracy = constants.getEffectiveAccuracy ? constants.getEffectiveAccuracy(move, attacker, defender) : move.accuracy;
       const currentPp = Number.isInteger(move.currentPp) ? move.currentPp : (move.pp || 0);
       const isLevelDamage = Boolean(constants?.isLevelDamageMove?.(move));
       const isConstantDamage = Boolean(constants?.isConstantDamageMove?.(move));
@@ -181,9 +181,9 @@
         let statusChance = 0;
         let isEligible = false;
 
-        if (constants.P7?.ability(attacker)==='prankster'&&!attacker.abilitySuppressed&&move.target!=='self'&&move.target!=='foeSide'&&((defender.types||[]).includes('dark')||constants.P8?.hasType?.(defender,'dark'))){expectedStatusBenefit=0;statusChance=0;}
-        else if ((constants.P7?.ability(defender)==='magic-bounce'&&!defender.abilitySuppressed&&!constants.P7?.ignored(attacker,defender,'magic-bounce'))&&constants.MoveFlags?.isReflectableMove?.(move.id)&&move.target!=='self'){expectedStatusBenefit=-50;statusChance=0;}
-        else if ((defender.substituteHp>0||defender.substitute)&&!(constants.P7?.ability(attacker)==='infiltrator'&&!attacker.abilitySuppressed)&&!constants.MoveFlags?.isSoundMove?.(move)&&move.target!=='self'&&move.target!=='foeSide'){expectedStatusBenefit=0;statusChance=0;}
+        if (constants.P7?.ability(attacker) === 'prankster' && !attacker.abilitySuppressed && move.target !== 'self' && move.target !== 'foeSide' && ((defender.types || []).includes('dark') || constants.P8?.hasType?.(defender, 'dark'))) { expectedStatusBenefit = 0; statusChance = 0; }
+        else if ((constants.P7?.ability(defender) === 'magic-bounce' && !defender.abilitySuppressed && !constants.P7?.ignored(attacker, defender, 'magic-bounce')) && constants.MoveFlags?.isReflectableMove?.(move.id) && move.target !== 'self') { expectedStatusBenefit = -50; statusChance = 0; }
+        else if ((defender.substituteHp > 0 || defender.substitute) && !(constants.P7?.ability(attacker) === 'infiltrator' && !attacker.abilitySuppressed) && !constants.MoveFlags?.isSoundMove?.(move) && move.target !== 'self' && move.target !== 'foeSide') { expectedStatusBenefit = 0; statusChance = 0; }
         else if (move.statusEffect) {
           if (move.statusEffect === 'confusion') {
             const immune = constants?.isStatusMoveImmune ? constants.isStatusMoveImmune({ ...move, type: moveType }, defender.types) : false;
@@ -201,7 +201,7 @@
                 ? 0.75
                 : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
               if (attacker.confusionTurns > 1) actionFactor *= 0.67;
-      if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
+              if (attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0 && ![173, 214].includes(move.id)) actionFactor = 0;
               statusChance = accuracyFactor * actionFactor;
               expectedStatusBenefit = Math.round(statusChance * 20);
             }
@@ -221,7 +221,7 @@
                 ? 0.75
                 : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
               if (attacker.confusionTurns > 1) actionFactor *= 0.67;
-      if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
+              if (attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0 && ![173, 214].includes(move.id)) actionFactor = 0;
               statusChance = accuracyFactor * actionFactor;
               if (move.statusEffect === 'sleep') {
                 expectedStatusBenefit = Math.round(statusChance * 25);
@@ -236,13 +236,13 @@
           }
         }
 
-        if(move.id===599){isEligible=['poison','toxic'].includes(defender.statusCondition);expectedStatusBenefit=isEligible?30:0;}
-        if(move.id===156){isEligible=attacker.currentHp<attacker.maxHp&&attacker.statusCondition!=='sleep';expectedStatusBenefit=isEligible?attacker.maxHp-attacker.currentHp:0;}
-        if(move.id===281){isEligible=!defender.statusCondition&&!(defender.drowsyTurns>0);const canAct=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0?0:attacker.statusCondition==='freeze'?0.2:attacker.statusCondition==='paralysis'?0.75:1;expectedStatusBenefit=isEligible?Math.round(30*canAct):0;}
-        if(move.id===214){
-          isEligible=attacker.statusCondition==='sleep'&&attacker.sleepTurns>0;
-          const candidates=(attacker.moves||[]).filter(m=>m.id!==214&&![117,690,704].includes(m.id)&&m.damageClass!=='status'&&constants.getMoveCapability(m)?.supportLevel==='FULL');
-          expectedStatusBenefit=isEligible&&candidates.length?Math.round(candidates.reduce((sum,m)=>sum+evaluateMove({...attacker,statusCondition:null,confusionTurns:0},defender,m,context).expectedDamage,0)/candidates.length):0;
+        if (move.id === 599) { isEligible = ['poison', 'toxic'].includes(defender.statusCondition); expectedStatusBenefit = isEligible ? 30 : 0; }
+        if (move.id === 156) { isEligible = attacker.currentHp < attacker.maxHp && attacker.statusCondition !== 'sleep'; expectedStatusBenefit = isEligible ? attacker.maxHp - attacker.currentHp : 0; }
+        if (move.id === 281) { isEligible = !defender.statusCondition && !(defender.drowsyTurns > 0); const canAct = attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0 ? 0 : attacker.statusCondition === 'freeze' ? 0.2 : attacker.statusCondition === 'paralysis' ? 0.75 : 1; expectedStatusBenefit = isEligible ? Math.round(30 * canAct) : 0; }
+        if (move.id === 214) {
+          isEligible = attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0;
+          const candidates = (attacker.moves || []).filter(m => m.id !== 214 && ![117, 690, 704].includes(m.id) && m.damageClass !== 'status' && constants.getMoveCapability(m)?.supportLevel === 'FULL');
+          expectedStatusBenefit = isEligible && candidates.length ? Math.round(candidates.reduce((sum, m) => sum + evaluateMove({ ...attacker, statusCondition: null, confusionTurns: 0 }, defender, m, context).expectedDamage, 0) / candidates.length) : 0;
         }
         return {
           moveId: move.id,
@@ -267,7 +267,7 @@
           guaranteedKo: false,
           possibleKo: false,
           wouldKo: false,
-          priority: constants.P7?.priority(attacker,move,constants) ?? (constants?.getMovePriority?.(move) || 0),
+          priority: constants.P7?.priority(attacker, move, constants) ?? (constants?.getMovePriority?.(move) || 0),
           drainRatio: 0,
           expectedHeal: 0,
           recoilRatio: 0,
@@ -283,7 +283,7 @@
       }
 
       // 1. Seleção dos atributos ofensivos e defensivos
-      const evalMove = {...move, type: moveType};
+      const evalMove = { ...move, type: moveType };
       let attackStat;
       let defenseStat;
       if (damageClass === 'special') {
@@ -310,28 +310,29 @@
       let typeMultiplier;
       let typeClassification;
       if (constants?.isDualTypeEffectiveness?.(move)) {
-        const primaryEff = constants.P8.effectiveness('fighting',defender,TypeEffectiveness,attacker,null,constants);
-        const secondaryEff = constants.P8.effectiveness('flying',defender,TypeEffectiveness,attacker,null,constants);
-        const combinedMultiplier = constants.P8.adjustEffectiveness(primaryEff.multiplier * secondaryEff.multiplier,attacker,defender,move,constants);
+        const primaryEff = constants.P8.effectiveness('fighting', defender, TypeEffectiveness, attacker, null, constants);
+        const secondaryEff = constants.P8.effectiveness('flying', defender, TypeEffectiveness, attacker, null, constants);
+        const combinedMultiplier = constants.P8.adjustEffectiveness(primaryEff.multiplier * secondaryEff.multiplier, attacker, defender, move, constants);
         typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(combinedMultiplier, context)
           : combinedMultiplier;
         typeClassification = TypeEffectiveness.getClassification(typeMultiplier);
       } else {
-        const effectiveness = constants.P8.effectiveness(moveType,defender,TypeEffectiveness,attacker,move,constants);
+        const effectiveness = constants.P8.effectiveness(moveType, defender, TypeEffectiveness, attacker, move, constants);
         typeMultiplier = BattleModifierResolver && BattleModifierResolver.resolveTypeMultiplier
           ? BattleModifierResolver.resolveTypeMultiplier(effectiveness.multiplier, context)
           : effectiveness.multiplier;
         typeClassification = effectiveness.classification;
       }
 
-      if(move.id===117){typeMultiplier=1;typeClassification='NEUTRAL';}
+      if (move.id === 117) { typeMultiplier = 1; typeClassification = 'NEUTRAL'; }
       // 4. Faixa e Média de Dano (PBA-014B: Level 50 e Variância 85..100)
       const simLevel = (constants && constants.BATTLE_CONFIG && constants.BATTLE_CONFIG.SIMULATION_LEVEL) || 50;
-      const p5Failure = p5 ? constants.P5.failure(move,attacker,defender,{...context,targetMove:context.targetMove||(defender.moves||[]).find(m=>m.damageClass!=='status')}) : null;
-      const entryRestricted = Boolean(constants.P8.failure(attacker,defender,move,constants)) || Boolean(p5Failure) || (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id===138&&defender.statusCondition!=='sleep') || (move.id===173&&(attacker.statusCondition!=='sleep'||attacker.sleepTurns<=0));
+      const p5Failure = p5 ? constants.P5.failure(move, attacker, defender, { ...context, targetMove: context.targetMove || (defender.moves || []).find(m => m.damageClass !== 'status') }) : null;
+      const entryRestricted = Boolean(constants.P8.failure(attacker, defender, move, constants)) || Boolean(p5Failure) || (Number(move.id) === 252 && move.name === 'fake-out' && Number(attacker.entryMoveAttempts || 0) >= 1) || (move.id === 138 && defender.statusCondition !== 'sleep') || (move.id === 173 && (attacker.statusCondition !== 'sleep' || attacker.sleepTurns <= 0));
       const multiHit = constants.getMultiHitMove(move);
-      const expectedHits = multiHit ? (multiHit.minHits!==multiHit.maxHits ? 3.1 : multiHit.maxHits) : 1;
+      const hasSkillLink = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7?.ability && constants.P7.ability(attacker) === 'skill-link');
+      const expectedHits = multiHit ? (hasSkillLink ? multiHit.maxHits : (multiHit.minHits !== multiHit.maxHits ? 3.1 : multiHit.maxHits)) : 1;
       let baseDamage;
       let minDamage;
       let maxDamage;
@@ -339,12 +340,12 @@
       let damageIfHit;
 
       if (isP5Fixed) {
-        const failure=constants.P5.failure(move,attacker,defender,context);
-        const amount = failure || typeMultiplier===0 ? 0 : constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:100});
-        baseDamage=minDamage=maxDamage=averageDamage=damageIfHit=amount;
-        if((planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) || (constants.P5.ohko(move) && Number(accuracy)<100))minDamage=0;
-        if(move.id===149 && amount>0){minDamage=constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:50});maxDamage=constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:150});averageDamage=Array.from({length:101},(_,i)=>constants.P5.fixedAmount(move,attacker,defender,{psywaveRoll:i+50})).reduce((a,b)=>a+b,0)/101;damageIfHit=averageDamage;}
-        typeMultiplier=typeMultiplier===0?0:1;typeClassification=typeMultiplier===0?'IMMUNE':'NEUTRAL';
+        const failure = constants.P5.failure(move, attacker, defender, context);
+        const amount = failure || typeMultiplier === 0 ? 0 : constants.P5.fixedAmount(move, attacker, defender, { psywaveRoll: 100 });
+        baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = amount;
+        if ((planning && (constants.P5.counterIds.includes(move.id) || move.id === 117)) || (constants.P5.ohko(move) && Number(accuracy) < 100)) minDamage = 0;
+        if (move.id === 149 && amount > 0) { minDamage = constants.P5.fixedAmount(move, attacker, defender, { psywaveRoll: 50 }); maxDamage = constants.P5.fixedAmount(move, attacker, defender, { psywaveRoll: 150 }); averageDamage = Array.from({ length: 101 }, (_, i) => constants.P5.fixedAmount(move, attacker, defender, { psywaveRoll: i + 50 })).reduce((a, b) => a + b, 0) / 101; damageIfHit = averageDamage; }
+        typeMultiplier = typeMultiplier === 0 ? 0 : 1; typeClassification = typeMultiplier === 0 ? 'IMMUNE' : 'NEUTRAL';
       } else if (isLevelDamage) {
         const attackerLevel = Number(attacker.level) || simLevel;
         if (typeMultiplier === 0) {
@@ -396,25 +397,25 @@
           : DamageCalculator.calculateDamageRange(attackStat, defenseStat, effectivePower, simLevel, typeMultiplier, stabMultiplier);
 
         baseDamage = range.baseDamage;
-        minDamage = constants.applyBurnPenalty(range.minDamage, attacker, damageClass===move.damageClass?move:{...move,damageClass}) * (multiHit?.minHits || 1);
+        minDamage = constants.applyBurnPenalty(range.minDamage, attacker, damageClass === move.damageClass ? move : { ...move, damageClass }) * (multiHit?.minHits || 1);
         maxDamage = constants.applyBurnPenalty(range.maxDamage, attacker, move) * (multiHit?.maxHits || 1);
         averageDamage = constants.applyBurnPenalty(range.averageDamage, attacker, move) * expectedHits;
-        minDamage *= semiInvulnerableMultiplier;maxDamage *= semiInvulnerableMultiplier;averageDamage *= semiInvulnerableMultiplier;
+        minDamage *= semiInvulnerableMultiplier; maxDamage *= semiInvulnerableMultiplier; averageDamage *= semiInvulnerableMultiplier;
         damageIfHit = averageDamage;
       }
 
-      if(multiHit && (multiHit.multiAccuracy || multiHit.critical)){
-        const p=Math.min(1,Math.max(0,Number(accuracy)/100));
-        let lo=0,hi=0,avg=0;
-        for(let i=0;i<multiHit.maxHits;i++){
-          const hitPower=multiHit.escalating?power*(i+1):power;
-          const critical=Boolean(multiHit.critical);
-          const base=DamageCalculator.calculateBaseDamage(critical?constants.Critical.stats(attacker,defender,{...move,damageClass},constants).attack:attackStat,critical?constants.Critical.stats(attacker,defender,{...move,damageClass},constants).defense:defenseStat,hitPower);
-          const values=Array.from({length:16},(_,r)=>constants.applyBurnPenalty(DamageCalculator.applyModifier(base*(critical?1.5:1),typeMultiplier,stabMultiplier,r+85),attacker,move));
-          if(!multiHit.multiAccuracy||i===0)lo+=values[0];
-          hi+=values[15];avg+=values.reduce((a,b)=>a+b,0)/16*(multiHit.multiAccuracy?Math.pow(p,i):1);
+      if (multiHit && (multiHit.multiAccuracy || multiHit.critical)) {
+        const p = Math.min(1, Math.max(0, Number(accuracy) / 100));
+        let lo = 0, hi = 0, avg = 0;
+        for (let i = 0; i < multiHit.maxHits; i++) {
+          const hitPower = multiHit.escalating ? power * (i + 1) : power;
+          const critical = Boolean(multiHit.critical);
+          const base = DamageCalculator.calculateBaseDamage(critical ? constants.Critical.stats(attacker, defender, { ...move, damageClass }, constants).attack : attackStat, critical ? constants.Critical.stats(attacker, defender, { ...move, damageClass }, constants).defense : defenseStat, hitPower);
+          const values = Array.from({ length: 16 }, (_, r) => constants.applyBurnPenalty(DamageCalculator.applyModifier(base * (critical ? 1.5 : 1), typeMultiplier, stabMultiplier, r + 85), attacker, move));
+          if (!multiHit.multiAccuracy || hasSkillLink || i === 0) lo += values[0];
+          hi += values[15]; avg += values.reduce((a, b) => a + b, 0) / 16 * ((multiHit.multiAccuracy && !hasSkillLink) ? Math.pow(p, i) : 1);
         }
-        minDamage=lo;maxDamage=hi;averageDamage=damageIfHit=avg;
+        minDamage = lo; maxDamage = hi; averageDamage = damageIfHit = avg;
       }
       // 5. Ponderação por Precisão para obter Dano Esperado (Expected Value)
       let accuracyFactor = 1.0;
@@ -430,13 +431,13 @@
         ? 0.75
         : (attacker.statusCondition === 'freeze' ? (isSelfThaw ? 1.0 : 0.20) : 1);
       if (attacker.confusionTurns > 1) actionFactor *= 0.67;
-      if(attacker.statusCondition==='sleep'&&attacker.sleepTurns>0&&![173,214].includes(move.id)) actionFactor=0;
+      if (attacker.statusCondition === 'sleep' && attacker.sleepTurns > 0 && ![173, 214].includes(move.id)) actionFactor = 0;
       if (entryRestricted || attacker.rechargeMoveId) actionFactor = 0;
-      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !move.p8Max&&!move.p8Z && !constants.isProtectBypassingMove?.(move) && !(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(move.id))) {
+      if (defender.isProtected && move.target !== 'self' && move.damageClass !== 'status_self' && ![14, 156, 214, 347, 182, 197].includes(move.id) && !move.p8Max && !move.p8Z && !constants.isProtectBypassingMove?.(move) && !(constants.P7.ability(attacker) === 'unseen-fist' && constants.P5.contactIds.includes(move.id))) {
         actionFactor = 0;
         baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
       }
-      if(defender.maxGuard&&move.target!=='self'){actionFactor=0;baseDamage=minDamage=maxDamage=averageDamage=damageIfHit=0;}
+      if (defender.maxGuard && move.target !== 'self') { actionFactor = 0; baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0; }
       if (defender.twoTurnMove?.state && move.target !== 'self' && move.damageClass !== 'status_self') {
         const canHit = constants.canHitSemiInvulnerable?.(move, defender.twoTurnMove.state, attacker, defender);
         if (!canHit) {
@@ -444,45 +445,45 @@
           baseDamage = minDamage = maxDamage = averageDamage = damageIfHit = 0;
         }
       }
-      if(context.battleState && !isFixedDamage){const role=context.attackerSide==='enemy'?'player':'enemy';const f=constants.P6.barrierMultiplier(context.battleState,role,{...move,damageClass},Boolean(multiHit?.critical),attacker);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
-      if(!isFixedDamage){const f=constants.P7.damageMultiplier(context.battleState,attacker,defender,{...move,type:moveType},typeMultiplier);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
-      if(!isFixedDamage){const f=constants.P8.finalMultiplier(attacker,defender,move);minDamage=Math.floor(minDamage*f);maxDamage=Math.floor(maxDamage*f);averageDamage*=f;damageIfHit=averageDamage;}
-      const ab=constants.P7.defenderAbility(attacker,defender,move),absorbs={'water-absorb':'water','volt-absorb':'electric','flash-fire':'fire','sap-sipper':'grass','lightning-rod':'electric','storm-drain':'water'};
-      if(absorbs[ab]===moveType||ab==='levitate'&&moveType==='ground'||ab==='sturdy'&&constants.P5.ohko(move)||defender.envTerrain==='psychic'&&constants.P7.grounded(defender)&&constants.P7.priority(attacker,move,constants)>0){minDamage=maxDamage=averageDamage=damageIfHit=0;}
-      if(!multiHit&&defender.currentHp===defender.maxHp&&(ab==='sturdy'||defender.item==='focus-sash')){minDamage=Math.min(minDamage,defender.currentHp-1);maxDamage=Math.min(maxDamage,defender.currentHp-1);averageDamage=Math.min(averageDamage,defender.currentHp-1);damageIfHit=averageDamage;}
-      if(defender.minimized&&constants.P6.minimizeHits.includes(move.id)){minDamage*=2;maxDamage*=2;averageDamage*=2;damageIfHit=averageDamage;accuracyFactor=1;}
-      if(constants.P6.consecutive.includes(move.id)&&attacker.lastP6Move===move.id){actionFactor=0;minDamage=maxDamage=averageDamage=damageIfHit=0;}
+      if (context.battleState && !isFixedDamage) { const role = context.attackerSide === 'enemy' ? 'player' : 'enemy'; const f = constants.P6.barrierMultiplier(context.battleState, role, { ...move, damageClass }, Boolean(multiHit?.critical), attacker); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
+      if (!isFixedDamage) { const f = constants.P7.damageMultiplier(context.battleState, attacker, defender, { ...move, type: moveType }, typeMultiplier); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
+      if (!isFixedDamage) { const f = constants.P8.finalMultiplier(attacker, defender, move); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
+      const ab = constants.P7.defenderAbility(attacker, defender, move), absorbs = { 'water-absorb': 'water', 'volt-absorb': 'electric', 'flash-fire': 'fire', 'sap-sipper': 'grass', 'lightning-rod': 'electric', 'storm-drain': 'water' };
+      if (absorbs[ab] === moveType || ab === 'levitate' && moveType === 'ground' || ab === 'sturdy' && constants.P5.ohko(move) || defender.envTerrain === 'psychic' && constants.P7.grounded(defender) && constants.P7.priority(attacker, move, constants) > 0) { minDamage = maxDamage = averageDamage = damageIfHit = 0; }
+      if (!multiHit && defender.currentHp === defender.maxHp && (ab === 'sturdy' || defender.item === 'focus-sash')) { minDamage = Math.min(minDamage, defender.currentHp - 1); maxDamage = Math.min(maxDamage, defender.currentHp - 1); averageDamage = Math.min(averageDamage, defender.currentHp - 1); damageIfHit = averageDamage; }
+      if (defender.minimized && constants.P6.minimizeHits.includes(move.id)) { minDamage *= 2; maxDamage *= 2; averageDamage *= 2; damageIfHit = averageDamage; accuracyFactor = 1; }
+      if (constants.P6.consecutive.includes(move.id) && attacker.lastP6Move === move.id) { actionFactor = 0; minDamage = maxDamage = averageDamage = damageIfHit = 0; }
       // Keep ordinary minimum damage for guaranteed KOs; rare criticals only raise the possible maximum/mean.
-      const criticalMove={...move,type:moveType,damageClass};
-      const criticalChance=constants.Critical.chance(criticalMove,constants,attacker,defender);
-      let criticalMaxDamage=0;
-      if(criticalChance>0&&criticalChance<1&&!entryRestricted&&typeMultiplier>0&&actionFactor>0&&averageDamage>0){
-        const cs=constants.Critical.stats(attacker,defender,criticalMove,constants),n=multiHit?.maxHits||1;
-        let critAverage=0;
-        for(let i=0;i<n;i++){
-          const d=i>0?{...defender,currentHp:Math.max(1,defender.currentHp-1)}:defender;
-          const rawEff=i>0?constants.P8.effectiveness(moveType,d,TypeEffectiveness,attacker,criticalMove,constants).multiplier:typeMultiplier;
-          const eff=i>0&&BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(rawEff,context):rawEff;
-          const hitPower=multiHit?.escalating?power*(i+1):power,base=DamageCalculator.calculateBaseDamage(cs.attack,cs.defense,hitPower);
-          const values=Array.from({length:16},(_,j)=>{
-            const critMult=constants.Critical?.multiplier?constants.Critical.multiplier(attacker,criticalMove,constants):1.5;
-            let amount=constants.applyBurnPenalty(DamageCalculator.applyModifier(base*critMult,eff,stabMultiplier,j+85),attacker,criticalMove);
-            if(defender.twoTurnMove?.state)amount*=constants.getSemiInvulnerableDamageMultiplier(move,defender.twoTurnMove.state);
-            amount=Math.max(eff===0?0:1,Math.floor(amount*constants.P7.damageMultiplier(context.battleState,attacker,d,criticalMove,eff)));
-            amount=Math.max(eff===0?0:1,Math.floor(amount*constants.P8.finalMultiplier(attacker,d,criticalMove)));
-            if(defender.minimized&&constants.P6.minimizeHits.includes(move.id))amount*=2;
+      const criticalMove = { ...move, type: moveType, damageClass };
+      const criticalChance = constants.Critical.chance(criticalMove, constants, attacker, defender);
+      let criticalMaxDamage = 0;
+      if (criticalChance > 0 && criticalChance < 1 && !entryRestricted && typeMultiplier > 0 && actionFactor > 0 && averageDamage > 0) {
+        const cs = constants.Critical.stats(attacker, defender, criticalMove, constants), n = multiHit?.maxHits || 1;
+        let critAverage = 0;
+        for (let i = 0; i < n; i++) {
+          const d = i > 0 ? { ...defender, currentHp: Math.max(1, defender.currentHp - 1) } : defender;
+          const rawEff = i > 0 ? constants.P8.effectiveness(moveType, d, TypeEffectiveness, attacker, criticalMove, constants).multiplier : typeMultiplier;
+          const eff = i > 0 && BattleModifierResolver?.resolveTypeMultiplier ? BattleModifierResolver.resolveTypeMultiplier(rawEff, context) : rawEff;
+          const hitPower = multiHit?.escalating ? power * (i + 1) : power, base = DamageCalculator.calculateBaseDamage(cs.attack, cs.defense, hitPower);
+          const values = Array.from({ length: 16 }, (_, j) => {
+            const critMult = constants.Critical?.multiplier ? constants.Critical.multiplier(attacker, criticalMove, constants) : 1.5;
+            let amount = constants.applyBurnPenalty(DamageCalculator.applyModifier(base * critMult, eff, stabMultiplier, j + 85), attacker, criticalMove);
+            if (defender.twoTurnMove?.state) amount *= constants.getSemiInvulnerableDamageMultiplier(move, defender.twoTurnMove.state);
+            amount = Math.max(eff === 0 ? 0 : 1, Math.floor(amount * constants.P7.damageMultiplier(context.battleState, attacker, d, criticalMove, eff)));
+            amount = Math.max(eff === 0 ? 0 : 1, Math.floor(amount * constants.P8.finalMultiplier(attacker, d, criticalMove)));
+            if (defender.minimized && constants.P6.minimizeHits.includes(move.id)) amount *= 2;
             return amount;
           });
-          criticalMaxDamage+=values[15];
-          critAverage+=values.reduce((a,b)=>a+b,0)/16*(multiHit?.multiAccuracy?Math.pow(accuracyFactor,i):1);
+          criticalMaxDamage += values[15];
+          critAverage += values.reduce((a, b) => a + b, 0) / 16 * (multiHit?.multiAccuracy ? Math.pow(accuracyFactor, i) : 1);
         }
-        if(multiHit&&multiHit.minHits!==multiHit.maxHits)critAverage*=expectedHits/n;
-        if(!multiHit&&defender.currentHp===defender.maxHp&&(ab==='sturdy'||defender.item==='focus-sash')){criticalMaxDamage=Math.min(criticalMaxDamage,defender.currentHp-1);critAverage=Math.min(critAverage,defender.currentHp-1);}
-        maxDamage=Math.max(maxDamage,criticalMaxDamage);
-        averageDamage=damageIfHit=averageDamage*(1-criticalChance)+critAverage*criticalChance;
-      }else if(criticalChance===1)criticalMaxDamage=maxDamage;
+        if (multiHit && multiHit.minHits !== multiHit.maxHits) critAverage *= (hasSkillLink ? 1 : expectedHits / n);
+        if (!multiHit && defender.currentHp === defender.maxHp && (ab === 'sturdy' || defender.item === 'focus-sash')) { criticalMaxDamage = Math.min(criticalMaxDamage, defender.currentHp - 1); critAverage = Math.min(critAverage, defender.currentHp - 1); }
+        maxDamage = Math.max(maxDamage, criticalMaxDamage);
+        averageDamage = damageIfHit = averageDamage * (1 - criticalChance) + critAverage * criticalChance;
+      } else if (criticalChance === 1) criticalMaxDamage = maxDamage;
       const isTwoTurn = Boolean(constants?.isTwoTurnMove?.(move));
-      const isTwoTurnCharging = isTwoTurn && !attacker.twoTurnMove && !constants.P7.instantCharge(context.battleState,attacker,move);
+      const isTwoTurnCharging = isTwoTurn && !attacker.twoTurnMove && !constants.P7.instantCharge(context.battleState, attacker, move);
       let projectedDamage = averageDamage > 0 ? Math.floor(averageDamage * accuracyFactor * actionFactor) : 0;
       let expectedDamage = projectedDamage;
       if (isTwoTurnCharging) {
@@ -491,8 +492,8 @@
 
       // 6. Semântica refinada de nocaute (KO)
       const defenderHp = Number(defender.currentHp) || 0;
-      const berryBlocked=context.battleState?constants.P7.berriesBlocked(context.battleState,context.attackerSide==='enemy'?'player':'enemy'):['unnerve','as-one-spectrier','as-one-glastrier'].includes(constants.P7.ability(attacker));
-      const guaranteedKo = !(multiHit&&(defender.item?.endsWith('-berry')&&!berryBlocked||ab==='multiscale')) && !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id)||move.id===117)) && minDamage >= defenderHp && minDamage > 0;
+      const berryBlocked = context.battleState ? constants.P7.berriesBlocked(context.battleState, context.attackerSide === 'enemy' ? 'player' : 'enemy') : ['unnerve', 'as-one-spectrier', 'as-one-glastrier'].includes(constants.P7.ability(attacker));
+      const guaranteedKo = !(multiHit && (defender.item?.endsWith('-berry') && !berryBlocked || ab === 'multiscale')) && !isTwoTurnCharging && !attacker.rechargeMoveId && !(planning && (constants.P5.counterIds.includes(move.id) || move.id === 117)) && minDamage >= defenderHp && minDamage > 0;
       const possibleKo = !isTwoTurnCharging && !attacker.rechargeMoveId && maxDamage >= defenderHp && maxDamage > 0;
       const wouldKo = guaranteedKo; // Retrocompatibilidade: wouldKo expressa KO garantido
 
@@ -503,9 +504,9 @@
       const drainRatio = constants?.getDrainRatio?.(move) || 0;
       const expectedHeal = (drainRatio > 0 && cappedExpectedDamage > 0)
         ? Math.min(
-            Math.max(0, (Number(attacker.maxHp) || 0) - (Number(attacker.currentHp) || 0)),
-            Math.max(1, Math.floor(cappedExpectedDamage * drainRatio))
-          )
+          Math.max(0, (Number(attacker.maxHp) || 0) - (Number(attacker.currentHp) || 0)),
+          Math.max(1, Math.floor(cappedExpectedDamage * drainRatio))
+        )
         : 0;
 
       const isChloroblast = move?.id === 835 || String(move?.name || '').trim().toLowerCase() === 'chloroblast' || move?.recoilMaxHpRatio > 0;
@@ -527,19 +528,21 @@
       if (isRockyHelmet && cappedExpectedDamage > 0) {
         contactRecoil += Math.max(1, Math.floor((constants?.P8?.baseMaxHp ? constants.P8.baseMaxHp(attacker) : attacker.maxHp || 100) / 6));
       }
-      const expectedCrash=move.id===853&&constants.P7.ability(attacker)!=='magic-guard'?Math.min(attacker.currentHp,Math.max(1,Math.floor(constants.P8.baseMaxHp(attacker)/2)))*(typeMultiplier===0||defender.isProtected||defender.twoTurnMove?.state?1:1-accuracyFactor):0;
+      const expectedCrash = move.id === 853 && constants.P7.ability(attacker) !== 'magic-guard' ? Math.min(attacker.currentHp, Math.max(1, Math.floor(constants.P8.baseMaxHp(attacker) / 2))) * (typeMultiplier === 0 || defender.isProtected || defender.twoTurnMove?.state ? 1 : 1 - accuracyFactor) : 0;
       const wouldRecoilKo = (recoilRatio > 0 || contactRecoil > 0) && (expectedRecoil + contactRecoil) >= (Number(attacker.currentHp) || 0);
-      const priority = constants.P7.priority(attacker,move,constants);
+      const priority = constants.P7.priority(attacker, move, constants);
 
       // 8. Avaliação de Efeito Secundário Canônico (Secondary Effects: P4)
-      const secEffect = constants.P7.secondary(context.battleState||{},move,constants.getSecondaryEffect(move));
+      const attackerHasSheerForce = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7?.ability && constants.P7.ability(attacker) === 'sheer-force' && move.damageClass !== 'status');
+      const rawSecEffect = constants.P7.secondary(context.battleState || {}, move, constants.getSecondaryEffect(move));
+      const secEffect = (attackerHasSheerForce && (constants.hasSecondaryEffect ? constants.hasSecondaryEffect(move) : Boolean(rawSecEffect))) ? null : rawSecEffect;
       let expectedStatusChance = 0;
       let expectedStatusBenefit = 0;
       let isEligibleForSecondary = false;
 
-      if (secEffect?.statusChoices && typeMultiplier>0 && !guaranteedKo) {
-        const eligible=secEffect.statusChoices.filter(status=>constants.isEligibleForStatusCondition(defender,status)).length;
-        isEligibleForSecondary=eligible>0;expectedStatusChance=secEffect.chance/100*accuracyFactor*actionFactor*eligible/secEffect.statusChoices.length;expectedStatusBenefit=Math.round(expectedStatusChance*25);
+      if (secEffect?.statusChoices && typeMultiplier > 0 && !guaranteedKo) {
+        const eligible = secEffect.statusChoices.filter(status => constants.isEligibleForStatusCondition(defender, status)).length;
+        isEligibleForSecondary = eligible > 0; expectedStatusChance = secEffect.chance / 100 * accuracyFactor * actionFactor * eligible / secEffect.statusChoices.length; expectedStatusBenefit = Math.round(expectedStatusChance * 25);
       }
       if (secEffect && typeMultiplier > 0) {
         if (secEffect.statusCondition) {
@@ -559,7 +562,7 @@
               const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
               expectedStatusBenefit = Math.round(expectedStatusChance * (tick * turnsRemaining));
             } else if (secEffect.statusCondition === 'toxic') {
-              expectedStatusBenefit=Math.round(expectedStatusChance*Math.min(defenderHp,Math.max(1,Math.floor(defMaxHp/16))*6));
+              expectedStatusBenefit = Math.round(expectedStatusChance * Math.min(defenderHp, Math.max(1, Math.floor(defMaxHp / 16)) * 6));
             } else if (secEffect.statusCondition === 'burn') {
               const tick = Math.max(1, Math.floor(defMaxHp / 16));
               const turnsRemaining = Math.max(1, Math.min(3, Math.ceil(defenderHp / Math.max(1, averageDamage))));
@@ -579,7 +582,7 @@
           }
         } else if (secEffect.statDrops && typeof secEffect.statDrops === 'object') {
           isEligibleForSecondary = Object.entries(secEffect.statDrops).some(([k, delta]) => {
-            const currentStage = ['accuracy','evasion'].includes(k) ? Number(defender[k+'Stage']||0) : (defender.statStages && defender.statStages[k] !== undefined)
+            const currentStage = ['accuracy', 'evasion'].includes(k) ? Number(defender[k + 'Stage'] || 0) : (defender.statStages && defender.statStages[k] !== undefined)
               ? Number(defender.statStages[k])
               : 0;
             return delta < 0 ? currentStage > -6 : currentStage < 6;
@@ -591,7 +594,7 @@
 
             let totalEffectiveDrop = 0;
             for (const [k, delta] of Object.entries(secEffect.statDrops)) {
-              const currentStage = ['accuracy','evasion'].includes(k) ? Number(defender[k+'Stage']||0) : (defender.statStages && defender.statStages[k] !== undefined)
+              const currentStage = ['accuracy', 'evasion'].includes(k) ? Number(defender[k + 'Stage'] || 0) : (defender.statStages && defender.statStages[k] !== undefined)
                 ? Number(defender.statStages[k])
                 : 0;
               if (delta < 0 && currentStage > -6) {
@@ -646,7 +649,7 @@
             expectedStatusBenefit = Math.round(expectedStatusChance * 20);
           }
         } else if (secEffect.confusion) {
-          isEligibleForSecondary = !(defender.confusionTurns > 0) && !guaranteedKo && defenderHp > 0 && (!secEffect.requiresRaisedStats || context.targetRaisedStatsThisTurn===true);
+          isEligibleForSecondary = !(defender.confusionTurns > 0) && !guaranteedKo && defenderHp > 0 && (!secEffect.requiresRaisedStats || context.targetRaisedStatsThisTurn === true);
           if (isEligibleForSecondary) {
             const rawChance = Number(secEffect.chance) || 0;
             expectedStatusChance = (rawChance / 100) * accuracyFactor * actionFactor;
@@ -655,13 +658,13 @@
         }
       }
 
-      if(secEffect?.flinchChance&&typeMultiplier>0&&!guaranteedKo&&!context.targetAlreadyActed){
-        const opponentPriority=constants.getMovePriority(context.defenderMove||{});
-        const before=priority>opponentPriority||(priority===opponentPriority&&constants.getEffectiveStat(attacker,'speed')>constants.getEffectiveStat(defender,'speed'));
-        if(before)expectedStatusBenefit+=Math.round(secEffect.flinchChance/100*accuracyFactor*actionFactor*20);
+      if (secEffect?.flinchChance && typeMultiplier > 0 && !guaranteedKo && !context.targetAlreadyActed) {
+        const opponentPriority = constants.getMovePriority(context.defenderMove || {});
+        const before = priority > opponentPriority || (priority === opponentPriority && constants.getEffectiveStat(attacker, 'speed') > constants.getEffectiveStat(defender, 'speed'));
+        if (before) expectedStatusBenefit += Math.round(secEffect.flinchChance / 100 * accuracyFactor * actionFactor * 20);
       }
-      if(move.id===499&&typeMultiplier>0&&!guaranteedKo){const net=Object.values(defender.statStages||{}).reduce((sum,n)=>sum+Number(n||0),0);expectedStatusBenefit+=Math.round(Math.max(0,net)*8*accuracyFactor*actionFactor);}
-      if(move.id===740&&typeMultiplier>0){const team=context.attackerTeam||[attacker];expectedStatusBenefit+=Math.round(team.filter(mon=>mon.statusCondition).length*15*accuracyFactor*actionFactor);}
+      if (move.id === 499 && typeMultiplier > 0 && !guaranteedKo) { const net = Object.values(defender.statStages || {}).reduce((sum, n) => sum + Number(n || 0), 0); expectedStatusBenefit += Math.round(Math.max(0, net) * 8 * accuracyFactor * actionFactor); }
+      if (move.id === 740 && typeMultiplier > 0) { const team = context.attackerTeam || [attacker]; expectedStatusBenefit += Math.round(team.filter(mon => mon.statusCondition).length * 15 * accuracyFactor * actionFactor); }
       return {
         moveId: move.id,
         moveName: move.name || 'unknown',
@@ -683,7 +686,7 @@
         typeClassification,
         damageIfHit,
         entryRestricted,
-        requiresRecharge:constants.isRechargeMove(move),
+        requiresRecharge: constants.isRechargeMove(move),
         isTwoTurnMove: isTwoTurn,
         chargingTurn: isTwoTurnCharging,
         projectedDamage,
@@ -695,7 +698,7 @@
         drainRatio,
         expectedHeal,
         recoilRatio,
-        expectedRecoil:expectedRecoil+expectedCrash+contactRecoil,
+        expectedRecoil: expectedRecoil + expectedCrash + contactRecoil,
         expectedCrash,
         wouldRecoilKo,
         statBoosts: null,

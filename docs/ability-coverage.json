@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 188,
+    "declaredSupported": 198,
     "assignedAbilities": 313,
-    "assignedPending": 126,
+    "assignedPending": 116,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 364
+    "recordsWithPendingDefault": 337
   },
   "phases": [
     {
@@ -21,8 +21,8 @@
     {
       "id": "H2",
       "name": "Dano, atributos, precisão e críticos",
-      "assignedPending": 13,
-      "defaultRecordsImpacted": 38
+      "assignedPending": 3,
+      "defaultRecordsImpacted": 11
     },
     {
       "id": "H3",
@@ -5998,8 +5998,8 @@
     },
     {
       "name": "heavy-metal",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -6893,8 +6893,8 @@
     },
     {
       "name": "illuminate",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -9243,8 +9243,8 @@
     },
     {
       "name": "light-metal",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -9728,8 +9728,8 @@
     },
     {
       "name": "long-reach",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -10223,8 +10223,8 @@
     },
     {
       "name": "minds-eye",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -13820,8 +13820,8 @@
     },
     {
       "name": "quick-feet",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -14501,8 +14501,8 @@
     },
     {
       "name": "rivalry",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -16347,8 +16347,8 @@
     },
     {
       "name": "sheer-force",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -17057,8 +17057,8 @@
     },
     {
       "name": "skill-link",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {
@@ -21663,8 +21663,8 @@
     },
     {
       "name": "unaware",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H2",
       "pokemon": [
         {

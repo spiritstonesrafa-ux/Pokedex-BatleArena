@@ -2,6 +2,39 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 05/11/2026: Auditoria Final de Cobertura, Resolução de Regressão e Validação Status FULL H2-E
+
+- **Estado Git:** Trabalho estritamente local mantido (sem `git add`, `git commit`, `git push` ou `deploy`). Baseline remota: `11fb8812cecf0c69a3d1aaa07996e5465477b277` (`origin/main`). Arquivo permanente protegido `tests/visual/minior-shields-down-harness.html` preservado intacto e não rastreado.
+- **Resolução Definitiva da Divergência 328 vs 200 Testes de Regressão Cruzada (Critério A — Diferença Explicada):**
+  - **Origem dos 328 testes:** Execução canônica com expansão por curinga glob (`node --test tests/battle/abilities-h2a*.test.js tests/battle/abilities-h2b*.test.js tests/battle/abilities-h2c*.test.js tests/battle/abilities-h2d*.test.js tests/battle/abilities-h7a-neutralizing-gas.test.js`). Abrange 9 arquivos H2-A (113 testes: 64 nos 8 modulares + 49 no consolidado), 8 arquivos H2-B (64 testes), 8 arquivos H2-C (64 testes), 8 arquivos H2-D (76 testes) e Neutralizing Gas (11 testes). Total: 113 + 64 + 64 + 76 + 11 = 328 testes PASS (100%).
+  - **Origem dos 200 testes:** Execução com caminhos literais estritos (`node --test tests/battle/abilities-h2a.test.js tests/battle/abilities-h2b.test.js tests/battle/abilities-h2c-*.test.js tests/battle/abilities-h2d-*.test.js tests/battle/abilities-h7a-neutralizing-gas.test.js`). Essa seleção executou apenas o arquivo consolidado de H2-A (49 testes) e omitiu os 8 arquivos modulares H2-A (64 testes); ademais, o arquivo literal `abilities-h2b.test.js` não existe no repositório (os testes de H2-B residem exclusivamente nos 8 arquivos `abilities-h2b-*.test.js`), resultando em 0 testes para H2-B (64 testes omitidos). Total: 49 + 0 + 64 + 76 + 11 = 200 testes PASS.
+  - **Conclusão:** Diferença de 128 testes estritamente explicada (64 de H2-A modular + 64 de H2-B modular). Nenhum teste foi removido, enfraquecido ou corrompido. A cobertura consolidada de 328 testes foi comprovada e restabelecida.
+- **Auditoria de Dependências de Sheer Force e Limitações Conhecidas:**
+  - `Shell Bell`: Item de cura por dano ausente no motor. Em Showdown Gen IX (`data/items.ts`), `onAfterMoveSecondarySelf` possui tag `(S)` (anulado por Sheer Force em golpes com secundário). Registrada ausência canônica sem mock; sem impacto no status FULL da habilidade.
+  - `Red Card`: Item de troca forçada pós-golpe ausente no motor. Possui tag `(S)` em `onAfterMoveSecondary`. Sem impacto no FULL.
+  - `Eject Button`: Item de troca tática ausente no motor. Possui tag `(S)` em `onAfterMoveSecondary`. Sem impacto no FULL.
+  - `Emergency Exit` / `Wimp Out`: Habilidades de troca tática programadas no roadmap para a **Fase H5**. Possuem tag `(S)`. Registrada dependência futura sem mock; sem impacto no FULL.
+  - Efeitos suportados ativos: Life Orb (recuo suprimido), Berserk e Anger Shell (suprimidos ao cruzar 50% HP em golpes secundários; ativos em golpes sem secundário), Color Change (suprimida em golpes secundários), bônus de 1.3× e anulação de efeitos secundários para a IA.
+- **Validação Oficial do Critério de Status FULL:**
+  - Critério adotado oficialmente pelo projeto: **FULL Relativo ao Escopo Técnico Suportado** (todos os efeitos previstos para o motor de combate atual implementados deterministamente, com limitações de sistemas externos ausentes ou fases futuras devidamente documentadas).
+  - Todas as 10 habilidades do lote H2-E (`illuminate`, `skill-link`, `quick-feet`, `unaware`, `sheer-force`, `heavy-metal`, `light-metal`, `rivalry`, `minds-eye`, `long-reach`) cumprem 100% dos requisitos do motor e justificam a classificação **FULL**.
+- **Inventário Auditado (`audit-abilities.js`):**
+  - Conhecidas: 374
+  - Suportadas declaradas: **198 (+10 no ciclo H2-E)**
+  - Pendentes atribuídas: **116 (-10 no ciclo H2-E)**
+  - Pendências restantes em H2: **3** (`scrappy`, `serene-grace`, `simple` reservadas para H2-F)
+  - Pendências em H1: **0**
+- **Resultados de Testes e Homologação:**
+  - 10 suítes dedicadas H2-E: **107/107 PASS** (100% determinístico)
+  - Regressões cruzadas H2-A..D e Neutralizing Gas: **328/328 PASS**
+  - Suíte P7 Mechanics: **222/222 PASS**
+  - Suítes P5 e P6: **517/517 PASS**
+  - Suíte global (`npm.cmd test`): **4.190/4.190 PASS (100%)** em 42 suítes, 0 falhas, exit code 0.
+  - Auditoria P8 (`audit-p8.js`): **PASS** (`unresolvedP8: 0`).
+  - Auditoria Habilidades (`audit-abilities.js --check`): **PASS**.
+  - Higiene Git (`git diff --check`): **PASS** (zero erros de sintaxe ou whitespace).
+- **Parecer Final de Homologação:** **HOMOLOGADO E APROVADO PARA PUBLICAÇÃO** (aptidão técnica estrita comprovada, aguardando comando do usuário para commit e push).
+
 ## Atualização — 05/11/2026: Nova Governança de Lotes (10 Habilidades) e Planejamento H2-E / H2-F
 
 - **Decisão do Responsável pelo Projeto (05/11/2026):**

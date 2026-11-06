@@ -1949,6 +1949,169 @@
     }
   };
 
+  const H2E_METADATA = {
+    'illuminate': {
+      id: 'illuminate',
+      name: 'Illuminate',
+      generation: 3,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_BOOST', 'ON_MODIFY_MOVE']),
+      bearer: 'Staryu (#120), Starmie (#121), Chinchou (#170), Lanturn (#171), Volbeat (#313), Watchog (#505), Morelull (#755), Shiinotic (#756)',
+      ruleset: 'Gen IX SV / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-illuminate.test.js']),
+      description: 'Impede que a Precisão do portador seja reduzida por oponentes e ignora modificadores de Evasão do alvo.'
+    },
+    'skill-link': {
+      id: 'skill-link',
+      name: 'Skill Link',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_MOVE']),
+      bearer: 'Shellder (#090), Cloyster (#091), Aipom (#190), Ambipom (#424), Minccino (#572), Cinccino (#573), Pikipek (#731), Trumbeak (#732), Toucannon (#733)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-skill-link.test.js']),
+      description: 'Garante o número máximo de acertos para golpes multi-hit com número variável de golpes.'
+    },
+    'quick-feet': {
+      id: 'quick-feet',
+      name: 'Quick Feet',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_SPE']),
+      bearer: 'Ursaring (#217), Teddiursa (#216), Jolteon (#135), Granbull (#210), Poochyena (#261), Mightyena (#262), Shroomish (#285), Zigzagoon (#263), Linoone (#264)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-quick-feet.test.js']),
+      description: 'Aumenta a Velocidade em 1.5x quando o portador sofre de uma condição de status e ignora a perda de velocidade de paralisia.'
+    },
+    'unaware': {
+      id: 'unaware',
+      name: 'Unaware',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ANY_MODIFY_BOOST']),
+      bearer: 'Clefable (#036), Wooper (#194), Quagsire (#195), Bidoof (#399), Bibarel (#400), Swoobat (#528), Cosmog (#789), Cosmoem (#790), Skeledirge (#911), Clodsire (#980), Dondozo (#977)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-unaware.test.js']),
+      description: 'Ao atacar, ignora aumentos de Defesa/Sp. Def e Evasão do defensor; ao defender, ignora aumentos de Ataque/Sp. Atk e Precisão do atacante.'
+    },
+    'sheer-force': {
+      id: 'sheer-force',
+      name: 'Sheer Force',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER', 'ON_MODIFY_MOVE']),
+      bearer: 'Nidoqueen (#031), Nidoking (#034), Krabby (#098), Kingler (#099), Tauros (#128), Feraligatr (#160), Steelix (#208), Hariyama (#297), Mawile (#303), Bagon (#371), Cranidos (#408), Rampardos (#409), Darmanitan (#555), Landorus (#645), Copperajah (#879), Cetitan (#975)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-sheer-force.test.js']),
+      description: 'Aumenta em 1.3x (5325/4096) o poder de movimentos com efeitos secundários, removendo esses efeitos e o dano de recuo de Life Orb.'
+    },
+    'heavy-metal': {
+      id: 'heavy-metal',
+      name: 'Heavy Metal',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_WEIGHT']),
+      bearer: 'Aron (#304), Lairon (#305), Aggron (#306), Bronzor (#436), Bronzong (#437), Cufant (#878), Copperajah (#879), Duraludon (#884), Archaludon (#1024)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-heavy-metal.test.js']),
+      description: 'Dobra o peso corporal efetivo do Pokémon em batalha, influenciando movimentos baseados em peso.'
+    },
+    'light-metal': {
+      id: 'light-metal',
+      name: 'Light Metal',
+      generation: 5,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_WEIGHT']),
+      bearer: 'Scizor (#212), Beldum (#374), Metang (#375), Metagross (#376), Registeel (#379), Duraludon (#884)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-light-metal.test.js']),
+      description: 'Reduz pela metade o peso corporal efetivo do Pokémon em batalha, influenciando movimentos baseados em peso.'
+    },
+    'rivalry': {
+      id: 'rivalry',
+      name: 'Rivalry',
+      generation: 4,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BASE_POWER']),
+      bearer: 'Nidoran-F (#029), Nidorina (#030), Nidoqueen (#031), Nidoran-M (#032), Nidorino (#033), Nidoking (#034), Shinx (#403), Luxio (#404), Luxray (#405), Pidove (#519), Tranquill (#520), Unfezant (#521), Axew (#610), Fraxure (#611), Haxorus (#612), Litleo (#667), Pyroar (#668)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-rivalry.test.js']),
+      description: 'Aumenta o poder dos golpes em 1.25x contra adversários do mesmo gênero e reduz em 0.75x contra gênero oposto (neutro se sem gênero).'
+    },
+    'minds-eye': {
+      id: 'minds-eye',
+      name: "Mind's Eye",
+      generation: 9,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_BOOST', 'ON_MODIFY_MOVE']),
+      bearer: 'Ursaluna-Bloodmoon (#10272)',
+      ruleset: 'Gen IX SV / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-minds-eye.test.js']),
+      description: 'Permite que movimentos Normal e Fighting atinjam Pokémon Ghost com dano neutro; impede a perda de Precisão e ignora Evasão adversária.'
+    },
+    'long-reach': {
+      id: 'long-reach',
+      name: 'Long Reach',
+      generation: 7,
+      phase: 'H2',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_MOVE']),
+      bearer: 'Rowlet (#722), Dartrix (#723), Decidueye (#724)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h2e-long-reach.test.js']),
+      description: 'Executa todos os movimentos sem fazer contato físico com o alvo, evitando efeitos adversos de contato.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -2052,6 +2215,11 @@
 
     if (H2D_DAMAGE_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H2D_DAMAGE_METADATA[slug] }));
+      continue;
+    }
+
+    if (H2E_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H2E_METADATA[slug] }));
       continue;
     }
 

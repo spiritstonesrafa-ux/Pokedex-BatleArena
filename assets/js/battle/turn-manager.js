@@ -29,7 +29,8 @@
       const speed = constants.getEffectiveStat
         ? constants.getEffectiveStat(combatant, 'speed')
         : Number(combatant.speed);
-      return combatant.statusCondition === 'paralysis' && speed > 0
+      const hasQuickFeet = Boolean(combatant && !combatant.abilitySuppressed && !combatant.neutralizingGasSuppressed && constants.P7?.ability && constants.P7.ability(combatant) === 'quick-feet');
+      return combatant.statusCondition === 'paralysis' && speed > 0 && !hasQuickFeet
         ? Math.max(1, Math.floor(speed / 2)) : speed;
     }
     function resolveActionPriority(combatant, action) {

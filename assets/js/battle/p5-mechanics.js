@@ -487,7 +487,16 @@
     if (m.power === null) return raw.power == null || raw.power === 0 || raw.power === '0';
     return (typeof raw.power === 'number' || typeof raw.power === 'string') && raw.power !== '' && Number(raw.power)===m.power;
   }
-  function weight(mon) {return Number(mon.weightKg) > 0 ? Number(mon.weightKg) : weightKgById[mon.id] || null;}
+  function weight(mon, attacker = null) {
+    if (!mon) return null;
+    const base = Number(mon.weightKg) > 0 ? Number(mon.weightKg) : weightKgById[mon.id] || null;
+    if (!base) return null;
+    const isIgnored = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && ['mold-breaker','teravolt','turboblaze'].includes(attacker.ability));
+    const ab = (mon.abilitySuppressed || mon.neutralizingGasSuppressed || (attacker && isIgnored)) ? null : (mon.ability || null);
+    if (ab === 'heavy-metal') return base * 2;
+    if (ab === 'light-metal') return Math.max(0.1, Math.floor(base * 5) / 10);
+    return base;
+  }
   const contactIds=Object.freeze([709,512,332,677,453,872,401,292,372,310,419,853,782,781,117,20,44,891,299,776,34,754,550,340,785,413,784,280,693,450,418,658,845,498,509,128,370,878,4,894,132,68,343,152,238,440,242,306,462,15,663,91,827,291,146,38,458,742,24,892,3,620,337,692,407,525,577,409,65,529,530,814,223,879,283,245,263,252,793,206,185,565,424,680,7,660,755,175,488,172,394,812,731,19,560,264,395,492,218,31,210,154,544,416,862,447,803,12,360,359,912,29,543,838,457,531,535,484,667,136,610,30,32,532,887,158,301,423,665,8,861,611,442,231,746,857,26,2,282,869,808,387,348,141,726,122,710,67,490,679,183,696,224,25,5,232,309,910,866,718,302,400,609,200,371,64,80,566,721,583,365,305,398,342,860,884,1,681,612,438,875,706,828,701,386,228,98,99,889,873,229,534,514,216,279,179,431,249,27,205,533,10,724,69,421,467,325,425,735,806,130,507,327,21,163,684,265,779,669,699,209,712,859,789,537,798,211,23,707,830,480,70,165,66,389,713,916,162,276,818,33,541,36,915,168,37,675,422,823,9,885,813,865,167,688,376,918,369,557,741,22,11,233,344,358,127,834,817,528,17,452,35,378,404,428,716,729]);
   function type(move,a){
     if(move.id===686)return a.types[0];
@@ -500,7 +509,7 @@
   function ohko(move) {return ohkoIds.includes(Number(move.id));}
   function failure(move,a,d,context={}) {
     const id=Number(move.id);
-    if ([67,447,484,535].includes(id) && (!weight(d)||([484,535].includes(id)&&!weight(a)))) return 'WEIGHT_UNAVAILABLE';
+    if ([67,447,484,535].includes(id) && (!weight(d, a)||([484,535].includes(id)&&!weight(a, null)))) return 'WEIGHT_UNAVAILABLE';
     if (id===704 && !a.shellTrapTriggered) return 'SHELL_TRAP';
     if (id===283 && a.currentHp>=d.currentHp) return 'ENDEAVOR_HP';
     if (ohko(move) && ((a.level||50)<(d.level||50) || (id===329 && d.types.includes('ice')))) return 'OHKO_INELIGIBLE';
@@ -519,8 +528,8 @@
   }
   function power(move,a,d,C,context={}) {
     const id=Number(move.id),speed=m=>m.statusCondition==='paralysis'?Math.max(1,Math.floor(C.getEffectiveStat(m,'speed')/2)):C.getEffectiveStat(m,'speed');
-    if([67,447].includes(id)){const w=weight(d);return !w?0:w<10?20:w<25?40:w<50?60:w<100?80:w<200?100:120;}
-    if([484,535].includes(id)){const ratio=weight(a)/weight(d);return ratio>=5?120:ratio>=4?100:ratio>=3?80:ratio>=2?60:40;}
+    if([67,447].includes(id)){const w=weight(d, a);return !w?0:w<10?20:w<25?40:w<50?60:w<100?80:w<200?100:120;}
+    if([484,535].includes(id)){const ratio=weight(a, null)/weight(d, a);return ratio>=5?120:ratio>=4?100:ratio>=3?80:ratio>=2?60:40;}
     if(id===360)return Math.min(150,Math.max(1,Math.floor(25*speed(d)/Math.max(1,speed(a)))+1));
     if(id===486)return [40,60,80,120,150][Math.min(4,Math.floor(speed(a)/Math.max(1,speed(d))))];
     if([175,179].includes(id)){const r=Math.max(1,Math.floor(48*a.currentHp/a.maxHp));return r<2?200:r<5?150:r<10?100:r<17?80:r<33?40:20;}

@@ -360,6 +360,16 @@
     Object.fromEntries(Object.values(SECONDARY_EFFECT_MOVES).map(m => [m.id, m]))
   );
 
+  function hasSecondaryEffect(move) {
+    if (!move) return false;
+    if (move.secondaryEffect || move.secondaries || move.hasSecondary) return true;
+    return Boolean(getSecondaryEffect(move));
+  }
+
+  function getEffectiveWeightKg(combatant, attacker = null) {
+    return P5.weight(combatant, attacker);
+  }
+
   function getSecondaryEffect(move) {
     if(Number(move?.id)===239)return {id:239,name:'twister',chance:20,flinch:true};
     if(Number(move?.id)===143)return {id:143,name:'sky-attack',chance:30,flinch:true};
@@ -414,21 +424,42 @@
     const weatherAccuracy=P7.accuracy(move,attacker,defender,move.accuracy);
     if(weatherAccuracy===null||move.accuracy==='ALWAYS_HIT')return null;
     if(move.id===92&&attacker.types?.includes('poison'))return null;
-    // Keen Eye: ignore positive evasion of target (treat defender evasionStage as min(0, stage))
-    const attackerHasKeenEye = !attacker?.abilitySuppressed && P7.ability(attacker)==='keen-eye' && !attacker?.abilityIgnored;
+    // Keen Eye / Illuminate / Mind's Eye / Unaware: ignore positive evasion of target
+    const attackerIgnoresEvasion = !attacker?.abilitySuppressed && !attacker?.neutralizingGasSuppressed &&
+      ['keen-eye', 'illuminate', 'minds-eye', 'unaware'].includes(P7.ability(attacker)) && !attacker?.abilityIgnored;
     const rawDefenderEvasion = Completion.ignoresStages(move)?0:(Number(defender.evasionStage)||0);
-    const effectiveDefenderEvasion = attackerHasKeenEye ? 0 : rawDefenderEvasion;
-    const stage=Math.max(-6,Math.min(6,(Number(attacker.accuracyStage)||0)-effectiveDefenderEvasion));
+    const effectiveDefenderEvasion = attackerIgnoresEvasion ? 0 : rawDefenderEvasion;
+    // Unaware defender: ignores attacker's accuracy stages (unless ignored by Mold Breaker)
+    const defenderHasUnaware = !defender?.abilitySuppressed && !defender?.neutralizingGasSuppressed &&
+      P7.ability(defender) === 'unaware' && !defender?.abilityIgnored;
+    const rawAttackerAccuracy = Number(attacker.accuracyStage) || 0;
+    const effectiveAttackerAccuracy = defenderHasUnaware ? 0 : rawAttackerAccuracy;
+    const stage=Math.max(-6,Math.min(6,effectiveAttackerAccuracy-effectiveDefenderEvasion));
     return Math.min(100,Math.floor(Number(weatherAccuracy)*(stage>=0?(3+stage)/3:3/(3-stage))));
   }
 
-  function getEffectiveStat(combatant, statKey, move = null, defender = null) {
+  function getEffectiveStat(combatant, statKey, move = null, opponent = null) {
     if (!combatant || typeof combatant !== 'object') return 1;
-    const base = Number(combatant[statKey])*P7.stat(combatant,statKey,move,defender);
+    let actualMove = move;
+    let actualOpponent = opponent;
+    if (move && typeof move === 'object' && (move.ability || move.currentHp !== undefined || move.statStages) && (!opponent || typeof opponent === 'boolean')) {
+      actualOpponent = move;
+      actualMove = null;
+    }
+    const base = Number(combatant[statKey])*P7.stat(combatant,statKey,actualMove,actualOpponent);
     if (!Number.isFinite(base) || base <= 0) return 1;
     if (!STAT_STAGE_KEYS.includes(statKey)) return Math.max(1, Math.floor(base));
 
-    const stage = combatant.statStages ? Number(combatant.statStages[statKey]) || 0 : 0;
+    let stage = combatant.statStages ? Number(combatant.statStages[statKey]) || 0 : 0;
+    if (actualOpponent && !actualOpponent.abilitySuppressed && !actualOpponent.neutralizingGasSuppressed) {
+      const oppAb = P7.ability(actualOpponent);
+      const isOppIgnored = Boolean(combatant && !combatant.abilitySuppressed && !combatant.neutralizingGasSuppressed && ['mold-breaker','teravolt','turboblaze'].includes(P7.ability(combatant)));
+      if (oppAb === 'unaware' && !isOppIgnored) {
+        if (['attack', 'specialAttack', 'defense', 'specialDefense'].includes(statKey)) {
+          stage = 0;
+        }
+      }
+    }
     const clampedStage = Math.max(-6, Math.min(6, Math.trunc(stage)));
 
     if (clampedStage === 0) {
@@ -628,17 +659,26 @@
     return null;
   }
 
-  const MULTI_HIT_MOVES = Object.freeze(Object.fromEntries(Object.entries({"24":{"id":24,"name":"double-kick","minHits":2,"maxHits":2},"41":{"id":41,"name":"twineedle","minHits":2,"maxHits":2},"292":{"id":292,"name":"arm-thrust","minHits":2,"maxHits":5},"331":{"id":331,"name":"bullet-seed","minHits":2,"maxHits":5},"333":{"id":333,"name":"icicle-spear","minHits":2,"maxHits":5},"350":{"id":350,"name":"rock-blast","minHits":2,"maxHits":5},"594":{"id":594,"name":"water-shuriken","minHits":2,"maxHits":5}}).map(([id, move]) => [id, Object.freeze(move)])));
+  const MULTI_HIT_MOVES = Object.freeze(Object.fromEntries(Object.entries({"24":{"id":24,"name":"double-kick","minHits":2,"maxHits":2},"41":{"id":41,"name":"twineedle","minHits":2,"maxHits":2},"292":{"id":292,"name":"arm-thrust","minHits":2,"maxHits":5},"331":{"id":331,"name":"bullet-seed","minHits":2,"maxHits":5},"333":{"id":333,"name":"icicle-spear","minHits":2,"maxHits":5},"350":{"id":350,"name":"rock-blast","minHits":2,"maxHits":5},"594":{"id":594,"name":"water-shuriken","minHits":2,"maxHits":5},"860":{"id":860,"name":"population-bomb","minHits":10,"maxHits":10,"multiAccuracy":true},"878":{"id":878,"name":"population-bomb","minHits":10,"maxHits":10}}).map(([id, move]) => [id, Object.freeze(move)])));
   function getMultiHitMove(move) {
     if (!move) return null;
-    return MULTI_HIT_MOVES[Number(move.id)] || P5.multiHits[Number(move.id)] || Object.values(MULTI_HIT_MOVES).find(m => m.name === move.name) || null;
+    const moveId = typeof move === 'number' ? move : Number(move?.id);
+    return MULTI_HIT_MOVES[moveId] || P5.multiHits?.[moveId] || (move?.name ? Object.values(MULTI_HIT_MOVES).find(m => m.name === move.name) : null) || null;
   }
-  function getMultiHitCount(move, roll = 1) {
+  function getMultiHitCount(move, roll = 1, attacker = null) {
+    if (typeof roll === 'object' && roll !== null && attacker === null) {
+      attacker = roll;
+      roll = 1;
+    }
     const config = getMultiHitMove(move);
     if (!config) return 1;
+    if (attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && P7.ability(attacker) === 'skill-link') {
+      return config.maxHits;
+    }
     if (config.minHits === config.maxHits) return config.minHits;
-    if (!Number.isInteger(roll) || roll < 1 || roll > 100) throw new Error('Rolagem de quantidade de acertos inválida.');
-    return roll <= 35 ? 2 : roll <= 70 ? 3 : roll <= 85 ? 4 : 5;
+    const r = typeof roll === 'number' ? roll : 1;
+    if (!Number.isInteger(r) || r < 1 || r > 100) throw new Error('Rolagem de quantidade de acertos inválida.');
+    return r <= 35 ? 2 : r <= 70 ? 3 : r <= 85 ? 4 : 5;
   }
 
   // Modern recharge family. Official PokéAPI metadata; only successful hits lock the following turn.
@@ -1908,6 +1948,8 @@
     SECONDARY_EFFECT_MOVES,
     SECONDARY_EFFECT_MOVES_BY_ID,
     getSecondaryEffect,
+    hasSecondaryEffect,
+    getEffectiveWeightKg,
     isStatusConditionImmune,
     isEligibleForStatusCondition,
     isSelfThawingMove,

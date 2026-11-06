@@ -296,8 +296,9 @@
         confusionTurns: 0,
         drowsyTurns: 0,
         drowsySleepDuration: 0,
-        accuracyStage: 0,
-        evasionStage: 0,
+        gender: raw.gender ? String(raw.gender).trim().toUpperCase() : null,
+        accuracyStage: Number(raw.accuracyStage) || 0,
+        evasionStage: Number(raw.evasionStage) || 0,
         entryMoveAttempts: 0, // Battle-local opportunities, including sleep/flinch/confusion.
         moves: normalizedMoves,
         statStages: constants.sanitizeStatStages ? constants.sanitizeStatStages(raw.statStages) : (constants.createDefaultStatStages ? constants.createDefaultStatStages() : { attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 })
@@ -840,7 +841,8 @@
       if(defender.shellTrapReady && move.damageClass==='physical')defender.shellTrapTriggered=true;
       defender.focusLost=true;
       if(defender.bideState)defender.bideState.damage+=damage;
-      if(defender.beakBlastReady && !attacker.safeguarded && constants.P5.contactIds.includes(move.id) && constants.isEligibleForStatusCondition(attacker,'burn')){
+      const makesContact = constants.P5.contactIds.includes(move.id) && !(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'long-reach');
+      if(defender.beakBlastReady && !attacker.safeguarded && makesContact && constants.isEligibleForStatusCondition(attacker,'burn')){
         attacker.statusCondition='burn';
         events.push({type:BATTLE_EVENTS.STATUS_APPLIED,source:defenderRole,target:attackerRole,pokemonName:attacker.name,statusCondition:'burn',moveId:690,moveName:'beak-blast',chance:100});
         constants.P7.checkSynchronize?.(null,defenderRole,attackerRole,'burn',constants,events,defender,attacker);
@@ -947,7 +949,7 @@
       if(!calledMove && attacker.item==='assault-vest'&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
       const actualDamageClass = constants.P8.damageClass(attacker,selectedMove,constants);
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
-      attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';defender.p7KeenEyeAccuracyBlock=constants.P7.defenderAbility(attacker,defender,selectedMove)==='keen-eye';
+      attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7KeenEyeAccuracyBlock=false;defender.p7BlockDrop=['clear-body','white-smoke','full-metal-body'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));defender.p7BlockAttackDrop=constants.P7.defenderAbility(attacker,defender,selectedMove)==='hyper-cutter';defender.p7KeenEyeAccuracyBlock=['keen-eye','illuminate','minds-eye'].includes(constants.P7.defenderAbility(attacker,defender,selectedMove));
       const actualDamageType=constants.P8.moveType(attacker,selectedMove,constants.P7.moveType(state,attacker,selectedMove,constants.P5.type(selectedMove,attacker)));
       const damageMove={...selectedMove,damageClass:actualDamageClass,type:actualDamageType,originalType:selectedMove.originalType||selectedMove.type};
       const continuingBide=Boolean(attacker.bideState);
@@ -1909,7 +1911,7 @@
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
         const multiHit = constants.getMultiHitMove(selectedMove);
         if (multiHit) {
-          const plannedHits = constants.getMultiHitCount(selectedMove, action?.hitCountRoll ?? 1);
+          const plannedHits = constants.getMultiHitCount(selectedMove, action?.hitCountRoll ?? 1, attacker);
           function hitRolls(key, fallback, min, max) {
             const supplied = action?.[key];
             if (supplied !== undefined && (!Array.isArray(supplied) || supplied.length !== plannedHits)) throw new Error('Quantidade de rolagens por acerto inválida.');
@@ -1920,13 +1922,18 @@
           const damageRolls = hitRolls('hitDamageRolls', damageRoll, 85, 100);
           const criticalRolls=hitRolls('hitCriticalRolls',action?.criticalRoll??24,1,24);
           if(action?.criticalRoll!==undefined&&criticalRolls[0]!==action.criticalRoll)throw Error('O crítico do primeiro acerto deve coincidir com criticalRoll.');
+        const hasSkillLink = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'skill-link');
         const accuracyRolls = multiHit.multiAccuracy ? hitRolls('hitAccuracyRolls',accuracyRoll,1,100) : null;
         if(accuracyRolls && accuracyRolls[0]!==accuracyRoll)throw new Error('A precisão do primeiro acerto deve coincidir com accuracyRoll.');
-          const poisonRolls = selectedMove.id === 41 ? hitRolls('hitSecondaryEffectRolls', secondaryEffectRoll, 1, 100) : null;
+          const attackerHasSheerForce = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'sheer-force');
+          if (attackerHasSheerForce && (constants.hasSecondaryEffect ? constants.hasSecondaryEffect(selectedMove) : false)) {
+            attacker.sheerForceBoosted = true;
+          }
+          const poisonRolls = (selectedMove.id === 41 && !attackerHasSheerForce) ? hitRolls('hitSecondaryEffectRolls', secondaryEffectRoll, 1, 100) : null;
           let hitCount = 0;
           let totalDamage = 0;
           for (let index = 0; index < plannedHits && defender.currentHp > 0 && effectiveMultiplier > 0; index++) {
-            if(index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
+            if(!hasSkillLink && index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
           const hitEff=constants.P8.effectiveness(actualDamageType,defender,TypeEffectiveness,attacker,damageMove,constants);const hitMultiplier=BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(hitEff.multiplier,{attackerSide:attackerRole,modifiers:state.modifiers||{}}):hitEff.multiplier;
           const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
           const critical=constants.Critical.resolve(damageMove,criticalRolls[index],constants,attacker,defender);
@@ -1961,7 +1968,7 @@
               stabMultiplier, typeMultiplier: hitMultiplier, multiplier: hitMultiplier,
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
             constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp,attacker,defender);
-            if (attacker.currentHp === 0) break;
+            if (attacker.currentHp === 0 || defender.currentHp === 0) break;
             if (poisonRolls && poisonRolls[index] <= 20 && constants.isEligibleForStatusCondition(defender, 'poison')) {
               defender.statusCondition = 'poison';
               defender.toxicStage = 0;
@@ -1974,8 +1981,8 @@
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
             moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical && !constants.Critical?.isCriticalBlocked?.(defender, attacker, damageMove, constants))});
           if (defender.currentHp > 0 && totalDamage > 0) {
-            if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, totalDamage, false, false)) {
-              constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events);
+            if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, totalDamage, false, false, attacker)) {
+              constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events, attacker);
             }
           }
           const faintedRolesMulti = [];
@@ -2143,6 +2150,11 @@
       // 10C. Resolução de Efeitos Secundários de Status e Atributos (Secondary Effects: P4)
       let secEffect = constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null;
       secEffect=constants.P7.secondary(state,selectedMove,secEffect);
+      const attackerHasSheerForce = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'sheer-force');
+      if (attackerHasSheerForce && secEffect) {
+        attacker.sheerForceBoosted = true;
+        secEffect = null;
+      }
       if(secEffect?.statusChoices){
         const choice=action?.secondaryStatusChoice===undefined?1:Number(action.secondaryStatusChoice);
         if(!Number.isInteger(choice)||choice<1||choice>secEffect.statusChoices.length)throw new Error('Escolha secundária inválida.');
@@ -2236,8 +2248,8 @@
                     finalStage: report.finalStage,
                     blockedReason: report.blockedReason
                   });
-                  if (report.blockedReason === 'ABILITY' && report.statKey === 'accuracy' && constants.P7.ability(defender) === 'keen-eye') {
-                    events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: 'keen-eye' });
+                  if (report.blockedReason === 'ABILITY' && report.statKey === 'accuracy' && ['keen-eye','illuminate','minds-eye'].includes(constants.P7.ability(defender))) {
+                    events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: constants.P7.ability(defender) });
                   }
                 }
               }
@@ -2308,8 +2320,8 @@
       }
 
       if (currentHp > 0 && actualDamageDealt > 0) {
-        if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, actualDamageDealt, hasActiveSub, bypassesSubDamage)) {
-          constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events);
+        if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, actualDamageDealt, hasActiveSub, bypassesSubDamage, attacker)) {
+          constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events, attacker);
         }
       }
 

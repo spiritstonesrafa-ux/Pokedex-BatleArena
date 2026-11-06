@@ -492,24 +492,24 @@ Lote conjunto de oito habilidades canônicas de modificação de poder, imunidad
   - **H2-E (10 habilidades):** Lote padrão completo de dez habilidades.
   - **H2-F (3 habilidades):** Lote residual de encerramento da fase H2 com as 3 habilidades finais.
 
-#### H2-E — Modificadores Ofensivos, Evasão, Peso e Mecânicas Especiais (PLANEJADO — 10 Habilidades)
+#### H2-E — Modificadores Ofensivos, Evasão, Peso e Mecânicas Especiais (IMPLEMENTADO E HOMOLOGADO — 10 Habilidades)
 
-*Status: Planejamento oficial aprovado sob a nova política de 10 habilidades por lote. Não implementado nesta etapa.*
+*Status: Implementado localmente, auditado integralmente, corrigido canonicamente e coberto com 107/107 testes determinísticos dedicados (80 da suíte inicial + 27 testes de auditoria canônica e cenários críticos). Suporte FULL confirmado no Ability Registry (198 suportadas / 116 pendentes atribuídas / 3 pendentes em H2).*
 
 1. **`illuminate`** (Gen III-IX):
    - Em batalha (Gen IX SV): previne que a Accuracy do portador seja reduzida por movimentos adversários e ignora modificadores de Evasion do defensor (efeito idêntico a Keen Eye).
 2. **`skill-link`** (Gen IV-IX):
-   - Garante que movimentos de múltiplos acertos aleatórios (2 a 5 golpes, ex: Bullet Seed, Icicle Spear, Rock Blast, Tail Slap, Pin Missile) sempre atinjam o número máximo de 5 acertos.
+   - Garante que movimentos de múltiplos acertos aleatórios (2 a 5 golpes, ex: Bullet Seed, Icicle Spear, Rock Blast, Tail Slap, Pin Missile) e de múltiplos acertos com precisão individual (`multiAccuracy: true`: Triple Axel, Triple Kick, Population Bomb) atinjam seu número máximo de acertos. Canonicamente (Gen IX Showdown/Cartucho), com Skill Link há apenas uma checagem inicial de precisão; se acertar, todos os acertos subsequentes conectam sem rolagens adicionais de precisão. Sem Skill Link, as checagens individuais permanecem ativas encerrando a sequência no primeiro erro.
 3. **`quick-feet`** (Gen IV-IX):
    - Multiplica o Speed efetivo por 1.5× quando o portador sofre de uma condição de status principal (`brn`, `par`, `psn`, `tox`, `slp`, `frz`). Ignora a penalidade de 50% de velocidade de paralisia.
 4. **`unaware`** (Gen IV-IX):
-   - Ao atacar, ignora os estágios de Defense e Special Defense do defensor. Ao defender, ignora os estágios de Attack e Special Attack do atacante. Não ignora estágios de Speed.
+   - Ao atacar, ignora os estágios de Defense, Special Defense e Evasion do defensor. Ao defender, ignora os estágios de Attack, Special Attack e Accuracy do atacante. Não ignora estágios de Speed.
 5. **`sheer-force`** (Gen V-IX):
-   - Aumenta em 1.3× (5325/4096) o poder base de movimentos que possuem efeitos secundários com chance percentual (`secondary.chance`), removendo a chance de ativação do efeito secundário. Nega o dano de recuo de Life Orb ao utilizar movimentos elegíveis.
+   - Aumenta em 1.3× (5325/4096) o poder base de movimentos que possuem efeitos secundários com chance percentual (`secondary.chance`), removendo a chance de ativação do efeito secundário. Nega o dano de recuo de Life Orb ao utilizar movimentos elegíveis. Canonicamente (Showdown Gen IX tag `(S)` em `[AfterMoveSecondary]`), suprime habilidades defensivas pós-secundárias como Color Change, Berserk e Anger Shell ao cruzar o limiar de 50% HP; movimentos sem efeitos secundários (Earthquake) ou Sheer Force suprimida ativam Berserk e Anger Shell normalmente. IA anula avaliação de benefícios secundários.
 6. **`heavy-metal`** (Gen V-IX):
    - Dobra o peso corporal efetivo do combatente em batalha (influencia Grass Knot, Low Kick, Heavy Slam e Heat Crash).
 7. **`light-metal`** (Gen V-IX):
-   - Reduz pela metade (0.5×) o peso corporal efetivo do combatente em batalha.
+   - Reduz pela metade (0.5×) o peso corporal efetivo do combatente em batalha, respeitando o piso mínimo de 0.1 kg.
 8. **`rivalry`** (Gen IV-IX):
    - Multiplica o dano por 1.25× contra alvos do mesmo gênero e por 0.75× contra alvos do gênero oposto. Permanece neutro (1.0×) se o atacante ou defensor for genderless.
 9. **`minds-eye`** (Gen IX):
@@ -530,7 +530,7 @@ Lote conjunto de oito habilidades canônicas de modificação de poder, imunidad
 
 ### H2 — Dano, atributos, precisão e críticos
 
-**Inventário:** 13 habilidades pendentes (21 antes do lote H2-D, 29 antes do lote H2-C, 37 antes do lote H2-B, 44 antes do lote H2-A); registros com habilidade padrão afetados atualizados.
+**Inventário:** 3 habilidades pendentes (`scrappy`, `serene-grace`, `simple` reservadas para H2-F); 13 antes do lote H2-E, 21 antes do lote H2-D, 29 antes do lote H2-C, 37 antes do lote H2-B, 44 antes do lote H2-A; registros com habilidade padrão afetados atualizados.
 
 **Dependências:** H0; flags canônicas e regras de críticos/efeitos secundários.
 
