@@ -2,6 +2,44 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 05/11/2026: Redesign da Tela de Batalha Mobile & Ajuste do Seletor de Mecânica Especial (PBA-020)
+
+- **Objetivo Concluído:** Redesenho completo da interface de batalha mobile (especialmente orientação paisagem), eliminando o layout em duas colunas (Imagem 1 — Antes) e implementando a visualização de arena em tela cheia com controles flutuantes sobrepostos e pokémons em grande escala (Imagem 2 — Referência Desejada), seguido do refinamento do seletor de mecânica especial.
+- **Ajuste Pontual de Mecânica Especial no Mobile Landscape:**
+  - Reposicionamento do seletor `Mecânica especial` (`#p8Activation`) no canto inferior direito, imediatamente acima dos dois últimos botões de ataque (`Ice-Beam` e `Dark-Pulse`), com folga vertical calculada de 6px.
+  - Desobstrução total do Pokémon adversário (Lapras), que agora possui visibilidade limpa e desimpedida na arena.
+  - Correção da largura do `<select>` (`max-width: clamp(145px, 22vw, 200px)`), eliminando o truncamento anterior e exibindo "Batalhar normalmente" por completo.
+- **Alterações de Arquitetura e Layout (`assets/css/battle-arena.css`):**
+  - **Arena Full-Bleed:** `.battle-camera-wrapper` e `.battle-stage` agora ocupam 100% da largura e altura do viewport (`position: absolute; inset: 0; z-index: 1`), proporcionando imersão total do estádio e céu cósmico.
+  - **Pokémons em Escala Expandida e Perspectiva Canônica:**
+    - Combatente do Jogador (Tapu-Koko): posicionado no primeiro plano inferior esquerdo (`left: clamp(24px, 10vw, 110px); bottom: clamp(56px, 15vh, 84px); width: clamp(175px, 28vw, 250px); z-index: 4`), com sprite de costas animado (`showdown/back/${id}.gif`) voltado para a arena.
+    - Combatente Adversário (Zamazenta): posicionado no tablado à direita (`right: clamp(55px, 16vw, 165px); bottom: clamp(105px, 28vh, 160px); width: clamp(135px, 24vw, 195px); z-index: 3`), em escala de combate ampla e imersiva.
+  - **HUD Inimigo Flutuante (Top-Left):** Caixa translúcida de vidro escuro (`background: rgba(10, 15, 28, 0.76); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px;`) contendo Nome, Pílula de Tipo (`FIGHTING`) e barra de HP com valores `167 / 167`.
+  - **Caixa de Pergunta / Narrativa (Top-Right):** Pílula translúcida flutuante no canto superior direito ("O que Tapu-Koko deve fazer?").
+  - **Controles de Ação Auxiliares (Right):** Botões `TROCAR POKÉMON` e `CAMPO Terreno elétrico` empilhados verticalmente abaixo da pergunta, com estilo de vidro fosco.
+  - **HUD do Jogador (Bottom-Left):**
+    - 4 Pokébolas da equipe renderizadas em CSS com alta fidelidade (`🔴 🔴 🔴 🔴`) sobre a caixa do combatente.
+    - Caixa translúcida com Nome (`Tapu-Koko`), pílulas de tipos (`ELECTRIC`, `FAIRY`) e barra de HP com valores `145 / 145`.
+  - **Barra de Golpes Horizontal Única (Bottom):** Os 4 golpes agora ficam alinhados horizontalmente em uma barra inferior única (`grid-template-columns: repeat(4, minmax(0, 1fr))`), estilizados como pílulas/cápsulas elegantes com cor de fundo temática de cada tipo (`--move-accent-color`), texto escuro de alto contraste, nome do golpe centralizado no topo, badge de tipo e contador de PP no rodapé.
+  - **Compatibilidade Responsiva Preservada:**
+    - Modo Portrait Mobile (`@media (max-width: 760px)`): mantém a grade 2x2 funcional e legibilidade vertical intacta.
+    - Modo Desktop: mantém a apresentação em duas zonas widescreen testada e aprovada.
+- **Alterações de Código Front-end (`assets/js/ui/battle-view.js`):**
+  - Suporte ao Showdown Animated Back Sprite para o lado do jogador (`showdown/back/${id}.gif`) com fallback robusto e seguro (`showdown/${id}.gif` -> `official-artwork/${id}.png` -> `staticSprite`).
+  - Inclusão do container `.hud-player-team-balls` no HUD do jogador.
+  - Estruturação semântica de `.move-btn-type-badge` e `.move-btn-type-desktop` para transição responsiva impecável.
+- **Validação Visual e Evidências:**
+  - Capturas determinísticas em Edge Headless:
+    - `before_redesign_844x390.png`: reproduz exatamente o layout anterior dividido (Imagem 1).
+    - `mobile_landscape_844x390.png`: comprova a paridade e fidelidade à Imagem 2.
+    - `mobile_landscape_915x412.png`: validação em telas Android widescreen.
+    - `mobile_portrait_390x844.png`: integridade em modo retrato.
+    - `desktop_1366x768.png`: integridade em modo desktop.
+    - `special_selector_corrected_844x390.png`: comprova o seletor acima de Ice-Beam/Dark-Pulse e Lapras 100% visível.
+- **Homologação Automatizada:**
+  - Suíte Global (`npm.cmd test`): **4.190/4.190 PASS (100%)** em 42 suítes, zero falhas.
+  - Governança Git: `git diff --check` PASS (0 erros de formatação/whitespace).
+
 ## Atualização — 05/11/2026: Auditoria Final de Cobertura, Resolução de Regressão e Validação Status FULL H2-E
 
 - **Estado Git:** Trabalho estritamente local mantido (sem `git add`, `git commit`, `git push` ou `deploy`). Baseline remota: `11fb8812cecf0c69a3d1aaa07996e5465477b277` (`origin/main`). Arquivo permanente protegido `tests/visual/minior-shields-down-harness.html` preservado intacto e não rastreado.

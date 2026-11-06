@@ -1158,6 +1158,9 @@ body.battle-fullscreen-mode .footer {
 .battle-immersive-shell .battle-action-panel { min-height: 0; padding: 10px; gap: 8px; }
 .battle-immersive-shell .moves-action-grid { min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .battle-immersive-shell .move-action-btn { min-height: 58px; padding: 8px 10px; }
+.move-btn-type-badge { display: none; }
+.move-btn-type-desktop { display: inline-block; }
+.hud-player-team-balls { display: none; }
 .battle-immersive-shell .action-controls-row {
   display: flex;
   align-items: center;
@@ -1422,247 +1425,560 @@ body.battle-fullscreen-mode .footer {
 }
 
 @media (orientation: landscape) and (max-height: 540px) {
-  /* Campaign-exclusive landscape layout: Visuals on left (Enemy, Stage, Player), Interaction on right (Narrative, Actions) */
+  /* ====================================================================
+     PBA-020: REDESIGN DE ARENA AMPLIADA EM MOBILE LANDSCAPE
+     Fidelidade total à referência visual (Arena expandida, HUDs flutuantes,
+     Pokémons ampliados e barra de golpes horizontal única)
+     ==================================================================== */
+
+  .battle-view-container.battle-immersive-shell {
+    padding: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+
+  .battle-immersive-shell .battle-arena-layout,
   .battle-immersive-shell .battle-arena-layout.campaign-battle-layout {
-    grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr) !important;
-    grid-template-rows: 28px auto 1fr auto !important;
-    grid-template-areas:
-      "top top"
-      "enemy narrative"
-      "stage actions"
-      "player actions" !important;
-    gap: 4px 10px !important;
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
     height: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
     overflow: hidden !important;
+    gap: 0 !important;
   }
-  .battle-arena-layout.campaign-battle-layout .combatant-hud.enemy-hud {
-    grid-area: enemy !important;
-    padding: 3px 6px !important;
-    border-radius: 6px !important;
-  }
-  .battle-arena-layout.campaign-battle-layout .combatant-hud.player-hud {
-    grid-area: player !important;
-    padding: 3px 6px !important;
-    border-radius: 6px !important;
-  }
+
+  /* 1. Arena em Tela Cheia (Full-bleed Background) */
+  .battle-immersive-shell .battle-camera-wrapper,
   .battle-arena-layout.campaign-battle-layout .battle-camera-wrapper {
-    grid-area: stage !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
     height: 100% !important;
-    min-height: 0 !important;
-    border-radius: 10px !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    z-index: 1 !important;
+    box-shadow: none !important;
   }
+
+  .battle-immersive-shell .battle-stage {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .battle-immersive-shell .arena-backdrop {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-size: cover !important;
+    background-position: center 36% !important;
+  }
+
+  .battle-immersive-shell .stage-ground-platform {
+    position: absolute !important;
+    bottom: clamp(24px, 8vh, 46px) !important;
+    left: 8% !important;
+    right: 8% !important;
+    height: clamp(60px, 18vh, 100px) !important;
+    border-radius: 50% !important;
+    transform: scaleY(0.7) !important;
+  }
+
+  /* 2. Sprites dos Combatentes (Ampliados e Posicionados em Perspectiva Canônica) */
+  .battle-immersive-shell .combatant-slot,
   .battle-arena-layout.campaign-battle-layout .combatant-slot {
-    width: clamp(70px, 13vw, 100px) !important;
-    height: clamp(70px, 13vw, 100px) !important;
+    position: absolute !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    margin: 0 !important;
   }
+
+  /* Pokémon do Jogador (Tapu-Koko em primeiro plano à esquerda) */
+  .battle-immersive-shell .combatant-slot.player-slot,
   .battle-arena-layout.campaign-battle-layout .combatant-slot.player-slot {
-    margin-top: 10px !important;
+    left: clamp(24px, 10vw, 110px) !important;
+    bottom: clamp(56px, 15vh, 84px) !important;
+    width: clamp(175px, 28vw, 250px) !important;
+    height: clamp(175px, 48vh, 240px) !important;
+    z-index: 4 !important;
   }
+
+  /* Pokémon Adversário (Zamazenta no tablado à direita) */
+  .battle-immersive-shell .combatant-slot.enemy-slot,
   .battle-arena-layout.campaign-battle-layout .combatant-slot.enemy-slot {
-    margin-bottom: 10px !important;
+    right: clamp(55px, 16vw, 165px) !important;
+    bottom: clamp(105px, 28vh, 160px) !important;
+    width: clamp(135px, 24vw, 195px) !important;
+    height: clamp(135px, 38vh, 190px) !important;
+    z-index: 3 !important;
   }
-  .battle-arena-layout.campaign-battle-layout .battle-narrative-box {
-    grid-area: narrative !important;
-    padding: 2px 8px !important;
-    font-size: 0.70rem !important;
-    font-weight: 700 !important;
-    min-height: 20px !important;
-    max-height: 26px !important;
-    background: rgba(12, 16, 32, 0.75) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 6px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+
+  .battle-immersive-shell .combatant-sprite-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: bottom center !important;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.65)) !important;
+  }
+
+  /* 3. Barra Superior Compacta Integrada */
+  .battle-immersive-shell .battle-top-bar {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 25 !important;
+    height: 32px !important;
+    min-height: 32px !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: space-between !important;
+    padding: max(2px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 2px max(12px, env(safe-area-inset-left)) !important;
+    background: linear-gradient(180deg, rgba(5, 8, 16, 0.82) 0%, rgba(5, 8, 16, 0.35) 75%, transparent 100%) !important;
+    border-radius: 0 !important;
+    border: none !important;
+    backdrop-filter: blur(4px) !important;
   }
+
+  .battle-immersive-shell .battle-top-bar .battle-exit-btn {
+    height: 25px !important;
+    min-width: 58px !important;
+    padding: 0 10px !important;
+    font-size: 0.72rem !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    color: #f8fafc !important;
+  }
+
+  .battle-immersive-shell .battle-top-bar .battle-exit-btn span {
+    display: inline !important;
+  }
+
+  .battle-immersive-shell .battle-turn-tag {
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    color: #fde047 !important;
+    background: transparent !important;
+    border: none !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .battle-immersive-shell .battle-top-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .battle-immersive-shell .battle-audio-toggle-btn,
+  .battle-immersive-shell .battle-fullscreen-toggle-btn {
+    height: 25px !important;
+    min-width: 28px !important;
+    padding: 0 6px !important;
+    font-size: 0.78rem !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+  }
+
+  /* 4. HUD do Pokémon Adversário (Flutuante no Canto Superior Esquerdo) */
+  .battle-immersive-shell .combatant-hud.enemy-hud,
+  .battle-arena-layout.campaign-battle-layout .combatant-hud.enemy-hud {
+    position: absolute !important;
+    top: max(36px, calc(env(safe-area-inset-top) + 32px)) !important;
+    left: max(12px, env(safe-area-inset-left)) !important;
+    width: clamp(200px, 26vw, 265px) !important;
+    background: rgba(10, 15, 28, 0.76) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 12px !important;
+    padding: 6px 12px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55) !important;
+    z-index: 15 !important;
+    gap: 3px !important;
+  }
+
+  .battle-immersive-shell .enemy-hud .hud-pokemon-name {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    color: #f8fafc !important;
+  }
+
+  .battle-immersive-shell .enemy-hud .hud-type-badge {
+    font-size: 0.62rem !important;
+    font-weight: 800 !important;
+    padding: 1.5px 7px !important;
+    border-radius: 999px !important;
+    text-transform: uppercase !important;
+  }
+
+  .battle-immersive-shell .enemy-hud .hp-track {
+    height: 7px !important;
+    border-radius: 999px !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+  }
+
+  .battle-immersive-shell .enemy-hud .hp-values-row {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #cbd5e1 !important;
+  }
+
+  /* 5. Caixa de Narrativa / Pergunta (Pílula Flutuante no Canto Superior Direito) */
+  .battle-immersive-shell .battle-narrative-box,
+  .battle-arena-layout.campaign-battle-layout .battle-narrative-box {
+    position: absolute !important;
+    top: max(36px, calc(env(safe-area-inset-top) + 32px)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+    max-width: clamp(230px, 32vw, 360px) !important;
+    min-height: 28px !important;
+    max-height: none !important;
+    background: rgba(10, 15, 28, 0.76) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 12px !important;
+    padding: 5px 14px !important;
+    font-size: 0.80rem !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    text-align: center !important;
+    z-index: 15 !important;
+  }
+
+  /* 6. Painel de Ações do Jogador */
+  .battle-immersive-shell .battle-action-panel,
   .battle-arena-layout.campaign-battle-layout .battle-action-panel {
-    grid-area: actions !important;
-    height: 100% !important;
+    position: static !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    display: contents !important;
+  }
+
+  /* Botões Auxiliares: TROCAR POKÉMON & CAMPO (Empilhados à Direita) */
+  .battle-immersive-shell .action-controls-row,
+  .battle-arena-layout.campaign-battle-layout .action-controls-row {
+    position: absolute !important;
+    top: max(72px, calc(env(safe-area-inset-top) + 68px)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
-    padding: 3px !important;
-    gap: 4px !important;
+    align-items: flex-end !important;
+    gap: 5px !important;
+    width: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    z-index: 15 !important;
   }
-  .battle-arena-layout.campaign-battle-layout .action-controls-row {
-    min-height: 26px !important;
-    max-height: 28px !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 4px !important;
-    width: 100% !important;
-  }
+
+  .battle-immersive-shell .action-controls-row p,
   .battle-arena-layout.campaign-battle-layout .action-controls-row p {
     display: none !important;
   }
-  .battle-arena-layout.campaign-battle-layout .action-controls-row label {
+
+  .battle-immersive-shell .btn-switch-action,
+  .battle-arena-layout.campaign-battle-layout .btn-switch-action {
+    background: rgba(10, 15, 28, 0.82) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 9px !important;
+    color: #f8fafc !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    padding: 5px 12px !important;
+    min-height: 28px !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5) !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 2px !important;
-    font-size: 0.65rem !important;
-    color: #cbd5e1 !important;
-    white-space: nowrap !important;
-    margin: 0 !important;
+    gap: 6px !important;
   }
+
+  .battle-immersive-shell .btn-field-info-toggle,
+  .battle-arena-layout.campaign-battle-layout .btn-field-info-toggle {
+    background: rgba(10, 15, 28, 0.82) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+    border-radius: 9px !important;
+    color: #bae6fd !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    padding: 5px 12px !important;
+    min-height: 28px !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .battle-immersive-shell .action-controls-row label,
+  .battle-arena-layout.campaign-battle-layout .action-controls-row label {
+    position: fixed !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: calc(max(6px, env(safe-area-inset-bottom)) + clamp(44px, 12vh, 52px) + 6px) !important;
+    z-index: 20 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: clamp(0.64rem, 1vw, 0.72rem) !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    background: rgba(10, 15, 28, 0.88) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 9px !important;
+    padding: 3px 8px !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5) !important;
+    white-space: nowrap !important;
+    pointer-events: auto !important;
+  }
+
+  .battle-immersive-shell .action-controls-row select#p8Activation,
   .battle-arena-layout.campaign-battle-layout .action-controls-row select#p8Activation {
     min-height: 24px !important;
     height: 24px !important;
-    padding: 1px 4px !important;
-    font-size: 0.65rem !important;
+    padding: 1px 6px !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
     border-radius: 6px !important;
-    background: rgba(15, 23, 42, 0.9) !important;
-    border: 1px solid rgba(234, 179, 8, 0.45) !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1px solid rgba(234, 179, 8, 0.5) !important;
     color: #fef08a !important;
     cursor: pointer !important;
-    max-width: 125px !important;
+    max-width: clamp(145px, 22vw, 200px) !important;
+    outline: none !important;
   }
-  .battle-arena-layout.campaign-battle-layout .btn-switch-action,
-  .battle-arena-layout.campaign-battle-layout .btn-field-info-toggle {
-    min-height: 24px !important;
-    height: 24px !important;
-    font-size: 0.65rem !important;
-    padding: 2px 6px !important;
-    border-radius: 6px !important;
-    white-space: nowrap !important;
+
+  /* 7. Barra Inferior Translucida (Dock) */
+  .battle-immersive-shell .battle-arena-layout::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: clamp(66px, 17vh, 88px) !important;
+    background: linear-gradient(180deg, transparent 0%, rgba(5, 8, 16, 0.72) 25%, rgba(5, 8, 16, 0.95) 100%) !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
   }
+
+  /* 8. HUD do Pokémon do Jogador (Canto Inferior Esquerdo) */
+  .battle-immersive-shell .combatant-hud.player-hud,
+  .battle-arena-layout.campaign-battle-layout .combatant-hud.player-hud {
+    position: absolute !important;
+    bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
+    width: clamp(200px, 26vw, 265px) !important;
+    background: rgba(10, 15, 28, 0.80) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 12px !important;
+    padding: 6px 12px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6) !important;
+    z-index: 15 !important;
+    gap: 3px !important;
+  }
+
+  .battle-immersive-shell .hud-player-team-balls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .battle-immersive-shell .hud-player-team-balls .team-dot {
+    width: 13px !important;
+    height: 13px !important;
+    border-radius: 50% !important;
+    border: 1.5px solid #0f172a !important;
+    background: linear-gradient(180deg, #ef4444 0%, #ef4444 48%, #0f172a 48%, #0f172a 56%, #ffffff 56%, #ffffff 100%) !important;
+    position: relative !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .battle-immersive-shell .hud-player-team-balls .team-dot::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 3.5px !important;
+    height: 3.5px !important;
+    background: #ffffff !important;
+    border: 1px solid #0f172a !important;
+    border-radius: 50% !important;
+  }
+
+  .battle-immersive-shell .hud-player-team-balls .team-dot.fainted {
+    background: linear-gradient(180deg, #64748b 0%, #64748b 48%, #0f172a 48%, #0f172a 56%, #94a3b8 56%, #94a3b8 100%) !important;
+    opacity: 0.45 !important;
+  }
+
+  .battle-immersive-shell .player-hud .hud-pokemon-name {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    color: #f8fafc !important;
+  }
+
+  .battle-immersive-shell .player-hud .hud-type-badge {
+    font-size: 0.62rem !important;
+    font-weight: 800 !important;
+    padding: 1.5px 7px !important;
+    border-radius: 999px !important;
+    text-transform: uppercase !important;
+  }
+
+  .battle-immersive-shell .player-hud .hp-track {
+    height: 7px !important;
+    border-radius: 999px !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+  }
+
+  .battle-immersive-shell .player-hud .hp-values-row {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #cbd5e1 !important;
+  }
+
+  /* 9. Fileira Horizontal Única com os 4 Golpes (Cápsulas Estilizadas de Imagem 2) */
+  .battle-immersive-shell .moves-action-grid,
   .battle-arena-layout.campaign-battle-layout .moves-action-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 4px !important;
-    flex: 1 !important;
-    align-content: stretch !important;
+    position: absolute !important;
+    bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    left: clamp(225px, 28vw, 290px) !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: clamp(4px, 0.8vw, 8px) !important;
+    z-index: 15 !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
+
+  .battle-immersive-shell .move-action-btn,
   .battle-arena-layout.campaign-battle-layout .move-action-btn {
-    min-height: 38px !important;
-    padding: 3px 6px !important;
-    border-radius: 8px !important;
+    min-height: clamp(44px, 12vh, 52px) !important;
+    height: clamp(44px, 12vh, 52px) !important;
+    border-radius: 999px !important;
+    padding: 4px 10px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
+    align-items: center !important;
     gap: 2px !important;
+    background: var(--move-accent-color, #38bdf8) !important;
+    color: #0f172a !important;
+    border: 2px solid rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    cursor: pointer !important;
+    transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease !important;
+    overflow: hidden !important;
   }
+
+  .battle-immersive-shell .move-action-btn:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    filter: brightness(1.08) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55) !important;
+  }
+
+  .battle-immersive-shell .move-action-btn:active:not(:disabled) {
+    transform: translateY(1px) !important;
+  }
+
+  .battle-immersive-shell .move-action-btn:disabled {
+    opacity: 0.45 !important;
+    filter: grayscale(80%) !important;
+    cursor: not-allowed !important;
+  }
+
+  .battle-immersive-shell .move-btn-top-row,
   .battle-arena-layout.campaign-battle-layout .move-btn-top-row {
     display: flex !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
     align-items: center !important;
-    gap: 4px !important;
     width: 100% !important;
   }
+
+  .battle-immersive-shell .move-btn-name,
   .battle-arena-layout.campaign-battle-layout .move-btn-name {
-    font-size: 0.74rem !important;
-    font-weight: 800 !important;
+    font-size: clamp(0.72rem, 1.2vw, 0.86rem) !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    max-width: 82% !important;
-    line-height: 1.2 !important;
+    max-width: 96% !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
   }
-  .battle-arena-layout.campaign-battle-layout .move-btn-type {
-    font-size: 0.58rem !important;
-    padding: 1px 4px !important;
-    border-radius: 4px !important;
-    flex-shrink: 0 !important;
+
+  .battle-immersive-shell .move-btn-type-desktop {
+    display: none !important;
   }
+
+  .battle-immersive-shell .move-btn-bottom-row,
   .battle-arena-layout.campaign-battle-layout .move-btn-bottom-row {
-    font-size: 0.62rem !important;
-    color: #94a3b8 !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     width: 100% !important;
-    line-height: 1 !important;
+    gap: 4px !important;
+    padding: 0 2px !important;
   }
-  .battle-arena-layout.campaign-battle-layout .move-btn-category {
+
+  .battle-immersive-shell .move-btn-type-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: clamp(0.56rem, 0.9vw, 0.64rem) !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    color: #0f172a !important;
+    border: 1.5px solid rgba(15, 23, 42, 0.45) !important;
+    border-radius: 999px !important;
+    padding: 1px 6px !important;
+    background: rgba(255, 255, 255, 0.28) !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  .battle-immersive-shell .move-btn-category {
     display: none !important;
   }
 
-  @media (max-height: 360px) {
-    .battle-immersive-shell .battle-arena-layout.campaign-battle-layout {
-      grid-template-rows: 24px auto 1fr auto !important;
-      gap: 2px 6px !important;
-      padding: 2px 4px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .combatant-hud {
-      padding: 2px 4px !important;
-      min-height: 24px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .combatant-hud .combatant-name {
-      font-size: 0.68rem !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .combatant-hud .hp-bar-shell {
-      height: 4px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .combatant-slot {
-      width: clamp(50px, 9vw, 75px) !important;
-      height: clamp(50px, 9vw, 75px) !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .combatant-slot.player-slot,
-    .battle-arena-layout.campaign-battle-layout .combatant-slot.enemy-slot {
-      margin: 0 !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .battle-narrative-box {
-      min-height: 18px !important;
-      font-size: 0.66rem !important;
-      padding: 2px 4px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .battle-action-panel {
-      padding: 2px !important;
-      gap: 2px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .moves-action-grid {
-      gap: 2px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .move-action-btn {
-      min-height: 32px !important;
-      padding: 2px 4px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .move-btn-name {
-      font-size: 0.68rem !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .move-btn-meta {
-      font-size: 0.58rem !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .action-controls-row {
-      min-height: 22px !important;
-      gap: 2px !important;
-    }
-    .battle-arena-layout.campaign-battle-layout .action-controls-row button {
-      min-height: 22px !important;
-      font-size: 0.65rem !important;
-      padding: 2px 4px !important;
-    }
-  }
-
-  /* General fallback landscape */
-  .battle-immersive-shell .battle-arena-layout {
-    grid-template-columns: minmax(0, 1.25fr) minmax(270px, 1fr);
-    grid-template-rows: 32px auto auto minmax(28px, auto) 1fr;
-    grid-template-areas:
-      "top top"
-      "stage enemy"
-      "stage player"
-      "stage narrative"
-      "stage actions";
-    gap: 4px 8px;
-    height: 100%;
-    overflow: hidden;
-  }
-  .battle-immersive-shell .battle-camera-wrapper {
-    height: 100%;
-    min-height: 0;
-  }
-  .battle-immersive-shell .combatant-slot {
-    width: clamp(75px, 14vw, 110px);
-    height: clamp(75px, 14vw, 110px);
-  }
-  .battle-immersive-shell .move-action-btn {
-    min-height: 40px;
-    padding: 3px 6px;
-  }
-  .battle-immersive-shell .move-btn-category {
-    display: none;
+  .battle-immersive-shell .move-btn-pp {
+    font-size: clamp(0.62rem, 1vw, 0.74rem) !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    margin-left: auto !important;
   }
 }
 /* PBA-015H — Shadow HUD uses existing SHADOW_AURA state only (Compact HUD format). */

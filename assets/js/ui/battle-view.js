@@ -392,7 +392,10 @@
       const name = String(combatant.name || `Pokémon #${id}`).trim().toLowerCase();
 
       // URLs padrão canônicas da PokéAPI baseadas no ID
-      const cdnAnimated = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`;
+      const cdnAnimated = (side === 'player')
+        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${id}.gif`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`;
+      const cdnAnimatedFront = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`;
       const cdnArtwork = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
       const cdnStatic = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
       const cdnCry = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`;
@@ -435,6 +438,7 @@
         staticSprite: staticCandidate,
         photo: artworkCandidate,
         animatedPhoto: animatedCandidate,
+        animatedPhotoFront: cdnAnimatedFront,
         cry: cryCandidate
       };
     }
@@ -673,9 +677,10 @@
           >
             <div class="move-btn-top-row">
               <span class="move-btn-name">${shown.name}</span>
-              <span class="move-btn-type" style="background: ${typeColor};">${displayType}</span>
+              <span class="move-btn-type move-btn-type-desktop" style="background: ${typeColor};">${displayType}</span>
             </div>
             <div class="move-btn-bottom-row">
+              <span class="move-btn-type move-btn-type-badge" style="background: ${typeColor};">${displayType}</span>
               <span class="move-btn-category">
                 <i class="${shown.damageClass === 'special' ? 'fa-solid fa-burst' : 'fa-solid fa-fist-raised'}"></i>
                 ${(statusBadge(shown.statusEffect) || SUPPORT_MOVE_LABELS[shown.id]) ? `STATUS · ${(statusBadge(shown.statusEffect) || SUPPORT_MOVE_LABELS[shown.id]).short}` : powerLabel(shown) || `${shown.damageClass} (Pwr ${shown.power})`}
@@ -763,10 +768,11 @@
                     class="combatant-sprite-img ${playerActive.currentHp === 0 ? 'fainted' : ''}"
                     src="${playerVisual.spriteUrl}"
                     data-primary-src="${playerVisual.spriteUrl}"
+                    data-front-src="${playerVisual.animatedPhotoFront || ''}"
                     data-fallback-src="${playerVisual.artworkUrl}"
                     data-static-src="${playerVisual.staticSprite}"
                     alt="${playerVisual.name}"
-                    onerror="if(this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc){ this.src = this.dataset.fallbackSrc; } else if(this.dataset.staticSrc && this.src !== this.dataset.staticSrc){ this.src = this.dataset.staticSrc; } else { this.onerror = null; }"
+                    onerror="if(this.dataset.frontSrc && this.src !== this.dataset.frontSrc){ this.src = this.dataset.frontSrc; } else if(this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc){ this.src = this.dataset.fallbackSrc; } else if(this.dataset.staticSrc && this.src !== this.dataset.staticSrc){ this.src = this.dataset.staticSrc; } else { this.onerror = null; }"
                   >
                 </div>
 
@@ -792,6 +798,7 @@
 
             <!-- HUD do Pokémon do Jogador -->
             <div class="combatant-hud player-hud">
+              <div class="hud-player-team-balls" aria-hidden="true">${renderDots(player.team, player.activeIndex)}</div>
               <div class="hud-info-row">
                 <span id="playerPokemonName" class="hud-pokemon-name">${playerActive.name}</span>
                 <span id="playerStatusBadge" class="battle-status-badge" data-status="${playerActive.statusCondition || ''}" ${statusBadge(playerActive.statusCondition) ? '' : 'hidden'} aria-label="${statusBadge(playerActive.statusCondition)?.aria || ''}">${statusBadge(playerActive.statusCondition)?.short || ''}</span>
