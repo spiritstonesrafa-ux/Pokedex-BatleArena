@@ -70,7 +70,9 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H1-D | Beast Boost, Cotton Down, Download, Moody, Speed Boost, Thermal Exchange, Wind Power, Wind Rider | Ultra Beasts, Gossifleur, Porygon, Moody/Speed Boost em fim de turno, Baxcalibur imune a Burn, e interação com golpes de vento e Tailwind. |
 | H2-A | Marvel Scale, Hustle, Keen Eye, Steadfast (H1) | Milotic, Togekiss, Pelipper/Skarmory e Lucario aparecem na campanha e nas instalações; revisar defesa, precisão, ataques físicos/especiais e flinch. Entregar em commits separados por família. |
 | H3-A | Rough Skin, Iron Barbs, Effect Spore, Poison Touch, Cute Charm, Gooey, Tangling Hair, Aftermath, Innards Out, Perish Body, Shed Skin, Hydration, Leaf Guard, Early Bird, Synchronize, Liquid Ooze, Poison Heal, Bad Dreams, Stench, Shield Dust, Big Pecks | **Implementado (FULL)**. 21 habilidades canônicas Gen IX de reações de contato, dano residual no nocaute, contagem de Perish Song, cura/imunidade de status e clima, inversão de drenagem e proteções secundárias. 170 testes unitários dedicados. |
-| H4-A | Dark Aura, Fairy Aura, Aura Break, Prism Armor e Neuroforce (H2) | **Implementado (FULL)**. Efeitos canônicos para Yveltal (#717), Xerneas (#716), Zygarde (#718), Necrozma (#800) e Ultra Necrozma (#10157). |
+| H4-A | Primordial Sea, Desolate Land, Delta Stream, Dry Skin, Ice Body, Flower Gift, Sand Spit, Orichalcum Pulse, Transistor, Dragon's Maw (+ Dark Aura, Fairy Aura, Aura Break, Prism Armor, Neuroforce) | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de climas primordiais, multiplicadores elementais e absorções + auditoria das 5 habilidades preexistentes. 93 testes dedicados. |
+| H4-B | Seed Sower, Grass Pelt, Surge Surfer, Hadron Engine, Protosynthesis, Quark Drive, Vessel of Ruin, Sword of Ruin, Tablets of Ruin, Beads of Ruin | Planejado (10 habilidades). Efeitos de terreno, ativações de Paradoxos e debuffs do quarteto dos Tesouros da Ruína. |
+| H4-C | Supersweet Syrup | Planejado (1 habilidade). Redução de evasão de oponentes na entrada (-1 estágio). Encerramento oficial da Família H4. |
 | H5-A | Prankster, Infiltrator, Magic Bounce | Exigem flags de golpes, prioridade e reflexão por evento; alto impacto em estratégia, inclusive para a IA. |
 
 A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes compartilham a mesma dificuldade. Cada habilidade pode ser liberada individualmente após seus testes. As fases seguintes são famílias de trabalho, não um único commit por fase.
@@ -629,11 +631,40 @@ A Família H3 é estruturada em exatamente dois lotes de 21 habilidades como exc
 
 ### H4 — Clima, terreno e auras
 
-**Inventário:** 24 habilidades pendentes; 57 registros com habilidade padrão afetados.
+**Inventário:** 11 habilidades pendentes (15 declaradas com suporte no catálogo, sendo 5 preexistentes auditadas e 10 implementadas em H4-A); política estrita de lotes: H4-A (10), H4-B (10) e H4-C (1).
 
 **Dependências:** H0; clima/terreno; H2 para estatísticas e efetividade.
 
-Climas primordiais exigem prioridade e permanência próprias; não tratar como Drought/Drizzle comuns com outro nome. Auras consideram os portadores ativos e exceções. Paradoxos exigem definir Booster Energy, atributo elegível e término do efeito antes de liberar a habilidade. Não afirmar suporte ao item se ele ainda não existir.
+Climas primordiais possuem prioridade e permanência próprias (anulam climas convencionais de 5/8 turnos e golpes elementais correspondentes); Delta Stream neutraliza fraquezas elementais de tipos Flying; auras afetam todo o campo e são invertidas por Aura Break; multiplicadores de Transistor e Dragon's Maw atuam diretamente nos cálculos ofensivos.
+
+#### H4-A — Climas Primordiais, Multiplicadores e Reações Climáticas (CONCLUÍDO)
+Lote canônico homologado e coberto por 93 testes determinísticos em `tests/battle/abilities-h4a*.test.js`:
+1. **`primordial-sea`** (Gen VI): Ativa chuva primordial permanente; anula ataques ofensivos Fire; amplifica Water em 1.5x; impede climas comuns; desativa no desmaio/saída.
+2. **`desolate-land`** (Gen VI): Ativa sol primordial permanente; anula ataques ofensivos Water; amplifica Fire em 1.5x; dispara Solar Beam instantaneamente; desativa no desmaio/saída.
+3. **`delta-stream`** (Gen VI): Ativa correntes misteriosas; neutraliza fraquezas de Pokémon Flying (Ice, Electric, Rock tornam-se 1x); desativa no desmaio/saída.
+4. **`dry-skin`** (Gen IV): Absorve ataques Water (+25% HP máx); sofre 1.25x de Fire; cura 1/8 HP em chuva e perde 1/8 em sol; quebrável por Mold Breaker.
+5. **`ice-body`** (Gen IV): Recupera 1/16 HP no fim de turno sob Snow/Hail; imune a dano de Hail.
+6. **`flower-gift`** (Gen IV): Cherrim transforma-se em Sunshine Form (#42101) sob sol; concede +50% Atk e SpD para si e aliados da equipe.
+7. **`sand-spit`** (Gen VIII): Ativa Sandstorm (5 turnos, 8 com Smooth Rock) ao sofrer dano direto; ativa mesmo em caso de desmaio; não sobrepõe clima primordial.
+8. **`orichalcum-pulse`** (Gen IX): Ativa Sunny Day na entrada; sob sol ou sol primordial, concede ~33.3% de bônus ao Ataque (5461/4096) sem alterar estágios.
+9. **`transistor`** (Gen VIII): Amplifica atributos ofensivos e dano de golpes Electric em 1.3x (5325/4096 em Gen IX).
+10. **`dragons-maw`** (Gen VIII): Amplifica atributos ofensivos e dano de golpes Dragon em 1.5x.
+*Auditadas e validadas:* `dark-aura`, `fairy-aura`, `aura-break`, `prism-armor`, `neuroforce`.
+
+#### H4-B — Terrenos, Ruínas e Paradoxos (PLANEJADO — 10 Habilidades)
+1. `seed-sower`
+2. `grass-pelt`
+3. `surge-surfer`
+4. `hadron-engine`
+5. `protosynthesis`
+6. `quark-drive`
+7. `vessel-of-ruin`
+8. `sword-of-ruin`
+9. `tablets-of-ruin`
+10. `beads-of-ruin`
+
+#### H4-C — Fechamento da Família H4 (PLANEJADO — 1 Habilidade)
+1. `supersweet-syrup`
 
 **Aceite:** Entrada/saída/nocaute do portador, segundo ativo, conflito de climas, Air Lock/Cloud Nine, supressão, golpes proibidos por clima, terreno e fórmulas de cada atributo afetado.
 

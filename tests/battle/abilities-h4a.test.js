@@ -243,19 +243,72 @@ test('Aura Break: supressão de Aura Break restaura a amplificação das auras p
   assert.equal(d, Math.floor(dBase * (4 / 3)), 'Com Aura Break suprimida, Dark Aura volta a dar 4/3 de dano');
 });
 
-test('Aura Break: Mold Breaker no atacante NÃO neutraliza o efeito de Aura Break sobre as auras', () => {
-  const sBase = battle({}, {}, [282, 156], [33, 156]);
-  const rBase = turn(sBase, 282);
-  const dBase = rBase.events.find(e => e.type === 'DAMAGE_APPLIED').damage;
+test('Aura Break: atacante com Mold Breaker ignora Aura Break do defensor diretamente atacado (Showdown breakable: 1)', () => {
+  // Doubles setup: Player has mon1 (Mold Breaker) + mon2 (Dark Aura).
+  // Enemy has mon3 (Zygarde with Aura Break) + mon4 (normal mon).
+  const p1 = mon(1, [282, 156], { speed: 200, ability: 'mold-breaker' });
+  const p2 = mon(2, [33, 156], { speed: 190, ability: 'dark-aura' });
+  const e1 = mon(3, [33, 156], { speed: 50, ability: 'aura-break' });
+  const e2 = mon(4, [33, 156], { speed: 40 });
 
-  // Defender has Dark Aura, player has Mold Breaker; enemy ally or field has Aura Break
-  const s = battle({ ability: 'mold-breaker' }, { ability: 'aura-break' }, [282, 156], [33, 156]);
-  // Add a third mon or simulate field aura
-  const s2 = battle({ ability: 'dark-aura' }, { ability: 'aura-break' }, [282, 156], [33, 156]);
-  const r = turn(s2, 282);
-  const d = r.events.find(e => e.type === 'DAMAGE_APPLIED').damage;
+  const s = {
+    battleFormat: 'DOUBLES',
+    doublesTeams: {
+      player: { activeIndices: [0, 1], team: [p1, p2] },
+      enemy: { activeIndices: [0, 1], team: [e1, e2] }
+    }
+  };
 
-  assert.equal(d, Math.floor(dBase * 0.75), 'Aura Break inverte a aura para 0.75x mesmo contra Mold Breaker');
+  // Mold Breaker attacks Zygarde directly: Zygarde has breakable: 1, so Mold Breaker ignores Aura Break!
+  // Dark Aura on the field is NOT inverted -> multiplier is 4/3 (~1.33x)
+  const mult = C.P7.damageMultiplier(s, p1, e1, move(282), 1);
+  assert.equal(mult, 4 / 3, 'Mold Breaker atacando Zygarde diretamente ignora Aura Break, mantendo Dark Aura em 4/3');
+});
+
+test('Aura Break: Zygarde segurando Ability Shield protege Aura Break contra Mold Breaker', () => {
+  const p1 = mon(1, [282, 156], { speed: 200, ability: 'mold-breaker' });
+  const p2 = mon(2, [33, 156], { speed: 190, ability: 'dark-aura' });
+  const e1 = mon(3, [33, 156], { speed: 50, ability: 'aura-break', item: 'ability-shield' });
+  const e2 = mon(4, [33, 156], { speed: 40 });
+
+  const s = {
+    battleFormat: 'DOUBLES',
+    doublesTeams: {
+      player: { activeIndices: [0, 1], team: [p1, p2] },
+      enemy: { activeIndices: [0, 1], team: [e1, e2] }
+    }
+  };
+
+  const mult = C.P7.damageMultiplier(s, p1, e1, move(282), 1);
+  assert.equal(mult, 0.75, 'Ability Shield em Zygarde impede que Mold Breaker ignore Aura Break, mantendo inversão em 0.75x');
+});
+
+test('Aura Break: em Doubles, Mold Breaker atacando o parceiro de Zygarde NÃO ignora Aura Break no campo', () => {
+  const p1 = mon(1, [282, 156], { speed: 200, ability: 'mold-breaker' });
+  const p2 = mon(2, [33, 156], { speed: 190, ability: 'dark-aura' });
+  const e1 = mon(3, [33, 156], { speed: 50, ability: 'aura-break' });
+  const e2 = mon(4, [33, 156], { speed: 40 }); // Target is partner e2
+
+  const s = {
+    battleFormat: 'DOUBLES',
+    doublesTeams: {
+      player: { activeIndices: [0, 1], team: [p1, p2] },
+      enemy: { activeIndices: [0, 1], team: [e1, e2] }
+    }
+  };
+
+  // Mold Breaker only ignores the defender e2's ability, NOT third-party field abilities like Zygarde's Aura Break!
+  const mult = C.P7.damageMultiplier(s, p1, e2, move(282), 1);
+  assert.equal(mult, 0.75, 'Mold Breaker contra o parceiro não anula o Aura Break de Zygarde no campo');
+});
+
+test('Aura Break: portador de Aura Break atacando outro Pokémon inverte auras do campo', () => {
+  const zygarde = mon(718, [282, 156], { speed: 200, ability: 'aura-break' });
+  const yveltal = mon(717, [33, 156], { speed: 100, ability: 'dark-aura' });
+  const s = E.createBattle(zygarde, yveltal);
+
+  const mult = C.P7.damageMultiplier(s, zygarde, yveltal, move(282), 1);
+  assert.equal(mult, 0.75, 'Zygarde atacando com Dark move inverte Dark Aura para 0.75x');
 });
 
 /* ==========================================================================
@@ -604,7 +657,7 @@ test('AbilityRegistry: todas as 5 habilidades H4-A reportam status FULL e metada
   const expected = [
     { id: 'dark-aura', phase: 'H4', gen: 6, breakable: false },
     { id: 'fairy-aura', phase: 'H4', gen: 6, breakable: false },
-    { id: 'aura-break', phase: 'H4', gen: 6, breakable: false },
+    { id: 'aura-break', phase: 'H4', gen: 6, breakable: true },
     { id: 'prism-armor', phase: 'H4', gen: 7, breakable: false },
     { id: 'neuroforce', phase: 'H4', gen: 7, breakable: false }
   ];

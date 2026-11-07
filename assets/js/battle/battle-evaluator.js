@@ -308,6 +308,7 @@
       const stabMultiplier = !isFixedDamage ? constants.P8.stab(effectiveAttacker, moveType, constants) : 1;
 
       // 3. Efetividade de Tipos (Type Effectiveness)
+      defender.envWeather ||= context.battleState ? constants.P7.fieldWeather(context.battleState) : (defender.envWeather || attacker.envWeather);
       const defenderTypes = Array.isArray(defender.types) ? defender.types : [];
       let typeMultiplier;
       let typeClassification;
@@ -450,10 +451,14 @@
       if (context.battleState && !isFixedDamage) { const role = context.attackerSide === 'enemy' ? 'player' : 'enemy'; const f = constants.P6.barrierMultiplier(context.battleState, role, { ...move, damageClass }, Boolean(multiHit?.critical), attacker); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
       if (!isFixedDamage) { const f = constants.P7.damageMultiplier(context.battleState, attacker, defender, { ...move, type: moveType }, typeMultiplier); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
       if (!isFixedDamage) { const f = constants.P8.finalMultiplier(attacker, defender, move); minDamage = Math.floor(minDamage * f); maxDamage = Math.floor(maxDamage * f); averageDamage *= f; damageIfHit = averageDamage; }
-      const ab = constants.P7.defenderAbility(attacker, defender, move), absorbs = { 'water-absorb': 'water', 'volt-absorb': 'electric', 'flash-fire': 'fire', 'sap-sipper': 'grass', 'lightning-rod': 'electric', 'storm-drain': 'water', 'earth-eater': 'ground', 'well-baked-body': 'fire' };
+      const ab = constants.P7.defenderAbility(attacker, defender, move), absorbs = { 'water-absorb': 'water', 'volt-absorb': 'electric', 'flash-fire': 'fire', 'sap-sipper': 'grass', 'lightning-rod': 'electric', 'storm-drain': 'water', 'earth-eater': 'ground', 'well-baked-body': 'fire', 'dry-skin': 'water' };
       const isSoundImmune = ab === 'soundproof' && constants.MoveFlags?.isSoundMove?.(move);
       const isBulletImmune = ab === 'bulletproof' && constants.MoveFlags?.isBulletMove?.(move);
       const isWonderGuardImmune = ab === 'wonder-guard' && move.damageClass !== 'status' && move.id !== 165 && (typeMultiplier <= 1.0);
+      const effectiveWeather = context.battleState ? constants.P7.fieldWeather(context.battleState) : (attacker.envWeather || defender.envWeather);
+      const isPrimordialWaterCancel = effectiveWeather === 'desolate-land' && moveType === 'water' && move.damageClass !== 'status';
+      const isPrimordialFireCancel = effectiveWeather === 'primordial-sea' && moveType === 'fire' && move.damageClass !== 'status';
+      if (isPrimordialWaterCancel || isPrimordialFireCancel) { minDamage = maxDamage = averageDamage = damageIfHit = 0; }
       if (absorbs[ab] === moveType || ab === 'levitate' && moveType === 'ground' || ab === 'sturdy' && constants.P5.ohko(move) || isSoundImmune || isBulletImmune || isWonderGuardImmune || defender.envTerrain === 'psychic' && constants.P7.grounded(defender) && constants.P7.priority(attacker, move, constants) > 0) { minDamage = maxDamage = averageDamage = damageIfHit = 0; }
       if (ab === 'purifying-salt' && moveType === 'ghost') { minDamage = Math.floor(minDamage * 0.5); maxDamage = Math.floor(maxDamage * 0.5); averageDamage *= 0.5; damageIfHit = averageDamage; }
       if (!multiHit && defender.currentHp === defender.maxHp && (ab === 'sturdy' || defender.item === 'focus-sash')) { minDamage = Math.min(minDamage, defender.currentHp - 1); maxDamage = Math.min(maxDamage, defender.currentHp - 1); averageDamage = Math.min(averageDamage, defender.currentHp - 1); damageIfHit = averageDamage; }

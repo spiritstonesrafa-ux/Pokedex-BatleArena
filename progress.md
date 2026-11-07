@@ -2,6 +2,43 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 06/11/2026: Auditoria Corretiva Final e Homologação do Lote H4-A (10 Novas Habilidades Canônicas Gen IX + 5 Preexistentes Auditadas)
+
+- **Lote H4-A Implementado e Homologado (10 Novas Habilidades Canônicas Gen IX):**
+  1. `primordial-sea` (Gen VI): Ativa chuva primordial permanente na entrada. Anula completamente ataques ofensivos do tipo Fire (evaporam via tryHit). Impede a sobreposição por climas comuns (Rain Dance, Sunny Day, Sandstorm, Snowscape falham). Amplifica ataques Water em 1.5x. Swift Swim dobra velocidade. Thunder e Hurricane nunca erram. Desativa quando o portador sai de campo ou desmaia (preservando outros Kyogres ativos).
+  2. `desolate-land` (Gen VI): Ativa sol primordial permanente na entrada. Anula e evapora completamente ataques ofensivos do tipo Water (tryHit). Impede a sobreposição por climas comuns. Amplifica ataques Fire em 1.5x. Solar Beam dispara instantaneamente sem carregar. Chlorophyll dobra velocidade. Desativa quando o portador sai ou desmaia.
+  3. `delta-stream` (Gen VI): Ativa correntes de ar misteriosas permanentes na entrada. Remove a contribuição de fraquezas elementais (Ice, Electric, Rock) contra Pokémon do tipo Flying (reduz de 2x para 1x; Rayquaza Dragon/Flying sofre 2x de Ice em vez de 4x, 0.5x de Electric e 1x de Rock). Impede a sobreposição por climas comuns. Desativa quando o portador sai ou desmaia.
+  4. `dry-skin` (Gen IV): Imunidade a ataques Water, recuperando 25% do HP máximo (tryHit). Sofre 1.25x (+25%) de dano de ataques do tipo Fire. Recupera 1/8 do HP máximo no final do turno sob Rain/Primordial Sea e sofre 1/8 de dano sob Sun/Desolate Land. Quebrável por Mold Breaker.
+  5. `ice-body` (Gen IV): Recupera 1/16 do HP máximo no final do turno sob Snow ou Hail. Concede imunidade total a dano residual de granizo. Não cura sob clima limpo, chuva, sol ou areia.
+  6. `flower-gift` (Gen IV): Sob sol forte ou sol primordial, Cherrim transforma-se na Sunshine Form (#42101) e concede bônus de 1.5x (+50%) ao Ataque e Defesa Especial para si e para os aliados da equipe. Reverte à forma Overcast (#421) quando o sol cessa ou sob supressão.
+  7. `sand-spit` (Gen VIII): Ativa uma tempestade de areia (Sandstorm) de 5 turnos (8 com Smooth Rock) ao sofrer dano direto de qualquer golpe físico ou especial. Ativa mesmo se desmaiar com o golpe. Não sobrepõe climas primordiais.
+  8. `orichalcum-pulse` (Gen IX): Ativa Sunny Day na entrada (5 turnos, 8 com Heat Rock). Sob sol forte ou sol primordial, concede bônus de ~33.3% ao Ataque (multiplicador 5461/4096) sem alterar estágios de atributo.
+  9. `transistor` (Gen VIII): Amplifica atributos ofensivos em 1.3x (multiplicador 5325/4096 em Gen IX aplicado uma única vez em stat() para movimentos Electric físicos e especiais, sem dupla aplicação em dano final ou BattleEvaluator).
+  10. `dragons-maw` (Gen VIII): Amplifica atributos ofensivos em 1.5x (aplicado uma única vez em stat() para movimentos Dragon físicos e especiais, sem dupla aplicação em dano final ou BattleEvaluator).
+
+- **5 Habilidades Preexistentes Auditadas e Validadas:**
+  1. `dark-aura` (Gen VI): Amplifica movimentos Dark em 4/3 (~1.33x) para todos em campo; invertida por Aura Break; suprimida por Neutralizing Gas.
+  2. `fairy-aura` (Gen VI): Amplifica movimentos Fairy em 4/3 (~1.33x) para todos em campo; invertida por Aura Break; suprimida por Neutralizing Gas.
+  3. `aura-break` (Gen VI): Inverte efeitos das auras para 0.75x; metadados e comportamento canônico alinhados ao Showdown Gen IX (`flags: { breakable: 1 }`, `breakable: true`); Mold Breaker ignora Aura Break ao atacar Zygarde diretamente (auras aplicadas a 4/3); Ability Shield protege Aura Break contra Mold Breaker; em Doubles, ataque ao parceiro de Zygarde preserva Aura Break (0.75x); suprimida por Neutralizing Gas.
+  4. `prism-armor` (Gen VII): Reduz dano super efetivo em 25% (0.75x); não é quebrada por Mold Breaker, Teravolt ou Turboblaze; suprimível por Gastro Acid e Neutralizing Gas.
+  5. `neuroforce` (Gen VII): Aumenta dano super efetivo em 25% (1.25x); suprimida por Neutralizing Gas.
+
+- **Suítes de Testes H4-A (93 Testes — 100% PASS):**
+  - `tests/battle/abilities-h4a.test.js`: 42 testes PASS (Auras, Aura Break canônico com Mold Breaker / Ability Shield / Doubles, Prism Armor inquebrável, Neuroforce, IA e espécies reais Yveltal, Xerneas, Zygarde, Necrozma, Ultra Necrozma).
+  - `tests/battle/abilities-h4a-weathers.test.js`: 30 testes PASS (Primordial Sea, Desolate Land, Delta Stream, Sand Spit, Flower Gift, mudança de forma de Cherrim, persistência com dois portadores em Doubles, cancelamento por Neutralizing Gas e supressão de efeitos por Cloud Nine/Air Lock).
+  - `tests/battle/abilities-h4a-multipliers.test.js`: 21 testes PASS (Dry Skin, Ice Body, Orichalcum Pulse, Transistor, Dragon's Maw, Neutralizing Gas, 7 comparações canônicas de dano numérico e prevenção de dupla aplicação, alinhamento com BattleEvaluator).
+
+- **Validação Global e Inventário:**
+  - H4-A: 93 testes PASS (0 falhas).
+  - H3-B: 178 testes PASS (0 falhas).
+  - H3-A: 181 testes PASS (0 falhas).
+  - H2: 463 testes PASS (0 falhas).
+  - H1: 221 testes PASS (0 falhas).
+  - Testes Globais do Projeto (`npm.cmd test`): 4.577 testes PASS (0 falhas).
+  - Auditoria de Habilidades (`scripts/audit-abilities.js --check`): 248 declaradas com suporte (+10), 66 pendentes associadas (-10), 11 pendências restantes na Família H4 (distribuídas rigorosamente em H4-B = 10 e H4-C = 1).
+  - Auditoria P8 (`scripts/audit-p8.js`): 100% PASS (0 pendências P8 não resolvidas).
+  - Governança Git: Working tree estritamente preservada (sem commits/push não autorizados, harness de Minior intacto e não rastreado, CSS e PBA-020 intactos).
+
 ## Atualização — 06/11/2026: Correção Canônica Final, Homologação e Encerramento do Lote H3-B (21 Habilidades Canônicas Gen IX) — Família H3 Concluída
 
 - **Lote H3-B Homologado com Correções Canônicas Finais Gen IX (Showdown):**
