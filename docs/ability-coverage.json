@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 259,
+    "declaredSupported": 274,
     "assignedAbilities": 313,
-    "assignedPending": 55,
+    "assignedPending": 40,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 138
+    "recordsWithPendingDefault": 125
   },
   "phases": [
     {
@@ -39,8 +39,8 @@
     {
       "id": "H5",
       "name": "Prioridade, controle e fluxo de ações",
-      "assignedPending": 15,
-      "defaultRecordsImpacted": 13
+      "assignedPending": 0,
+      "defaultRecordsImpacted": 0
     },
     {
       "id": "H6",
@@ -685,8 +685,8 @@
     },
     {
       "name": "armor-tail",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -3144,8 +3144,8 @@
     },
     {
       "name": "dazzling",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -3916,8 +3916,8 @@
     },
     {
       "name": "emergency-exit",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -5007,8 +5007,8 @@
     },
     {
       "name": "gale-wings",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -10825,8 +10825,8 @@
     },
     {
       "name": "mycelium-might",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -12058,8 +12058,8 @@
     },
     {
       "name": "parental-bond",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -13786,8 +13786,8 @@
     },
     {
       "name": "queenly-majesty",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -13802,8 +13802,8 @@
     },
     {
       "name": "quick-draw",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -15902,8 +15902,8 @@
     },
     {
       "name": "screen-cleaner",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -17129,8 +17129,8 @@
     },
     {
       "name": "slow-start",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -17977,8 +17977,8 @@
     },
     {
       "name": "stall",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -19189,8 +19189,8 @@
     },
     {
       "name": "suction-cups",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -21588,8 +21588,8 @@
     },
     {
       "name": "triage",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -21604,8 +21604,8 @@
     },
     {
       "name": "truant",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {
@@ -22984,8 +22984,8 @@
     },
     {
       "name": "wimp-out",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H5",
       "pokemon": [
         {

@@ -169,7 +169,8 @@
   function isForcedSwitchMove(move) {
     if (!move) return false;
     const name = String(move.name || '').trim().toLowerCase();
-    return name === 'dragon-tail' || name === 'circle-throw';
+    const id = Number(move.id) || 0;
+    return name === 'dragon-tail' || name === 'circle-throw' || name === 'roar' || name === 'whirlwind' || id === 525 || id === 509 || id === 46 || id === 18;
   }
 
   const STAT_STAGE_KEYS = Object.freeze(['attack', 'defense', 'specialAttack', 'specialDefense', 'speed']);

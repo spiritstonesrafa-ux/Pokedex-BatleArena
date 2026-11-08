@@ -921,7 +921,7 @@
       constants.Completion.crash(state,attackerRole,attacker,action,events.slice(start),constants,events);
       if(!calledMove&&!state.doublesSpread)constants.P7.afterMove(state,attackerRole,events,constants,events.slice(start));
       if(attacker.currentHp<=0&&!events.slice(start).some(e=>e.type===BATTLE_EVENTS.POKEMON_FAINTED&&e.target===attackerRole))resolveFaints(state,events,[attackerRole],'item');
-      if(attacker.pivotAfterHit){const id=attacker.pivotAfterHit;delete attacker.pivotAfterHit;if(attacker.currentHp>0&&!['PLAYER_WIN','ENEMY_WIN'].includes(state.status))constants.P6.requestPivot(state,attackerRole,id,events);}
+      if(attacker.pivotAfterHit){const id=attacker.pivotAfterHit;delete attacker.pivotAfterHit;if(attacker.currentHp>0&&!['PLAYER_WIN','ENEMY_WIN'].includes(state.status)&&!state.pendingPivot)constants.P6.requestPivot(state,attackerRole,id,events);}
       const batch=events.slice(start);
       constants.P8.remember(attacker,batch,attackerRole);
       const lastSpecial=batch.findLast(e=>e.type==='MOVE_USED'&&e.actor===attackerRole&&e.damageClass!=='status')||batch.find(e=>e.type==='MOVE_USED'&&e.actor===attackerRole),specialMove=lastSpecial&&{...constants.KNOWN_CATALOG_MOVES[lastSpecial.moveId],id:lastSpecial.moveId,type:lastSpecial.moveType,damageClass:lastSpecial.damageClass};if(!calledMove&&!state.doublesSpread)constants.P8.finishMove(attacker,specialMove||{},Boolean(specialMove&&!constants.P5.fixed(specialMove)&&!constants.isFractionalDamageMove(specialMove)&&!constants.isConstantDamageMove(specialMove)&&!constants.isLevelDamageMove(specialMove)&&batch.some(e=>e.type===BATTLE_EVENTS.DAMAGE_APPLIED&&e.source===attackerRole&&e.damage>0)));
@@ -1407,6 +1407,31 @@
         moveName: selectedMove.name
       });
 
+      const isTruantLoafing = Boolean(!calledMove && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7?.ability(attacker) === 'truant' && attacker.truantTurn);
+      if (isTruantLoafing) {
+        attacker.lastMoveFailed = true;
+        attacker.stallCount = 0;
+        events.push({
+          type: BATTLE_EVENTS.MOVE_FAILED,
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: attacker.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name,
+          reason: 'TRUANT_LOAFING'
+        });
+        return;
+      }
+      if (attacker.quickDrawTriggered) {
+        events.push({
+          type: 'ABILITY_ACTIVATED',
+          label: 'quick-draw',
+          actor: attackerRole,
+          pokemonName: attacker.name
+        });
+        attacker.quickDrawTriggered = false;
+      }
+
       const immobilized = !calledMove && attacker.statusCondition === 'paralysis' && statusRoll <= 25;
       if(selectedMove.id===264&&attacker.focusLost&&!immobilized){attacker.lastMoveFailed=true;attacker.stallCount=0;events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,pokemonName:attacker.name,moveId:264,moveName:selectedMove.name,reason:'FOCUS_LOST'});return;}
 
@@ -1595,7 +1620,7 @@
       const isReflectable = constants.MoveFlags?.isReflectableMove?.(selectedMove.id) ?? false;
       const isHazardMove = [191, 390, 446, 564].includes(selectedMove.id);
       const defenderHasMagicBounce = Boolean(constants.P7?.ability(defender) === 'magic-bounce' && !defender.abilitySuppressed);
-      const isMoldBreakerIgnored = defenderHasMagicBounce && constants.P7?.ignored(attacker, defender, 'magic-bounce');
+      const isMoldBreakerIgnored = defenderHasMagicBounce && constants.P7?.ignored(attacker, defender, selectedMove);
       const canMagicBounce = isReflectable && !isSelfTarget && selectedMove.target !== 'self' && defenderHasMagicBounce && !isMoldBreakerIgnored && !action.bounced;
 
       if (canMagicBounce) {
@@ -1666,6 +1691,31 @@
           reason: 'IMMUNE_PRANKSTER'
         });
         return;
+      }
+
+      // Priority Blocking (Queenly Majesty, Dazzling, Armor Tail)
+      const movePriority = constants.TurnManager ? constants.TurnManager.resolveActionPriority(attacker, action) : (constants.P7 ? constants.P7.priority(attacker, selectedMove, constants, action) : (constants.getMovePriority?.(selectedMove) || 0));
+      if (movePriority > 0 && !isSelfTarget && selectedMove.target !== 'self' && !action.bounced) {
+        const priorityBlockers = ['queenly-majesty', 'dazzling', 'armor-tail'];
+        const defenderMons = state.battleFormat === 'DOUBLES' ? (constants.P7?.activeMons(state, defenderRole) || [defender]) : [defender];
+        const blockingMon = defenderMons.find(m => m && m.currentHp > 0 && !m.abilitySuppressed && !m.neutralizingGasSuppressed && priorityBlockers.includes(constants.P7?.ability(m)));
+        const blockerAbility = blockingMon ? constants.P7.ability(blockingMon) : null;
+        const isBlockerIgnored = blockerAbility && constants.P7?.ignored && constants.P7.ignored(attacker, blockingMon, selectedMove);
+        if (blockerAbility && !isBlockerIgnored) {
+          attacker.lastMoveFailed = true;
+          events.push({
+            type: BATTLE_EVENTS.MOVE_FAILED,
+            actor: attackerRole,
+            target: defenderRole,
+            pokemonName: attacker.name,
+            defenderName: defender.name,
+            moveId: selectedMove.id,
+            moveName: selectedMove.name,
+            reason: 'PROTECTED_BY_PRIORITY_BLOCK',
+            label: blockerAbility
+          });
+          return;
+        }
       }
 
       // H5-A.2: Infiltrator & Substitute on Status Moves
@@ -1962,6 +2012,7 @@
           }
           return;
         }
+        return;
       }
 
       // 3. Resolução de STAB (Same-Type Attack Bonus)
@@ -2099,8 +2150,9 @@
         baseDamage = DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat, critical?criticalStats.defense:defenseStat, effectivePower);
         // P5 pilots share accuracy/PP/action checks, but resolve damage and poison per hit.
         const multiHit = constants.getMultiHitMove(selectedMove);
-        if (multiHit) {
-          const plannedHits = constants.getMultiHitCount(selectedMove, action?.hitCountRoll ?? 1, attacker);
+        const isParentalBond = Boolean(!multiHit && constants.P7?.ability(attacker) === 'parental-bond' && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && selectedMove.damageClass !== 'status' && !selectedMove.selfdestruct && !(state.battleFormat==='DOUBLES'&&state.doublesSpread));
+        if (multiHit || isParentalBond) {
+          const plannedHits = isParentalBond ? 2 : constants.getMultiHitCount(selectedMove, action?.hitCountRoll ?? 1, attacker);
           function hitRolls(key, fallback, min, max) {
             const supplied = action?.[key];
             if (supplied !== undefined && (!Array.isArray(supplied) || supplied.length !== plannedHits)) throw new Error('Quantidade de rolagens por acerto inválida.');
@@ -2112,23 +2164,54 @@
           const criticalRolls=hitRolls('hitCriticalRolls',action?.criticalRoll??24,1,24);
           if(action?.criticalRoll!==undefined&&criticalRolls[0]!==action.criticalRoll)throw Error('O crítico do primeiro acerto deve coincidir com criticalRoll.');
         const hasSkillLink = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'skill-link');
-        const accuracyRolls = multiHit.multiAccuracy ? hitRolls('hitAccuracyRolls',accuracyRoll,1,100) : null;
+        const accuracyRolls = multiHit?.multiAccuracy ? hitRolls('hitAccuracyRolls',accuracyRoll,1,100) : null;
         if(accuracyRolls && accuracyRolls[0]!==accuracyRoll)throw new Error('A precisão do primeiro acerto deve coincidir com accuracyRoll.');
           const attackerHasSheerForce = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'sheer-force');
-          if (attackerHasSheerForce && (constants.hasSecondaryEffect ? constants.hasSecondaryEffect(selectedMove) : false)) {
-            attacker.sheerForceBoosted = true;
+          let pbSecEffect = selectedMove.secondaryEffect || (constants.getSecondaryEffect ? constants.getSecondaryEffect(selectedMove) : null);
+          pbSecEffect = constants.P7?.secondary ? constants.P7.secondary(state, selectedMove, pbSecEffect, attacker) : pbSecEffect;
+          if (selectedMove.secondaryEffect?.flinch && pbSecEffect && !pbSecEffect.flinch) {
+            pbSecEffect = { ...pbSecEffect, flinch: true, flinchChance: selectedMove.secondaryEffect.flinchChance || 10 };
           }
+          if (attackerHasSheerForce && (pbSecEffect || (constants.hasSecondaryEffect ? constants.hasSecondaryEffect(selectedMove) : false))) {
+            attacker.sheerForceBoosted = true;
+            pbSecEffect = null;
+          }
+          if (!attackerHasSheerForce && selectedMove.damageClass !== 'status' && constants.P7?.ability?.(attacker) === 'stench' && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed) {
+            if (!pbSecEffect) {
+              pbSecEffect = { chance: 10, flinch: true, flinchChance: 10 };
+            } else if (!pbSecEffect.flinch) {
+              pbSecEffect = { ...pbSecEffect, flinch: true, flinchChance: 10 };
+            }
+          }
+          if (pbSecEffect?.statusChoices) {
+            const choice = action?.secondaryStatusChoice === undefined ? 1 : Number(action.secondaryStatusChoice);
+            if (!Number.isInteger(choice) || choice < 1 || choice > pbSecEffect.statusChoices.length) throw new Error('Escolha secundária inválida.');
+            pbSecEffect = { ...pbSecEffect, statusCondition: pbSecEffect.statusChoices[choice - 1] };
+          }
+          const defaultSecRoll = action?.secondaryEffectRoll !== undefined ? action.secondaryEffectRoll : (pbSecEffect?.target === 'attacker' || pbSecEffect?.chance === 100 ? (action?.secondaryEffectRoll ?? 1) : 100);
+          const pbSecRolls = (isParentalBond && pbSecEffect && !attackerHasSheerForce)
+            ? hitRolls('hitSecondaryEffectRolls', defaultSecRoll, 1, 100)
+            : null;
+          if (pbSecRolls && action?.secondaryEffectRoll !== undefined && pbSecRolls[0] !== action.secondaryEffectRoll) {
+            throw new Error('O efeito secundário do primeiro acerto deve coincidir com secondaryEffectRoll.');
+          }
+          const pbFlinchRolls = (isParentalBond && pbSecEffect?.flinch && !attackerHasSheerForce)
+            ? hitRolls('hitFlinchRolls', action?.flinchRoll ?? (action?.secondaryEffectRoll ?? 100), 1, 100)
+            : null;
           const poisonRolls = (selectedMove.id === 41 && !attackerHasSheerForce) ? hitRolls('hitSecondaryEffectRolls', secondaryEffectRoll, 1, 100) : null;
           let hitCount = 0;
           let totalDamage = 0;
           for (let index = 0; index < plannedHits && defender.currentHp > 0 && effectiveMultiplier > 0; index++) {
             if(!hasSkillLink && index>0 && accuracyRolls && accuracyRolls[index]>effectiveAccuracy)break;
           const hitEff=constants.P8.effectiveness(actualDamageType,defender,TypeEffectiveness,attacker,damageMove,constants);const hitMultiplier=BattleModifierResolver?.resolveTypeMultiplier?BattleModifierResolver.resolveTypeMultiplier(hitEff.multiplier,{attackerSide:attackerRole,modifiers:state.modifiers||{}}):hitEff.multiplier;
-          const hitPower=(multiHit.escalating?selectedMove.power*(index+1):resolvedPower);
+          const hitPower=(multiHit?.escalating?selectedMove.power*(index+1):resolvedPower);
           const critical=constants.Critical.resolve(damageMove,criticalRolls[index],constants,attacker,defender);
           const hitBaseDamage=DamageCalculator.calculateBaseDamage(critical?criticalStats.attack:attackStat,critical?criticalStats.defense:defenseStat,hitPower);
           const hitCritMult = critical ? (constants.Critical?.multiplier ? constants.Critical.multiplier(attacker, damageMove, constants) : 1.5) : 1;
           let hitDamage = Math.max(hitMultiplier===0?0:1,Math.floor(constants.P6.barrierMultiplier(state,defenderRole,damageMove,critical,attacker)*constants.applyBurnPenalty(DamageCalculator.applyModifier(hitBaseDamage*hitCritMult, hitMultiplier, stabMultiplier, damageRolls[index]), attacker, damageMove) * semiInvulnerableMultiplier * minimizeMultiplier));
+          if (isParentalBond && index === 1) {
+            hitDamage = Math.max(1, Math.floor(hitDamage * 0.25));
+          }
             hitDamage=Math.max(hitMultiplier===0?0:1,Math.floor(hitDamage*constants.P7.damageMultiplier(state,attacker,defender,damageMove,hitMultiplier)));
             hitDamage=constants.P7.survive(state,attackerRole,damageMove,hitDamage,constants,events);
             const hasMultiSub = Boolean(defender.substituteHp > 0 || defender.substitute);
@@ -2157,6 +2240,138 @@
               stabMultiplier, typeMultiplier: hitMultiplier, multiplier: hitMultiplier,
               damage: hitDamage, previousHp, currentHp: defender.currentHp, hitIndex: hitCount });
             constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,previousHp-defender.currentHp,attacker,defender);
+            if (isParentalBond && pbSecEffect && !attackerHasSheerForce) {
+              const currentSecRoll = pbSecRolls ? pbSecRolls[index] : defaultSecRoll;
+              const isSecretPower = Number(selectedMove.id) === 290 || selectedMove.name === 'secret-power';
+              const secretPowerBlocked = isSecretPower && index < plannedHits - 1;
+              const defenderHasShieldDust = constants.P7?.defenderAbility?.(attacker, defender, selectedMove) === 'shield-dust';
+              const hitSub = hasMultiSub && !bypassesMultiSub;
+
+              // 1. Efeitos no defensor:
+              if (defender.currentHp > 0 && !defenderHasShieldDust && !hitSub) {
+                if (pbSecEffect.statusCondition && !secretPowerBlocked) {
+                  const canApply = constants.isEligibleForStatusCondition
+                    ? constants.isEligibleForStatusCondition(defender, pbSecEffect.statusCondition)
+                    : (!defender.statusCondition && defender.currentHp > 0);
+                  if (!defender.safeguarded && canApply && currentSecRoll <= pbSecEffect.chance) {
+                    defender.statusCondition = pbSecEffect.statusCondition;
+                    defender.toxicStage = 0;
+                    if (pbSecEffect.statusCondition === 'sleep') {
+                      const duration = action?.sleepDuration ?? 2;
+                      if (!Number.isInteger(duration) || duration < 1 || duration > 3) throw new Error('Duração de sono inválida.');
+                      defender.sleepTurns = duration;
+                      defender.sleepCounter = duration;
+                    }
+                    events.push({
+                      type: BATTLE_EVENTS.STATUS_APPLIED,
+                      source: attackerRole,
+                      target: defenderRole,
+                      pokemonName: defender.name,
+                      statusCondition: pbSecEffect.statusCondition,
+                      moveId: selectedMove.id,
+                      moveName: selectedMove.name,
+                      secondaryEffectRoll: currentSecRoll,
+                      chance: pbSecEffect.chance,
+                      hitIndex: hitCount
+                    });
+                    constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, pbSecEffect.statusCondition, constants, events, attacker, defender);
+                    if (['poison', 'toxic'].includes(pbSecEffect.statusCondition)) {
+                      applyPoisonPuppeteerConfusion(attacker, defender, attackerRole, defenderRole, action, constants, events, state);
+                    }
+                  }
+                }
+
+                if (pbSecEffect.flinch) {
+                  const currentFlinchRoll = pbFlinchRolls ? pbFlinchRolls[index] : (action?.flinchRoll ?? currentSecRoll);
+                  if (!defender.dynamax && constants.P7?.defenderAbility?.(attacker, defender, selectedMove) !== 'inner-focus' && currentFlinchRoll <= (pbSecEffect.flinchChance || pbSecEffect.chance)) {
+                    defender.isFlinched = true;
+                    events.push({
+                      type: BATTLE_EVENTS.FLINCH_APPLIED,
+                      source: attackerRole,
+                      target: defenderRole,
+                      pokemonName: defender.name,
+                      moveId: selectedMove.id,
+                      moveName: selectedMove.name,
+                      secondaryEffectRoll: currentFlinchRoll,
+                      chance: pbSecEffect.flinchChance || pbSecEffect.chance,
+                      hitIndex: hitCount
+                    });
+                  }
+                }
+
+                if (pbSecEffect.confusion && !secretPowerBlocked && (!pbSecEffect.requiresRaisedStats || defender.statsRaisedThisTurn)) {
+                  const canApply = !defender.safeguarded && !constants.P7?.statusImmune?.(defender, 'confusion') && !(defender.confusionTurns > 0) && defender.currentHp > 0;
+                  if (canApply && currentSecRoll <= pbSecEffect.chance) {
+                    let duration = constants.DEFAULT_CONFUSION_TURNS?.DEFAULT || 3;
+                    if (action && action.confusionDuration !== undefined) {
+                      const parsed = Number(action.confusionDuration);
+                      if (!Number.isInteger(parsed) || parsed < 2 || parsed > 5) throw new Error(`Duração de confusão inválida: ${action.confusionDuration}. Deve ser um inteiro entre 2 e 5.`);
+                      duration = parsed;
+                    }
+                    defender.confusionTurns = duration;
+                    events.push({
+                      type: BATTLE_EVENTS.CONFUSION_APPLIED,
+                      source: attackerRole,
+                      target: defenderRole,
+                      pokemonName: defender.name,
+                      moveId: selectedMove.id,
+                      moveName: selectedMove.name,
+                      duration: defender.confusionTurns,
+                      secondaryEffectRoll: currentSecRoll,
+                      chance: pbSecEffect.chance,
+                      hitIndex: hitCount
+                    });
+                  }
+                }
+
+                if (pbSecEffect.statDrops && !secretPowerBlocked && typeof pbSecEffect.statDrops === 'object') {
+                  if ((!state.p6Sides[defenderRole].mist || attackerInfiltrates) && currentSecRoll <= pbSecEffect.chance) {
+                    if (constants.P7?.modifyStages) {
+                      constants.P7.modifyStages(state, defenderRole, defender, pbSecEffect.statDrops, attackerRole, attacker, 'secondary-effect', constants, events);
+                    } else {
+                      for (const [statKey, delta] of Object.entries(pbSecEffect.statDrops)) {
+                        const report = constants.applyStatStageChange(defender, statKey, delta);
+                        events.push({
+                          type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                          combatant: defenderRole,
+                          pokemonName: defender.name,
+                          statKey: report.statKey,
+                          previousStage: report.previousStage,
+                          requestedDelta: report.requestedDelta,
+                          appliedDelta: report.appliedDelta,
+                          finalStage: report.finalStage,
+                          blockedReason: report.blockedReason
+                        });
+                      }
+                    }
+                  }
+                }
+              }
+
+              // 2. Efeitos no atacante (ex: Power-Up Punch, Ancient Power):
+              if (attacker.currentHp > 0 && pbSecEffect.target === 'attacker' && pbSecEffect.statBoosts && typeof pbSecEffect.statBoosts === 'object') {
+                if (currentSecRoll <= pbSecEffect.chance) {
+                  if (constants.P7?.modifyStages) {
+                    constants.P7.modifyStages(state, attackerRole, attacker, pbSecEffect.statBoosts, attackerRole, attacker, 'secondary-boost', constants, events);
+                  } else {
+                    for (const [statKey, delta] of Object.entries(pbSecEffect.statBoosts)) {
+                      const report = constants.applyStatStageChange(attacker, statKey, delta);
+                      events.push({
+                        type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                        combatant: attackerRole,
+                        pokemonName: attacker.name,
+                        statKey: report.statKey,
+                        previousStage: report.previousStage,
+                        requestedDelta: report.requestedDelta,
+                        appliedDelta: report.appliedDelta,
+                        finalStage: report.finalStage,
+                        blockedReason: report.blockedReason
+                      });
+                    }
+                  }
+                }
+              }
+            }
             if (attacker.currentHp === 0 || defender.currentHp === 0) break;
             if (poisonRolls) {
               const sereneGraceActive = Boolean(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'serene-grace');
@@ -2173,7 +2388,12 @@
             }
           }
           if (hitCount) events.push({type: BATTLE_EVENTS.MULTI_HIT_COMPLETE, source: attackerRole, target: defenderRole,
-            moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean(multiHit.critical && !constants.Critical?.isCriticalBlocked?.(defender, attacker, damageMove, constants))});
+            moveName: selectedMove.name, hitCount, plannedHits, totalDamage, critical:Boolean((multiHit?.critical || isParentalBond) && !constants.Critical?.isCriticalBlocked?.(defender, attacker, damageMove, constants))});
+          if (defender.currentHp > 0 && defender.emergencyExitTriggered && state.version === 2 && state.battleFormat !== 'DOUBLES') {
+            defender.emergencyExitTriggered = false;
+            state.pendingPivot = { role: defenderRole, reason: constants.P7?.ability(defender) || 'emergency-exit' };
+            state.status = BATTLE_STATUS.AWAITING_REPLACEMENT;
+          }
           if (defender.currentHp > 0 && totalDamage > 0) {
             if (constants.P7?.canActivateColorChange?.(defender, selectedMove, actualDamageType, totalDamage, false, false, attacker)) {
               constants.P7.activateColorChange(state, defenderRole, defender, selectedMove, actualDamageType, constants, events, attacker);
@@ -2244,6 +2464,11 @@
 
       constants.P7.afterHit(state,attackerRole,damageMove,action||{},constants,events,actualDamageDealt,attacker,defender);
       constants.P8.afterHit(state,attackerRole,damageMove,constants,events,actualDamageDealt);
+      if (currentHp > 0 && defender.emergencyExitTriggered && state.version === 2 && state.battleFormat !== 'DOUBLES') {
+        defender.emergencyExitTriggered = false;
+        state.pendingPivot = { role: defenderRole, reason: constants.P7?.ability(defender) || 'emergency-exit' };
+        state.status = BATTLE_STATUS.AWAITING_REPLACEMENT;
+      }
       // 8B. Descongelamento do alvo por golpe de dano Fire (onDamagingHit: P4)
       // Conforme Pokémon Showdown data/conditions.ts (frz.onDamagingHit): golpes de dano Fire
       // descongelam o alvo sobrevivente imediatamente ao aplicar o dano.
@@ -2557,8 +2782,10 @@
 
       // 11. Troca Forçada (Forced Switch: Dragon Tail / Circle Throw)
       if (currentHp > 0 && finalDamage > 0 && state.version === 2 && state.battleFormat!=='DOUBLES' && !defender.dynamax && constants.isForcedSwitchMove?.(selectedMove)) {
-        if (constants.P7?.ability(defender) === 'guard-dog') {
-          events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: 'guard-dog' });
+        const defAb = constants.P7?.defenderAbility ? constants.P7.defenderAbility(attacker, defender, selectedMove) : constants.P7?.ability(defender);
+        if (constants.P7?.ability(defender) === 'guard-dog' || defAb === 'suction-cups') {
+          const lbl = defAb === 'suction-cups' ? 'suction-cups' : 'guard-dog';
+          events.push({ type: 'MOVE_PREPARED', actor: defenderRole, pokemonName: defender.name, reason: 'P7_ABILITY', label: lbl });
         } else {
           const defenderSide = state[defenderRole];
           const eligibleBench = defenderSide.team

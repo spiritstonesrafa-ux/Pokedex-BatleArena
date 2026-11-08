@@ -73,7 +73,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H4-A | Primordial Sea, Desolate Land, Delta Stream, Dry Skin, Ice Body, Flower Gift, Sand Spit, Orichalcum Pulse, Transistor, Dragon's Maw (+ Dark Aura, Fairy Aura, Aura Break, Prism Armor, Neuroforce) | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de climas primordiais, multiplicadores elementais e absorções + auditoria das 5 habilidades preexistentes. 93 testes dedicados. |
 | H4-B | Seed Sower, Grass Pelt, Surge Surfer, Hadron Engine, Protosynthesis, Quark Drive, Vessel of Ruin, Sword of Ruin, Tablets of Ruin, Beads of Ruin | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de terrenos, paradoxos, booster energy e tesouros da ruína. 34 testes dedicados em tests/battle/abilities-h4b.test.js. |
 | H4-C | Supersweet Syrup | **Implementado (FULL)**. 1 habilidade canônica Gen IX de redução de evasão de oponentes na entrada (-1 estágio, única por batalha). Encerramento oficial da Família H4 com 28 testes dedicados em `tests/battle/abilities-h4c.test.js`. |
-| H5-A | Prankster, Infiltrator, Magic Bounce | Exigem flags de golpes, prioridade e reflexão por evento; alto impacto em estratégia, inclusive para a IA. |
+| H5 | Suction Cups, Truant, Slow Start, Stall, Prankster, Infiltrator, Gale Wings, Parental Bond, Triage, Queenly Majesty, Dazzling, Armor Tail, Mycelium Might, Quick Draw, Emergency Exit, Wimp Out, Magic Bounce, Screen Cleaner | **Implementado (FULL)**. Lote único consolidado de 18 habilidades canônicas Gen IX de prioridade, controle e fluxo de ações. 63 testes dedicados em `tests/battle/abilities-h5.test.js`. |
 
 A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes compartilham a mesma dificuldade. Cada habilidade pode ser liberada individualmente após seus testes. As fases seguintes são famílias de trabalho, não um único commit por fase.
 
@@ -673,17 +673,36 @@ Lote canônico homologado e coberto por 28 testes determinísticos em `tests/bat
 
 **Lista completa da família:** `dry-skin`, `ice-body`, `flower-gift`, `dark-aura`, `fairy-aura`, `aura-break`, `primordial-sea`, `desolate-land`, `delta-stream`, `grass-pelt`, `surge-surfer`, `seed-sower`, `sand-spit`, `transistor`, `dragons-maw`, `protosynthesis`, `quark-drive`, `orichalcum-pulse`, `hadron-engine`, `vessel-of-ruin`, `sword-of-ruin`, `tablets-of-ruin`, `beads-of-ruin`, `supersweet-syrup`.
 
-### H5 — Prioridade, controle e fluxo de ações
+### H5 — Prioridade, controle e fluxo de ações (CONCLUÍDO)
 
-**Inventário:** 18 habilidades pendentes; 28 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (18 concluídas em lote único consolidado H5); 0 registros com habilidade padrão afetados.
 
 **Dependências:** H0; fluxo de ações, flags; H3 quando houver impedimentos.
 
-Separar prioridade, controle de turnos, reflexão, ataques adicionais e saída forçada. Magic Bounce precisa de alvos e flags, além de proteção contra reflexão infinita. Parental Bond exige um segundo impacto com regras próprias. Emergency Exit/Wimp Out devem reutilizar substituição obrigatória, com reserva escolhida conforme o formato.
+Lote canônico consolidado de 18 habilidades implementado e coberto por 63 testes determinísticos em `tests/battle/abilities-h5.test.js`:
 
-**Aceite:** Prioridade/velocidade, interrupção e falha, Ghost/Dark quando pertinente às regras adotadas, ausência de reservas, dois ativos, ações já escolhidas e nenhuma ação extra após troca/nocaute.
+1. **`suction-cups`**: Impede a troca forçada do portador causada por movimentos como Roar, Whirlwind, Dragon Tail e Circle Throw. Bypassed canonicamente por Mold Breaker/Teravolt/Turboblaze.
+2. **`truant`**: O portador ataca a cada dois turnos, ficando ocioso (loafing) no turno intermediário. Ocioso não gasta PP e não executa o movimento. Suprimido canonicamente por Neutralizing Gas.
+3. **`slow-start`**: Reduz o Attack e Speed efetivos em 50% durante 5 turnos a partir da entrada em combate. O contador decrementa no final do turno e os atributos são integralmente restaurados após o 5º turno.
+4. **`stall`**: Faz o portador agir por último dentro do seu colchete de prioridade via deslocamento fracionário (-0.1), mesmo superando em velocidade o oponente.
+5. **`prankster`**: Concede +1 de prioridade a movimentos da categoria status. Falha canonicamente contra oponentes do tipo Dark (`IMMUNE_PRANKSTER`).
+6. **`infiltrator`**: Ignora telas e barreiras defensivas (Reflect, Light Screen, Aurora Veil) e atinge alvos diretamente através de Substitute.
+7. **`gale-wings`**: Concede +1 de prioridade a movimentos do tipo Flying exclusivamente quando o portador estiver com 100% do HP máximo.
+8. **`parental-bond`**: Faz movimentos de dano simples acertarem duas vezes consecutivas (1.0x no primeiro golpe, 0.25x no segundo golpe), consumindo apenas 1 PP. Efeitos secundários (status, stat drops como Crunch -1 Defesa com chance canônica de 20%, auto-buffs como Power-Up Punch +1 Ataque) e contatos (Rough Skin, Rocky Helmet) processam independentemente em ambos os impactos. Secret Power suprime efeitos de status/terreno no hit 1 preservando flinch. Sheer Force suprime ambos os impactos.
+9. **`triage`**: Concede +3 de prioridade canônica a movimentos de cura (Recover, Soft-Boiled, Roost, Drain Punch, Giga Drain, etc.), mapeados através de `HEAL_MOVE_IDS`.
+10. **`queenly-majesty`**: Bloqueia o uso de movimentos com prioridade positiva direcionados ao portador ou aliados (`PROTECTED_BY_PRIORITY_BLOCK`). Ignorável por Mold Breaker.
+11. **`dazzling`**: Bloqueia o uso de movimentos com prioridade positiva direcionados ao portador ou aliados (`PROTECTED_BY_PRIORITY_BLOCK`). Ignorável por Mold Breaker.
+12. **`armor-tail`**: Bloqueia o uso de movimentos com prioridade positiva direcionados ao portador ou aliados (`PROTECTED_BY_PRIORITY_BLOCK`). Ignorável por Mold Breaker.
+13. **`mycelium-might`**: Aplica prioridade fracionária (-0.1) a golpes de status, permitindo que seus golpes de status ignorem habilidades defensivas como Magic Bounce, Good as Gold, Clear Body e imunidades de status.
+14. **`quick-draw`**: Concede prioridade fracionária (+0.1) a golpes de dano quando ativado (chance canônica de 30% em batalha real), garantindo precedência contra oponentes na mesma faixa de prioridade.
+15. **`emergency-exit`**: Força a troca tática para uma reserva disponível quando o HP do portador é reduzido a 50% ou menos após sofrer dano direto. Multi-hits concluem todos os impactos antes da troca forçada, pivôs adversários (U-turn) são bloqueados, e o efeito reativa se curado acima de 50%.
+16. **`wimp-out`**: Força a troca tática para uma reserva disponível quando o HP do portador é reduzido a 50% ou menos após sofrer dano (mesma mecânica canônica de Emergency Exit).
+17. **`magic-bounce`**: Reflete movimentos de status elegíveis (Taunt, Stealth Rock, Spikes, Thunder Wave, etc.) de volta para o atacante. Ignorável canonicamente por Mold Breaker e Mycelium Might.
+18. **`screen-cleaner`**: Remove barreiras defensivas (Reflect, Light Screen e Aurora Veil) de ambos os lados do campo imediatamente na entrada do portador.
 
-**Lista completa da família:** `suction-cups`, `truant`, `slow-start`, `stall`, `prankster`, `infiltrator`, `gale-wings`, `parental-bond`, `triage`, `queenly-majesty`, `dazzling`, `armor-tail`, `mycelium-might`, `quick-draw`, `emergency-exit`, `wimp-out`, `magic-bounce`, `screen-cleaner`.
+**Aceite:** Prioridade/velocidade, interrupção e falha, Dark contra Prankster, ausência de reservas, dois ativos, ações já escolhidas e nenhuma ação extra após troca/nocaute.
+
+**Lista completa da família (18/18 CONCLUÍDAS):** `suction-cups`, `truant`, `slow-start`, `stall`, `prankster`, `infiltrator`, `gale-wings`, `parental-bond`, `triage`, `queenly-majesty`, `dazzling`, `armor-tail`, `mycelium-might`, `quick-draw`, `emergency-exit`, `wimp-out`, `magic-bounce`, `screen-cleaner`.
 
 ### H6 — Tipos e mudanças de forma
 

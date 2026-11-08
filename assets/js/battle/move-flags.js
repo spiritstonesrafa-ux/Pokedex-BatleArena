@@ -230,6 +230,53 @@
     600   // Powder
   ]);
 
+  // Healing moves (boosted by Triage: +3 priority; flags: { heal: 1 })
+  const HEAL_MOVE_IDS = new Set([
+    71,   // Absorb
+    72,   // Mega Drain
+    105,  // Recover
+    135,  // Soft-Boiled
+    138,  // Dream Eater
+    141,  // Leech Life
+    156,  // Rest
+    202,  // Giga Drain
+    208,  // Milk Drink
+    234,  // Morning Sun
+    235,  // Synthesis
+    236,  // Moonlight
+    256,  // Swallow
+    273,  // Wish
+    303,  // Slack Off
+    355,  // Roost
+    361,  // Healing Wish
+    409,  // Drain Punch
+    456,  // Heal Order
+    505,  // Heal Pulse
+    532,  // Horn Leech
+    565,  // Oblivion Wing
+    570,  // Parabolic Charge
+    577,  // Draining Kiss
+    659,  // Shore Up
+    666,  // Floral Healing
+    668,  // Strength Sap
+    685,  // Purify
+    791,  // Life Dew
+    816,  // Jungle Healing
+    849,  // Lunar Blessing
+    891,  // Bitter Blade
+    902   // Matcha Gotcha
+  ]);
+
+  const HEAL_MOVE_NAMES = new Set([
+    'absorb', 'mega-drain', 'recover', 'soft-boiled', 'dream-eater', 'leech-life',
+    'rest', 'giga-drain', 'milk-drink', 'morning-sun', 'synthesis', 'moonlight',
+    'swallow', 'wish', 'slack-off', 'roost', 'healing-wish', 'drain-punch',
+    'heal-order', 'heal-pulse', 'horn-leech', 'oblivion-wing', 'parabolic-charge',
+    'draining-kiss', 'shore-up', 'floral-healing', 'strength-sap', 'purify',
+    'life-dew', 'jungle-healing', 'lunar-blessing', 'bitter-blade', 'matchagotcha',
+    'matcha-gotcha'
+  ]);
+
   function getMoveId(move) {
     if (!move) return 0;
     if (typeof move === 'number') return move;
@@ -290,6 +337,14 @@
     return POWDER_MOVE_IDS.has(getMoveId(move));
   }
 
+  function isHealMove(move) {
+    if (!move) return false;
+    const id = getMoveId(move);
+    if (id && HEAL_MOVE_IDS.has(id)) return true;
+    const name = String(move.name || '').trim().toLowerCase();
+    return HEAL_MOVE_NAMES.has(name);
+  }
+
   function getMoveFlags(move, contactIds) {
     const id = getMoveId(move);
     return Object.freeze({
@@ -303,7 +358,8 @@
       slicing: SLICING_MOVE_IDS.has(id),
       pulse: PULSE_MOVE_IDS.has(id),
       reflectable: REFLECTABLE_MOVE_IDS.has(id),
-      powder: POWDER_MOVE_IDS.has(id)
+      powder: POWDER_MOVE_IDS.has(id),
+      heal: isHealMove(move)
     });
   }
 
@@ -317,6 +373,7 @@
     PULSE_MOVE_IDS: Object.freeze(PULSE_MOVE_IDS),
     REFLECTABLE_MOVE_IDS: Object.freeze(REFLECTABLE_MOVE_IDS),
     POWDER_MOVE_IDS: Object.freeze(POWDER_MOVE_IDS),
+    HEAL_MOVE_IDS: Object.freeze(HEAL_MOVE_IDS),
     isContactMove,
     isSoundMove,
     isBulletMove,
@@ -327,6 +384,7 @@
     isPulseMove,
     isReflectableMove,
     isPowderMove,
+    isHealMove,
     getMoveFlags
   });
 

@@ -2,6 +2,51 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 08/11/2026: Conferência Canônica Final — Crunch e Secret Power — Lote H5 (Conformidade Showdown Gen IX)
+
+- **Conferência Canônica e Refinamentos Finais Consolidados:**
+  1. `parental-bond` & `crunch` (Chance Canônica Oficial):
+     - Investigação e diagnóstico do catálogo: Crunch (ID 242) já estava registrado no catálogo oficial do PBA (`battle-constants.js:287` e `line 953`) com a chance canônica exata de 20% (`chance: 20`) e redução de -1 de Defesa (`statDrops: { defense: -1 }`). O valor de 50% mencionado anteriormente tratava-se exclusivamente de uma fixture sintética de teste com probabilidade artificial injetada no override do movimento.
+     - 4 testes de limites probabilísticos com RNG determinístico adicionados em `tests/battle/abilities-h5.test.js` usando o movimento do catálogo:
+       * [20, 21]: ativação no primeiro hit (<= 20) e falha no segundo (> 20) -> -1 estágio de Defesa.
+       * [21, 20]: falha no primeiro hit (> 20) e ativação no segundo (<= 20) -> -1 estágio de Defesa.
+       * [20, 20]: ambos ativam (<= 20) -> -2 estágios acumulados de Defesa.
+       * [21, 21]: ambos falham (> 20) -> 0 alteração de estágios de Defesa.
+  2. `parental-bond` & `secret-power` (Exceção Showdown do Primeiro Acerto):
+     - No Pokémon Showdown Gen IX (`battle-actions.ts`), o gancho `onSourceModifySecondaries` de Parental Bond filtra os efeitos secundários de Secret Power no primeiro acerto (`index === 0`), preservando especificamente efeitos do tipo `volatileStatus === 'flinch'` (`secondaries.filter(effect => effect.volatileStatus === 'flinch')`).
+     - Efeitos de terreno (Sleep em Grassy Terrain, Special Attack -1 em Misty Terrain, Speed -1 em Psychic Terrain e Paralysis no terreno padrão) são filtrados e suprimidos no hit 1, ativando exclusivamente no golpe final (hit 2).
+     - Efeitos de Flinch (decorrentes de itens ou habilidades como Stench) são preservados no hit 1 e podem infligir Flinch no alvo no primeiro impacto.
+     - Interação com Substitute: hit 1 quebra o Substitute adversário; hit 2 atinge o Pokémon real e aplica a condição/estágio secundário normalmente.
+     - Supressão por Sheer Force: anula integralmente ambos os impactos e amplifica o dano base.
+     - Ausência de King's Rock / Razor Fang: verificado formalmente no codebase (`assets/js/battle/p7-mechanics.js:14`) que esses itens não existem no PBA. Documentado como fora de escopo de H5 para evitar adições não autorizadas.
+  3. `emergency-exit` / `wimp-out`:
+     - Resolução completa de multi-hit: sequências de múltiplos impactos concluem TODOS os golpes planejados antes de acionar a troca forçada (`pendingPivot`).
+     - Nocaute em multi-hit: caso o portador desmaie durante a sequência de multi-hit, o desmaio é resolvido normalmente e `emergency-exit` não gera troca forçada (`pendingPivot: undefined`).
+     - Supressão de golpes de pivot adversários: quando atingido por U-turn, Volt Switch ou Flip Turn, a troca forçada de Emergency Exit tem precedência absoluta e o pivot do adversário é bloqueado.
+     - Reativação após cura: se curado acima de 50% de HP no decorrer da batalha, o cruzamento subsequente do limiar de 50% reativa `emergency-exit` normalmente.
+     - Supressão por Sheer Force: golpes com efeito secundário executados por atacantes com Sheer Force suprimem o acionamento de Emergency Exit.
+  4. `quick-draw`:
+     - Prioridade fracionária (+0.1) garante precedência contra oponentes mais rápidos dentro da mesma faixa de prioridade (prioridade 0).
+     - Não supera movimentos de prioridade estrita superior (+1 ou maior).
+     - Não ativa em movimentos da categoria Status.
+     - Precedência garantida sobre Stall (-0.1) e Mycelium Might (-0.1).
+     - Empate de ativação simultânea entre dois portadores desempata pela Speed de batalha.
+
+- **Suíte de Testes H5 Final Consolidada (63 Testes — 100% PASS):**
+  - `tests/battle/abilities-h5.test.js`: 63 testes determinísticos cobrindo integralmente as 18 habilidades e todas as verificações canônicas de Parental Bond, Crunch (20% oficial com limites [20, 21], [21, 20], [20, 20], [21, 21]), Secret Power (supressão de status no hit 1, ativação no hit 2, Grassy Terrain, Misty Terrain, preservação de Flinch no hit 1, Substitute e Sheer Force).
+
+- **Validação Global e Inventário:**
+  - H5: 63 testes PASS (0 falhas).
+  - Suíte Global do Projeto: **4.705/4.705 PASS** (59 suítes, 0 falhas, 0 regressões).
+  - Habilidades conhecidas: **374**.
+  - Habilidades declaradas com suporte: **274**.
+  - Pendências atribuídas: **40**.
+  - Pendências restantes na Família H5: **0** (Família H5 100% concluída!).
+  - Auditoria de Habilidades (`scripts/audit-abilities.js --check`): 100% PASS.
+  - Auditoria P8 (`scripts/audit-p8.js`): 100% PASS (`unresolvedP8: 0`).
+  - Hashing de integridade `minior-shields-down-harness.html`: SHA-256 `B673B72A1A446016513D759D0B16835E9A5AB5D01F8C3E6EF2D13FC34BCA9A1E` idêntico ao baseline.
+  - Estilização `assets/css/battle-arena.css`: 100% intocada.
+
 ## Atualização — 08/11/2026: Implementação Canônica e Fechamento da Família H4 (H4-C — Supersweet Syrup)
 
 - **Lote H4-C Implementado e Homologado (Fechamento da Família H4):**
