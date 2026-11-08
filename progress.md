@@ -2,6 +2,37 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 08/11/2026: Implementação Canônica e Homologação do Lote H4-B (10 Habilidades Canônicas Gen IX + Booster Energy)
+
+- **Lote H4-B Implementado e Homologado (10 Novas Habilidades Canônicas Gen IX):**
+  1. `seed-sower` (Gen IX): Ativa Grassy Terrain por 5 turnos (8 turnos com Terrain Extender) ao receber dano de ataque direto de qualquer golpe (físico ou especial). Não ativa em dano residual. Suprimido por Neutralizing Gas e Gastro Acid.
+  2. `grass-pelt` (Gen VI): Aumenta a Defense do portador em 1.5x enquanto Grassy Terrain estiver ativo no campo. Ignorado por atacantes com Mold Breaker (`flags: { breakable: 1 }`, canônico Showdown).
+  3. `surge-surfer` (Gen VII): Dobra a Speed do portador sob Electric Terrain (multiplicador 2.0x), sem exigir que o Pokémon esteja aterrado.
+  4. `hadron-engine` (Gen IX): Invoca Electric Terrain na entrada; se o terreno já estiver ativo, ativa sem reiniciar o terreno; concede bônus de 5461/4096 (~1.33x) ao Special Attack sob Electric Terrain. Não copiável por Trace/Receiver, não trocável e não sobrescrevível.
+  5. `protosynthesis` (Gen IX): Aumenta o maior atributo do portador em 1.5x (Speed) ou ~1.3x (5325/4096 outros) sob Sun / Desolate Land ou ao consumir Booster Energy. Desempate canônico Showdown: Atk > Def > SpA > SpD > Spe. O bônus obtido por Booster Energy persiste até o portador sair de campo.
+  6. `quark-drive` (Gen IX): Aumenta o maior atributo do portador em 1.5x (Speed) ou ~1.3x (5325/4096 outros) sob Electric Terrain ou ao consumir Booster Energy. Desempate canônico Showdown: Atk > Def > SpA > SpD > Spe. O bônus obtido por Booster Energy persiste até o portador sair de campo.
+  7. `vessel-of-ruin` (Gen IX): Reduz o Special Attack de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker (`flags: {}`). Suprimível por Neutralizing Gas.
+  8. `sword-of-ruin` (Gen IX): Reduz a Defense de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker (`flags: {}`). Suprimível por Neutralizing Gas.
+  9. `tablets-of-ruin` (Gen IX): Reduz o Attack de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker (`flags: {}`). Suprimível por Neutralizing Gas.
+  10. `beads-of-ruin` (Gen IX): Reduz a Special Defense de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker (`flags: {}`). Suprimível por Neutralizing Gas.
+
+- **Item Canônico booster-energy Integrado:**
+  - Registrado no catálogo de batalha com ID Showdown 1880 e em `QUICK_ITEMS` do customizador de campanha.
+  - Consumido automaticamente apenas quando nem clima (Sun) nem terreno (Electric Terrain) correspondentes estão ativos.
+  - Protegido contra roubo/remoção por Knock Off ou Thief quando segurado por Pokémon Paradox.
+  - O boost resultante de Booster Energy persiste mesmo com transições de clima/terreno até a troca do portador.
+
+- **Suíte de Testes H4-B (34 Testes — 100% PASS):**
+  - `tests/battle/abilities-h4b.test.js`: 34 testes determinísticos (100% PASS) cobrindo ativações de terreno, ordens canônicas de entrada, duração de Grassy Terrain com Terrain Extender, desempate e multiplicadores Paradox (getBestStat(false, true)), fixação de atributo e recálculo após expiração, consumo imediato de Booster Energy após término de clima/terreno, proteção contra consumo por Pokémon Transformado, imunidade contra roubo/remoção por Knock Off/Thief em Paradox, supressões por Neutralizing Gas, cálculos do quarteto de Ruínas em Singles/Doubles/Espelho e integração com a IA do BattleEvaluator.
+
+- **Validação Global e Inventário:**
+  - H4-B: 34 testes PASS (0 falhas).
+  - H4-A: 93 testes PASS (0 falhas).
+  - Suíte Global do Projeto (`npm.cmd test`): 4.614 testes PASS (42 suítes, 0 falhas).
+  - Auditoria de Habilidades (`scripts/audit-abilities.js --check`): 258 declaradas suportadas (+10), 56 pendentes associadas (-10), 1 única pendência restante na Família H4 (`supersweet-syrup` reservada estritamente para H4-C).
+  - Auditoria P8 (`scripts/audit-p8.js`): 100% PASS (0 pendências P8 não resolvidas).
+  - Governança Git: Working tree estritamente local; harness de Minior intacto e não rastreado; CSS e PBA-020 preservados. Sem commits ou push antes da autorização expressa do usuário.
+
 ## Atualização — 06/11/2026: Auditoria Corretiva Final e Homologação do Lote H4-A (10 Novas Habilidades Canônicas Gen IX + 5 Preexistentes Auditadas)
 
 - **Lote H4-A Implementado e Homologado (10 Novas Habilidades Canônicas Gen IX):**

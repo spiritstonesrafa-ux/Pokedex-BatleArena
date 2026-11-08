@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 248,
+    "declaredSupported": 258,
     "assignedAbilities": 313,
-    "assignedPending": 66,
+    "assignedPending": 56,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 171
+    "recordsWithPendingDefault": 140
   },
   "phases": [
     {
@@ -33,8 +33,8 @@
     {
       "id": "H4",
       "name": "Clima, terreno e auras",
-      "assignedPending": 11,
-      "defaultRecordsImpacted": 33
+      "assignedPending": 1,
+      "defaultRecordsImpacted": 2
     },
     {
       "id": "H5",
@@ -1011,8 +1011,8 @@
     },
     {
       "name": "beads-of-ruin",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -5426,8 +5426,8 @@
     },
     {
       "name": "grass-pelt",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -5754,8 +5754,8 @@
     },
     {
       "name": "hadron-engine",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -13489,8 +13489,8 @@
     },
     {
       "name": "protosynthesis",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -13705,8 +13705,8 @@
     },
     {
       "name": "quark-drive",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -15924,8 +15924,8 @@
     },
     {
       "name": "seed-sower",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -19338,8 +19338,8 @@
     },
     {
       "name": "surge-surfer",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -20004,8 +20004,8 @@
     },
     {
       "name": "sword-of-ruin",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -20195,8 +20195,8 @@
     },
     {
       "name": "tablets-of-ruin",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {
@@ -22111,8 +22111,8 @@
     },
     {
       "name": "vessel-of-ruin",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {

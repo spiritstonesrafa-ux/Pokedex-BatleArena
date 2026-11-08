@@ -35,7 +35,8 @@
     'terrain-extender': 'Prolonga a duração de terrenos provocados pelo usuário para 8 turnos.',
     'ability-shield': 'Protege a habilidade do usuário contra supressão e efeitos que a alteram.',
     'safety-goggles': 'Protege contra dano residual de clima e golpes baseados em pó ou esporos.',
-    'rocky-helmet': 'Causa 1/6 de dano de recuo ao adversário sempre que sofrer contato físico.'
+    'rocky-helmet': 'Causa 1/6 de dano de recuo ao adversário sempre que sofrer contato físico.',
+    'booster-energy': 'Ativa Protosynthesis ou Quark Drive em combate, consumindo a cápsula para energizar o atributo mais alto.'
   };
 
   const QUICK_ITEMS = [
@@ -47,6 +48,7 @@
     { id: 'choice-scarf', label: 'Choice Scarf' },
     { id: 'assault-vest', label: 'Assault Vest' },
     { id: 'focus-sash', label: 'Focus Sash' },
+    { id: 'booster-energy', label: 'Booster Energy' },
     { id: 'sitrus-berry', label: 'Sitrus Berry' },
     { id: 'heavy-duty-boots', label: 'Heavy-Duty Boots' },
     { id: 'rocky-helmet', label: 'Rocky Helmet' },

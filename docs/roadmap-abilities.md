@@ -71,7 +71,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H2-A | Marvel Scale, Hustle, Keen Eye, Steadfast (H1) | Milotic, Togekiss, Pelipper/Skarmory e Lucario aparecem na campanha e nas instalações; revisar defesa, precisão, ataques físicos/especiais e flinch. Entregar em commits separados por família. |
 | H3-A | Rough Skin, Iron Barbs, Effect Spore, Poison Touch, Cute Charm, Gooey, Tangling Hair, Aftermath, Innards Out, Perish Body, Shed Skin, Hydration, Leaf Guard, Early Bird, Synchronize, Liquid Ooze, Poison Heal, Bad Dreams, Stench, Shield Dust, Big Pecks | **Implementado (FULL)**. 21 habilidades canônicas Gen IX de reações de contato, dano residual no nocaute, contagem de Perish Song, cura/imunidade de status e clima, inversão de drenagem e proteções secundárias. 170 testes unitários dedicados. |
 | H4-A | Primordial Sea, Desolate Land, Delta Stream, Dry Skin, Ice Body, Flower Gift, Sand Spit, Orichalcum Pulse, Transistor, Dragon's Maw (+ Dark Aura, Fairy Aura, Aura Break, Prism Armor, Neuroforce) | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de climas primordiais, multiplicadores elementais e absorções + auditoria das 5 habilidades preexistentes. 93 testes dedicados. |
-| H4-B | Seed Sower, Grass Pelt, Surge Surfer, Hadron Engine, Protosynthesis, Quark Drive, Vessel of Ruin, Sword of Ruin, Tablets of Ruin, Beads of Ruin | Planejado (10 habilidades). Efeitos de terreno, ativações de Paradoxos e debuffs do quarteto dos Tesouros da Ruína. |
+| H4-B | Seed Sower, Grass Pelt, Surge Surfer, Hadron Engine, Protosynthesis, Quark Drive, Vessel of Ruin, Sword of Ruin, Tablets of Ruin, Beads of Ruin | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de terrenos, paradoxos, booster energy e tesouros da ruína. 34 testes dedicados em tests/battle/abilities-h4b.test.js. |
 | H4-C | Supersweet Syrup | Planejado (1 habilidade). Redução de evasão de oponentes na entrada (-1 estágio). Encerramento oficial da Família H4. |
 | H5-A | Prankster, Infiltrator, Magic Bounce | Exigem flags de golpes, prioridade e reflexão por evento; alto impacto em estratégia, inclusive para a IA. |
 
@@ -631,7 +631,7 @@ A Família H3 é estruturada em exatamente dois lotes de 21 habilidades como exc
 
 ### H4 — Clima, terreno e auras
 
-**Inventário:** 11 habilidades pendentes (15 declaradas com suporte no catálogo, sendo 5 preexistentes auditadas e 10 implementadas em H4-A); política estrita de lotes: H4-A (10), H4-B (10) e H4-C (1).
+**Inventário:** 1 habilidade pendente (25 declaradas com suporte no catálogo, sendo 5 preexistentes auditadas, 10 implementadas em H4-A e 10 implementadas em H4-B); política estrita de lotes: H4-A (10), H4-B (10) e H4-C (1).
 
 **Dependências:** H0; clima/terreno; H2 para estatísticas e efetividade.
 
@@ -651,17 +651,19 @@ Lote canônico homologado e coberto por 93 testes determinísticos em `tests/bat
 10. **`dragons-maw`** (Gen VIII): Amplifica atributos ofensivos e dano de golpes Dragon em 1.5x.
 *Auditadas e validadas:* `dark-aura`, `fairy-aura`, `aura-break`, `prism-armor`, `neuroforce`.
 
-#### H4-B — Terrenos, Ruínas e Paradoxos (PLANEJADO — 10 Habilidades)
-1. `seed-sower`
-2. `grass-pelt`
-3. `surge-surfer`
-4. `hadron-engine`
-5. `protosynthesis`
-6. `quark-drive`
-7. `vessel-of-ruin`
-8. `sword-of-ruin`
-9. `tablets-of-ruin`
-10. `beads-of-ruin`
+#### H4-B — Terrenos, Ruínas e Paradoxos (CONCLUÍDO — 10 Habilidades)
+Lote canônico homologado e coberto por 34 testes determinísticos em `tests/battle/abilities-h4b.test.js`:
+1. **`seed-sower`** (Gen IX): Invoca Grassy Terrain por 5 turnos (8 com Terrain Extender) ao receber dano de ataque direto; não exige contato nem categoria física; suprimido por Neutralizing Gas.
+2. **`grass-pelt`** (Gen VI): Aumenta a Defense do portador em 1.5x enquanto Grassy Terrain estiver ativo. Ignorado por atacantes com Mold Breaker (`flags: { breakable: 1 }`).
+3. **`surge-surfer`** (Gen VII): Dobra a Speed do portador sob Electric Terrain (2.0x), sem exigir que o Pokémon esteja aterrado.
+4. **`hadron-engine`** (Gen IX): Invoca Electric Terrain na entrada; se o terreno já estiver ativo, ativa sem reiniciar o clima; amplifica Special Attack em ~1.33x (5461/4096) sob Electric Terrain. Não copiável por Trace/Receiver, não trocável e não sobrescrevível.
+5. **`protosynthesis`** (Gen IX): Aumenta o maior atributo do portador em 1.5x (Speed) ou ~1.3x (5325/4096 outros) sob Sun / Desolate Land ou ao consumir Booster Energy. Desempate canônico: Atk > Def > SpA > SpD > Spe.
+6. **`quark-drive`** (Gen IX): Aumenta o maior atributo do portador em 1.5x (Speed) ou ~1.3x (5325/4096 outros) sob Electric Terrain ou ao consumir Booster Energy. Desempate canônico: Atk > Def > SpA > SpD > Spe.
+7. **`vessel-of-ruin`** (Gen IX): Reduz o Special Attack de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker.
+8. **`sword-of-ruin`** (Gen IX): Reduz a Defense de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker.
+9. **`tablets-of-ruin`** (Gen IX): Reduz o Attack de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker.
+10. **`beads-of-ruin`** (Gen IX): Reduz a Special Defense de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker.
+*Dependência associada:* `booster-energy` (Showdown ID 1880) ativada apenas quando o clima/terreno natural não estiver ativo; persiste até o portador sair de campo; não removível de Pokémon Paradox.
 
 #### H4-C — Fechamento da Família H4 (PLANEJADO — 1 Habilidade)
 1. `supersweet-syrup`

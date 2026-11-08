@@ -1173,6 +1173,170 @@
     }
   };
 
+  // H4-B Canonical Abilities (FULL status)
+  const H4B_METADATA = {
+    'seed-sower': {
+      id: 'seed-sower',
+      name: 'Seed Sower',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DAMAGING_HIT', 'FIELD_TERRAIN']),
+      bearer: 'Arboliva (#930)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Invoca Grassy Terrain por 5 turnos (8 turnos com Terrain Extender) ao ser atingido por qualquer ataque direto de dano (físico ou especial).'
+    },
+    'grass-pelt': {
+      id: 'grass-pelt',
+      name: 'Grass Pelt',
+      generation: 6,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_DEFENSE']),
+      bearer: 'Skiddo (#672), Gogoat (#673)',
+      ruleset: 'Gen VI-IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Aumenta a Defense do portador em 1.5x enquanto Grassy Terrain estiver ativo no campo. Ignorado por Mold Breaker.'
+    },
+    'surge-surfer': {
+      id: 'surge-surfer',
+      name: 'Surge Surfer',
+      generation: 7,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['MODIFY_SPEED']),
+      bearer: 'Raichu-Alola (#10100)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Dobra a Speed do portador enquanto Electric Terrain estiver ativo no campo, sem exigir contato com o solo.'
+    },
+    'hadron-engine': {
+      id: 'hadron-engine',
+      name: 'Hadron Engine',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'FIELD_TERRAIN', 'MODIFY_SPECIAL_ATTACK']),
+      bearer: 'Miraidon (#1008)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Invoca Electric Terrain na entrada e aumenta o Special Attack do portador em ~1.33x (5461/4096) sob Electric Terrain.'
+    },
+    'protosynthesis': {
+      id: 'protosynthesis',
+      name: 'Protosynthesis',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'WEATHER_BOOST', 'ITEM_BOOST', 'MODIFY_STAT']),
+      bearer: 'Pokémon Paradox do Passado (Great Tusk, Scream Tail, Brute Bonnet, Flutter Mane, Slither Wing, Sandy Shocks, Roaring Moon, Walking Wake, Gouging Fire, Raging Bolt)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Aumenta o maior atributo do portador em 1.5x (Speed) ou ~1.3x (5325/4096 outros) sob Sun / Desolate Land ou ao consumir Booster Energy. Desempate: Atk > Def > SpA > SpD > Spe.'
+    },
+    'quark-drive': {
+      id: 'quark-drive',
+      name: 'Quark Drive',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'TERRAIN_BOOST', 'ITEM_BOOST', 'MODIFY_STAT']),
+      bearer: 'Pokémon Paradox do Futuro (Iron Treads, Iron Bundle, Iron Hands, Iron Jugulis, Iron Moth, Iron Thorns, Iron Valiant, Iron Leaves, Iron Boulder, Iron Crown)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: false,
+      copyable: false,
+      swappable: false,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Aumenta o maior atributo do portador em 1.5x (Speed) ou ~1.3x (5325/4096 outros) sob Electric Terrain ou ao consumir Booster Energy. Desempate: Atk > Def > SpA > SpD > Spe.'
+    },
+    'vessel-of-ruin': {
+      id: 'vessel-of-ruin',
+      name: 'Vessel of Ruin',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'AURA_STAT_DROP', 'MODIFY_SPECIAL_ATTACK']),
+      bearer: 'Ting-Lu (#1003)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Reduz o Special Attack de todos os outros combatentes no campo em 25% (multiplicador 0.75x). Portadores de Vessel of Ruin são imunes. Não acumula com múltiplos portadores.'
+    },
+    'sword-of-ruin': {
+      id: 'sword-of-ruin',
+      name: 'Sword of Ruin',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'AURA_STAT_DROP', 'MODIFY_DEFENSE']),
+      bearer: 'Chien-Pao (#1002)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Reduz a Defense de todos os outros combatentes no campo em 25% (multiplicador 0.75x). Portadores de Sword of Ruin são imunes. Não acumula com múltiplos portadores.'
+    },
+    'tablets-of-ruin': {
+      id: 'tablets-of-ruin',
+      name: 'Tablets of Ruin',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'AURA_STAT_DROP', 'MODIFY_ATTACK']),
+      bearer: 'Wo-Chien (#1001)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Reduz o Attack de todos os outros combatentes no campo em 25% (multiplicador 0.75x). Portadores de Tablets of Ruin são imunes. Não acumula com múltiplos portadores.'
+    },
+    'beads-of-ruin': {
+      id: 'beads-of-ruin',
+      name: 'Beads of Ruin',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'AURA_STAT_DROP', 'MODIFY_SPECIAL_DEFENSE']),
+      bearer: 'Chi-Yu (#1004)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
+      description: 'Reduz a Special Defense de todos os outros combatentes no campo em 25% (multiplicador 0.75x). Portadores de Beads of Ruin são imunes. Não acumula com múltiplos portadores.'
+    }
+  };
+
   // H6-A Canonical Type-Conversion Abilities (FULL status)
   const H6A_METADATA = {
     'normalize': {
@@ -2878,6 +3042,11 @@
 
     if (H4A_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H4A_METADATA[slug] }));
+      continue;
+    }
+
+    if (H4B_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H4B_METADATA[slug] }));
       continue;
     }
 
