@@ -967,7 +967,14 @@
     }
 
     abandonBattle() {
+      const meta = this.sessionOptions?.metadata;
       this.leaveBattle();
+      if (meta?.mode === 'CAMPAIGN') {
+        if (typeof window !== 'undefined' && typeof window.switchAppTab === 'function') {
+          window.switchAppTab('campaign');
+          return;
+        }
+      }
       return this.checkTeamAndInit();
     }
 

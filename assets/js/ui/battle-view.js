@@ -325,10 +325,73 @@
     requestExitBattle() {
       const state = this.sessionController ? this.sessionController.uiState : null;
       const completed = state === 'VICTORY' || state === 'DEFEAT';
-      if (!completed && typeof window !== 'undefined' && !window.confirm('Sair da batalha atual? O resultado não será registrado.')) return false;
-      this.resetArena();
-      if (this.sessionController && typeof this.sessionController.abandonBattle === 'function') this.sessionController.abandonBattle();
-      return true;
+      const meta = this.sessionController?.sessionOptions?.metadata;
+      const isCampaign = meta?.mode === 'CAMPAIGN';
+
+      if (completed) {
+        if (isCampaign) {
+          this.returnToCampaign();
+        } else {
+          this.returnToPreparation();
+        }
+        return true;
+      }
+
+      this.openExitConfirmModal();
+      return false;
+    }
+
+    openExitConfirmModal() {
+      this.modalTrigger = typeof document !== 'undefined' ? document.activeElement : null;
+      const meta = this.sessionController?.sessionOptions?.metadata;
+      const isCampaign = meta?.mode === 'CAMPAIGN';
+
+      const contentHtml = `
+        <div class="battle-exit-confirm-dialog">
+          <p class="battle-exit-confirm-text">
+            ${isCampaign ? 'Deseja sair da batalha e voltar para a campanha?' : 'Deseja realmente sair da batalha atual?'}
+          </p>
+          <p class="battle-exit-confirm-subtext">
+            O progresso deste combate não será registrado.
+          </p>
+          <div class="battle-exit-actions">
+            <button
+              id="btnConfirmExitBattle"
+              class="btn-battle-action-primary btn-battle-action-danger"
+              onclick="if(window.battleView) { window.battleView.confirmExitBattle(); }"
+              aria-label="${isCampaign ? 'Confirmar e voltar para a campanha' : 'Confirmar e sair da batalha'}"
+            >
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> ${isCampaign ? 'Sair para Campanha' : 'Sair da Batalha'}
+            </button>
+            <button
+              id="btnCancelExitBattle"
+              class="btn-battle-action-secondary"
+              onclick="if(window.battleView) { window.battleView.closeModal(); }"
+              aria-label="Cancelar e continuar batalhando"
+            >
+              <i class="fa-solid fa-xmark"></i> Continuar Batalha
+            </button>
+          </div>
+        </div>
+      `;
+
+      this.renderModal(
+        '<i class="fa-solid fa-triangle-exclamation"></i> Sair da Batalha',
+        contentHtml,
+        true,
+        isCampaign ? 'Modo Campanha' : 'Confirmação de desistência'
+      );
+    }
+
+    confirmExitBattle() {
+      this.closeModal();
+      const meta = this.sessionController?.sessionOptions?.metadata;
+      const isCampaign = meta?.mode === 'CAMPAIGN';
+      if (isCampaign) {
+        this.returnToCampaign();
+      } else {
+        this.returnToPreparation();
+      }
     }
 
     returnToPreparation() {

@@ -117,7 +117,7 @@
           this.sessionController.submitDoublesTurn(actions);
         } catch (error) { this.showDoublesError(error.message); }
       };
-      const leave = query('#btnDoublesLeave'); if (leave) leave.onclick = () => { if (!resolving && !this.sessionController?.isResolving) this.sessionController.abandonBattle(); };
+      const leave = query('#btnDoublesLeave'); if (leave) leave.onclick = () => { if (!resolving && !this.sessionController?.isResolving) this.requestExitBattle(); };
     };
     View.prototype.updateDoublesCombatant = function (command) {
       const role = command.side, slot = command.targetSlot, hud = this.container?.querySelector(`[data-duo-hud="${role}:${slot}"]`), target = this.container?.querySelector(`#duoCombatant_${role}_${slot}`);

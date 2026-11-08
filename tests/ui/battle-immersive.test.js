@@ -46,13 +46,76 @@ describe('PBA-014D — IMMERSIVE BATTLE VIEW', () => {
     assert.match(viewSource, /btnBackToBattle/);
   });
 
-  it('exit confirmation rejects accidental abandonment without mutating the session', () => {
+  it('exit confirmation uses in-game modal without window.confirm and protects active battle', () => {
     const originalWindow = global.window;
-    global.window = { confirm: () => false };
+    let confirmCalled = false;
+    let switchedTab = null;
+    global.window = {
+      confirm: () => { confirmCalled = true; return true; },
+      switchAppTab: (tab) => { switchedTab = tab; }
+    };
     let abandoned = 0;
-    const view = new BattleView({ container: {}, sessionController: { uiState: 'AWAITING_PLAYER_ACTION', abandonBattle: () => abandoned++ } });
+    const fakeContainer = { innerHTML: '', querySelector: () => null, querySelectorAll: () => [] };
+    const view = new BattleView({
+      container: fakeContainer,
+      sessionController: {
+        uiState: 'AWAITING_PLAYER_ACTION',
+        sessionOptions: { metadata: { mode: 'CAMPAIGN' } },
+        abandonBattle: () => abandoned++,
+        leaveBattle: () => {}
+      }
+    });
+
     assert.equal(view.requestExitBattle(), false);
+    assert.equal(confirmCalled, false, 'window.confirm must never be called');
     assert.equal(abandoned, 0);
+    assert.ok(view.activeModal, 'In-game modal must be active');
+    assert.match(view.activeModal.innerHTML, /Deseja sair da batalha e voltar para a campanha/);
+    assert.match(view.activeModal.innerHTML, /Sair para Campanha/);
+
+    // Confirm exit routes to campaign
+    view.confirmExitBattle();
+    assert.equal(switchedTab, 'campaign', 'Must return to campaign tab');
+
+    global.window = originalWindow;
+  });
+
+  it('exit confirmation in quick battle mode routes to returnToPreparation', () => {
+    const originalWindow = global.window;
+    let prepCalled = false;
+    const fakeContainer = { innerHTML: '', querySelector: () => null, querySelectorAll: () => [] };
+    const view = new BattleView({
+      container: fakeContainer,
+      sessionController: {
+        uiState: 'AWAITING_PLAYER_ACTION',
+        sessionOptions: { metadata: { mode: 'QUICK' } },
+        returnToPreparation: () => { prepCalled = true; },
+        leaveBattle: () => {}
+      }
+    });
+
+    view.requestExitBattle();
+    assert.match(view.activeModal.innerHTML, /Deseja realmente sair da batalha atual/);
+    assert.match(view.activeModal.innerHTML, /Sair da Batalha/);
+    view.confirmExitBattle();
+    assert.equal(prepCalled, true);
+
+    global.window = originalWindow;
+  });
+
+  it('abandonBattle on controller routes to campaign tab when metadata.mode is CAMPAIGN', () => {
+    const originalWindow = global.window;
+    let switchedTab = null;
+    global.window = {
+      switchAppTab: (tab) => { switchedTab = tab; }
+    };
+    const controller = new BattleSessionController({
+      teamStore: { load: () => [] }
+    });
+    controller.sessionOptions = { metadata: { mode: 'CAMPAIGN' } };
+    controller.abandonBattle();
+    assert.equal(switchedTab, 'campaign');
+
     global.window = originalWindow;
   });
 
