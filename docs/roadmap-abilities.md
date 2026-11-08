@@ -74,6 +74,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H4-B | Seed Sower, Grass Pelt, Surge Surfer, Hadron Engine, Protosynthesis, Quark Drive, Vessel of Ruin, Sword of Ruin, Tablets of Ruin, Beads of Ruin | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de terrenos, paradoxos, booster energy e tesouros da ruína. 34 testes dedicados em tests/battle/abilities-h4b.test.js. |
 | H4-C | Supersweet Syrup | **Implementado (FULL)**. 1 habilidade canônica Gen IX de redução de evasão de oponentes na entrada (-1 estágio, única por batalha). Encerramento oficial da Família H4 com 28 testes dedicados em `tests/battle/abilities-h4c.test.js`. |
 | H5 | Suction Cups, Truant, Slow Start, Stall, Prankster, Infiltrator, Gale Wings, Parental Bond, Triage, Queenly Majesty, Dazzling, Armor Tail, Mycelium Might, Quick Draw, Emergency Exit, Wimp Out, Magic Bounce, Screen Cleaner | **Implementado (FULL)**. Lote único consolidado de 18 habilidades canônicas Gen IX de prioridade, controle e fluxo de ações. 63 testes dedicados em `tests/battle/abilities-h5.test.js`. |
+| H8 | Gluttony, Unburden, Klutz, Frisk, Anticipation, Forewarn, Pickpocket, Harvest, Cheek Pouch, Magician, Sticky Hold, Ripen, Cud Chew, Pickup | **Implementado (FULL)**. Lote único consolidado de 14 habilidades canônicas Gen IX de itens, berries, roubo, recuperação e informações. 67 testes dedicados em `tests/battle/abilities-h8.test.js`. |
 
 A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes compartilham a mesma dificuldade. Cada habilidade pode ser liberada individualmente após seus testes. As fases seguintes são famílias de trabalho, não um único commit por fase.
 
@@ -994,15 +995,15 @@ Criar regras por habilidade para copiar, substituir, herdar e suprimir. Neutrali
 
 **Lista completa da família:** `trace`, `mummy`, `receiver`, `power-of-alchemy`, `wandering-spirit`, `neutralizing-gas`, `lingering-aroma`.
 
-### H8 — Itens, berries e informações
+### H8 — Itens, berries e informações (CONCLUÍDO)
 
-**Inventário:** 14 habilidades pendentes; 62 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (14 concluídas em lote único consolidado H8); 0 registros com habilidade padrão afetados.
 
 **Dependências:** H0; consumo/posse de itens e regras por berry; H7 para supressão.
 
 Separar uso de berries, recuperação/roubo e informação pública de batalha. Pickup possui efeito em combate e não deve ser descartada como habilidade só de exploração. Frisk/Anticipation/Forewarn precisam de mensagens úteis e informação permitida; nada de ler a ação futura do jogador. Itens recuperados na luta não entram permanentemente na mochila/elenco.
 
-**Aceite:** Unnerve/As One, berry já consumida, múltiplos portadores, chance controlada, Sticky Hold/itens irremovíveis, troca de item, remoção por golpe, alvo nocauteado e restauração no início de nova batalha.
+**Aceite:** Unnerve/As One, berry já consumida, múltiplos portadores, chance controlada, Sticky Hold/itens irremovíveis, troca de item, remoção por golpe, alvo nocauteado e restauração no início de nova batalha. Concluído com 62 testes dedicados em `tests/battle/abilities-h8.test.js`.
 
 **Lista completa da família:** `gluttony`, `unburden`, `klutz`, `frisk`, `anticipation`, `forewarn`, `pickpocket`, `harvest`, `cheek-pouch`, `magician`, `sticky-hold`, `ripen`, `cud-chew`, `pickup`.
 

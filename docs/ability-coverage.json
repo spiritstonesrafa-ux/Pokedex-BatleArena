@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 274,
+    "declaredSupported": 288,
     "assignedAbilities": 313,
-    "assignedPending": 40,
+    "assignedPending": 26,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 125
+    "recordsWithPendingDefault": 63
   },
   "phases": [
     {
@@ -57,8 +57,8 @@
     {
       "id": "H8",
       "name": "Itens, berries e informações",
-      "assignedPending": 14,
-      "defaultRecordsImpacted": 62
+      "assignedPending": 0,
+      "defaultRecordsImpacted": 0
     },
     {
       "id": "H9",
@@ -521,8 +521,8 @@
     },
     {
       "name": "anticipation",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -1626,8 +1626,8 @@
     },
     {
       "name": "cheek-pouch",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -2639,8 +2639,8 @@
     },
     {
       "name": "cud-chew",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -4566,8 +4566,8 @@
     },
     {
       "name": "forewarn",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -4706,8 +4706,8 @@
     },
     {
       "name": "frisk",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -5063,8 +5063,8 @@
     },
     {
       "name": "gluttony",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -5800,8 +5800,8 @@
     },
     {
       "name": "harvest",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -8617,8 +8617,8 @@
     },
     {
       "name": "klutz",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -9925,8 +9925,8 @@
     },
     {
       "name": "magician",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -12132,8 +12132,8 @@
     },
     {
       "name": "pickpocket",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -12238,8 +12238,8 @@
     },
     {
       "name": "pickup",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -14453,8 +14453,8 @@
     },
     {
       "name": "ripen",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -18630,8 +18630,8 @@
     },
     {
       "name": "sticky-hold",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {
@@ -21761,8 +21761,8 @@
     },
     {
       "name": "unburden",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H8",
       "pokemon": [
         {

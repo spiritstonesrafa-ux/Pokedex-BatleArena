@@ -3288,6 +3288,235 @@
     }
   };
 
+  // H8 Canonical Item & Berry Abilities (FULL status)
+  const H8_METADATA = {
+    'gluttony': {
+      id: 'gluttony',
+      name: 'Gluttony',
+      generation: 4,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_UPDATE', 'ON_EAT_ITEM']),
+      bearer: 'Shuckle (#213), Gulpin (#316), Swalot (#317), Snorlax (#143), Zigzagoon (#263), Linoone (#264), Bellsprout (#69), Weepinbell (#70), Victreebel (#71), Grimer-Alola (#88), Muk-Alola (#89)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Faz com que o portador consuma pinch berries em 50% ou menos de HP máximo em vez do limiar normal de 25%.'
+    },
+    'unburden': {
+      id: 'unburden',
+      name: 'Unburden',
+      generation: 4,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_AFTER_USE_ITEM', 'ON_MODIFY_SPE']),
+      bearer: 'Treecko (#252), Grovyle (#253), Sceptile (#254), Drifloon (#425), Drifblim (#426), Hawlucha (#701), Accelgor (#617), Slurpuff (#685), Grafaiai (#945)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Dobra a Speed do portador quando seu item segurado é consumido, roubado ou removido em batalha. A bonificação cessa se um novo item for adquirido e é resetada ao sair de campo.'
+    },
+    'klutz': {
+      id: 'klutz',
+      name: 'Klutz',
+      generation: 4,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_MOVE', 'ON_TAKE_ITEM', 'ON_RESIDUAL']),
+      bearer: 'Buneary (#427), Lopunny (#428), Woobat (#527), Swoobat (#528), Golett (#622), Golurk (#623), Bewear (#760)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Impede o uso e efeitos passivos ou ativos do item segurado pelo portador, exceto itens que afetam ganho de experiência ou Ability Shield. Permite usar golpes de status mesmo segurando Assault Vest e impede Choice lock.'
+    },
+    'frisk': {
+      id: 'frisk',
+      name: 'Frisk',
+      generation: 4,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START']),
+      bearer: 'Stantler (#234), Shuppet (#353), Banette (#354), Dusclops (#356), Dusknoir (#477), Gothita (#574), Gothorita (#575), Gothitelle (#576), Noibat (#714), Noivern (#715), Grimmsnarl (#861)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Ao entrar em campo, revela o item segurado pelo oponente (ou oponentes ativos em Doubles).'
+    },
+    'anticipation': {
+      id: 'anticipation',
+      name: 'Anticipation',
+      generation: 4,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START']),
+      bearer: 'Barboach (#339), Whiscash (#340), Croagunk (#453), Toxicroak (#454), Ferrothorn (#598), Eevee (#133), Wormadam (#413)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Ao entrar em campo, estremece se o oponente possuir golpes super-efetivos contra sua tipagem atual, golpes OHKO ou golpes de autodestruição.'
+    },
+    'forewarn': {
+      id: 'forewarn',
+      name: 'Forewarn',
+      generation: 4,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START']),
+      bearer: 'Drowzee (#96), Hypno (#97), Jynx (#124), Munna (#517), Musharna (#518)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Ao entrar em campo, alerta sobre o golpe de maior poder base entre os golpes dos oponentes ativos, quebrando empates deterministicamente.'
+    },
+    'pickpocket': {
+      id: 'pickpocket',
+      name: 'Pickpocket',
+      generation: 5,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_AFTER_MOVE_SECONDARY']),
+      bearer: 'Sneasel (#215), Weavile (#461), Seedot (#273), Nuzleaf (#274), Shiftry (#275), Binacle (#688), Barbaracle (#689), Impidimp (#859), Morgrem (#860), Grimmsnarl (#861)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Quando o portador sem item é atingido por um golpe de contato, rouba o item segurado do atacante caso seja removível.'
+    },
+    'harvest': {
+      id: 'harvest',
+      name: 'Harvest',
+      generation: 5,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL']),
+      bearer: 'Exeggcute (#102), Exeggutor (#103), Exeggutor-Alola (#103), Tropius (#357), Phantump (#708), Trevenant (#709), Smoliv (#928), Dolliv (#929), Arboliva (#930)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'No final de cada turno, possui 50% de chance de restaurar uma Berry consumida pelo portador. Sob sol intenso (Sun ou Desolate Land), a chance é de 100%.'
+    },
+    'cheek-pouch': {
+      id: 'cheek-pouch',
+      name: 'Cheek Pouch',
+      generation: 6,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_EAT_ITEM']),
+      bearer: 'Bunnelby (#659), Diggersby (#660), Dedenne (#702), Skwovet (#819), Greedent (#820)',
+      ruleset: 'Gen VI-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Restaura 1/3 do HP máximo do portador adicionalmente sempre que este consome qualquer tipo de Berry.'
+    },
+    'magician': {
+      id: 'magician',
+      name: 'Magician',
+      generation: 6,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_AFTER_MOVE_SECONDARY']),
+      bearer: 'Fennekin (#653), Braixen (#654), Delphox (#655), Klefki (#707), Hoopa (#720)',
+      ruleset: 'Gen VI-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Quando o portador sem item acerta um golpe causador de dano no alvo, rouba o item segurado do alvo caso seja removível.'
+    },
+    'sticky-hold': {
+      id: 'sticky-hold',
+      name: 'Sticky Hold',
+      generation: 3,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TAKE_ITEM']),
+      bearer: 'Grimer (#88), Muk (#89), Gulpin (#316), Swalot (#317), Shellos (#422), Gastrodon (#423), Trubbish (#568), Accelgor (#617)',
+      ruleset: 'Gen III-IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      flags: Object.freeze({ breakable: 1 }),
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Protege o item do portador de ser removido ou roubado por golpes como Knock Off e Thief ou habilidades como Magician e Pickpocket. Bypassed por Mold Breaker.'
+    },
+    'ripen': {
+      id: 'ripen',
+      name: 'Ripen',
+      generation: 8,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TRY_HEAL', 'ON_MODIFY_DAMAGE', 'ON_EAT_ITEM']),
+      bearer: 'Applin (#840), Flapple (#841), Appletun (#842)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Amadurece Berries e dobra seus efeitos: cura o dobro em Berries de restauração de HP, concede +2 estágios em Berries de status, e reduz o dano a 0.25x em Berries de redução de dano super-efetivo.'
+    },
+    'cud-chew': {
+      id: 'cud-chew',
+      name: 'Cud Chew',
+      generation: 9,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_EAT_ITEM', 'ON_RESIDUAL']),
+      bearer: 'Tauros-Paldea (#128), Farigiraf (#981)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'Se o portador consome uma Berry, ele a mastiga novamente no final do turno seguinte, obtendo seu efeito uma segunda vez.'
+    },
+    'pickup': {
+      id: 'pickup',
+      name: 'Pickup',
+      generation: 3,
+      phase: 'H8',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL']),
+      bearer: 'Meowth (#52), Aipom (#190), Teddiursa (#216), Phanpy (#231), Zigzagoon (#263), Linoone (#264), Pachirisu (#417), Ambipom (#424), Munchlax (#446), Lillipup (#506), Bunnelby (#659), Diggersby (#660), Dedenne (#702), Pikipek (#731), Trumbeak (#732), Greedent (#820), Tandemaus (#924)',
+      ruleset: 'Gen III-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-h8.test.js']),
+      description: 'No final do turno, se o portador não estiver segurando nenhum item, ele recolhe um item consumido por outro Pokémon ativo durante o turno.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -3416,6 +3645,11 @@
 
     if (H2F_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H2F_METADATA[slug] }));
+      continue;
+    }
+
+    if (H8_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H8_METADATA[slug] }));
       continue;
     }
 

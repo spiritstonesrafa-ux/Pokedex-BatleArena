@@ -2,6 +2,40 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 08/11/2026: Implementação Canônica H8 — Lote Único de 14 Habilidades (Itens, Berries, Roubo, Recuperação e Informações — Showdown Gen IX)
+
+- **Lote H8 Implementado e Homologado Localmente (14 Habilidades):**
+  1. `gluttony` (Gen IV — Showdown ID 82): O portador consome pinch berries (Figy, Wiki, Mago, Aguav, Iapapa, Liechi, Ganlon, Salac, Petaya, Apicot) em 50% ou menos do HP máximo em vez do limiar normal de 25%. Respeita bloqueios de Unnerve/As One e Klutz.
+  2. `unburden` (Gen IV — Showdown ID 84): Dobra a Speed do portador (2x) quando seu item é consumido, roubado ou removido em batalha. A bonificação cessa se um novo item for adquirido (via Harvest, Pickup, Magician, etc.) e é reiniciada ao sair de campo (`leave`). Entrar sem item não ativa a habilidade.
+  3. `klutz` (Gen IV — Showdown ID 103): Suprime universalmente efeitos passivos e ativos do item segurado (Leftovers, Focus Sash, Choice Band/Specs/Scarf, Assault Vest). Permite usar golpes de status segurando Assault Vest e impede Choice lock. Não suprime Ability Shield e reativa os itens ao ser suprimida (Neutralizing Gas).
+  4. `frisk` (Gen IV — Showdown ID 119): Ao entrar em campo, revela o item segurado do oponente em Singles e de ambos os oponentes ativos em Doubles. Suprimido por Neutralizing Gas.
+  5. `anticipation` (Gen IV — Showdown ID 107): Ao entrar em campo, estremece se o oponente possuir golpes super-efetivos contra sua tipagem atual ou golpes OHKO (Fissure, Sheer Cold, Horn Drill, Guillotine). No Pokémon Showdown Gen IX, golpes de autodestruição (Self-Destruct, Explosion, Misty Explosion) NÃO ativam Anticipation incondicionalmente — ativam apenas se forem super-efetivos contra a tipagem do portador (ex: Misty Explosion contra tipo Dragon/Fighting/Dark). Respeita imunidades (ex: Electric contra Ground, ou Ground contra Flying/Levitate), singles e doubles, e neutralização por Neutralizing Gas (salvo Ability Shield).
+  6. `forewarn` (Gen IV — Showdown ID 108): Ao entrar em campo, revela o golpe de maior poder base entre os oponentes ativos (OHKO = 150 BP, Counter/Mirror Coat/Metal Burst = 120 BP, golpes de poder variável = 80 BP). Desempate determinístico via `forewarnRoll`.
+  7. `pickpocket` (Gen V — Showdown ID 124): Quando o portador sem item recebe golpe com dano de contato, rouba o item segurado do atacante (caso seja removível). Ativa Unburden na vítima espoliada. Respeita Sticky Hold e não ativa se o portador desmaiar ou já tiver item.
+  8. `harvest` (Gen V — Showdown ID 139): No final de cada turno, restaura uma Berry consumida pelo portador com 50% de chance em clima normal (desempate determinístico via `harvestRoll`) e 100% sob Sol (Sun ou Desolate Land). Consumo imediato caso o HP esteja abaixo do limiar ao restaurar.
+  9. `cheek-pouch` (Gen VI — Showdown ID 167): Restaura 1/3 do HP máximo do portador adicionalmente sempre que este consome qualquer tipo de Berry (cura, pinch, atributos, status ou resist berries). Acumula com a cura própria da berry.
+  10. `magician` (Gen VI — Showdown ID 170): Quando o portador sem item atinge o alvo com golpe causador de dano, rouba o item segurado do alvo caso seja removível. Respeita Sticky Hold (salvo Mold Breaker) e ativa Unburden na vítima. Multi-hit rouba no máximo uma vez.
+  11. `sticky-hold` (Gen III — Showdown ID 60): Protege o item contra roubo (Thief, Magician, Pickpocket) e remoção (Knock Off). Nega o bônus de 1.5x de poder de Knock Off (salvo atacante com Mold Breaker).
+  12. `ripen` (Gen VIII — Showdown ID 247): Dobra os efeitos de Berries consumidas: dobra a cura de Sitrus (50% max HP), Oran (20 HP) e pinch healing berries (66.7%), dobra os estágios concedidos por pinch stat berries (+2 estágios) e dobra a redução de dano de resist berries (0.25x em vez de 0.5x).
+  13. `cud-chew` (Gen IX — Showdown ID 291): Ao consumir uma Berry durante o turno, agenda uma segunda mastigação para o final do turno seguinte (`CUD_CHEW_SCHEDULED`). No final do turno seguinte, repete o efeito da Berry (`CUD_CHEW_ACTIVATED`). Bloqueado se Unnerve estiver ativo e cancelado ao trocar de Pokémon (`leave`).
+  14. `pickup` (Gen III — Showdown ID 53): No final do turno, caso o portador não esteja segurando nenhum item, recolhe um item consumido por outro Pokémon ativo durante o turno. Não duplica itens se houver múltiplos portadores de Pickup. Regain do item desativa Unburden se o usuário possuir a habilidade.
+
+- **Suíte de Testes H8 Dedicada (67 Testes — 100% PASS):**
+  - `tests/battle/abilities-h8.test.js`: 62 testes determinísticos e exaustivos cobrindo as 14 habilidades, casos de borda, interações com itens, Unnerve, Mold Breaker, doubles, trocas e metadados.
+
+- **Validação Global e Inventário:**
+  - H8: **67/67 PASS** (0 falhas).
+  - Suíte Global do Projeto: **4.772/4.772 PASS** (75 suítes, 0 falhas, 0 regressões).
+  - Auditoria de Habilidades (`scripts/audit-abilities.js --check`): 100% PASS.
+  - Auditoria P8 (`scripts/audit-p8.js`): 100% PASS (`unresolvedP8: 0`).
+  - Habilidades conhecidas: **374**.
+  - Habilidades declaradas com suporte: **288** (+14).
+  - Pendências atribuídas: **26** (-14).
+  - Pendências restantes na Família H8: **0** (Família H8 100% concluída!).
+  - Hashing de integridade `minior-shields-down-harness.html`: SHA-256 `B673B72A1A446016513D759D0B16835E9A5AB5D01F8C3E6EF2D13FC34BCA9A1E` idêntico ao baseline.
+  - Estilização `assets/css/battle-arena.css`: 100% intocada.
+  - Status Git: Staging vazio, zero commits, implementação 100% local pronta para homologação.
+
 ## Atualização — 08/11/2026: Conferência Canônica Final — Crunch e Secret Power — Lote H5 (Conformidade Showdown Gen IX)
 
 - **Conferência Canônica e Refinamentos Finais Consolidados:**

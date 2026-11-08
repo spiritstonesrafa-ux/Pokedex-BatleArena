@@ -1010,8 +1010,8 @@
       const ppMove=selectedMove;
       selectedMove=constants.P8.activeMove(attacker,selectedMove,constants);
       if(!calledMove && constants.P6.consecutive.includes(selectedMove.id)&&attacker.lastP6Move===selectedMove.id)throw new Error('ACTION_REJECTED: este golpe não pode ser usado consecutivamente.');
-      if(!calledMove && !attacker.dynamax && attacker.choiceLock && (['choice-band','choice-specs','choice-scarf'].includes(attacker.item)||constants.P7.ability(attacker)==='gorilla-tactics')&&selectedMove.id!==attacker.choiceLock&&!isStruggle)throw new Error('ACTION_REJECTED: item Choice ou Gorilla Tactics bloqueia outro golpe.');
-      if(!calledMove && attacker.item==='assault-vest'&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
+      if(!calledMove && !attacker.dynamax && attacker.choiceLock && (['choice-band','choice-specs','choice-scarf'].some(it=>constants.P7.held(attacker,it))||constants.P7.ability(attacker)==='gorilla-tactics')&&selectedMove.id!==attacker.choiceLock&&!isStruggle)throw new Error('ACTION_REJECTED: item Choice ou Gorilla Tactics bloqueia outro golpe.');
+      if(!calledMove && constants.P7.held(attacker,'assault-vest')&&selectedMove.damageClass==='status')throw new Error('ACTION_REJECTED: Assault Vest impede golpes de status.');
       const actualDamageClass = constants.P8.damageClass(attacker,selectedMove,constants);
       constants.P7.sync(state);attacker.abilityIgnored=false;defender.abilityIgnored=constants.P7.ignored(attacker,defender,selectedMove);
       attacker.p7BlockDrop=false;attacker.p7BlockAttackDrop=false;attacker.p7BlockDefenseDrop=false;attacker.p7KeenEyeAccuracyBlock=false;
@@ -1498,7 +1498,7 @@
       }
 
       if(baseCharge&&selectedMove.id===130)constants.P6.stage(constants,events,attackerRole,attacker,'defense',1);
-      if(skipCharge&&!(selectedMove.id===76&&constants.P7.fieldWeather(state)==='sun'))constants.P7.consume(constants,events,attackerRole,attacker,'power-herb');
+      if(skipCharge&&!(selectedMove.id===76&&constants.P7.fieldWeather(state)==='sun'))constants.P7.consume(constants,events,attackerRole,attacker,'power-herb',state);
       if (isTwoTurnCharging) {
         attacker.stallCount = 0;
         const twoTurnDef = constants.getTwoTurnMove(selectedMove);
