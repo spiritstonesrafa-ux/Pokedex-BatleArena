@@ -41,12 +41,14 @@
       multiplier: 1,
       enterFrom: 'left',
       attackDirection: 1,
+      facingDirection: -1,
       label: 'player'
     },
     enemy: {
       multiplier: -1,
       enterFrom: 'right',
       attackDirection: -1,
+      facingDirection: 1,
       label: 'enemy'
     }
   });

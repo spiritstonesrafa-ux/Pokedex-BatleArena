@@ -23,19 +23,26 @@
   --pba-duration-switch-out: 400ms;
   --pba-duration-switch-in: 500ms;
   --pba-duration-victory: 700ms;
+  --pba-facing: 1;
 }
 
 /* Orientações base por lado de combate */
 [data-battle-side="player"],
 [data-battle-side^="player:"],
-.pba-side-player {
+.pba-side-player,
+.combatant-slot.player-slot,
+.duo-player {
   --pba-dir: 1; /* Player ataca e avança para a direita (+X) */
+  --pba-facing: -1; /* Espelha o sprite para olhar para a direita (em direção ao adversário) */
 }
 
 [data-battle-side="enemy"],
 [data-battle-side^="enemy:"],
-.pba-side-enemy {
+.pba-side-enemy,
+.combatant-slot.enemy-slot,
+.duo-enemy {
   --pba-dir: -1; /* Enemy ataca e avança para a esquerda (-X) */
+  --pba-facing: 1; /* Adversário mantém a orientação nativa canônica (encarando a esquerda) */
 }
 
 /* Elemento base do sprite */
@@ -47,6 +54,7 @@
   transition: opacity 0.2s ease;
   user-select: none;
   -webkit-user-drag: none;
+  transform: scaleX(var(--pba-facing, 1));
 }
 
 /* Estado oculto pós-faint ou fora de campo */
@@ -65,15 +73,15 @@
 @keyframes pba-keyframe-enter {
   0% {
     opacity: 0;
-    transform: translateX(calc(var(--pba-enter-distance) * -1 * var(--pba-dir))) scale(0.65);
+    transform: translateX(calc(var(--pba-enter-distance) * -1 * var(--pba-dir))) scale(calc(0.65 * var(--pba-facing, 1)), 0.65);
   }
   60% {
     opacity: 1;
-    transform: translateX(calc(var(--pba-enter-distance) * 0.1 * var(--pba-dir))) scale(1.05);
+    transform: translateX(calc(var(--pba-enter-distance) * 0.1 * var(--pba-dir))) scale(calc(1.05 * var(--pba-facing, 1)), 1.05);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0) scale(var(--pba-facing, 1), 1);
   }
 }
 
@@ -85,10 +93,10 @@
 
 @keyframes pba-keyframe-idle {
   0%, 100% {
-    transform: translateY(0) scale(1, 1);
+    transform: translateY(0) scale(var(--pba-facing, 1), 1);
   }
   50% {
-    transform: translateY(-6px) scale(1.02, 0.98);
+    transform: translateY(-6px) scale(calc(1.02 * var(--pba-facing, 1)), 0.98);
   }
 }
 
@@ -100,16 +108,16 @@
 
 @keyframes pba-keyframe-attack {
   0% {
-    transform: translateX(0) scale(1);
+    transform: translateX(0) scale(var(--pba-facing, 1), 1);
   }
   40% {
-    transform: translateX(calc(var(--pba-travel-distance) * var(--pba-dir))) scale(1.12);
+    transform: translateX(calc(var(--pba-travel-distance) * var(--pba-dir))) scale(calc(1.12 * var(--pba-facing, 1)), 1.12);
   }
   75% {
-    transform: translateX(calc(var(--pba-travel-distance) * 0.8 * var(--pba-dir))) scale(1.04);
+    transform: translateX(calc(var(--pba-travel-distance) * 0.8 * var(--pba-dir))) scale(calc(1.04 * var(--pba-facing, 1)), 1.04);
   }
   100% {
-    transform: translateX(0) scale(1);
+    transform: translateX(0) scale(var(--pba-facing, 1), 1);
   }
 }
 
@@ -121,23 +129,23 @@
 
 @keyframes pba-keyframe-damage {
   0%, 100% {
-    transform: translate(0, 0);
+    transform: translate(0, 0) scale(var(--pba-facing, 1), 1);
     opacity: 1;
   }
   15% {
-    transform: translate(calc(-10px * var(--pba-dir)), -4px);
+    transform: translate(calc(-10px * var(--pba-dir)), -4px) scale(var(--pba-facing, 1), 1);
     opacity: 0.4;
   }
   35% {
-    transform: translate(calc(8px * var(--pba-dir)), 2px);
+    transform: translate(calc(8px * var(--pba-dir)), 2px) scale(var(--pba-facing, 1), 1);
     opacity: 1;
   }
   55% {
-    transform: translate(calc(-6px * var(--pba-dir)), -2px);
+    transform: translate(calc(-6px * var(--pba-dir)), -2px) scale(var(--pba-facing, 1), 1);
     opacity: 0.6;
   }
   75% {
-    transform: translate(calc(3px * var(--pba-dir)), 1px);
+    transform: translate(calc(3px * var(--pba-dir)), 1px) scale(var(--pba-facing, 1), 1);
     opacity: 1;
   }
 }
@@ -151,19 +159,19 @@
 @keyframes pba-keyframe-faint {
   0% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(var(--pba-facing, 1), 1);
   }
   30% {
     opacity: 0.85;
-    transform: translateY(8px) scale(0.95, 0.85);
+    transform: translateY(8px) scale(calc(0.95 * var(--pba-facing, 1)), 0.85);
   }
   65% {
     opacity: 0.4;
-    transform: translateY(22px) scale(0.8, 0.7);
+    transform: translateY(22px) scale(calc(0.8 * var(--pba-facing, 1)), 0.7);
   }
   100% {
     opacity: 0;
-    transform: translateY(40px) scale(0.5);
+    transform: translateY(40px) scale(calc(0.5 * var(--pba-facing, 1)), 0.5);
   }
 }
 
@@ -176,15 +184,15 @@
 @keyframes pba-keyframe-switch-out {
   0% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(var(--pba-facing, 1), 1) translateY(0);
   }
   50% {
     opacity: 0.7;
-    transform: scale(0.7) translateY(10px);
+    transform: scale(calc(0.7 * var(--pba-facing, 1)), 0.7) translateY(10px);
   }
   100% {
     opacity: 0;
-    transform: scale(0.2) translateY(25px);
+    transform: scale(calc(0.2 * var(--pba-facing, 1)), 0.2) translateY(25px);
   }
 }
 
@@ -197,15 +205,15 @@
 @keyframes pba-keyframe-switch-in {
   0% {
     opacity: 0;
-    transform: scale(0.25) translateY(-25px);
+    transform: scale(calc(0.25 * var(--pba-facing, 1)), 0.25) translateY(-25px);
   }
   60% {
     opacity: 1;
-    transform: scale(1.08) translateY(2px);
+    transform: scale(calc(1.08 * var(--pba-facing, 1)), 1.08) translateY(2px);
   }
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(var(--pba-facing, 1), 1) translateY(0);
   }
 }
 
@@ -217,16 +225,16 @@
 
 @keyframes pba-keyframe-victory {
   0%, 100% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(var(--pba-facing, 1), 1);
   }
   25% {
-    transform: translateY(-22px) scale(1.12);
+    transform: translateY(-22px) scale(calc(1.12 * var(--pba-facing, 1)), 1.12);
   }
   50% {
-    transform: translateY(0) scale(0.98, 1.02);
+    transform: translateY(0) scale(calc(0.98 * var(--pba-facing, 1)), 1.02);
   }
   75% {
-    transform: translateY(-12px) scale(1.06);
+    transform: translateY(-12px) scale(calc(1.06 * var(--pba-facing, 1)), 1.06);
   }
 }
 
@@ -246,7 +254,7 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    transform: none !important;
+    transform: scaleX(var(--pba-facing, 1)) !important;
   }
 
   .pba-anim-faint,
@@ -274,7 +282,7 @@
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
-  transform: none !important;
+  transform: scaleX(var(--pba-facing, 1)) !important;
 }
 
 .pba-reduced-motion.pba-anim-faint,

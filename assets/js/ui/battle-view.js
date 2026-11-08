@@ -391,10 +391,8 @@
       const id = Number(combatant.id || combatant.number) || defaultId;
       const name = String(combatant.name || `Pokémon #${id}`).trim().toLowerCase();
 
-      // URLs padrão canônicas da PokéAPI baseadas no ID
-      const cdnAnimated = (side === 'player')
-        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${id}.gif`
-        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`;
+      // URLs padrão canônicas da PokéAPI baseadas no ID (ambos usam sprites frontais canônicos virados de frente)
+      const cdnAnimated = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`;
       const cdnAnimatedFront = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${id}.gif`;
       const cdnArtwork = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
       const cdnStatic = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
@@ -762,7 +760,7 @@
                 <div class="arena-ambient-container" id="arenaAmbientContainer" aria-hidden="true"></div>
 
                 <!-- Slot do Pokémon do Jogador -->
-                <div class="combatant-slot player-slot" data-pokemon-target="player" id="playerCombatantTarget" data-semi-state="${playerActive.twoTurnMove?.state||''}">
+                <div class="combatant-slot player-slot" data-battle-side="player" data-pokemon-target="player" id="playerCombatantTarget" data-semi-state="${playerActive.twoTurnMove?.state||''}">
                   <img
                     id="playerSpriteImg"
                     class="combatant-sprite-img ${playerActive.currentHp === 0 ? 'fainted' : ''}"
@@ -777,7 +775,7 @@
                 </div>
 
                 <!-- Slot do Pokémon Adversário -->
-                <div class="combatant-slot enemy-slot" data-pokemon-target="enemy" id="enemyCombatantTarget" data-semi-state="${enemyActive.twoTurnMove?.state||''}">
+                <div class="combatant-slot enemy-slot" data-battle-side="enemy" data-pokemon-target="enemy" id="enemyCombatantTarget" data-semi-state="${enemyActive.twoTurnMove?.state||''}">
                   <img
                     id="enemySpriteImg"
                     class="combatant-sprite-img ${enemyActive.currentHp === 0 ? 'fainted' : ''} ${finalStand ? 'shadow-pokemon-aura' : ''}"

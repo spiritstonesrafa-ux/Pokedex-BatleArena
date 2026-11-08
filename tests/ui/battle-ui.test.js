@@ -824,6 +824,28 @@ describe('PHASE PBA-013-SPRITE-FIX — GATES SPR01–SPR20 (SPRITE RENDERING & B
     assert.ok(navBtnHtml.includes('<span>Batalhar</span>'), 'Button must have Batalhar label');
     assert.ok(!navBtnHtml.toLowerCase().includes('em breve'), 'Button must NOT contain Em breve badge');
   });
+
+  it('SPR21 — Facing Orientation & Canonical Front Sprites: Player and Enemy face each other without back sprites', () => {
+    const view = new BattleView({ container: mockContainer });
+    const battleState = {
+      turn: 1,
+      player: { activeIndex: 0, team: [{ id: 94, name: 'gengar', maxHp: 135, currentHp: 135, types: ['ghost', 'poison'], moves: [] }] },
+      enemy: { activeIndex: 0, team: [{ id: 718, name: 'zygarde', maxHp: 129, currentHp: 129, types: ['dragon', 'ground'], moves: [] }] }
+    };
+    view.renderActiveBattleView(battleState, 'AWAITING_PLAYER_ACTION');
+
+    const html = mockContainer.innerHTML;
+    assert.ok(html.includes('data-battle-side="player"'), 'Player slot must define data-battle-side="player"');
+    assert.ok(html.includes('data-battle-side="enemy"'), 'Enemy slot must define data-battle-side="enemy"');
+
+    const playerVisual = view.resolveCombatantVisual({ id: 94, name: 'gengar' }, 'player');
+    const enemyVisual = view.resolveCombatantVisual({ id: 718, name: 'zygarde' }, 'enemy');
+
+    assert.ok(!playerVisual.spriteUrl.includes('/showdown/back/'), 'Player must never use back sprite URL');
+    assert.ok(playerVisual.spriteUrl.includes('/showdown/94.gif'), 'Player must resolve to canonical front showdown GIF');
+    assert.ok(!enemyVisual.spriteUrl.includes('/showdown/back/'), 'Enemy must never use back sprite URL');
+    assert.ok(enemyVisual.spriteUrl.includes('/showdown/718.gif'), 'Enemy must resolve to canonical front showdown GIF');
+  });
 });
 
 describe('PBA-015I-HOTFIX — Campaign session handoff', () => {
