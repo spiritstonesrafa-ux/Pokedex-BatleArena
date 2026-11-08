@@ -4,12 +4,12 @@
   "scope": "Fixed battle catalogue; normal, hidden and alternate natural abilities. Declared support is not a FULL behavioral audit.",
   "summary": {
     "knownAbilities": 374,
-    "declaredSupported": 258,
+    "declaredSupported": 259,
     "assignedAbilities": 313,
-    "assignedPending": 56,
+    "assignedPending": 55,
     "unassignedPending": 60,
     "battleRecords": 1349,
-    "recordsWithPendingDefault": 140
+    "recordsWithPendingDefault": 138
   },
   "phases": [
     {
@@ -33,8 +33,8 @@
     {
       "id": "H4",
       "name": "Clima, terreno e auras",
-      "assignedPending": 1,
-      "defaultRecordsImpacted": 2
+      "assignedPending": 0,
+      "defaultRecordsImpacted": 0
     },
     {
       "id": "H5",
@@ -19297,8 +19297,8 @@
     },
     {
       "name": "supersweet-syrup",
-      "declaredSupported": false,
-      "status": "PENDING",
+      "declaredSupported": true,
+      "status": "DECLARED_UNVERIFIED",
       "phase": "H4",
       "pokemon": [
         {

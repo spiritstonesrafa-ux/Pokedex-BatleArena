@@ -2,6 +2,35 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 08/11/2026: Implementação Canônica e Fechamento da Família H4 (H4-C — Supersweet Syrup)
+
+- **Lote H4-C Implementado e Homologado (Fechamento da Família H4):**
+  1. `supersweet-syrup` (Gen IX — Showdown ID 306): Reduz a evasão dos oponentes adjacentes em exatamente 1 estágio na primeira entrada do portador em combate.
+  - Ativação estritamente única por portador por batalha (`syrupTriggered` persistente na instância do Pokémon na equipe). Reentradas posteriores ou trocas contínuas não reativam a habilidade.
+  - Oponentes protegidos por Substitute (`substitute` ou `substituteHp > 0`) são imunes à redução (emite evento canônico `ABILITY_IMMUNE` com reason `'SUBSTITUTE'`), mas a ativação única do portador é consumida.
+  - Em batalhas de Duplas (Doubles), atinge ambos os adversários adjacentes ativos e preserva o Pokémon aliado.
+  - Interação canônica com proteções e inversões de atributos: bloqueada por Clear Body, White Smoke e Full Metal Body; invertida para +1 de evasão por Contrary; refletida de volta ao portador por Mirror Armor; ativa bônus ofensivos em Defiant (+2 Attack) e Competitive (+2 Special Attack).
+  - Interação com Neutralizing Gas: suprimida se Gas estiver ativo na entrada (sem consumir `syrupTriggered`). Reativa canonicamente após o término de Gas (`gasEndsCheck` / `handleFaint` / `leave`) se o portador ainda estiver elegível no campo. Portador segurando Ability Shield ignora Neutralizing Gas.
+  - Copiável por Trace e Imposter/Transform na entrada.
+  - Integrada à sincronização de estágios em `battle-constants.js` (`applyStatStageChange` com clamp [-6, +6]).
+  - Alinhada à IA do `BattleEvaluator` (reconhece benefício e maior acerto esperado contra alvos em -1 de evasão).
+  - Validada em fluxo completo de sessão com `BattleSessionController`.
+
+- **Suíte de Testes H4-C (28 Testes — 100% PASS):**
+  - `tests/battle/abilities-h4c.test.js`: 28 testes determinísticos (100% PASS) cobrindo metadados e registro, ativação em Singles/Doubles, consumo e persistência estrita de `syrupTriggered`, múltiplos portadores, limites de estágio (-6), imunidade por Substitute, interações com 8 habilidades reativas/protetoras, ciclo de vida com Neutralizing Gas e Ability Shield, cópias por Trace/Transform, integração na precisão/evasão, Keen Eye (conforme especificação canônica do motor), previsões da IA e orquestração em sessão real.
+
+- **Validação Global e Inventário:**
+  - H4-C: 28 testes PASS (0 falhas).
+  - H4-B: 34 testes PASS (0 falhas).
+  - H4-A: 93 testes PASS (0 falhas).
+  - Suíte Global do Projeto (`npm.cmd test`): **4.642 testes PASS (42 suítes, 0 falhas)**.
+  - Habilidades declaradas com suporte: **259** (+1 em relação a H4-B).
+  - Pendências atribuídas: **55** (-1 em relação a H4-B).
+  - Pendências restantes na Família H4: **0** (Família H4 100% concluída!).
+  - Auditoria de Habilidades (`scripts/audit-abilities.js --check`): 100% PASS.
+  - Auditoria P8 (`scripts/audit-p8.js`): 100% PASS.
+  - Governança Git: Working tree estritamente local; harness de Minior intacto e não rastreado; CSS e PBA-020 preservados. Sem commits ou push antes da autorização expressa do usuário.
+
 ## Atualização — 08/11/2026: Implementação Canônica e Homologação do Lote H4-B (10 Habilidades Canônicas Gen IX + Booster Energy)
 
 - **Lote H4-B Implementado e Homologado (10 Novas Habilidades Canônicas Gen IX):**

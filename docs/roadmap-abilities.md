@@ -72,7 +72,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H3-A | Rough Skin, Iron Barbs, Effect Spore, Poison Touch, Cute Charm, Gooey, Tangling Hair, Aftermath, Innards Out, Perish Body, Shed Skin, Hydration, Leaf Guard, Early Bird, Synchronize, Liquid Ooze, Poison Heal, Bad Dreams, Stench, Shield Dust, Big Pecks | **Implementado (FULL)**. 21 habilidades canônicas Gen IX de reações de contato, dano residual no nocaute, contagem de Perish Song, cura/imunidade de status e clima, inversão de drenagem e proteções secundárias. 170 testes unitários dedicados. |
 | H4-A | Primordial Sea, Desolate Land, Delta Stream, Dry Skin, Ice Body, Flower Gift, Sand Spit, Orichalcum Pulse, Transistor, Dragon's Maw (+ Dark Aura, Fairy Aura, Aura Break, Prism Armor, Neuroforce) | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de climas primordiais, multiplicadores elementais e absorções + auditoria das 5 habilidades preexistentes. 93 testes dedicados. |
 | H4-B | Seed Sower, Grass Pelt, Surge Surfer, Hadron Engine, Protosynthesis, Quark Drive, Vessel of Ruin, Sword of Ruin, Tablets of Ruin, Beads of Ruin | **Implementado (FULL)**. 10 novas habilidades canônicas Gen IX de terrenos, paradoxos, booster energy e tesouros da ruína. 34 testes dedicados em tests/battle/abilities-h4b.test.js. |
-| H4-C | Supersweet Syrup | Planejado (1 habilidade). Redução de evasão de oponentes na entrada (-1 estágio). Encerramento oficial da Família H4. |
+| H4-C | Supersweet Syrup | **Implementado (FULL)**. 1 habilidade canônica Gen IX de redução de evasão de oponentes na entrada (-1 estágio, única por batalha). Encerramento oficial da Família H4 com 28 testes dedicados em `tests/battle/abilities-h4c.test.js`. |
 | H5-A | Prankster, Infiltrator, Magic Bounce | Exigem flags de golpes, prioridade e reflexão por evento; alto impacto em estratégia, inclusive para a IA. |
 
 A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes compartilham a mesma dificuldade. Cada habilidade pode ser liberada individualmente após seus testes. As fases seguintes são famílias de trabalho, não um único commit por fase.
@@ -631,7 +631,7 @@ A Família H3 é estruturada em exatamente dois lotes de 21 habilidades como exc
 
 ### H4 — Clima, terreno e auras
 
-**Inventário:** 1 habilidade pendente (25 declaradas com suporte no catálogo, sendo 5 preexistentes auditadas, 10 implementadas em H4-A e 10 implementadas em H4-B); política estrita de lotes: H4-A (10), H4-B (10) e H4-C (1).
+**Inventário:** 0 habilidades pendentes (26 declaradas com suporte no catálogo, sendo 5 preexistentes auditadas, 10 implementadas em H4-A, 10 implementadas em H4-B e 1 implementada em H4-C); política estrita de lotes cumprida: H4-A (10), H4-B (10) e H4-C (1). Família H4 100% concluída.
 
 **Dependências:** H0; clima/terreno; H2 para estatísticas e efetividade.
 
@@ -665,8 +665,9 @@ Lote canônico homologado e coberto por 34 testes determinísticos em `tests/bat
 10. **`beads-of-ruin`** (Gen IX): Reduz a Special Defense de todos os outros combatentes no campo em 25% (0.75x). Portadores são imunes. Não acumula com múltiplos portadores idênticos; acumula com outras Ruínas. Não quebrável por Mold Breaker.
 *Dependência associada:* `booster-energy` (Showdown ID 1880) ativada apenas quando o clima/terreno natural não estiver ativo; persiste até o portador sair de campo; não removível de Pokémon Paradox.
 
-#### H4-C — Fechamento da Família H4 (PLANEJADO — 1 Habilidade)
-1. `supersweet-syrup`
+#### H4-C — Fechamento da Família H4 (CONCLUÍDO — 1 Habilidade)
+Lote canônico homologado e coberto por 28 testes determinísticos em `tests/battle/abilities-h4c.test.js`:
+1. **`supersweet-syrup`** (Gen IX): Reduz a evasão dos oponentes adjacentes em exatamente 1 estágio na primeira entrada do portador em combate. Ativação estritamente única por portador por batalha (`syrupTriggered`). Oponentes protegidos por Substitute são imunes à redução (com evento canônico), mas a ativação do portador é consumida. Respeita habilidades de proteção e inversão de status (Clear Body, White Smoke, Full Metal Body, Contrary, Mirror Armor, Defiant, Competitive). Suprimida por Neutralizing Gas (reativando após o término do gás caso o portador ainda esteja elegível). Integrada aos cálculos de precisão/evasão em `battle-constants.js`, fórmula canônica e IA `BattleEvaluator`.
 
 **Aceite:** Entrada/saída/nocaute do portador, segundo ativo, conflito de climas, Air Lock/Cloud Nine, supressão, golpes proibidos por clima, terreno e fórmulas de cada atributo afetado.
 

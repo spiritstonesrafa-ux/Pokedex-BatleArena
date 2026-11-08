@@ -1334,6 +1334,23 @@
       swappable: true,
       testFiles: Object.freeze(['tests/battle/abilities-h4b.test.js']),
       description: 'Reduz a Special Defense de todos os outros combatentes no campo em 25% (multiplicador 0.75x). Portadores de Beads of Ruin são imunes. Não acumula com múltiplos portadores.'
+    },
+    'supersweet-syrup': {
+      id: 'supersweet-syrup',
+      name: 'Supersweet Syrup',
+      generation: 9,
+      phase: 'H4',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ENTRY', 'MODIFY_STAT_STAGES']),
+      bearer: 'Dipplin (#1011), Hydrapple (#1019)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      flags: Object.freeze({}),
+      testFiles: Object.freeze(['tests/battle/abilities-h4c.test.js']),
+      description: 'Ao entrar em campo pela primeira vez na batalha, reduz a evasão de todos os adversários adjacentes em 1 estágio. Não afeta alvos com Substitute. Ativa apenas uma única vez por batalha por Pokémon.'
     }
   };
 

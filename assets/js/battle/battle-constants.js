@@ -501,6 +501,9 @@
       const key=statKey+'Stage', previousStage=Math.max(-6,Math.min(6,Number(combatant[key])||0));
       const finalStage=Math.max(-6,Math.min(6,previousStage+requestedDelta));
       combatant[key]=finalStage;
+      if (combatant.statStages && typeof combatant.statStages === 'object') {
+        combatant.statStages[statKey] = finalStage;
+      }
       if(finalStage>previousStage)combatant.statsRaisedThisTurn=true;
       return {
         statKey,
