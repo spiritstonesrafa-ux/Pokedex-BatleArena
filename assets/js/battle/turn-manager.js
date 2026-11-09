@@ -40,7 +40,9 @@
       if (typeof action.priority === 'number' && Number.isFinite(action.priority)) {
         return action.priority;
       }
-      if (action.type === constants.BATTLE_ACTIONS?.SWITCH) {
+      if (action.type === constants.BATTLE_ACTIONS?.SWITCH ||
+          action.type === 'FLEE' || action.type === 'ESCAPE' ||
+          action.type === 'BALL' || action.type === 'THROW_BALL') {
         return 1000;
       }
       let move = action.move || null;

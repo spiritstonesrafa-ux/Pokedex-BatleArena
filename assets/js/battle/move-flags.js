@@ -219,6 +219,22 @@
     810   // Corrosive Gas
   ]);
 
+  // Dance moves (copied by Dancer)
+  const DANCE_MOVE_IDS = new Set([
+    14,   // Swords Dance
+    80,   // Petal Dance
+    297,  // Feather Dance
+    298,  // Teeter Dance
+    349,  // Dragon Dance
+    461,  // Lunar Dance
+    483,  // Quiver Dance
+    552,  // Fiery Dance
+    686,  // Revelation Dance
+    775,  // Clangorous Soul
+    837,  // Victory Dance
+    872   // Aqua Step
+  ]);
+
   // Powder / Spore moves (blocked by Grass-types, Overcoat, Safety Goggles)
   const POWDER_MOVE_IDS = new Set([
     77,   // Poison Powder
@@ -337,6 +353,15 @@
     return POWDER_MOVE_IDS.has(getMoveId(move));
   }
 
+  function isDanceMove(move) {
+    if (!move) return false;
+    const id = getMoveId(move);
+    if (id && DANCE_MOVE_IDS.has(id)) return true;
+    if (move.flags && Boolean(move.flags.dance)) return true;
+    const name = String(move.name || '').trim().toLowerCase();
+    return name.includes('dance') || name === 'clangorous soul' || name === 'clangorous-soul' || name === 'aqua step' || name === 'aqua-step';
+  }
+
   function isHealMove(move) {
     if (!move) return false;
     const id = getMoveId(move);
@@ -359,7 +384,8 @@
       pulse: PULSE_MOVE_IDS.has(id),
       reflectable: REFLECTABLE_MOVE_IDS.has(id),
       powder: POWDER_MOVE_IDS.has(id),
-      heal: isHealMove(move)
+      heal: isHealMove(move),
+      dance: isDanceMove(move)
     });
   }
 
@@ -374,6 +400,7 @@
     REFLECTABLE_MOVE_IDS: Object.freeze(REFLECTABLE_MOVE_IDS),
     POWDER_MOVE_IDS: Object.freeze(POWDER_MOVE_IDS),
     HEAL_MOVE_IDS: Object.freeze(HEAL_MOVE_IDS),
+    DANCE_MOVE_IDS: Object.freeze(DANCE_MOVE_IDS),
     isContactMove,
     isSoundMove,
     isBulletMove,
@@ -385,6 +412,7 @@
     isReflectableMove,
     isPowderMove,
     isHealMove,
+    isDanceMove,
     getMoveFlags
   });
 

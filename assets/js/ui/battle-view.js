@@ -157,7 +157,7 @@
      */
     renderState(state, data = {}, battleState = null) {
       if (!this.container) return;
-      this.setImmersiveMode(['BATTLE', 'AWAITING_PLAYER_ACTION', 'RESOLVING', 'AWAITING_PLAYER_REPLACEMENT', 'VICTORY', 'DEFEAT'].includes(state));
+      this.setImmersiveMode(['BATTLE', 'AWAITING_PLAYER_ACTION', 'RESOLVING', 'AWAITING_PLAYER_REPLACEMENT', 'VICTORY', 'DEFEAT', 'ESCAPED'].includes(state));
 
       switch (state) {
         case 'NO_TEAM':
@@ -177,6 +177,9 @@
         case 'AWAITING_PLAYER_REPLACEMENT':
           this.renderActiveBattleView(battleState, state);
           this.openReplacementModal(battleState);
+          break;
+        case 'ESCAPED':
+          this.renderEscapedView(data, battleState);
           break;
         case 'VICTORY':
         case 'DEFEAT':
@@ -894,6 +897,10 @@
             <!-- Painel de Ação do Jogador -->
             <div class="battle-action-panel ${isReplacementPending ? 'is-replacement-pending' : ''}">
               <div class="action-controls-row">
+                ${!battleState.isTrainerBattle ? `
+                <button id="btnEscape" class="btn-battle-action-secondary" type="button" ${isResolving ? 'disabled' : ''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerEscape();" aria-label="Fugir da batalha" title="Fugir da batalha selvagem"><i class="fa-solid fa-person-running"></i> <span>FUGIR</span></button>
+                <button id="btnThrowBall" class="btn-battle-action-secondary" type="button" ${isResolving ? 'disabled' : ''} onclick="if(window.battleSessionController) window.battleSessionController.submitPlayerBall('pokeball');" aria-label="Lançar Pokébola" title="Lançar Pokébola"><i class="fa-solid fa-circle-dot"></i> <span>CAPTURAR</span></button>
+                ` : ''}
                 <button
                   id="btnOpenSwitch"
                   class="btn-switch-action ${isReplacementPending ? 'is-forced-switch' : ''}"

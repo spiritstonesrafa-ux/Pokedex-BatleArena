@@ -368,9 +368,11 @@
      * @returns {Object} Combatente ativo.
      */
     function getActiveCombatant(state, role) {
-      if (state.version === 2) {
+      if (!state || !state[role]) return null;
+      if (state.version === 2 || Array.isArray(state[role].team)) {
         const side = state[role];
-        return side.team[side.activeIndex];
+        const idx = typeof side.activeIndex === 'number' ? side.activeIndex : 0;
+        return (side.team && side.team[idx]) || side.team?.[0] || side;
       }
       return state[role];
     }
@@ -571,6 +573,7 @@
         for(const role of ['player','enemy'])for(const mon of (state.version===2?state[role].team:[state[role]])){constants.P8.restore(mon,true);mon.twoTurnMove=null;mon.lockedMove=null;mon.bound=null;mon.trapped=null;mon.leechSeed=null;mon.isProtected=false;}
         state.winner = winner;
         state.status = winner === 'player' ? BATTLE_STATUS.PLAYER_WIN : BATTLE_STATUS.ENEMY_WIN;
+        constants.P7?.checkHoneyGather?.(state, winner, constants, events);
         events.push({ type: BATTLE_EVENTS.BATTLE_ENDED, winner,
           reason: defeated.length === 2 ? 'Ambas as equipes caíram por status; empate conta como derrota do jogador.' :
             ['poison', 'toxic', 'burn'].includes(cause) ? `A equipe ${defeated[0]} caiu por ${cause === 'poison' || cause === 'toxic' ? 'veneno' : 'queimadura'}.` :
@@ -591,9 +594,13 @@
       if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,cloneData(item)]));
       return value;
     }
-    function plannedMove(mon,action){
-      if(action?.moveId!==undefined || action?.moveName!==undefined)return mon.moves.find(m=>(action.moveId!==undefined&&m.id===Number(action.moveId))||(action.moveName!==undefined&&m.name.toLowerCase()===String(action.moveName).toLowerCase()));
-      return mon.moves.find(m=>m.currentPp>0)||mon.moves[0];
+    function plannedMove(mon, action) {
+      if (!mon || !Array.isArray(mon.moves)) return null;
+      if (action && action.type && action.type !== BATTLE_ACTIONS.MOVE) return null;
+      if (action?.moveId !== undefined || action?.moveName !== undefined) {
+        return mon.moves.find(m => (action.moveId !== undefined && m.id === Number(action.moveId)) || (action.moveName !== undefined && m.name && m.name.toLowerCase() === String(action.moveName).toLowerCase())) || null;
+      }
+      return mon.moves.find(m => m.currentPp > 0) || mon.moves[0] || null;
     }
     function finishTurn(state, events) {
       if(state.pendingPivot)return;
@@ -733,7 +740,8 @@
       if(nextState.initialP7Events){events.push(...nextState.initialP7Events);delete nextState.initialP7Events;}
       for(const r of ['player','enemy'])getActiveCombatant(nextState,r).abilityIgnored=false;
       constants.P7.sync(nextState);
-      const currentTurn = nextState.turn;
+      const currentTurn = (typeof nextState.turn === 'number' && nextState.turn > 0) ? nextState.turn : 1;
+      nextState.turn = currentTurn;
       actions=cloneData({...actions});
       for(const role of ['player','enemy'])if(actions[role])delete actions[role].pursuitIntercept;
       for(const role of ['player','enemy']){
@@ -914,6 +922,90 @@
       }
     }
     function executeAction(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
+            if (action && (action.type === 'THROW_BALL' || action.type === 'BALL')) {
+        const attackerMon = getActiveCombatant(state, attackerRole);
+        const targetMon = getActiveCombatant(state, defenderRole);
+        const ballType = action.ball || action.ballType || 'pokeball';
+
+        if (state.isTrainerBattle || state.battleType === 'TRAINER' || state.battleType === 'GYM' || state.battleType === 'TRIAL') {
+          events.push({
+            type: 'BALL_BLOCKED',
+            actor: attackerRole,
+            pokemonName: attackerMon.name,
+            ball: ballType,
+            reason: 'TRAINER_BATTLE'
+          });
+          return;
+        }
+
+        events.push({
+          type: 'BALL_THROWN',
+          actor: attackerRole,
+          pokemonName: attackerMon.name,
+          targetName: targetMon.name,
+          ball: ballType
+        });
+
+        const ballMult = ballType === 'masterball' ? 255 : (ballType === 'ultraball' || ballType === 'ultra-ball') ? 2 : (ballType === 'greatball' || ballType === 'great-ball') ? 1.5 : 1;
+        const maxHp = targetMon.maxHp || 100;
+        const curHp = Math.max(1, targetMon.currentHp || 1);
+        const catchRate = targetMon.catchRate || 45;
+        const a = Math.min(255, Math.floor(((3 * maxHp - 2 * curHp) * catchRate * ballMult) / (3 * maxHp)));
+        const roll = action.roll !== undefined ? action.roll : Math.floor(Math.random() * 256);
+        const success = ballType === 'masterball' || roll < a;
+
+        if (success) {
+          state.status = 'PLAYER_WIN';
+          state.winner = attackerRole;
+          state.capturedPokemon = targetMon;
+          events.push({
+            type: 'POKEMON_CAUGHT',
+            actor: attackerRole,
+            pokemonName: targetMon.name,
+            ball: ballType
+          });
+          events.push({
+            type: BATTLE_EVENTS.BATTLE_ENDED,
+            winner: attackerRole,
+            reason: 'Pokémon selvagem capturado com sucesso!'
+          });
+        } else {
+          events.push({
+            type: 'POKEMON_BROKE_FREE',
+            actor: defenderRole,
+            pokemonName: targetMon.name,
+            ball: ballType
+          });
+          if (!state.firstFailedBall) {
+            state.firstFailedBall = ballType;
+          }
+        }
+        return;
+      }
+      if (action && (action.type === 'FLEE' || action.type === 'ESCAPE')) {
+        const attackerMon = getActiveCombatant(state, attackerRole);
+        const escResult = constants.P7.canEscape(state, attackerRole);
+        if (escResult.canEscape) {
+          state.status = 'ESCAPED';
+          events.push({
+            type: escResult.reason === 'RUN_AWAY' ? 'RUN_AWAY_ESCAPED' : 'BATTLE_ENDED',
+            actor: attackerRole,
+            pokemonName: attackerMon.name,
+            reason: escResult.reason || 'ESCAPED'
+          });
+          if (escResult.reason === 'RUN_AWAY') {
+            constants.P6.feedback(events, attackerRole, attackerMon, 'P7_ABILITY', { label: 'run-away' });
+          }
+        } else {
+          events.push({
+            type: 'ESCAPE_FAILED',
+            actor: attackerRole,
+            pokemonName: attackerMon.name,
+            reason: escResult.reason || 'CANNOT_ESCAPE'
+          });
+        }
+        return;
+      }
       const attacker=getActiveCombatant(state,attackerRole), originalTarget=getActiveCombatant(state,defenderRole), start=events.length;
       if(attacker.currentHp<=0 || state.status!=='IN_PROGRESS')return;
       executeActionCore(attackerRole,defenderRole,state,events,action,calledMove,pressureCallerId);
@@ -956,6 +1048,70 @@
       attacker.actedThisTurn=true;
       if(batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED&&e.moveId===690))attacker.beakBlastReady=false;
       if(attacker.bideState && !batch.some(e=>e.type===BATTLE_EVENTS.MOVE_USED))attacker.bideState=null;
+      if (action?.failedBall) state.firstFailedBall = state.firstFailedBall || action.failedBall;
+      if (!calledMove && !action?.isDancerCopy) {
+        const usedMoveEvent = batch.find(e => e.type === BATTLE_EVENTS.MOVE_USED && e.actor === attackerRole);
+        if (usedMoveEvent) {
+          const danceMove = constants.KNOWN_CATALOG_MOVES[usedMoveEvent.moveId] || { id: usedMoveEvent.moveId, name: usedMoveEvent.moveName, type: usedMoveEvent.moveType, damageClass: usedMoveEvent.damageClass };
+          if (constants.MoveFlags?.isDanceMove?.(danceMove)) {
+            const dancers = [];
+            for (const r of ['player', 'enemy']) {
+              for (const m of constants.P7.activeMons(state, r)) {
+                if (m && m.currentHp > 0 && m !== attacker && !m.abilitySuppressed && !m.neutralizingGasSuppressed && constants.P7.ability(m) === 'dancer') {
+                  const storedSpeed = (m.storedStats && (m.storedStats['spe'] !== undefined || m.storedStats.speed !== undefined))
+                    ? Number(m.storedStats['spe'] ?? m.storedStats.speed)
+                    : (m.stats && (m.stats['spe'] !== undefined || m.stats.speed !== undefined))
+                      ? Number(m.stats['spe'] ?? m.stats.speed)
+                      : Number(m.speed || 0);
+                  const abilityOrder = (m.abilityState && m.abilityState.effectOrder !== undefined)
+                    ? Number(m.abilityState.effectOrder)
+                    : (m.abilityOrder !== undefined)
+                      ? Number(m.abilityOrder)
+                      : (m.effectOrder !== undefined)
+                        ? Number(m.effectOrder)
+                        : (m.abilityAcquisitionOrder !== undefined)
+                          ? Number(m.abilityAcquisitionOrder)
+                          : (m.entryOrder !== undefined)
+                            ? Number(m.entryOrder)
+                            : 0;
+                  dancers.push({ role: r, mon: m, storedSpeed, abilityOrder });
+                }
+              }
+            }
+            dancers.sort((a, b) => {
+              // Showdown Gen IX canonical order (sim/battle-actions.ts):
+              // dancers.sort((a, b) => -(b.storedStats['spe'] - a.storedStats['spe']) || b.abilityState.effectOrder - a.abilityState.effectOrder);
+              const speedDiff = a.storedSpeed - b.storedSpeed;
+              if (speedDiff !== 0) return speedDiff;
+              const orderDiff = b.abilityOrder - a.abilityOrder;
+              if (orderDiff !== 0) return orderDiff;
+              // Canonical tie-breaker: deterministic and completely symmetrical (never role === 'player')
+              return ((a.mon.id || 0) - (b.mon.id || 0)) || (a.mon.name || '').localeCompare(b.mon.name || '');
+            });
+            for (const d of dancers) {
+              if (d.mon.currentHp <= 0 || state.status !== 'IN_PROGRESS') continue;
+              events.push({
+                type: 'DANCER_ACTIVATED',
+                actor: d.role,
+                pokemonName: d.mon.name,
+                copiedMoveId: danceMove.id,
+                copiedMoveName: danceMove.name
+              });
+              constants.P6.feedback(events, d.role, d.mon, 'P7_ABILITY', { label: 'dancer' });
+              const isSelfTarget = danceMove.target === 'self' || [14, 349, 461, 483, 775, 837].includes(danceMove.id);
+              const dancerTargetRole = isSelfTarget ? d.role : (d.role === 'player' ? 'enemy' : 'player');
+              executeAction(d.role, dancerTargetRole, state, events, {
+                type: 'MOVE',
+                moveId: danceMove.id,
+                moveName: danceMove.name,
+                isDancerCopy: true,
+                accuracyRoll: action?.dancerAccuracyRoll ?? action?.accuracyRoll ?? 1,
+                critRoll: action?.dancerCritRoll ?? action?.critRoll ?? 100
+              }, true);
+            }
+          }
+        }
+      }
     }
     function executeActionCore(attackerRole, defenderRole, state, events, action, calledMove = false, pressureCallerId = null) {
       const attacker = getActiveCombatant(state, attackerRole);
@@ -1568,7 +1724,21 @@
 
       if(state.doublesNoTarget){events.push({type:BATTLE_EVENTS.MOVE_FAILED,actor:attackerRole,moveId:selectedMove.id,moveName:selectedMove.name,reason:'NO_TARGET'});return;}
       const isSelfTarget = selectedMove.target === 'self' || selectedMove.damageClass === 'status_self' || [14, 156, 214, 347, 182, 197].includes(selectedMove.id);
-      const bypassesProtect = Boolean([144,166].includes(selectedMove.id)||selectedMove.p8Max||selectedMove.p8Z)||constants.isProtectBypassingMove?.(selectedMove)||(constants.P7.ability(attacker)==='unseen-fist'&&constants.P5.contactIds.includes(selectedMove.id));
+      const isContactMove = Boolean(constants.MoveFlags?.isContactMove ? constants.MoveFlags.isContactMove(selectedMove, constants.P5?.contactIds) : constants.P5?.contactIds?.includes(selectedMove.id)) && !(attacker && !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'long-reach');
+      const isPiercingDrill = !attacker.abilitySuppressed && !attacker.neutralizingGasSuppressed && constants.P7.ability(attacker) === 'piercing-drill' && isContactMove;
+      const bypassesProtect = Boolean([144,166].includes(selectedMove.id)||selectedMove.p8Max||selectedMove.p8Z)||constants.isProtectBypassingMove?.(selectedMove)||(constants.P7.ability(attacker)==='unseen-fist'&&isContactMove)||isPiercingDrill;
+      if (defender.isProtected && isPiercingDrill) {
+        events.push({
+          type: 'PIERCING_DRILL_PIERCE',
+          actor: attackerRole,
+          target: defenderRole,
+          pokemonName: attacker.name,
+          defenderName: defender.name,
+          moveId: selectedMove.id,
+          moveName: selectedMove.name
+        });
+        constants.P6.feedback(events, attackerRole, attacker, 'P7_ABILITY', { label: 'piercing-drill' });
+      }
       if ((defender.maxGuard&&!isSelfTarget&&selectedMove.target!=='foeSide') || (defender.isProtected && !isSelfTarget && selectedMove.target!=='foeSide' && !bypassesProtect)) {
         attacker.lastMoveFailed = true;
         events.push({
@@ -1986,6 +2156,29 @@
               ...(selectedMove.statusEffect === 'sleep' ? { sleepDuration: defender.sleepTurns } : {})
             });
             constants.P7.checkSynchronize?.(state, attackerRole, defenderRole, selectedMove.statusEffect, constants, events, attacker, defender);
+          }
+          return;
+        }
+
+                const statDrops = selectedMove.statDrops || (constants.getStatDrops && constants.getStatDrops(selectedMove));
+        if (statDrops && typeof statDrops === 'object') {
+          if (constants.P7?.modifyStages) {
+            constants.P7.modifyStages(state, defenderRole, defender, statDrops, attackerRole, attacker, 'status-drop', constants, events);
+          } else {
+            for (const [statKey, delta] of Object.entries(statDrops)) {
+              const report = constants.applyStatStageChange(defender, statKey, delta);
+              events.push({
+                type: BATTLE_EVENTS.STAT_STAGE_CHANGED,
+                combatant: defenderRole,
+                pokemonName: defender.name,
+                statKey: report.statKey,
+                previousStage: report.previousStage,
+                requestedDelta: report.requestedDelta,
+                appliedDelta: report.appliedDelta,
+                finalStage: report.finalStage,
+                blockedReason: report.blockedReason
+              });
+            }
           }
           return;
         }

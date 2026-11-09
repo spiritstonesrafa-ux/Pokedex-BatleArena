@@ -2,6 +2,57 @@
 
 Arquivo de governança técnica para alinhamento e continuidade entre diferentes sessões e agentes de IA.
 
+## Atualização — 08/11/2026: Implementação Canônica Final das 26 Habilidades Pendentes (Lote Único Consolidado FINAL-26: H9 + H10 + H11 — Pokémon Showdown Gen IX / Champions)
+
+- **Lote Único FINAL-26 Implementado e Homologado Localmente (26 Habilidades):**
+  - **Família H9 — 16 Habilidades de Interações em Duplas:**
+    1. `plus` (Gen III — Showdown ID 57): Concede 1.5x de Special Attack se um aliado ativo possuir a habilidade Plus ou Minus. Suprimido por Neutralizing Gas.
+    2. `minus` (Gen III — Showdown ID 58): Concede 1.5x de Special Attack se um aliado ativo possuir a habilidade Plus ou Minus. Suprimido por Neutralizing Gas.
+    3. `healer` (Gen V — Showdown ID 131): No final de cada turno (fase residual), possui 30% de chance canônica (roll <= 30) de curar a condição de status primária (BRN/PAR/PSN/TOX/SLP/FRZ) de um aliado adjacente. Não cura o próprio portador.
+    4. `friend-guard` (Gen V — Showdown ID 132): Reduz em 25% (multiplicador 0.75x) todo o dano recebido por aliados ativos. Não reduz dano sofrido pelo portador. Múltiplos aliados com Friend Guard acumulam multiplicativamente (0.75 * 0.75 = 0.5625x). Ignorado por Mold Breaker.
+    5. `telepathy` (Gen V — Showdown ID 140): Concede imunidade total a golpes causadores de dano desferidos por parceiros de equipe. Não bloqueia golpes de oponentes nem golpes de status de aliados. Ignorado por Mold Breaker do aliado atacante.
+    6. `symbiosis` (Gen VI — Showdown ID 180): Quando o aliado consome seu item segurado durante a batalha, o portador de Symbiosis transfere imediatamente seu item para o parceiro. Não transfere itens intransferíveis (ex: Booster Energy em Paradox, Mega Stones).
+    7. `dancer` (Gen VII — Showdown ID 216): Imediatamente após qualquer combatente executar um golpe de dano ou status classificado como dança (MoveFlags.isDanceMove: Swords Dance, Petal Dance, Feather Dance, Teeter Dance, Dragon Dance, Quiver Dance, Fiery Dance, Revelation Dance, Clangorous Soul, Victory Dance, Aqua Step), o portador copia e executa imediatamente o mesmo movimento sem custo de PP extra. Golpes auto-alvo (Swords Dance, Dragon Dance, Quiver Dance, Victory Dance, Clangorous Soul) afetam o dançarino; golpes direcionados (Feather Dance, Petal Dance) afetam o oponente. Portadores nocauteados antes da dança não a executam. Sem recursão infinita. Ordenação canônica Showdown Gen IX (`sim/battle-actions.ts`): menor Speed armazenada (`storedStats['spe']` / antes de Agility e Choice Scarf; refletindo Speed Swap) age primeiro; empates de Speed desempatam por ordem de aquisição (`b.abilityState.effectOrder - a.abilityState.effectOrder`), onde o portador que recebeu Dancer mais recentemente age primeiro, de forma 100% simétrica e sem viés de lado.
+    8. `battery` (Gen VII — Showdown ID 217): Aumenta o poder dos movimentos da categoria Special dos aliados ativos em 1.3x (fator 5325/4096). Não afeta golpes físicos do aliado nem golpes do próprio portador.
+    9. `power-spot` (Gen VIII — Showdown ID 249): Aumenta o poder dos movimentos ofensivos dos aliados ativos em 1.3x (fator 5325/4096), cobrindo categorias física e especial. Não afeta golpes do próprio portador.
+    10. `steely-spirit` (Gen VIII — Showdown ID 252): Aumenta em 1.5x o poder de golpes do tipo Steel para o portador e aliados ativos. Múltiplos portadores de Steely Spirit no mesmo lado acumulam multiplicativamente (1.5 * 1.5 = 2.25x).
+    11. `propeller-tail` (Gen VIII — Showdown ID 239): Os golpes direcionados do portador ignoram completamente qualquer efeito de redirecionamento adversário (Lightning Rod, Storm Drain, Follow Me, Rage Powder), atingindo exatamente o alvo selecionado.
+    12. `stalwart` (Gen VIII — Showdown ID 242): Mecânica idêntica a Propeller Tail: ignora todo efeito de redirecionamento (Lightning Rod, Storm Drain, Follow Me, Rage Powder) e atinge o alvo original.
+    13. `curious-medicine` (Gen VIII — Showdown ID 261): Ao entrar em batalha (`enter`), redefine todos os modificadores de atributos (stages) do aliado ativo para 0.
+    14. `costar` (Gen IX — Showdown ID 294): Ao entrar em batalha (`enter`), copia todos os estágios de modificação positivos e negativos de atributos do aliado ativo, bem como estágios de taxa crítica (Focus Energy / criticalStage e Dragon Cheer).
+    15. `hospitality` (Gen IX — Showdown ID 299): Ao entrar em batalha (`enter`), restaura 25% (0.25x) do HP máximo do parceiro ativo.
+    16. `victory-star` (Gen V — Showdown ID 162): Multiplica a precisão de todos os movimentos do portador e de seus aliados por 1.1x (fator 4506/4096). Acumula canonicamente de forma multiplicativa se houver múltiplos portadores ativos no mesmo lado ([4506/4096]^N). Golpes com precisão nula (accuracy: null) permanecem infalíveis.
+  - **Família H10 — 3 Habilidades Externas, Fuga e Captura:**
+    17. `run-away` (Gen III — Showdown ID 50 / PokéAPI ID 96): Garante sucesso absoluto na fuga de qualquer batalha selvagem via ação FLEE/ESCAPE, ignorando bloqueios de aprisionamento de Shadow Tag, Arena Trap e Magnet Pull. Encerra a batalha em status ESCAPED e BATTLE_UI_STATES.ESCAPED, preserva HP e equipe sem corrupção, concede 0 recompensas e bloqueia fuga em batalhas contra treinadores.
+    18. `honey-gather` (Gen IV — Showdown ID 118): Sem efeito durante os turnos ou na fase residual de combate. Dispara exclusivamente na vitória de batalhas elegíveis (`checkHoneyGather`), avaliando todos os membros da equipe (mesmo os que não entraram em campo) com chance canônica por nível (5% no nível 1-10 até 50% no nível 91-100), recolhendo Honey apenas se o slot de item estiver vazio, sem duplicação nem sobrescrita.
+    19. `ball-fetch` (Gen VIII — Showdown ID 237): Ao final do turno, caso o portador não esteja segurando nenhum item, recolhe a primeira Poké Ball arremessada na batalha que falhou na captura (`firstFailedBall`). Arremessos de bola são bloqueados em batalhas de treinador; apenas a primeira bola falha é recolhida por batalha.
+  - **Família H11 — 7 Habilidades Especiais de Mega Evolução (Pokémon Champions 2026):**
+    20. `piercing-drill` (Mega Excadrill): Movimentos de contato físico atravessam Protect, Detect e barreiras protetoras, infligindo 25% (0.25x) do dano normal ao alvo protegido. Movimentos sem contato (ex: Earthquake) permanecem totalmente bloqueados por Protect.
+    21. `dragonize` (Mega Feraligatr): Converte todos os movimentos do tipo Normal (inclusive status como Swords Dance) para o tipo Dragon. Aplica multiplicador de poder de 1.2x exclusivamente a movimentos causadores de dano.
+    22. `mega-sol` (Mega Meganium): Simula internamente os efeitos de Sol intenso nos golpes do portador sem alterar o clima global da arena: golpes Fire recebem 1.5x de poder, golpes Water sofrem redução para 0.5x, Solar Beam e Solar Blade disparam instantaneamente em 1 turno sem carregar, e Weather Ball converte-se para o tipo Fire com 100 BP e multiplicador 1.5x (totalizando 150 BP efetivos).
+    23. `spicy-spray` (Mega Scovillain): Ao sofrer dano direto de qualquer ataque de oponente, inflige a condição de status primária Burn no atacante (respeitando imunidade natural do tipo Fire e status pré-existente).
+    24. `eelevate` (Mega Eelektross): Concede imunidade completa a movimentos e armadilhas do tipo Ground e eleva em +1 estágio o maior atributo base/efetivo do portador ao nocautear diretamente um oponente.
+    25. `fire-mane` (Mega Pyroar): Concede um multiplicador passivo de 1.5x no poder de todos os movimentos do tipo Fire do portador.
+    26. `aura-guard` (Mega Lucario Z): Reduz à metade (multiplicador 0.5x) todo o dano recebido de ataques de contato (físicos ou especiais). Ignorado por Mold Breaker.
+
+- **Suíte de Testes FINAL-26 Dedicada (74 Testes — 100% PASS):**
+  - `tests/battle/abilities-final-26.test.js`: 74 testes unitários e de integração organizados em 27 suítes determinísticas, cobrindo integralmente as 26 habilidades, casos canônicos de borda, interações de duplas, mecânicas de fuga e captura, e auditoria do registro.
+
+- **Validação Global e Inventário:**
+  - Lote FINAL-26: **74/74 PASS** (0 falhas).
+  - Suíte Global do Projeto: **4.846/4.846 PASS** (102 suítes, 0 falhas, 0 regressões).
+  - Habilidades conhecidas no catálogo: **374**.
+  - Habilidades declaradas com suporte: **314** (+26).
+  - Habilidades atribuídas pendentes: **0** (100% da cobertura do jogo atingida).
+  - Habilidades naturais atribuídas aos 1.349 registros aptos: **313**.
+  - Pendências atribuídas: **0** (-26, 100% de conclusão do catálogo de habilidades atribuídas!).
+  - Registros com habilidade padrão pendente: **0**.
+  - Auditoria de Habilidades (`scripts/audit-abilities.js --check`): 100% PASS.
+  - Auditoria P8 (`scripts/audit-p8.js`): 100% PASS (`unresolvedP8: 0`).
+  - Hashing de integridade `minior-shields-down-harness.html`: SHA-256 `B673B72A1A446016513D759D0B16835E9A5AB5D01F8C3E6EF2D13FC34BCA9A1E` idêntico ao baseline.
+  - Estilização `assets/css/battle-arena.css`: 100% intocada.
+  - Status Git: Staging vazio, zero commits, implementação 100% local pronta para homologação.
+
 ## Atualização — 08/11/2026: Implementação Canônica H8 — Lote Único de 14 Habilidades (Itens, Berries, Roubo, Recuperação e Informações — Showdown Gen IX)
 
 - **Lote H8 Implementado e Homologado Localmente (14 Habilidades):**
@@ -2469,3 +2520,21 @@ NEXT_STEP = WAIT_FOR_HUMAN_PBA_014D_TEST
 - CRITICAL_OPEN_ISSUES = 0
 - PBA_020 = NOT_STARTED
 - RELEASE_1_1_SUMMARY = Publicação oficial da versão v1.1.0 (Arena Update) no GitHub Releases e GitHub Pages. Introdução de 24 arenas temáticas completas (18 Mestres de Tipo, 4 Endgame Trials, Super Trainer e Shadow Super Trainer) com orquestração centralizada via Arena Registry, preservação estrita de Game Engine ≠ Presentation Engine, zero alteração de regras de combate ou IA, compatibilidade total com acessibilidade (prefers-reduced-motion e contraste) e suíte com 651 testes automatizados aprovados (100% verde).
+
+---
+
+## FINAL-26 — Correção Canônica Final de Dancer e Homologação Consolidada (H9 + H10 + H11)
+
+- BATCH = FINAL-26 (CONSOLIDADO: H9 + H10 + H11)
+- TOTAL_ABILITIES_BATCH = 26
+- SUPPORTED_ABILITIES_GLOBAL = 314
+- ASSIGNED_PENDING = 0
+- UNASSIGNED_PENDING = 60
+- TESTS_DEDICATED_FINAL_26 = 91/91 PASS (28 suites)
+- FULL_TESTS_PASS = 4863/4863 PASS (103 suites)
+- FULL_TESTS_FAIL = 0
+- MINIOR_HARNESS_SHA256 = B673B72A1A446016513D759D0B16835E9A5AB5D01F8C3E6EF2D13FC34BCA9A1E (INTACTO / UNTRACKED)
+- CSS_PROTECTED = assets/css/battle-arena.css (INTACTO / ZERO DIFF)
+- GIT_STAGED = EMPTY
+- VERDICT = FINAL-26 HOMOLOGÁVEL — CORREÇÃO FINAL DE DANCER APROVADA
+- SUMMARY = Correção canônica definitiva da habilidade Dancer (ID 216) implementada e validada de acordo com a especificação do Pokémon Showdown Gen IX (`sim/battle-actions.ts`). A ordenação dos dançarinos agora utiliza estritamente a Speed armazenada (`storedStats['spe']` / unboosted), mantendo-se imune a multiplicadores temporários como Agility e Choice Scarf, enquanto reflete adequadamente trocas estruturais como Speed Swap. Em caso de empate de Speed, o desempate é resolvido pela ordem de aquisição da habilidade (`b.abilityState.effectOrder - a.abilityState.effectOrder`), garantindo que o combatente que adquiriu Dancer mais recentemente atue primeiro, com simetria estrita e sem qualquer preferência artificial para o lado do jogador. 12 novos testes dedicados foram adicionados à suíte FINAL-26 (totalizando 91/91 PASS), e a suíte global atingiu 4.863/4.863 testes PASS em 103 suítes, com zero falhas e zero regressões.

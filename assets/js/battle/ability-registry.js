@@ -41,7 +41,7 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Aumenta o Ataque em 1 estágio ao sofrer um ataque de dano do tipo Dark. Não é ignorada por Mold Breaker.'
     },
     'moxie': {
@@ -55,7 +55,7 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Aumenta o Ataque em 1 estágio ao nocautear um oponente diretamente com um ataque.'
     },
     'chilling-neigh': {
@@ -69,7 +69,7 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Aumenta o Ataque em 1 estágio ao nocautear um oponente diretamente com um ataque.'
     },
     'as-one-glastrier': {
@@ -83,7 +83,7 @@
       suppressible: false, // Protected against Core Enforcer / Gastro Acid / Neutralizing Gas
       copyable: false,
       swappable: false,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Combina os efeitos de Unnerve (bloqueia consumo de berries pelos adversários) e Chilling Neigh (+1 de Ataque ao nocautear). Insuprimível.'
     },
     'dauntless-shield': {
@@ -97,7 +97,7 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Aumenta a Defesa em 1 estágio na primeira entrada em combate (uma única vez por batalha, regra Gen IX).'
     }
   };
@@ -106,10 +106,12 @@
   const H11_METADATA = {
     'piercing-drill': {
       id: 'piercing-drill',
+      showdownId: 311,
+      pokeApiId: 308,
       name: 'Piercing Drill',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['ON_MOVE_DAMAGE', 'ON_PROTECT_BYPASS']),
       bearer: 'Mega Excadrill (#10287)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -118,15 +120,17 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Excadrill (Pokémon Champions). Golpes de contato atravessam Protect/Detect e barreiras de proteção causando 25% do dano normal.'
     },
     'dragonize': {
       id: 'dragonize',
+      showdownId: 312,
+      pokeApiId: 309,
       name: 'Dragonize',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['ON_MOVE_TYPE', 'ON_POWER_CALC']),
       bearer: 'Mega Feraligatr (#10283)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -135,15 +139,17 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Feraligatr (Pokémon Champions). Converte golpes do tipo Normal em Dragon e aumenta seu poder em 20%.'
     },
     'mega-sol': {
       id: 'mega-sol',
+      showdownId: 315,
+      pokeApiId: 310,
       name: 'Mega Sol',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['PASSIVE_SUN_SIMULATION']),
       bearer: 'Mega Meganium (#10282)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -152,15 +158,17 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Meganium (Pokémon Champions). Mega Sol faz os movimentos do próprio portador funcionarem como se houvesse sol intenso (sun simulation), independentemente do clima real. A habilidade não modifica o clima do campo, não invoca clima global, não altera diretamente o clima dos aliados e não funciona como Desolate Land.'
     },
     'spicy-spray': {
       id: 'spicy-spray',
+      showdownId: 318,
+      pokeApiId: 311,
       name: 'Spicy Spray',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['AFTER_DAMAGING_HIT']),
       bearer: 'Mega Scovillain (#10320)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -169,15 +177,17 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Scovillain (Pokémon Champions). Ao receber dano de um ataque adversário, inflige automaticamente Burn (queimadura) no atacante.'
     },
     'eelevate': {
       id: 'eelevate',
+      showdownId: 313,
+      pokeApiId: 312,
       name: 'Eelevate',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['GROUND_IMMUNITY', 'ON_DIRECT_KO']),
       bearer: 'Mega Eelektross (#10290)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -186,15 +196,17 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Eelektross (Pokémon Champions). Imune a ataques e armadilhas terrestres (Levitate) e aumenta o maior atributo em 1 estágio ao nocautear.'
     },
     'fire-mane': {
       id: 'fire-mane',
+      showdownId: 316,
+      pokeApiId: 313,
       name: 'Fire Mane',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['ON_POWER_CALC']),
       bearer: 'Mega Pyroar (#10295)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -203,15 +215,17 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Pyroar (Pokémon Champions). Aumenta o poder dos golpes do tipo Fire em 50%.'
     },
     'aura-guard': {
       id: 'aura-guard',
+      showdownId: 319,
+      pokeApiId: 314,
       name: 'Aura Guard',
       generation: 9,
       phase: 'H11',
-      status: 'RULE_CONFIRMED_PENDING_IMPLEMENTATION',
+      status: 'FULL',
       triggers: Object.freeze(['BEFORE_DAMAGE']),
       bearer: 'Mega Lucario Z (#10310)',
       ruleset: 'Pokémon Champions (2026, Nintendo Switch) / Pokémon Showdown data/abilities.ts',
@@ -220,7 +234,7 @@
       suppressible: true,
       copyable: true,
       swappable: true,
-      testFiles: Object.freeze(['tests/battle/abilities-h1a.test.js']),
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
       description: 'Habilidade de Mega Lucario Z (Pokémon Champions). Reduz à metade (0.5x) o dano recebido de ataques de contato.'
     }
   };
@@ -1620,6 +1634,8 @@
   const H6A_METADATA = {
     'normalize': {
       id: 'normalize',
+      showdownId: 96,
+      pokeApiId: 96,
       name: 'Normalize',
       generation: 4,
       phase: 'H6',
@@ -3517,6 +3533,356 @@
     }
   };
 
+  // Canonical H9 Implementation Specifications (16 Doubles Abilities)
+  const H9_METADATA = {
+    'plus': {
+      id: 'plus',
+      showdownId: 57,
+      pokeApiId: 57,
+      name: 'Plus',
+      generation: 3,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_SPA']),
+      bearer: 'Mareep (#179), Flaaffy (#180), Ampharos (#181), Plusle (#311), Klink (#599), Klang (#600), Klinklang (#601), Dedenne (#702), Toxtricity (#849)',
+      ruleset: 'Gen III-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Aumenta o Special Attack do portador em 50% (1.5x) se um aliado ativo possuir a habilidade Plus ou Minus.'
+    },
+    'minus': {
+      id: 'minus',
+      showdownId: 58,
+      pokeApiId: 58,
+      name: 'Minus',
+      generation: 3,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_MODIFY_SPA']),
+      bearer: 'Minun (#312), Manectric (#310), Klink (#599), Klang (#600), Klinklang (#601), Toxtricity (#849)',
+      ruleset: 'Gen III-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Aumenta o Special Attack do portador em 50% (1.5x) se um aliado ativo possuir a habilidade Plus ou Minus.'
+    },
+    'healer': {
+      id: 'healer',
+      showdownId: 131,
+      pokeApiId: 131,
+      name: 'Healer',
+      generation: 5,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL']),
+      bearer: 'Chansey (#113), Blissey (#242), Audino (#531), Alomomola (#594), Aromatisse (#683), Hatterene (#858)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'No final de cada turno, o portador tem 30% de chance de curar uma condição de status não-volátil de um aliado adjacente.'
+    },
+    'friend-guard': {
+      id: 'friend-guard',
+      showdownId: 132,
+      pokeApiId: 132,
+      name: 'Friend Guard',
+      generation: 5,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['BEFORE_DAMAGE']),
+      bearer: 'Cleffa (#173), Clefairy (#35), Igglybuff (#174), Jigglypuff (#39), Happiny (#440), Scatterbug (#664), Spewpa (#665), Vivillon (#666), Maushold (#925)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Reduz o dano recebido por aliados do portador em 25% (multiplicador 0.75x). Não reduz o dano sofrido pelo próprio portador. Ignorado por Mold Breaker.'
+    },
+    'telepathy': {
+      id: 'telepathy',
+      showdownId: 140,
+      pokeApiId: 140,
+      name: 'Telepathy',
+      generation: 5,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['TRY_HIT']),
+      bearer: 'Wobbuffet (#202), Ralts (#280), Kirlia (#281), Gardevoir (#282), Meditite (#307), Medicham (#308), Dialga (#483), Palkia (#484), Giratina (#487), Munna (#517), Musharna (#518), Elgyem (#605), Beheeyem (#606), Noibat (#714), Noivern (#715), Tapu Fini (#788), Orbeetle (#826), Rabsca (#954)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: true,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'O portador antecipa e desvia de todos os ataques causadores de dano desferidos por seus aliados (imunidade total a fogo amigo).'
+    },
+    'symbiosis': {
+      id: 'symbiosis',
+      showdownId: 180,
+      pokeApiId: 180,
+      name: 'Symbiosis',
+      generation: 6,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ALLY_ITEM_CONSUME']),
+      bearer: 'Flabébé (#669), Floette (#670), Florges (#671), Oranguru (#765)',
+      ruleset: 'Gen VI-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Quando um aliado ativo consome ou usa seu item segurado, o portador imediatamente transfere seu próprio item segurado para o aliado, se este puder ser passado.'
+    },
+    'dancer': {
+      id: 'dancer',
+      showdownId: 216,
+      pokeApiId: 216,
+      name: 'Dancer',
+      generation: 7,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_DANCE_MOVE']),
+      bearer: 'Oricorio (#741, #741-1, #741-2, #741-3)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Sempre que qualquer Pokémon em campo executar um golpe de dança, o portador imediatamente copia e executa o mesmo golpe sem gastar turno ou PP (sem recursão).'
+    },
+    'battery': {
+      id: 'battery',
+      showdownId: 217,
+      pokeApiId: 217,
+      name: 'Battery',
+      generation: 7,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_POWER_CALC']),
+      bearer: 'Charjabug (#737)',
+      ruleset: 'Gen VII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Aumenta em 30% (5325/4096, ~1.3x) o poder dos golpes especiais utilizados pelos aliados do portador em campo.'
+    },
+    'power-spot': {
+      id: 'power-spot',
+      showdownId: 249,
+      pokeApiId: 249,
+      name: 'Power Spot',
+      generation: 8,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_POWER_CALC']),
+      bearer: 'Stonejourner (#874)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Aumenta em 30% (5325/4096, ~1.3x) o dano de todos os ataques físicos e especiais desferidos pelos aliados do portador.'
+    },
+    'steely-spirit': {
+      id: 'steely-spirit',
+      showdownId: 252,
+      pokeApiId: 252,
+      name: 'Steely Spirit',
+      generation: 8,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_POWER_CALC']),
+      bearer: 'Perrserker (#863)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Aumenta em 50% (1.5x) o poder de golpes do tipo Steel utilizados pelo portador e por seus aliados ativos. Acumula multiplicativamente se houver múltiplos portadores.'
+    },
+    'propeller-tail': {
+      id: 'propeller-tail',
+      showdownId: 239,
+      pokeApiId: 239,
+      name: 'Propeller Tail',
+      generation: 8,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TARGET_RESOLUTION']),
+      bearer: 'Arrokuda (#846), Barraskewda (#847)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Os ataques do portador ignoram quaisquer efeitos de redirecionamento de alvos (Follow Me, Rage Powder, Spotlight, Lightning Rod, Storm Drain), atingindo diretamente o alvo pretendido.'
+    },
+    'stalwart': {
+      id: 'stalwart',
+      showdownId: 242,
+      pokeApiId: 242,
+      name: 'Stalwart',
+      generation: 8,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_TARGET_RESOLUTION']),
+      bearer: 'Duraludon (#884), Archaludon (#1018)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Os ataques do portador ignoram quaisquer efeitos de redirecionamento de alvos (Follow Me, Rage Powder, Spotlight, Lightning Rod, Storm Drain), atingindo diretamente o alvo pretendido.'
+    },
+    'curious-medicine': {
+      id: 'curious-medicine',
+      showdownId: 261,
+      pokeApiId: 261,
+      name: 'Curious Medicine',
+      generation: 8,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START']),
+      bearer: 'Slowking-Galar (#10173)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Ao entrar em campo, o portador dispersa uma medicina curiosa que reseta todos os estágios de atributos dos aliados ativos para 0.'
+    },
+    'costar': {
+      id: 'costar',
+      showdownId: 294,
+      pokeApiId: 294,
+      name: 'Costar',
+      generation: 9,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START']),
+      bearer: 'Flamigo (#973)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Ao entrar em campo, o portador copia exatamente os estágios de modificação de atributos (e foco crítico) de seu aliado ativo.'
+    },
+    'hospitality': {
+      id: 'hospitality',
+      showdownId: 299,
+      pokeApiId: 299,
+      name: 'Hospitality',
+      generation: 9,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_START']),
+      bearer: 'Poltchageist (#1012), Sinistcha (#1013)',
+      ruleset: 'Gen IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Ao entrar em campo, o portador serve chá e restaura 25% (1/4) do HP máximo do seu aliado ativo.'
+    },
+    'victory-star': {
+      id: 'victory-star',
+      showdownId: 162,
+      pokeApiId: 162,
+      name: 'Victory Star',
+      generation: 5,
+      phase: 'H9',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ACCURACY_CHECK']),
+      bearer: 'Victini (#494)',
+      ruleset: 'Gen V-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Aumenta a precisão dos golpes utilizados pelo portador e por seus aliados em campo em 10% (multiplicador 4506/4096, ~1.1x). Múltiplos Victory Stars no mesmo lado não se acumulam.'
+    }
+  };
+
+  // Canonical H10 Implementation Specifications (3 External / Systems Abilities)
+  const H10_METADATA = {
+    'run-away': {
+      id: 'run-away',
+      showdownId: 50,
+      pokeApiId: 50,
+      name: 'Run Away',
+      generation: 1,
+      phase: 'H10',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_ESCAPE']),
+      bearer: 'Rattata (#19), Raticate (#20), Ponyta (#77), Rapidash (#78), Doduo (#84), Dodrio (#85), Eevee (#133), Sentret (#161), Furret (#162), Aipom (#190), Dunsparce (#206), Snubbull (#209), Poochyena (#261), Pachirisu (#417), Buneary (#427), Patrat (#504), Nickit (#827), Thievul (#828), Wooloo (#831), Tandemaus (#924), Maschiff (#942), Dudunsparce (#982)',
+      ruleset: 'Gen I-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Garante fuga com sucesso garantido de batalhas contra Pokémon selvagens, ignorando quaisquer habilidades ou golpes de aprisionamento (Shadow Tag, Arena Trap, Magnet Pull, Mean Look, etc.). Inativa em batalhas contra treinadores.'
+    },
+    'honey-gather': {
+      id: 'honey-gather',
+      showdownId: 118,
+      pokeApiId: 118,
+      name: 'Honey Gather',
+      generation: 4,
+      phase: 'H10',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_BATTLE_END', 'ON_RESIDUAL']),
+      bearer: 'Teddiursa (#216), Combee (#415), Cutiefly (#742), Ribombee (#743)',
+      ruleset: 'Gen IV-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Chance de encontrar Honey baseada no nível do portador (5% nos níveis 1-10 até 50% nos níveis 91-100) após vitórias ou no final de turnos se o portador não estiver segurando item.'
+    },
+    'ball-fetch': {
+      id: 'ball-fetch',
+      showdownId: 237,
+      pokeApiId: 237,
+      name: 'Ball Fetch',
+      generation: 8,
+      phase: 'H10',
+      status: 'FULL',
+      triggers: Object.freeze(['ON_RESIDUAL']),
+      bearer: 'Yamper (#835), Boltund (#836)',
+      ruleset: 'Gen VIII-IX / Pokémon Showdown data/abilities.ts',
+      breakable: false,
+      suppressible: true,
+      copyable: true,
+      swappable: true,
+      testFiles: Object.freeze(['tests/battle/abilities-final-26.test.js']),
+      description: 'Se o portador não estiver segurando nenhum item, ao final do turno ele recupera a primeira Poké Ball que falhou na tentativa de captura durante o combate.'
+    }
+  };
+
   // Registry map
   const registry = new Map();
 
@@ -3650,6 +4016,15 @@
 
     if (H8_METADATA[slug]) {
       registry.set(slug, Object.freeze({ ...H8_METADATA[slug] }));
+      continue;
+    }
+    if (H9_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H9_METADATA[slug] }));
+      continue;
+    }
+
+    if (H10_METADATA[slug]) {
+      registry.set(slug, Object.freeze({ ...H10_METADATA[slug] }));
       continue;
     }
 

@@ -15,7 +15,8 @@
     IN_PROGRESS: 'IN_PROGRESS',
     AWAITING_REPLACEMENT: 'AWAITING_REPLACEMENT',
     PLAYER_WIN: 'PLAYER_WIN',
-    ENEMY_WIN: 'ENEMY_WIN'
+    ENEMY_WIN: 'ENEMY_WIN',
+    ESCAPED: 'ESCAPED'
   });
 
   const BATTLE_EVENTS = Object.freeze({
@@ -71,14 +72,36 @@
     CUD_CHEW_ACTIVATED: 'CUD_CHEW_ACTIVATED',
     CUD_CHEW_SCHEDULED: 'CUD_CHEW_SCHEDULED',
     HARVEST_RECOVERED: 'HARVEST_RECOVERED',
-    PICKUP_RECOVERED: 'PICKUP_RECOVERED'
+    PICKUP_RECOVERED: 'PICKUP_RECOVERED',
+    HEALER_CURED: 'HEALER_CURED',
+    TELEPATHY_AVOID: 'TELEPATHY_AVOID',
+    SYMBIOSIS_TRANSFERRED: 'SYMBIOSIS_TRANSFERRED',
+    DANCER_ACTIVATED: 'DANCER_ACTIVATED',
+    CURIOUS_MEDICINE_RESET: 'CURIOUS_MEDICINE_RESET',
+    COSTAR_COPIED: 'COSTAR_COPIED',
+    HOSPITALITY_HEAL: 'HOSPITALITY_HEAL',
+    RUN_AWAY_ESCAPED: 'RUN_AWAY_ESCAPED',
+    ESCAPE_FAILED: 'ESCAPE_FAILED',
+    HONEY_GATHER_FOUND: 'HONEY_GATHER_FOUND',
+    BALL_FETCH_RETRIEVED: 'BALL_FETCH_RETRIEVED',
+    PIERCING_DRILL_PIERCE: 'PIERCING_DRILL_PIERCE',
+    SPICY_SPRAY_BURN: 'SPICY_SPRAY_BURN',
+    EELEVATE_BOOST: 'EELEVATE_BOOST',
+    POKEMON_CAUGHT: 'POKEMON_CAUGHT',
+    POKEMON_BROKE_FREE: 'POKEMON_BROKE_FREE',
+    BALL_THROWN: 'BALL_THROWN',
+    BALL_BLOCKED: 'BALL_BLOCKED'
   });
 
   const BATTLE_ACTIONS = Object.freeze({
     MOVE: 'MOVE',
     RECHARGE: 'RECHARGE',
     SWITCH: 'SWITCH',
-    BASIC_ATTACK: 'BASIC_ATTACK' // Mantido para compatibilidade
+    BASIC_ATTACK: 'BASIC_ATTACK', // Mantido para compatibilidade
+    FLEE: 'FLEE',
+    ESCAPE: 'ESCAPE',
+    THROW_BALL: 'THROW_BALL',
+    BALL: 'BALL'
   });
 
   const SWITCH_REASON = Object.freeze({
@@ -187,7 +210,11 @@
 
   const STAT_BOOST_MOVES = Object.freeze({
     'swords-dance': Object.freeze({ attack: 2 }),
-    'calm-mind': Object.freeze({ specialAttack: 1, specialDefense: 1 })
+    'calm-mind': Object.freeze({ specialAttack: 1, specialDefense: 1 }),
+    'dragon-dance': Object.freeze({ attack: 1, speed: 1 }),
+    'quiver-dance': Object.freeze({ specialAttack: 1, specialDefense: 1, speed: 1 }),
+    'victory-dance': Object.freeze({ attack: 1, defense: 1, speed: 1 }),
+    'clangorous-soul': Object.freeze({ attack: 1, defense: 1, specialAttack: 1, specialDefense: 1, speed: 1 })
   });
 
   const SELF_STAT_DROP_MOVES = Object.freeze({
@@ -906,6 +933,8 @@
 
   const CANONICAL_MOVE_DEFINITIONS = Object.freeze({
     182: Object.freeze({ id: 182, name: 'protect', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'PROTECTION', 'PRIORITY'], knownPending: [], blockedReason: null, priority: 4 }),
+    552: Object.freeze({ id: 552, name: 'fiery-dance', supportLevel: 'FULL', requiredMechanics: ['SPECIAL_DAMAGE'], knownPending: [], blockedReason: null, priority: 0 }),
+    872: Object.freeze({ id: 872, name: 'aqua-step', supportLevel: 'FULL', requiredMechanics: ['PHYSICAL_DAMAGE', 'SPEED_BOOST'], knownPending: [], blockedReason: null, priority: 0 }),
     164: Object.freeze({ id: 164, name: 'substitute', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'SUBSTITUTE'], knownPending: [], blockedReason: null, priority: 0 }),
     269: Object.freeze({ id: 269, name: 'taunt', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'TAUNT'], knownPending: [], blockedReason: null, priority: 0 }),
     668: Object.freeze({ id: 668, name: 'strength-sap', supportLevel: 'FULL', requiredMechanics: ['STATUS', 'STAT_DROP', 'HEAL'], knownPending: [], blockedReason: null, priority: 0 }),
@@ -1685,6 +1714,13 @@
     'toxic': Object.freeze({ id: 92, name: 'toxic', type: 'poison', power: 0, accuracy: 90, pp: 10, damageClass: 'status', statusEffect: 'toxic' }),
     'confuse-ray': Object.freeze({ id: 109, name: 'confuse-ray', type: 'ghost',
       power: 0, accuracy: 100, pp: 10, damageClass: 'status', statusEffect: 'confusion' }),
+    'feather-dance': Object.freeze({ id: 297, name: 'feather-dance', type: 'flying', power: 0, accuracy: 100, pp: 15, damageClass: 'status', statDrops: Object.freeze({ attack: -2 }), target: 'normal', flags: Object.freeze({ dance: true, reflectable: true }) }),
+    'teeter-dance': Object.freeze({ id: 298, name: 'teeter-dance', type: 'normal', power: 0, accuracy: 100, pp: 20, damageClass: 'status', statusEffect: 'confusion', target: 'allAdjacent', flags: Object.freeze({ dance: true, reflectable: true }) }),
+    'dragon-dance': Object.freeze({ id: 349, name: 'dragon-dance', type: 'dragon', power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ attack: 1, speed: 1 }), target: 'self', flags: Object.freeze({ dance: true }) }),
+    'lunar-dance': Object.freeze({ id: 461, name: 'lunar-dance', type: 'psychic', power: 0, accuracy: null, pp: 10, damageClass: 'status', target: 'self', flags: Object.freeze({ dance: true }) }),
+    'quiver-dance': Object.freeze({ id: 483, name: 'quiver-dance', type: 'bug', power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ specialAttack: 1, specialDefense: 1, speed: 1 }), target: 'self', flags: Object.freeze({ dance: true }) }),
+    'victory-dance': Object.freeze({ id: 837, name: 'victory-dance', type: 'fighting', power: 0, accuracy: null, pp: 10, damageClass: 'status', statBoosts: Object.freeze({ attack: 1, defense: 1, speed: 1 }), target: 'self', flags: Object.freeze({ dance: true }) }),
+    'clangorous-soul': Object.freeze({ id: 775, name: 'clangorous-soul', type: 'dragon', power: 0, accuracy: 100, pp: 5, damageClass: 'status', statBoosts: Object.freeze({ attack: 1, defense: 1, specialAttack: 1, specialDefense: 1, speed: 1 }), target: 'self', flags: Object.freeze({ dance: true, sound: true }) }),
     'swords-dance': Object.freeze({ id: 14, name: 'swords-dance', type: 'normal',
       power: 0, accuracy: null, pp: 20, damageClass: 'status', statBoosts: Object.freeze({ attack: 2 }) }),
     'calm-mind': Object.freeze({ id: 347, name: 'calm-mind', type: 'psychic',

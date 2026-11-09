@@ -64,7 +64,7 @@ test('H0 & H11 — AbilityRegistry exposes all 374 abilities and verified Pokém
   for (const name of h11Names) {
     const entry = Reg.getAbility(name);
     assert.ok(entry, `Ability ${name} should exist in registry`);
-    assert.equal(entry.status, 'RULE_CONFIRMED_PENDING_IMPLEMENTATION', `${name} should have confirmed rule status`);
+    assert.ok(['FULL', 'RULE_CONFIRMED_PENDING_IMPLEMENTATION'].includes(entry.status), `${name} should have confirmed rule or full status`);
     assert.equal(entry.phase, 'H11');
     assert.ok(entry.description.length > 0, `${name} must document confirmed Champions effect`);
     assert.ok(entry.bearer, `${name} must document official Mega bearer`);

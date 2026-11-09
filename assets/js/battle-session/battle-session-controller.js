@@ -837,6 +837,77 @@
      * Executa a substituição obrigatória de um Pokémon nocauteado pelo jogador.
      * @param {number} targetPokemonId - ID do substituto escolhido.
      */
+
+    /**
+     * Submete a ação de fuga do jogador em batalhas selvagens (Run Away / Smoke Ball / velocidade).
+     */
+    async submitPlayerEscape() {
+      if (this.isResolving) return;
+      if (this.battleState && this.battleState.status !== 'IN_PROGRESS') {
+        await this.handlePostResolutionState();
+        return;
+      }
+      if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
+
+      this.isResolving = true;
+      this.notifyState(BATTLE_UI_STATES.RESOLVING);
+
+      try {
+        const turnActions = {
+          player: { type: 'FLEE' },
+          enemy: this.ai.chooseAction(this.battleState, 'enemy', { strategy: 'SMART' }).action
+        };
+        const turnResult = this.engine.resolveTurn(this.battleState, turnActions);
+        this.battleState = turnResult.state;
+
+        if (this.presentationEngine && turnResult.events && turnResult.events.length > 0) {
+          await this.presentationEngine.play(turnResult.events, { battleState: this.battleState });
+        }
+
+        await this.handlePostResolutionState();
+      } catch (err) {
+        console.error('Erro ao resolver fuga:', err);
+        this.notifyState(BATTLE_UI_STATES.ERROR, { error: err.message });
+      } finally {
+        this.isResolving = false;
+      }
+    }
+
+    /**
+     * Submete o arremesso de Pokébola pelo jogador em batalha.
+     */
+    async submitPlayerBall(ballType = 'pokeball', roll) {
+      if (this.isResolving) return;
+      if (this.battleState && this.battleState.status !== 'IN_PROGRESS') {
+        await this.handlePostResolutionState();
+        return;
+      }
+      if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_ACTION) return;
+
+      this.isResolving = true;
+      this.notifyState(BATTLE_UI_STATES.RESOLVING);
+
+      try {
+        const turnActions = {
+          player: { type: 'THROW_BALL', ball: ballType, roll },
+          enemy: this.ai.chooseAction(this.battleState, 'enemy', { strategy: 'SMART' }).action
+        };
+        const turnResult = this.engine.resolveTurn(this.battleState, turnActions);
+        this.battleState = turnResult.state;
+
+        if (this.presentationEngine && turnResult.events && turnResult.events.length > 0) {
+          await this.presentationEngine.play(turnResult.events, { battleState: this.battleState });
+        }
+
+        await this.handlePostResolutionState();
+      } catch (err) {
+        console.error('Erro ao lançar pokébola:', err);
+        this.notifyState(BATTLE_UI_STATES.ERROR, { error: err.message });
+      } finally {
+        this.isResolving = false;
+      }
+    }
+
     async submitPlayerReplacement(targetPokemonId) {
       if (this.isResolving) return;
       if (this.uiState !== BATTLE_UI_STATES.AWAITING_PLAYER_REPLACEMENT) return;
@@ -877,11 +948,17 @@
      * @private
      */
     async handlePostResolutionState() {
-      const status = this.battleState.status;
+      const status = this.battleState?.status;
+
+      if (status === 'ESCAPED') {
+        this.notifyState(BATTLE_UI_STATES.ESCAPED, { winner: null, escaped: true, battleState: this.battleState });
+        return;
+      }
 
       if (status === 'BATTLE_ENDED' || status === 'PLAYER_WIN' || status === 'ENEMY_WIN') {
         const winner = this.battleState.winner || (status === 'PLAYER_WIN' ? 'player' : 'enemy');
         const isVictory = winner === 'player' || status === 'PLAYER_WIN';
+
 
         // Registro de estatística no Perfil do Treinador (PBA-014) com battleId e leaderId
         try {
@@ -913,6 +990,12 @@
         } catch (err) { console.warn('Não foi possível registrar a progressão da campanha:', err); }
 
         if (isVictory) {
+          try {
+            if ((this.battleConstants?.P7 || battleConstants?.P7)?.checkHoneyGather) {
+              const hgEvents = [];
+              (this.battleConstants?.P7 || battleConstants?.P7).checkHoneyGather(this.battleState, 'player', (this.battleConstants || battleConstants), hgEvents);
+            }
+          } catch (e) { console.warn('Erro ao processar Honey Gather:', e); }
           this.notifyState(BATTLE_UI_STATES.VICTORY, { winner: 'player', battleState: this.battleState });
         } else {
           this.notifyState(BATTLE_UI_STATES.DEFEAT, { winner: 'enemy', battleState: this.battleState });

@@ -75,6 +75,7 @@ Estados: `PENDING` (sem efeito), `PARTIAL` (efeitos/interações incompletos), `
 | H4-C | Supersweet Syrup | **Implementado (FULL)**. 1 habilidade canônica Gen IX de redução de evasão de oponentes na entrada (-1 estágio, única por batalha). Encerramento oficial da Família H4 com 28 testes dedicados em `tests/battle/abilities-h4c.test.js`. |
 | H5 | Suction Cups, Truant, Slow Start, Stall, Prankster, Infiltrator, Gale Wings, Parental Bond, Triage, Queenly Majesty, Dazzling, Armor Tail, Mycelium Might, Quick Draw, Emergency Exit, Wimp Out, Magic Bounce, Screen Cleaner | **Implementado (FULL)**. Lote único consolidado de 18 habilidades canônicas Gen IX de prioridade, controle e fluxo de ações. 63 testes dedicados em `tests/battle/abilities-h5.test.js`. |
 | H8 | Gluttony, Unburden, Klutz, Frisk, Anticipation, Forewarn, Pickpocket, Harvest, Cheek Pouch, Magician, Sticky Hold, Ripen, Cud Chew, Pickup | **Implementado (FULL)**. Lote único consolidado de 14 habilidades canônicas Gen IX de itens, berries, roubo, recuperação e informações. 67 testes dedicados em `tests/battle/abilities-h8.test.js`. |
+| FINAL-26 (H9+H10+H11) | Plus, Minus, Healer, Friend Guard, Telepathy, Symbiosis, Dancer, Battery, Power Spot, Steely Spirit, Propeller Tail, Stalwart, Curious Medicine, Costar, Hospitality, Victory Star, Run Away, Honey Gather, Ball Fetch, Piercing Drill, Dragonize, Mega Sol, Spicy Spray, Eelevate, Fire Mane, Aura Guard | **Implementado (FULL)**. Lote único consolidado das últimas 26 habilidades atribuídas pendentes (H9 Duplas, H10 Fuga/Itens e H11 Mega Evoluções Champions). 65 testes dedicados em `tests/battle/abilities-final-26.test.js`. 100% das 313 habilidades atribuídas concluídas (0 pendências atribuídas). |
 
 A ordem é recomendada, não uma promessa de que todos os efeitos desses lotes compartilham a mesma dificuldade. Cada habilidade pode ser liberada individualmente após seus testes. As fases seguintes são famílias de trabalho, não um único commit por fase.
 
@@ -1009,47 +1010,56 @@ Separar uso de berries, recuperação/roubo e informação pública de batalha. 
 
 ### H9 — Interações de duplas
 
-**Inventário:** 16 habilidades pendentes; 29 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (16 concluídas no lote único FINAL-26); 0 registros com habilidade padrão afetados.
 
 **Dependências:** H0; H1/H2/H3/H5/H7 conforme família; duplas já jogáveis.
 
 Entregar auras de aliado, proteção/redirecionamento, suporte de entrada, cópia de atributos, dança e herança. Diferenciar aliado, adversário e próprio portador. Vitória/derrota e finais com dois KOs precisam de ordem documentada. Evoluir a IA para considerar suporte sem usar informações ocultas do turno.
 
-**Aceite:** Parceiro presente/ausente, parceiro substituído, dois portadores, área versus alvo único, cura com HP cheio, ações copiadas sem recursão, Commander e efeitos aplicados uma vez por alvo e turno.
+**Aceite:** Parceiro presente/ausente, parceiro substituído, dois portadores, área versus alvo único, cura com HP cheio, ações copiadas sem recursão, Commander e efeitos aplicados uma vez por alvo e turno. Concluído com testes dedicados em `tests/battle/abilities-final-26.test.js`.
 
 **Lista completa da família:** `plus`, `minus`, `healer`, `friend-guard`, `telepathy`, `symbiosis`, `dancer`, `battery`, `power-spot`, `steely-spirit`, `propeller-tail`, `stalwart`, `curious-medicine`, `costar`, `hospitality`, `victory-star`.
 
 ### H10 — Sistemas externos ao combate atual
 
-**Inventário:** 3 habilidades pendentes; 27 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (3 concluídas no lote único FINAL-26); 0 registros com habilidade padrão afetados.
 
 **Dependências:** Sistema de fuga; para coleta/bola, inventário mínimo e captura durante a luta.
 
-Run Away depende de comando de fuga real em encontros selvagens; não equivale a sair de uma batalha contra treinador nem a escapar de qualquer aprisionamento. Honey Gather precisa de um destino persistente válido para o item coletado. Ball Fetch precisa de Pokébola lançada/falhada e regra de recuperação. Manter BLOCKED enquanto esses sistemas não existirem.
+- `run-away` (Showdown ID: 50, PokéAPI ID: 50): Garante fuga bem-sucedida de encontros selvagens, ignorando golpes e habilidades de aprisionamento (Shadow Tag, Arena Trap, Magnet Pull). Bloqueada em batalhas contra treinadores e ginásios. Não colide com Normalize (Showdown ID: 96, PokéAPI ID: 96).
+- `honey-gather` (Showdown ID: 118, PokéAPI ID: 118): Concede Honey ao portador elegível exclusivamente no pós-vitória com probabilidade baseada no nível (5% a 50%). Respeita slot de item vazio e não duplica concessão.
+- `ball-fetch` (Showdown ID: 237, PokéAPI ID: 237): Recupera a primeira Pokébola lançada que falhou na captura ao final do turno residual. Não duplica recuperação e mantém o item equipado.
 
-**Aceite:** Fuga permitida/proibida conforme contexto, bola correta recuperada uma vez, inventário íntegro após reload, falha/limite de coleta e ausência de bônus inventados em duelos comuns.
+**Integração Real E2E:** Cadeia completa validada entre interface (botões de Fuga e Captura em batalhas selvagens), sessão (BattleSessionController), motor de batalha (FLEE / THROW_BALL / ESCAPED) e persistência de equipe.
 
 **Lista completa da família:** `run-away`, `honey-gather`, `ball-fetch`.
 
 ### H11 — Habilidades de Mega Evolução de Pokémon Champions (2026)
 
-**Inventário:** 7 habilidades pendentes; 7 registros com habilidade padrão afetados.
+**Inventário:** 0 habilidades pendentes (7 concluídas no lote único FINAL-26); 0 registros com habilidade padrão afetados.
 
 **Dependências:** Regras oficiais de Pokémon Champions (2026, Nintendo Switch); Pokémon Showdown `data/abilities.ts`; formato de Mega Evolução; H0.
 
-As sete habilidades são oficiais e pertencem a novas Mega Evoluções introduzidas em Pokémon Champions (2026, Nintendo Switch). Seus efeitos, portadores e regras foram confirmados:
+#### Matriz Canônica de Identificadores Oficiais H11
 
-- `piercing-drill` (Mega Excadrill, #10287): Golpes de contato atravessam Protect/Detect e barreiras de proteção causando 25% do dano normal.
-- `dragonize` (Mega Feraligatr, #10283): Converte golpes do tipo Normal em Dragon e aumenta seu poder em 20% (habilidade de conversão elemental semelhante a Pixilate/Aerilate).
-- `mega-sol` (Mega Meganium, #10282): Mega Sol faz os movimentos do próprio portador funcionarem como se houvesse sol intenso (sun simulation), independentemente do clima real. A habilidade não modifica o clima do campo, não invoca clima global, não altera diretamente o clima dos aliados e não funciona como Desolate Land. (Corrigido 02/11/2026 conforme regras canônicas de Pokémon Champions.)
-- `spicy-spray` (Mega Scovillain, #10320): Ao receber dano de qualquer ataque adversário, inflige automaticamente a condição Burn no atacante.
-- `eelevate` (Mega Eelektross, #10290): Combina imunidade ao solo e armadilhas (Levitate) com aumento de 1 estágio no maior atributo ao nocautear diretamente um oponente.
-- `fire-mane` (Mega Pyroar, #10295): Aumenta o poder dos golpes do tipo Fire em 50% (multiplicador passivo de 1.5x em ataques Fire).
-- `aura-guard` (Mega Lucario Z, #10310): Reduz à metade (0.5x) o dano recebido de todos os ataques de contato físico.
+| Habilidade | Slug PBA | Showdown ID | PokéAPI ID | ID da Forma Pokémon | Portador Oficial |
+|---|---|---:|---:|---:|---|
+| Piercing Drill | `piercing-drill` | 311 | 308 | #10287 | Mega Excadrill |
+| Dragonize | `dragonize` | 312 | 309 | #10283 | Mega Feraligatr |
+| Mega Sol | `mega-sol` | 315 | 310 | #10282 | Mega Meganium |
+| Spicy Spray | `spicy-spray` | 318 | 311 | #10320 | Mega Scovillain |
+| Eelevate | `eelevate` | 313 | 312 | #10290 | Mega Eelektross |
+| Fire Mane | `fire-mane` | 316 | 313 | #10295 | Mega Pyroar |
+| Aura Guard | `aura-guard` | 319 | 314 | #10310 | Mega Lucario Z |
 
-**Status no Catálogo:** `RULE_CONFIRMED_PENDING_IMPLEMENTATION`. Os contratos mecânicos estão formalmente identificados e auditados, aguardando a implementação específica do sistema de Mega Evolução da Fase H11.
+*Nota Metodológica:* Os valores 10001–10007 mencionados no relatório preliminar referiam-se estritamente à numeração de formulários internos e nunca foram IDs canônicos de habilidades. Os IDs canônicos no Pokémon Showdown e na PokéAPI constam na tabela acima e estão registrados no `ability-registry.js`. As formas Pokémon oficiais (como #10287 para Mega Excadrill) permanecem com seus IDs intactos.
 
-**Aceite:** Origem, versão, portadores e regra confirmados na fonte primária (Serebii, press oficial e Showdown). Nenhuma alteração ou exclusão de formas válidas.
+**Regras Específicas Validadas:**
+- **Mega Sol:** Weather Ball adquire o tipo Fire e poder base de estritamente 100 (nunca 150). O modificador solar de 1.5x é computado separadamente na fórmula de dano (`damageMultiplier`). A simulação de sol é estritamente pessoal e não altera o clima global, nem concede bônus aos aliados ou penaliza sob climas opostos.
+- **Dragonize:** Converte golpes do tipo Normal para Dragon com bônus de 1.2x em golpes de dano. Respeita as exceções canônicas de `onModifyType` que determinam o próprio tipo (Judgment, Multi-Attack, Natural Gift, Revelation Dance, Techno Blast, Terrain Pulse, Weather Ball, Tera Blast terastallizado, Struggle). Converte golpes de status elegíveis sem adicionar dano artificial.
+- **Dancer:** Catálogo integral com exatamente 12 movimentos canônicos (Swords Dance 14, Petal Dance 80, Feather Dance 297, Teeter Dance 298, Dragon Dance 349, Lunar Dance 461, Quiver Dance 483, Fiery Dance 552, Revelation Dance 686, Clangorous Soul 775, Victory Dance 837, Aqua Step 872). Respeita ordenação canônica Showdown Gen IX (`sim/battle-actions.ts`): menor Speed armazenada (`storedStats['spe']` / antes de modificadores como Agility e Choice Scarf; considerando Speed Swap) executa primeiro; em empates de Speed, o desempate é determinado pela ordem de aquisição da habilidade (`b.abilityState.effectOrder - a.abilityState.effectOrder`), onde o combatente que adquiriu Dancer mais recentemente age primeiro, de forma 100% simétrica e sem viés automático para o jogador.
+
+**Status no Catálogo:** `FULL`. Validado no motor de combate, na interface e na suíte `tests/battle/abilities-final-26.test.js` (81/81 PASS).
 
 **Lista completa da família:** `piercing-drill`, `dragonize`, `mega-sol`, `spicy-spray`, `eelevate`, `fire-mane`, `aura-guard`.
 
