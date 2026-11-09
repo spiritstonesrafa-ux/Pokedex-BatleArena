@@ -36,7 +36,8 @@
     'ability-shield': 'Protege a habilidade do usuário contra supressão e efeitos que a alteram.',
     'safety-goggles': 'Protege contra dano residual de clima e golpes baseados em pó ou esporos.',
     'rocky-helmet': 'Causa 1/6 de dano de recuo ao adversário sempre que sofrer contato físico.',
-    'booster-energy': 'Ativa Protosynthesis ou Quark Drive em combate, consumindo a cápsula para energizar o atributo mais alto.'
+    'booster-energy': 'Ativa Protosynthesis ou Quark Drive em combate, consumindo a cápsula para energizar o atributo mais alto.',
+    'honey': 'Mel doce coletado por Honey Gather. Item doce de exploração e suporte.'
   };
 
   const QUICK_ITEMS = [

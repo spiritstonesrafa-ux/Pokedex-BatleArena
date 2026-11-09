@@ -958,6 +958,7 @@
           state.status = 'PLAYER_WIN';
           state.winner = attackerRole;
           state.capturedPokemon = targetMon;
+          state.lastBallType = ballType;
           events.push({
             type: 'POKEMON_CAUGHT',
             actor: attackerRole,

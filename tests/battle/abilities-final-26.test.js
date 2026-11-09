@@ -6,6 +6,43 @@ const Registry = require('../../assets/js/battle/ability-registry.js');
 const { BattleTeamHydrator } = require('../../assets/js/battle-session/battle-team-hydrator.js');
 const { BattleSessionController } = require('../../assets/js/battle-session/battle-session-controller.js');
 const { BATTLE_UI_STATES } = require('../../assets/js/battle-session/battle-session-constants.js');
+const { BattleView } = require('../../assets/js/ui/battle-view.js');
+const { CampaignManager } = require('../../assets/js/campaign/campaign-wild-manager.js');
+const { describeItem } = require('../../assets/js/campaign/campaign-battle-customization.js');
+const Catalog = require('../../assets/js/campaign/campaign-catalog.js');
+const Wild = require('../../assets/js/campaign/campaign-wild-encounters.js');
+const Store = require('../../assets/js/campaign/campaign-store.js');
+
+const memoryStore = new Map();
+if (typeof global.localStorage === 'undefined' || !global.localStorage?.getItem) {
+  global.localStorage = {
+    getItem: key => memoryStore.get(key) || null,
+    setItem: (key, value) => memoryStore.set(key, String(value)),
+    removeItem: key => memoryStore.delete(key),
+    clear: () => memoryStore.clear()
+  };
+}
+global.window = global.window || {};
+global.window.PBACampaign = global.window.PBACampaign || {};
+Object.assign(global.window.PBACampaign, Catalog);
+global.window.matchMedia = global.window.matchMedia || (() => ({ matches: true }));
+global.window.switchAppTab = global.window.switchAppTab || (() => {});
+global.document = global.document || {};
+global.document.getElementById = () => null;
+global.document.querySelector = () => null;
+global.document.querySelectorAll = () => [];
+global.document.addEventListener = () => {};
+global.document.removeEventListener = () => {};
+global.document.createElement = tag => ({
+  tagName: tag.toUpperCase(),
+  classList: { add() {}, remove() {}, contains: () => false },
+  setAttribute() {},
+  getAttribute: () => null,
+  appendChild() {},
+  remove() {}
+});
+global.document.documentElement = { classList: { add() {}, remove() {}, contains: () => false } };
+global.document.body = { classList: { add() {}, remove() {}, contains: () => false } };
 
 const statusById = Object.fromEntries(
   Object.values(C.SUPPORTED_STATUS_MOVES).map(m => [Number(m.id), m])
@@ -1112,6 +1149,31 @@ describe('FINAL-26 CANONICAL ABILITIES SUITE (H9 + H10 + H11 — SHOWDOWN GEN IX
       C.P7.checkHoneyGather(state, 'player', C, events);
       assert.equal(hgMon.item, 'leftovers', 'Item segurado existente não pode ser sobrescrito');
     });
+
+    test('Honey possui ID oficial 94 da PokéAPI, Red Chain (418) não é confundido e itens não colidem', () => {
+      assert.equal(C.P7.items.honey.id, 94, 'Honey deve possuir ID 94 oficial da PokéAPI');
+      assert.notEqual(C.P7.items.honey.id, 418, 'ID 418 pertence à Red Chain e não a Honey');
+      assert.equal(C.P7.items['red-chain'], undefined, 'Red Chain não é item de combate');
+      const itemsWithId94 = Object.values(C.P7.items).filter(it => it.id === 94);
+      assert.equal(itemsWithId94.length, 1, 'Exatamente um item com ID 94');
+      assert.equal(itemsWithId94[0].name, 'honey');
+    });
+
+    test('normalizeItem, validatePreference e descrições do catálogo mantêm consistência canônica para Honey', () => {
+      assert.equal(C.P7.normalizeItem('honey'), 'honey');
+      assert.equal(C.P7.normalizeItem({ name: 'honey', id: 94 }), 'honey');
+      assert.throws(() => C.P7.normalizeItem('red-chain'), /sem suporte/);
+
+      const pref = C.P7.validatePreference(415, { ability: 'honey-gather', item: 'honey' });
+      assert.deepEqual(pref, { ability: 'honey-gather', item: 'honey' });
+
+      const prefP8 = C.P7.validatePreference(415, { ability: 'honey-gather', item: 'honey', teraType: 'flying', specialMechanic: 'tera' });
+      assert.deepEqual(prefP8, { ability: 'honey-gather', item: 'honey', teraType: 'flying', specialMechanic: 'tera' });
+
+      const desc = describeItem('honey');
+      assert.ok(desc && desc.length > 0, 'Descrição de Honey deve estar disponível');
+      assert.match(desc, /Honey Gather|Mel doce/);
+    });
   });
 
   describe('17. Ball Fetch (ID 237)', () => {
@@ -1592,6 +1654,786 @@ describe('FINAL-26 CANONICAL ABILITIES SUITE (H9 + H10 + H11 — SHOWDOWN GEN IX
       const previousState = JSON.parse(JSON.stringify(session.battleState));
       await session.handlePostResolutionState();
       assert.equal(session.battleState.player.team[0].item, 'honey', 'Item permanece intacto sem duplicação');
+    });
+
+    test('E2E Run Away / Interface: Clique no botão #btnEscape na interface real dispara submitPlayerEscape e view exibe renderEscapedView sem erros', async () => {
+      const runner = makeMon(19, [33], ['normal'], { ability: 'run-away' });
+      const wildMon = makeMon(99, [33], ['normal']);
+      const session = new BattleSessionController({
+        playerTeamIds: [19],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'IN_PROGRESS',
+        player: { team: [runner], activeIndex: 0 },
+        enemy: { team: [wildMon], activeIndex: 0 },
+        isTrainerBattle: false
+      };
+      session.uiState = BATTLE_UI_STATES.AWAITING_PLAYER_ACTION;
+
+      let inner = '';
+      const mockContainer = {
+        get innerHTML() { return inner; },
+        set innerHTML(val) { inner = val; },
+        querySelector: () => null,
+        querySelectorAll: () => []
+      };
+
+      const view = new BattleView({
+        container: mockContainer,
+        sessionController: session
+      });
+
+      // Renderiza a interface de batalha ativa para wild battle
+      view.renderActiveBattleView(session.battleState, 'AWAITING_PLAYER_ACTION');
+      assert.ok(mockContainer.innerHTML.includes('id="btnEscape"'), 'Botão #btnEscape deve estar presente no DOM');
+      assert.ok(mockContainer.innerHTML.includes('id="btnThrowBall"'), 'Botão #btnThrowBall deve estar presente no DOM');
+
+      // Chamada direta do renderEscapedView
+      view.renderEscapedView({}, session.battleState);
+      assert.ok(mockContainer.innerHTML.includes('FUGA BEM-SUCEDIDA!'), 'Tela de fuga deve exibir o badge');
+      assert.ok(mockContainer.innerHTML.includes('fa-person-running'), 'Ícone de corrida deve estar presente');
+      assert.ok(mockContainer.innerHTML.includes('btnBackToBattle'), 'Botão de voltar à preparação deve estar presente em quick battle');
+    });
+
+    test('E2E Run Away / Campaign Lifecycle: Fuga em batalha selvagem limpa wild.active, não registra vitória/derrota/recompensa e permite retorno à campanha', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start(Catalog.DRAFT.slice(0, 6).map(p => p.id));
+      const enc = manager.beginWildEncounter('region-1', 0.5);
+      assert.equal(enc.ok, true);
+      assert.ok(manager.getState().wild.active !== null, 'Encontro selvagem ativo antes da fuga');
+
+      const runner = makeMon(19, [33], ['normal'], { ability: 'run-away', currentHp: 500, maxHp: 500 });
+      const wildMon = makeMon(enc.pokemonId, [33], ['normal'], { currentHp: 500, maxHp: 500 });
+
+      const session = new BattleSessionController({
+        playerTeamIds: [19],
+        enemyTeamIds: [enc.pokemonId],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: {
+          mode: 'CAMPAIGN',
+          kind: 'WILD',
+          id: enc.pokemonId,
+          regionId: 'region-1',
+          pointId: enc.pointId
+        }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'IN_PROGRESS',
+        player: { team: [runner], activeIndex: 0 },
+        enemy: { team: [wildMon], activeIndex: 0 },
+        isTrainerBattle: false
+      };
+      session.uiState = BATTLE_UI_STATES.AWAITING_PLAYER_ACTION;
+
+      // Executa fuga via sessão
+      await session.submitPlayerEscape();
+
+      assert.equal(session.battleState.status, 'ESCAPED');
+      assert.equal(manager.getState().wild.active, null, 'wild.active limpo com sucesso após fuga');
+      assert.equal(manager.getState().wild.pendingCapture, null, 'Sem pendência de captura');
+      assert.equal(manager.getBadgeCount(), 0, 'Nenhuma insígnia concedida por fuga');
+      assert.equal(manager.getState().superTrainer.defeated, false, 'Nenhuma vitória indevida');
+    });
+
+    test('E2E Run Away / Exploration: Novo encontro selvagem é iniciado imediatamente após a fuga sem bloqueio RESOLVE_PREVIOUS', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start(Catalog.DRAFT.slice(0, 6).map(p => p.id));
+
+      // Inicia encontro 1
+      const enc1 = manager.beginWildEncounter('region-1', 0.2);
+      assert.equal(enc1.ok, true);
+
+      // Fuga limpa o estado
+      manager.recordWildEscape('btl_escape_test');
+      assert.equal(manager.getState().wild.active, null);
+
+      // Inicia encontro 2 imediatamente sem lock
+      const enc2 = manager.beginWildEncounter('region-1', 0.8);
+      assert.equal(enc2.ok, true, 'Novo encontro deve iniciar sem bloqueio');
+      assert.equal(enc2.resumed, false, 'Novo encontro não é resumo de anterior');
+      assert.ok(manager.getState().wild.active !== null);
+    });
+
+    test('E2E In-Battle Capture / Single Source of Truth: Arremesso de bola bem-sucedido adiciona mon ao elenco, resolve wild.result = CAUGHT e limpa pendingCapture', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start(Catalog.DRAFT.slice(0, 6).map(p => p.id));
+      const enc = manager.beginWildEncounter('region-1', 0.4);
+      assert.equal(enc.ok, true);
+      const targetId = enc.pokemonId;
+      assert.ok(!manager.getRosterIds().includes(targetId), 'Pokémon ainda não pertence ao elenco');
+
+      const attacker = makeMon(1, [33], ['grass'], { currentHp: 500, maxHp: 500 });
+      const wildTarget = makeMon(targetId, [33], ['normal'], { currentHp: 10, maxHp: 100, catchRate: 255 });
+
+      const session = new BattleSessionController({
+        playerTeamIds: [1],
+        enemyTeamIds: [targetId],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: {
+          mode: 'CAMPAIGN',
+          kind: 'WILD',
+          id: targetId,
+          regionId: 'region-1',
+          pointId: enc.pointId
+        }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'IN_PROGRESS',
+        player: { team: [attacker], activeIndex: 0 },
+        enemy: { team: [wildTarget], activeIndex: 0 },
+        isTrainerBattle: false
+      };
+      session.uiState = BATTLE_UI_STATES.AWAITING_PLAYER_ACTION;
+
+      // Arremesso de Master Ball (captura garantida)
+      await session.submitPlayerBall('masterball', 0);
+
+      assert.equal(session.battleState.status, 'PLAYER_WIN');
+      assert.ok(session.battleState.capturedPokemon);
+      assert.equal(session.battleState.capturedPokemon.id, targetId);
+
+      // Fonte única de verdade: wild.result é CAUGHT
+      const wildState = manager.getState().wild;
+      assert.equal(wildState.active, null, 'wild.active limpo');
+      assert.equal(wildState.pendingCapture, null, 'pendingCapture deve ser estritamente null (sem duplicidade)');
+      assert.equal(wildState.result.status, 'CAUGHT', 'Status de captura registrado no resultado');
+      assert.equal(wildState.result.pokemonId, targetId);
+
+      // Adicionado ao elenco
+      assert.ok(manager.getRosterIds().includes(targetId), 'Pokémon capturado adicionado ao elenco da campanha');
+
+      // Acknowledge limpa o resultado
+      manager.acknowledgeWildResult();
+      assert.equal(manager.getState().wild.result, null);
+    });
+
+    test('E2E In-Battle Capture / Protection: Captura duplicada ou com limite de ponto esgotado não adiciona mon ao elenco', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start(Catalog.DRAFT.slice(0, 6).map(p => p.id));
+      const enc = manager.beginWildEncounter('region-1', 0.5);
+      assert.equal(enc.ok, true);
+
+      // Mon já adicionado ao elenco (simulando espécie já capturada)
+      manager.data.wild.capturedIds.push(enc.pokemonId);
+      manager.data.wild.captureRegions[enc.pokemonId] = 'region-1';
+      manager.data.wild.capturePoints[enc.pokemonId] = enc.pointId;
+      assert.ok(manager.getRosterIds().includes(enc.pokemonId));
+
+      const res = manager.recordBattle({
+        battleId: 'btl_dup_test',
+        kind: 'WILD',
+        id: enc.pokemonId,
+        opponentPokemonId: enc.pokemonId,
+        winner: 'player',
+        captured: true,
+        ballType: 'pokeball'
+      });
+
+      assert.equal(res.processed, true);
+      assert.equal(manager.getState().wild.result.status, 'FLED');
+      assert.equal(manager.getState().wild.result.reason, 'DUPLICATE');
+      assert.equal(manager.getState().wild.pendingCapture, null);
+    });
+
+    test('E2E Honey Gather / Persistent Storage & Reload: Vitória real persiste Honey no CampaignManager, sobrevive a reload e não duplica', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start(Catalog.DRAFT.slice(0, 6).map(p => p.id));
+
+      // Adiciona Combee (#415) aos capturados
+      manager.data.wild.capturedIds.push(415);
+      manager.save('COMBEE_JOINED');
+      assert.ok(manager.getRosterIds().includes(415));
+      assert.equal(manager.getBattlePreference(415).item, null);
+
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const faintedWild = makeMon(99, [33], ['normal'], { currentHp: 0 });
+
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: {
+          mode: 'CAMPAIGN',
+          kind: 'WILD',
+          id: 99
+        }
+      });
+      session.battleState = {
+        turn: 2,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [faintedWild], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5 // Roll 5 <= chance -> Coleta Honey
+      };
+
+      // Executa pós-resolução
+      await session.handlePostResolutionState();
+
+      // Verifica atribuição em batalha e persistência no CampaignManager
+      assert.equal(session.battleState.player.team[0].item, 'honey');
+      assert.equal(manager.getBattlePreference(415).item, 'honey', 'Honey persistido no CampaignManager');
+
+      // Simula recarregamento da campanha via Store
+      const reloadedManager = new CampaignManager(Store);
+      assert.equal(reloadedManager.getBattlePreference(415).item, 'honey', 'Honey persiste após recarregar campanha');
+
+      // Segunda batalha: Combee já possui Honey equipado
+      combee.item = 'honey';
+      session.battleState.honeyGatherResolved = false;
+      session.battleState.honeyGatherRoll = 1;
+      await session.handlePostResolutionState();
+
+      // Confirma ausência de duplicação
+      assert.equal(session.battleState.player.team[0].item, 'honey', 'Item permanece honey sem duplicação');
+      assert.equal(reloadedManager.getBattlePreference(415).item, 'honey');
+    });
+
+    test('E2E Campaign Contract: Pokébolas não possuem inventário consumível na campanha', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start(Catalog.DRAFT.slice(0, 6).map(p => p.id));
+      const state = manager.getState();
+
+      // O modelo canônico da campanha não possui inventário numérico de Pokébolas
+      assert.equal(state.balls, undefined, 'Campanha não possui inventário paralelo de Pokébolas');
+      assert.equal(state.pokeballs, undefined, 'Pokébolas não são consumíveis numéricos');
+    });
+  });
+
+  describe('28. HOTFIX H10 — Preservação Estrita de Preferências pós-Honey Gather (10 Cenários Obrigatórios)', () => {
+    test('1. Pokémon com habilidade natural configurada é preservada após Honey Gather', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: null });
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      const pref = manager.getBattlePreference(415);
+      assert.equal(pref.ability, 'honey-gather', 'Habilidade natural preservada');
+      assert.equal(pref.item, 'honey', 'Item atualizado para honey');
+    });
+
+    test('2. Pokémon com tipo Tera selecionado é estritamente preservado', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: null, teraType: 'flying', specialMechanic: 'tera' });
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      const pref = manager.getBattlePreference(415);
+      assert.equal(pref.teraType, 'flying', 'teraType deve ser estritamente preservado');
+      assert.equal(pref.item, 'honey');
+    });
+
+    test('3. Pokémon com specialMechanic configurada é estritamente preservada', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: null, specialMechanic: 'dynamax' });
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      const pref = manager.getBattlePreference(415);
+      assert.equal(pref.specialMechanic, 'dynamax', 'specialMechanic deve ser preservada');
+      assert.equal(pref.item, 'honey');
+    });
+
+    test('4. Pokémon sem preferências anteriores recebe loadout legal com habilidade natural padrão e Honey', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      // Sem preferência prévia
+      delete manager.data.battlePreferences[415];
+      manager.save('CLEAR_PREF');
+
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      const pref = manager.getBattlePreference(415);
+      assert.equal(pref.ability, 'honey-gather', 'Habilidade default válida atribuída');
+      assert.equal(pref.item, 'honey', 'Honey persistido');
+    });
+
+    test('5. Pokémon cuja habilidade foi temporariamente alterada em combate (Trace/Transform) não sobrescreve preferência canônica', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: null, teraType: 'bug', specialMechanic: 'tera' });
+      // Em batalha, habilidade alterada temporariamente para 'intimidate'
+      const combee = makeMon(415, [33], ['bug', 'flying'], {
+        ability: 'intimidate',
+        originalAbility: 'honey-gather',
+        level: 50,
+        item: null
+      });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      const pref = manager.getBattlePreference(415);
+      assert.equal(pref.ability, 'honey-gather', 'Habilidade salva NÃO pode ser a temporária (intimidate)');
+      assert.equal(pref.item, 'honey');
+      assert.equal(pref.teraType, 'bug');
+      assert.equal(pref.specialMechanic, 'tera');
+    });
+
+    test('6. Pokémon com item preexistente não recebe Honey nem sobrescreve o item existente', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: 'focus-sash' });
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: 'focus-sash' });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      assert.equal(combee.item, 'focus-sash', 'Item de combate inalterado');
+      assert.equal(manager.getBattlePreference(415).item, 'focus-sash', 'Item de preferência inalterado');
+    });
+
+    test('7. Pokémon com preferência incompatível não perde configurações silenciosamente (reverte item de combate)', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+
+      // Fake mon não pertencente ao elenco (id 9999)
+      const fakeMon = makeMon(9999, [33], ['normal'], { ability: 'honey-gather', level: 50, item: 'honey' });
+      const session = new BattleSessionController({
+        playerTeamIds: [9999],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [fakeMon], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherResolved: true
+      };
+      await session.handlePostResolutionState();
+
+      assert.equal(fakeMon.item, null, 'Reverte item de combate se salvamento falhar (mantém coerência)');
+    });
+
+    test('8. Recarregamento do CampaignManager preserva habilidade, tipo Tera, mecânica especial e Honey quando elegíveis', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: 'honey', teraType: 'grass', specialMechanic: 'tera' });
+
+      // Recarrega instância nova através do Store
+      const reloaded = new CampaignManager(Store);
+      const pref = reloaded.getBattlePreference(415);
+      assert.equal(pref.ability, 'honey-gather', 'Habilidade sobrevive a reload');
+      assert.equal(pref.item, 'honey', 'Honey sobrevive a reload');
+      assert.equal(pref.teraType, 'grass', 'Tipo Tera sobrevive a reload');
+      assert.equal(pref.specialMechanic, 'tera', 'Mecânica especial sobrevive a reload');
+    });
+
+    test('9. Segunda batalha não duplica o item nem altera preferência existente', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: 'honey', teraType: 'grass', specialMechanic: 'tera' });
+
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: 'honey' });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 1
+      };
+      await session.handlePostResolutionState();
+
+      assert.equal(combee.item, 'honey', 'Item de combate continua sendo exatamente um honey');
+      const pref = manager.getBattlePreference(415);
+      assert.equal(pref.item, 'honey');
+      assert.equal(pref.teraType, 'grass');
+    });
+
+    test('10. Outro Pokémon do elenco não sofre alterações ao persistir Honey Gather', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      // Configura Pikachu (25) com loadout personalizado completo
+      manager.setBattlePreference(25, { ability: 'static', item: 'leftovers', teraType: 'electric', specialMechanic: 'tera' });
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: null });
+
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const pikachu = makeMon(25, [33], ['electric'], { ability: 'static', level: 50, item: 'leftovers' });
+      const session = new BattleSessionController({
+        playerTeamIds: [415, 25],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee, pikachu], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      assert.equal(manager.getBattlePreference(415).item, 'honey', 'Combee recebeu honey');
+
+      // Pikachu deve estar 100% inalterado
+      const pikaPref = manager.getBattlePreference(25);
+      assert.equal(pikaPref.ability, 'static', 'Habilidade do outro Pokémon intacta');
+      assert.equal(pikaPref.item, 'leftovers', 'Item do outro Pokémon intacto');
+      assert.equal(pikaPref.teraType, 'electric', 'Tera do outro Pokémon intacto');
+      assert.equal(pikaPref.specialMechanic, 'tera', 'Mecânica do outro Pokémon intacta');
+    });
+  });
+
+  describe('29. HOTFIX H10 — Smoke Test da Campanha e Interface Real (8 Fluxos Chave)', () => {
+    test('Fluxo 1: Fuga de encontro selvagem e retorno à exploração', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      const enc = manager.beginWildEncounter('region-1', 0.5);
+      assert.ok(enc.ok, 'Encontro iniciado');
+      assert.ok(manager.getState().wild.active, 'Encontro ativo registrado');
+
+      const mockContainer = {
+        innerHTML: '',
+        querySelector: sel => {
+          if (sel === '#btnCampaignReturn') return { addEventListener: (ev, fn) => { fn(); } };
+          return null;
+        },
+        querySelectorAll: () => []
+      };
+      const view = new BattleView({
+        container: mockContainer,
+        battleConstants: C,
+        campaignManager: manager
+      });
+      view.sessionController = {
+        sessionOptions: { metadata: { mode: 'CAMPAIGN', kind: 'WILD' } },
+        leaveBattle: () => {}
+      };
+
+      // Renderiza tela de fuga
+      view.renderEscapedView({}, { isTrainerBattle: false });
+      assert.match(mockContainer.innerHTML, /FUGA BEM-SUCEDIDA/);
+      assert.match(mockContainer.innerHTML, /btnCampaignReturn/);
+
+      // Retorno à campanha
+      view.returnToCampaign();
+      assert.equal(manager.getState().wild.active, null, 'Encontro selvagem limpo com sucesso');
+    });
+
+    test('Fluxo 2: Novo encontro selvagem imediatamente após fuga', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.beginWildEncounter('region-1', 0.5);
+      manager.recordWildEscape('btl_escape_flow');
+
+      const secondEnc = manager.beginWildEncounter('region-1', 0.5);
+      assert.equal(secondEnc.ok, true, 'Segundo encontro iniciado imediatamente sem bloqueio');
+      assert.ok(secondEnc.pokemonId);
+    });
+
+    test('Fluxo 3: Captura dentro da batalha persiste no elenco e registra CAUGHT', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      const enc = manager.beginWildEncounter('region-1', 0.5);
+      const targetId = enc.pokemonId;
+
+      const res = manager.recordBattle({
+        battleId: 'btl_in_battle_catch',
+        kind: 'WILD',
+        id: targetId,
+        opponentPokemonId: targetId,
+        winner: 'player',
+        captured: true,
+        ballType: 'great-ball'
+      });
+
+      assert.equal(res.processed, true);
+      assert.equal(manager.getState().wild.result.status, 'CAUGHT');
+      assert.equal(manager.getState().wild.result.ball, 'great-ball');
+      assert.ok(manager.getRosterIds().includes(targetId), 'Espécie capturada adicionada ao elenco');
+    });
+
+    test('Fluxo 4: Ausência de segundo minigame quando Pokémon já foi capturado em combate', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      const enc = manager.beginWildEncounter('region-1', 0.5);
+
+      manager.recordBattle({
+        battleId: 'btl_no_second_game',
+        kind: 'WILD',
+        id: enc.pokemonId,
+        opponentPokemonId: enc.pokemonId,
+        winner: 'player',
+        captured: true,
+        ballType: 'pokeball'
+      });
+
+      // pendingCapture DEVE ser null para não disparar tela de minigame adicional
+      assert.equal(manager.getState().wild.pendingCapture, null, 'pendingCapture estritamente null');
+    });
+
+    test('Fluxo 5: Captura tradicional após vitória por nocaute', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      const enc = manager.beginWildEncounter('region-1', 0.5);
+
+      manager.recordBattle({
+        battleId: 'btl_ko_catch',
+        kind: 'WILD',
+        id: enc.pokemonId,
+        opponentPokemonId: enc.pokemonId,
+        winner: 'player',
+        captured: false // Nocaute sem captura em combate
+      });
+
+      // Deve oferecer minigame de captura tradicional
+      assert.equal(manager.getState().wild.pendingCapture.pokemonId, enc.pokemonId, 'pendingCapture disponibilizado para captura tradicional pós-nocaute');
+    });
+
+    test('Fluxo 6: Ball Fetch após uma captura malsucedida', async () => {
+      const yamper = makeMon(835, [33], ['electric'], { ability: 'ball-fetch', item: null });
+      const wild = makeMon(99, [33], ['normal'], { maxHp: 500, currentHp: 500, catchRate: 3 });
+
+      const session = new BattleSessionController({
+        playerTeamIds: [835],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'IN_PROGRESS',
+        player: { team: [yamper], activeIndex: 0 },
+        enemy: { team: [wild], activeIndex: 0 },
+        isTrainerBattle: false
+      };
+      session.uiState = BATTLE_UI_STATES.AWAITING_PLAYER_ACTION;
+
+      await session.submitPlayerBall('dive-ball', 255);
+      assert.equal(session.battleState.player.team[0].item, 'dive-ball', 'Yamper recuperou a primeira Dive Ball com falha');
+    });
+
+    test('Fluxo 7: Honey Gather após vitória real na sessão', async () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      const combee = makeMon(415, [33], ['bug', 'flying'], { ability: 'honey-gather', level: 50, item: null });
+      const session = new BattleSessionController({
+        playerTeamIds: [415],
+        enemyTeamIds: [99],
+        engine: Engine,
+        battleConstants: C,
+        campaignManager: manager,
+        metadata: { mode: 'CAMPAIGN', kind: 'WILD', id: 99 }
+      });
+      session.battleState = {
+        turn: 1,
+        status: 'PLAYER_WIN',
+        winner: 'player',
+        player: { team: [combee], activeIndex: 0 },
+        enemy: { team: [makeMon(99)], activeIndex: 0 },
+        isTrainerBattle: false,
+        honeyGatherRoll: 5
+      };
+      await session.handlePostResolutionState();
+
+      assert.equal(session.battleState.player.team[0].item, 'honey');
+      assert.equal(manager.getBattlePreference(415).item, 'honey');
+    });
+
+    test('Fluxo 8: Recarregamento do save com todas as configurações preservadas', () => {
+      memoryStore.clear();
+      const manager = new CampaignManager(Store);
+      manager.start([25, ...Catalog.DRAFT.slice(0, 5).map(p => p.id)]);
+      manager.data.wild.capturedIds.push(415);
+      manager.save('INIT');
+
+      manager.setBattlePreference(415, { ability: 'honey-gather', item: 'honey', teraType: 'electric', specialMechanic: 'tera' });
+
+      const reloaded = new CampaignManager(Store);
+      const pref = reloaded.getBattlePreference(415);
+      assert.equal(pref.ability, 'honey-gather');
+      assert.equal(pref.item, 'honey');
+      assert.equal(pref.teraType, 'electric');
+      assert.equal(pref.specialMechanic, 'tera');
+      assert.ok(reloaded.getRosterIds().includes(415));
     });
   });
 

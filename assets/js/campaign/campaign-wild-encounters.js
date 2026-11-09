@@ -287,7 +287,14 @@
       if (isPointId(regionId, pointId) && validSavedPoint(pointId, id)
         && (raw.result.status !== 'CAUGHT'
           || (seen.has(id) && clean.captureRegions[id] === regionId && clean.capturePoints[id] === pointId))) {
-        clean.result = { status: raw.result.status, pokemonId: id, regionId, pointId };
+        clean.result = {
+          status: raw.result.status,
+          pokemonId: id,
+          regionId,
+          pointId,
+          ...(raw.result.ball ? { ball: String(raw.result.ball) } : {}),
+          ...(raw.result.reason ? { reason: String(raw.result.reason) } : {})
+        };
       }
     } else if (raw.active) {
       const regionId = raw.active.regionId || 'region-1';

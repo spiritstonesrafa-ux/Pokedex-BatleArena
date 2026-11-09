@@ -261,7 +261,8 @@
 
       this.view = options.view || null;
       this.uiState = BATTLE_UI_STATES.NO_TEAM;
-      this.sessionOptions = null;
+      this.sessionOptions = options && (options.metadata || options.playerTeamIds || options.campaignManager) ? options : null;
+      this.currentBattleId = options.currentBattleId || options.battleId || null;
       this.battleState = null;
       this.playerTeam = null;
       this.enemyTeam = null;
@@ -951,6 +952,21 @@
       const status = this.battleState?.status;
 
       if (status === 'ESCAPED') {
+        try {
+          const campaign = (typeof window !== 'undefined' ? window.campaignManager : null)
+            || (typeof globalThis !== 'undefined' ? globalThis.campaignManager : null)
+            || this.sessionOptions?.campaignManager;
+          const meta = this.sessionOptions?.metadata;
+          if (campaign && meta?.mode === 'CAMPAIGN' && meta?.kind === 'WILD') {
+            if (typeof campaign.recordWildEscape === 'function') {
+              campaign.recordWildEscape(this.currentBattleId || ('btl_' + Date.now()));
+            } else if (typeof campaign.cancelWildEncounter === 'function') {
+              campaign.cancelWildEncounter();
+            }
+          }
+        } catch (err) {
+          console.warn('Erro ao processar fuga da campanha:', err);
+        }
         this.notifyState(BATTLE_UI_STATES.ESCAPED, { winner: null, escaped: true, battleState: this.battleState });
         return;
       }
@@ -981,19 +997,50 @@
           console.warn('Não foi possível registrar a batalha no Perfil do Treinador:', err);
         }
         try {
-          const campaign = typeof window !== 'undefined' ? window.campaignManager : null;
+          const campaign = (typeof window !== 'undefined' ? window.campaignManager : null)
+            || (typeof globalThis !== 'undefined' ? globalThis.campaignManager : null)
+            || this.sessionOptions?.campaignManager;
           const meta = this.sessionOptions?.metadata;
           if (campaign && meta?.mode === 'CAMPAIGN') {
             const opponentPokemonId = meta.opponentPokemonId || (meta.id && Number.isInteger(Number(meta.id)) ? Number(meta.id) : null) || (Array.isArray(this.sessionOptions?.enemyTeamIds) && this.sessionOptions.enemyTeamIds.length === 1 ? Number(this.sessionOptions.enemyTeamIds[0]) : null);
-            campaign.recordBattle({ battleId: this.currentBattleId, kind: meta.kind, id: meta.id, opponentPokemonId, sketchChanges:this.battleState.sketchChanges||[], winner: isVictory ? 'player' : 'enemy' });
+            campaign.recordBattle({
+              battleId: this.currentBattleId || ('btl_' + Date.now()),
+              kind: meta.kind,
+              id: meta.id,
+              opponentPokemonId,
+              sketchChanges: this.battleState.sketchChanges || [],
+              winner: isVictory ? 'player' : 'enemy',
+              captured: Boolean(this.battleState?.capturedPokemon),
+              capturedPokemon: this.battleState?.capturedPokemon || null,
+              ballType: this.battleState?.lastBallType || this.battleState?.lastThrownBall || 'pokeball'
+            });
           }
         } catch (err) { console.warn('Não foi possível registrar a progressão da campanha:', err); }
 
         if (isVictory) {
           try {
-            if ((this.battleConstants?.P7 || battleConstants?.P7)?.checkHoneyGather) {
+            const p7 = (this.battleConstants?.P7 || battleConstants?.P7);
+            if (p7?.checkHoneyGather) {
               const hgEvents = [];
-              (this.battleConstants?.P7 || battleConstants?.P7).checkHoneyGather(this.battleState, 'player', (this.battleConstants || battleConstants), hgEvents);
+              p7.checkHoneyGather(this.battleState, 'player', (this.battleConstants || battleConstants), hgEvents);
+              const campaign = (typeof window !== 'undefined' ? window.campaignManager : null)
+                || (typeof globalThis !== 'undefined' ? globalThis.campaignManager : null)
+                || this.sessionOptions?.campaignManager;
+              const meta = this.sessionOptions?.metadata;
+              if (campaign && meta?.mode === 'CAMPAIGN' && typeof campaign.getBattlePreference === 'function' && typeof campaign.setBattlePreference === 'function') {
+                const playerTeam = this.battleState?.player?.team || [];
+                for (const mon of playerTeam) {
+                  if (mon && mon.item === 'honey') {
+                    const existing = campaign.getBattlePreference(mon.id) || {};
+                    const updated = { ...existing, item: 'honey' };
+                    const prefResult = campaign.setBattlePreference(mon.id, updated);
+                    if (!prefResult?.ok) {
+                      console.warn(`[Honey Gather] Falha ao persistir preferência para o Pokémon #${mon.id}:`, prefResult?.reason || 'ERRO_DESCONHECIDO');
+                      mon.item = existing.item || null;
+                    }
+                  }
+                }
+              }
             }
           } catch (e) { console.warn('Erro ao processar Honey Gather:', e); }
           this.notifyState(BATTLE_UI_STATES.VICTORY, { winner: 'player', battleState: this.battleState });

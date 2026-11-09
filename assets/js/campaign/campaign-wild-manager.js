@@ -57,6 +57,21 @@
     return true;
   };
 
+  Manager.prototype.recordWildEscape = function (battleId) {
+    const wild = this.data.wild;
+    if (!wild?.active) return { ok: false, reason: 'NO_ACTIVE_WILD' };
+    if (typeof battleId === 'string' && battleId && !this.data.processedBattleIds.includes(battleId)) {
+      this.data.processedBattleIds.push(battleId);
+      this.data.processedBattleIds = this.data.processedBattleIds.slice(-C.MAX_PROCESSED);
+    }
+    const pokemonId = wild.active.pokemonId;
+    const regionId = wild.active.regionId;
+    const pointId = wild.active.pointId;
+    wild.active = null;
+    this.save('WILD_ESCAPED');
+    return { ok: true, escaped: true, pokemonId, regionId, pointId };
+  };
+
   Manager.prototype.canChallenge = function (kind, id) {
     if (kind === 'WILD') {
       return this.isStarted() && !this.data.pendingReward
@@ -104,7 +119,35 @@
     this.data.processedBattleIds.push(battleId);
     this.data.processedBattleIds = this.data.processedBattleIds.slice(-C.MAX_PROCESSED);
     if (result.winner === 'player') {
-      wild.pendingCapture = { ...wild.active, battleId };
+      if (result.captured) {
+        const regionId = wild.active.regionId;
+        const pointId = wild.active.pointId;
+        const canCapture = Wild.getPointCaptureCount(wild, regionId, pointId) < Wild.getCaptureLimit(this.data, regionId, pointId);
+        const alreadyOwned = this.getRosterIds().includes(pokemonId);
+        if (canCapture && !alreadyOwned) {
+          wild.capturedIds.push(pokemonId);
+          wild.captureRegions[pokemonId] = regionId;
+          wild.capturePoints[pokemonId] = pointId;
+          wild.result = {
+            status: 'CAUGHT',
+            pokemonId,
+            regionId,
+            pointId,
+            ball: result.ballType || 'pokeball'
+          };
+        } else {
+          wild.result = {
+            status: 'FLED',
+            pokemonId,
+            regionId,
+            pointId,
+            reason: alreadyOwned ? 'DUPLICATE' : 'POINT_LIMIT'
+          };
+        }
+        wild.pendingCapture = null;
+      } else {
+        wild.pendingCapture = { ...wild.active, battleId };
+      }
     } else {
       wild.result = {
         status: 'LOST', pokemonId,
@@ -114,7 +157,7 @@
     wild.active = null;
     this.applySketchChanges?.(result);
     this.save('WILD_BATTLE_RECORDED');
-    return { processed: true, pendingCapture: this.data.wild.pendingCapture };
+    return { processed: true, pendingCapture: this.data.wild.pendingCapture, result: this.data.wild.result };
   };
 
   Manager.prototype.prepareWildCollectionCapture = function () {

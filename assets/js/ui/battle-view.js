@@ -87,6 +87,7 @@
         ? (typeof document !== 'undefined' ? document.querySelector(options.container) : null)
         : (options.container || (typeof document !== 'undefined' ? document.getElementById('futureModuleView') : null));
       this.sessionController = options.sessionController || (typeof window !== 'undefined' ? window.battleSessionController : null);
+      this.campaignManager = options.campaignManager || (typeof window !== 'undefined' ? window.campaignManager : null);
       this.arenaController = options.arenaController || (
         arenaControllerModule && typeof arenaControllerModule.TypeArenaController === 'function'
           ? new arenaControllerModule.TypeArenaController()
@@ -403,10 +404,24 @@
     }
 
     returnToCampaign() {
-      const meta=this.sessionController?.sessionOptions?.metadata;
+      const meta = this.sessionController?.sessionOptions?.metadata;
       this.resetArena();
       if (this.sessionController) this.sessionController.leaveBattle();
-      if(typeof window!=='undefined'&&window.campaignView&&['LEAGUE','TOWER'].includes(meta?.kind)){window.campaignView.pending={kind:meta.kind,id:null};window.campaignView.facilityCategory=meta.facilityCategory;window.campaignView.pick=[];}
+      if (meta?.mode === 'CAMPAIGN' && meta?.kind === 'WILD') {
+        const campaign = (typeof window !== 'undefined' ? window.campaignManager : null) || this.campaignManager || this.sessionController?.campaignManager;
+        if (campaign && campaign.data?.wild?.active) {
+          if (typeof campaign.recordWildEscape === 'function') {
+            campaign.recordWildEscape(this.sessionController?.currentBattleId);
+          } else if (typeof campaign.cancelWildEncounter === 'function') {
+            campaign.cancelWildEncounter();
+          }
+        }
+      }
+      if (typeof window !== 'undefined' && window.campaignView && ['LEAGUE','TOWER'].includes(meta?.kind)) {
+        window.campaignView.pending = { kind: meta.kind, id: null };
+        window.campaignView.facilityCategory = meta.facilityCategory;
+        window.campaignView.pick = [];
+      }
       if (typeof window !== 'undefined' && window.switchAppTab) window.switchAppTab('campaign');
     }
 
@@ -1229,6 +1244,40 @@
           }
         }
       }
+    }
+
+    /**
+     * Renderiza tela de encerramento por fuga bem-sucedida em batalhas selvagens.
+     * @param {Object} [data={}]
+     * @param {Object} [battleState=null]
+     */
+    renderEscapedView(data = {}, battleState = null) {
+      const campaignMeta = this.sessionController?.sessionOptions?.metadata;
+      const campaignBattle = campaignMeta?.mode === 'CAMPAIGN';
+
+      this.closeModal();
+      this.resetArena();
+
+      this.container.innerHTML = `
+        <div class="battle-view-container battle-immersive-shell battle-result-shell">
+          <div class="battle-card-panel battle-result-card">
+            <div class="battle-panel-icon" style="background: linear-gradient(135deg, #64748b, #475569);">
+              <i class="fa-solid fa-person-running"></i>
+            </div>
+            <div class="battle-result-badge escape" style="background: #64748b; color: #fff;">FUGA BEM-SUCEDIDA!</div>
+            <p class="battle-panel-desc">
+              Você conseguiu fugir do encontro selvagem em segurança! A batalha foi encerrada sem alterações de pontuação.
+            </p>
+
+            <div class="battle-result-buttons-row">
+              ${campaignBattle
+                ? `<button id="btnCampaignReturn" class="btn-battle-action-primary" onclick="if(window.battleView) window.battleView.returnToCampaign();"><i class="fa-solid fa-compass"></i> VOLTAR À EXPLORAÇÃO</button>`
+                : `<button id="btnBackToBattle" class="btn-battle-action-secondary" onclick="if(window.battleView) window.battleView.returnToPreparation();"><i class="fa-solid fa-arrow-left"></i> Voltar</button>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     /**

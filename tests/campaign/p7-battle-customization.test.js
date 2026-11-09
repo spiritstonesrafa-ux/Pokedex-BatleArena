@@ -100,7 +100,7 @@ test('P7 partial update preserves ability, teraType and specialMechanic when cha
 
 test('P7 describeItem provides full descriptions for all canonical battle items', () => {
   const allItems = Object.keys({ ...C.P7.items, ...C.P8.specialItems });
-  assert.equal(allItems.length, 98);
+  assert.equal(allItems.length, 99);
 
   for (const item of allItems) {
     const desc = Editor.describeItem(item);
