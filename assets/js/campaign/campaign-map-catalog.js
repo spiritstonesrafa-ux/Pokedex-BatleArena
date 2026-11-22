@@ -15,12 +15,12 @@
       },
       unlockCondition: Object.freeze({ kind: 'ALWAYS' }),
       routes: [
-        { routeId: 'r1-normal-grass', from: 'node-normal', to: 'node-grass', pathD: 'M 150 405 C 165 365, 190 335, 220 315 C 248 295, 265 275, 280 248' },
-        { routeId: 'r1-grass-bug', from: 'node-grass', to: 'node-bug', pathD: 'M 280 248 C 275 205, 255 175, 235 155 C 220 140, 205 130, 200 124' },
-        { routeId: 'r1-normal-water', from: 'node-normal', to: 'node-water', pathD: 'M 150 405 C 210 435, 285 450, 355 448 C 415 446, 470 470, 520 450' },
-        { routeId: 'r1-water-electric', from: 'node-water', to: 'node-electric', pathD: 'M 520 450 C 570 435, 620 405, 665 375 C 700 350, 722 332, 740 315' },
-        { routeId: 'r1-electric-flying', from: 'node-electric', to: 'node-flying', pathD: 'M 740 315 C 765 275, 795 235, 818 198 C 838 165, 850 148, 860 135' },
-        { routeId: 'r1-bug-flying', from: 'node-bug', to: 'node-flying', pathD: 'M 200 124 C 290 105, 380 98, 475 104 C 575 110, 675 125, 760 115 C 800 110, 835 120, 860 135' }
+        { routeId: 'r1-normal-grass', from: 'node-normal', to: 'node-grass', pathD: 'M 150 405 C 112 365, 102 315, 115 278 C 132 242, 222 252, 280 248' },
+        { routeId: 'r1-grass-bug', from: 'node-grass', to: 'node-bug', pathD: 'M 280 248 C 212 248, 148 228, 146 185 C 144 148, 192 126, 240 118' },
+        { routeId: 'r1-normal-water', from: 'node-normal', to: 'node-water', pathD: 'M 150 405 C 215 438, 315 448, 388 436 C 418 430, 418 374, 442 376 C 468 378, 492 386, 520 383' },
+        { routeId: 'r1-water-electric', from: 'node-water', to: 'node-electric', pathD: 'M 520 383 C 575 378, 632 382, 672 366 C 704 352, 722 334, 740 315' },
+        { routeId: 'r1-electric-flying', from: 'node-electric', to: 'node-flying', pathD: 'M 740 315 C 728 272, 668 242, 646 202 C 626 165, 678 132, 715 110' },
+        { routeId: 'r1-bug-flying', from: 'node-bug', to: 'node-flying', pathD: 'M 240 118 C 335 114, 435 112, 525 104 C 602 96, 665 98, 715 110' }
       ].map(Object.freeze),
       nodes: [
         {
@@ -46,7 +46,7 @@
           challengeKind: 'MASTER',
           challengeId: 'master-bug',
           type: 'bug',
-          position: Object.freeze({ x: 20.0, y: 22.0 }),
+          position: Object.freeze({ x: 24.0, y: 21.0 }),
           biomeLabel: 'Bosque dos Esporos',
           ariaLabelBase: 'Mestre Nilo, Tipo Inseto, Insígnia da Trama'
         },
@@ -55,7 +55,7 @@
           challengeKind: 'MASTER',
           challengeId: 'master-water',
           type: 'water',
-          position: Object.freeze({ x: 52.0, y: 80.0 }),
+          position: Object.freeze({ x: 52.0, y: 68.0 }),
           biomeLabel: 'Santuário das Marés',
           ariaLabelBase: 'Mestre Marina, Tipo Água, Insígnia da Maré'
         },
@@ -73,7 +73,7 @@
           challengeKind: 'MASTER',
           challengeId: 'master-flying',
           type: 'flying',
-          position: Object.freeze({ x: 86.0, y: 24.0 }),
+          position: Object.freeze({ x: 71.5, y: 19.5 }),
           biomeLabel: 'Picos dos Ventos',
           ariaLabelBase: 'Mestre Aero, Tipo Voador, Insígnia da Corrente'
         }
@@ -92,13 +92,13 @@
       },
       unlockCondition: Object.freeze({ kind: 'ALWAYS' }),
       routes: [
-        { routeId: 'r2-fighting-ground', from: 'node-fighting', to: 'node-ground', pathD: 'M 160 394 C 215 415, 275 440, 345 452 C 375 457, 400 459, 420 461' },
-        { routeId: 'r2-fighting-poison', from: 'node-fighting', to: 'node-poison', pathD: 'M 160 394 C 152 340, 148 290, 162 245 C 168 225, 175 205, 180 191' },
-        { routeId: 'r2-ground-rock', from: 'node-ground', to: 'node-rock', pathD: 'M 420 461 C 485 470, 560 480, 625 470 C 665 462, 695 448, 720 428' },
-        { routeId: 'r2-poison-fire', from: 'node-poison', to: 'node-fire', pathD: 'M 180 191 C 240 198, 305 208, 370 198 C 410 190, 440 174, 460 158' },
-        { routeId: 'r2-rock-fire', from: 'node-rock', to: 'node-fire', pathD: 'M 720 428 C 685 365, 640 310, 585 260 C 540 220, 495 185, 460 158' },
-        { routeId: 'r2-rock-ice', from: 'node-rock', to: 'node-ice', pathD: 'M 720 428 C 755 350, 775 280, 800 210 C 818 165, 830 130, 840 101' },
-        { routeId: 'r2-fire-ice', from: 'node-fire', to: 'node-ice', pathD: 'M 460 158 C 520 145, 595 140, 675 130 C 740 120, 800 110, 840 101' }
+        { routeId: 'r2-fighting-ground', from: 'node-fighting', to: 'node-ground', pathD: 'M 160 394 C 215 415, 265 445, 312 492 C 348 522, 388 495, 420 461' },
+        { routeId: 'r2-fighting-poison', from: 'node-fighting', to: 'node-poison', pathD: 'M 160 394 C 225 412, 275 402, 325 368 C 375 334, 415 318, 395 275 C 375 232, 355 196, 305 192 C 258 188, 215 190, 180 191' },
+        { routeId: 'r2-ground-rock', from: 'node-ground', to: 'node-rock', pathD: 'M 420 461 C 412 504, 485 524, 575 516 C 618 512, 608 446, 720 428' },
+        { routeId: 'r2-poison-fire', from: 'node-poison', to: 'node-fire', pathD: 'M 180 191 C 255 188, 335 186, 368 218 C 398 248, 405 308, 438 296 C 475 282, 482 215, 460 158' },
+        { routeId: 'r2-rock-fire', from: 'node-rock', to: 'node-fire', pathD: 'M 720 428 C 645 422, 575 395, 505 358 C 442 325, 488 245, 460 158' },
+        { routeId: 'r2-rock-ice', from: 'node-rock', to: 'node-ice', pathD: 'M 720 428 C 678 375, 678 305, 712 242 C 745 182, 795 148, 840 101' },
+        { routeId: 'r2-fire-ice', from: 'node-fire', to: 'node-ice', pathD: 'M 460 158 C 482 225, 545 255, 635 245 C 722 235, 785 158, 840 101' }
       ].map(Object.freeze),
       nodes: [
         {
@@ -170,12 +170,12 @@
       },
       unlockCondition: Object.freeze({ kind: 'ALWAYS' }),
       routes: [
-        { routeId: 'r3-fairy-psychic', from: 'node-fairy', to: 'node-psychic', pathD: 'M 240 461 C 210 440, 175 390, 168 335 C 160 285, 170 250, 180 225' },
-        { routeId: 'r3-fairy-dark', from: 'node-fairy', to: 'node-dark', pathD: 'M 240 461 C 295 462, 350 455, 410 440 C 475 425, 540 415, 600 405' },
-        { routeId: 'r3-psychic-ghost', from: 'node-psychic', to: 'node-ghost', pathD: 'M 180 225 C 195 180, 230 155, 275 135 C 310 120, 338 110, 360 101' },
-        { routeId: 'r3-dark-steel', from: 'node-dark', to: 'node-steel', pathD: 'M 600 405 C 660 395, 715 375, 765 348 C 788 335, 806 320, 820 304' },
-        { routeId: 'r3-ghost-dragon', from: 'node-ghost', to: 'node-dragon', pathD: 'M 360 101 C 420 120, 490 125, 560 120 C 630 115, 700 110, 760 113' },
-        { routeId: 'r3-steel-dragon', from: 'node-steel', to: 'node-dragon', pathD: 'M 820 304 C 830 255, 825 210, 805 170 C 790 145, 775 125, 760 113' }
+        { routeId: 'r3-fairy-psychic', from: 'node-fairy', to: 'node-psychic', pathD: 'M 240 461 C 302 424, 385 382, 386 336 C 388 292, 268 262, 180 225' },
+        { routeId: 'r3-fairy-dark', from: 'node-fairy', to: 'node-dark', pathD: 'M 240 461 C 312 418, 382 372, 412 315 C 438 268, 488 268, 528 295 C 565 320, 582 368, 600 405' },
+        { routeId: 'r3-psychic-ghost', from: 'node-psychic', to: 'node-ghost', pathD: 'M 180 225 C 265 262, 365 322, 415 304 C 462 286, 522 282, 508 235 C 492 185, 425 142, 360 101' },
+        { routeId: 'r3-dark-steel', from: 'node-dark', to: 'node-steel', pathD: 'M 600 405 C 665 415, 742 405, 782 382 C 808 366, 816 335, 820 304' },
+        { routeId: 'r3-ghost-dragon', from: 'node-ghost', to: 'node-dragon', pathD: 'M 360 101 C 425 142, 495 212, 545 245 C 595 275, 675 235, 715 192 C 742 162, 750 135, 760 113' },
+        { routeId: 'r3-steel-dragon', from: 'node-steel', to: 'node-dragon', pathD: 'M 820 304 C 795 268, 732 232, 725 192 C 720 162, 746 136, 760 113' }
       ].map(Object.freeze),
       nodes: [
         {
@@ -247,13 +247,13 @@
       },
       unlockCondition: Object.freeze({ kind: 'BADGE_COUNT', count: 18 }),
       routes: [
-        { routeId: 'rend-legendary-titans', from: 'node-legendary', to: 'node-titans', pathD: 'M 200 394 C 200 330, 210 260, 220 203' },
-        { routeId: 'rend-mythical-celestial', from: 'node-mythical', to: 'node-celestial', pathD: 'M 800 394 C 800 330, 790 260, 780 203' },
-        { routeId: 'rend-titans-super', from: 'node-titans', to: 'node-super', pathD: 'M 220 203 C 300 230, 400 270, 500 315' },
-        { routeId: 'rend-celestial-super', from: 'node-celestial', to: 'node-super', pathD: 'M 780 203 C 700 230, 600 270, 500 315' },
-        { routeId: 'rend-legendary-super', from: 'node-legendary', to: 'node-super', pathD: 'M 200 394 C 290 380, 390 360, 500 315' },
-        { routeId: 'rend-mythical-super', from: 'node-mythical', to: 'node-super', pathD: 'M 800 394 C 710 380, 610 360, 500 315' },
-        { routeId: 'rend-super-shadow', from: 'node-super', to: 'node-shadow', pathD: 'M 500 315 L 500 113' }
+        { routeId: 'rend-legendary-titans', from: 'node-legendary', to: 'node-titans', pathD: 'M 200 394 C 196 330, 206 264, 220 203' },
+        { routeId: 'rend-mythical-celestial', from: 'node-mythical', to: 'node-celestial', pathD: 'M 800 394 C 804 330, 794 264, 780 203' },
+        { routeId: 'rend-titans-super', from: 'node-titans', to: 'node-super', pathD: 'M 220 203 C 305 228, 398 272, 500 315' },
+        { routeId: 'rend-celestial-super', from: 'node-celestial', to: 'node-super', pathD: 'M 780 203 C 695 228, 602 272, 500 315' },
+        { routeId: 'rend-legendary-super', from: 'node-legendary', to: 'node-super', pathD: 'M 200 394 C 292 382, 395 356, 500 315' },
+        { routeId: 'rend-mythical-super', from: 'node-mythical', to: 'node-super', pathD: 'M 800 394 C 708 382, 605 356, 500 315' },
+        { routeId: 'rend-super-shadow', from: 'node-super', to: 'node-shadow', pathD: 'M 500 315 C 500 248, 500 180, 500 113' }
       ].map(Object.freeze),
       nodes: [
         {
@@ -325,16 +325,16 @@
       fallbackTheme:{background:'radial-gradient(circle at 50% 30%, #243653, #15102a 55%, #0a0816)',accentColor:'#bc9cff'},
       unlockCondition:Object.freeze({kind:'SHADOW_DEFEATED'}),
       routes:[
-        {routeId:'rpost-mewtwo-league',from:'node-mewtwo',to:'node-league',pathD:'M 200 225 C 400 180, 600 180, 800 225'},
-        {routeId:'rpost-zygarde-tower',from:'node-zygarde',to:'node-tower',pathD:'M 200 440 C 300 470, 400 510, 500 510'},
-        {routeId:'rpost-kyurem-league',from:'node-kyurem',to:'node-league',pathD:'M 500 320 C 620 320, 700 250, 800 225'},
-        {routeId:'rpost-kyurem-tower',from:'node-kyurem',to:'node-tower',pathD:'M 500 320 L 500 510'},
-        {routeId:'rpost-mewtwo-zygarde',from:'node-mewtwo',to:'node-zygarde',pathD:'M 200 225 L 200 440'},
-        {routeId:'rpost-mewtwo-kyurem',from:'node-mewtwo',to:'node-kyurem',pathD:'M 200 225 C 300 225, 400 280, 500 320'},
-        {routeId:'rpost-zygarde-kyurem',from:'node-zygarde',to:'node-kyurem',pathD:'M 200 440 C 300 440, 400 370, 500 320'},
-        {routeId:'rpost-kyurem-necrozma',from:'node-kyurem',to:'node-necrozma',pathD:'M 500 320 C 620 330, 700 420, 800 440'},
-        {routeId:'rpost-necrozma-creation',from:'node-necrozma',to:'node-creation',pathD:'M 800 440 C 760 180, 650 100, 500 100'},
-        {routeId:'rpost-zygarde-creation',from:'node-zygarde',to:'node-creation',pathD:'M 200 440 C 240 180, 350 100, 500 100'}
+        {routeId:'rpost-mewtwo-league',from:'node-mewtwo',to:'node-league',pathD:'M 200 225 C 390 176, 610 176, 800 225'},
+        {routeId:'rpost-zygarde-tower',from:'node-zygarde',to:'node-tower',pathD:'M 200 440 C 295 478, 395 508, 500 510'},
+        {routeId:'rpost-kyurem-league',from:'node-kyurem',to:'node-league',pathD:'M 500 320 C 605 292, 702 252, 800 225'},
+        {routeId:'rpost-kyurem-tower',from:'node-kyurem',to:'node-tower',pathD:'M 500 320 C 500 384, 500 448, 500 510'},
+        {routeId:'rpost-mewtwo-zygarde',from:'node-mewtwo',to:'node-zygarde',pathD:'M 200 225 C 196 296, 196 368, 200 440'},
+        {routeId:'rpost-mewtwo-kyurem',from:'node-mewtwo',to:'node-kyurem',pathD:'M 200 225 C 302 248, 402 286, 500 320'},
+        {routeId:'rpost-zygarde-kyurem',from:'node-zygarde',to:'node-kyurem',pathD:'M 200 440 C 302 406, 402 362, 500 320'},
+        {routeId:'rpost-kyurem-necrozma',from:'node-kyurem',to:'node-necrozma',pathD:'M 500 320 C 598 362, 698 406, 800 440'},
+        {routeId:'rpost-necrozma-creation',from:'node-necrozma',to:'node-creation',pathD:'M 800 440 C 765 215, 650 118, 500 100'},
+        {routeId:'rpost-zygarde-creation',from:'node-zygarde',to:'node-creation',pathD:'M 200 440 C 235 215, 350 118, 500 100'}
       ].map(Object.freeze),
       nodes:[
         ['league','LEAGUE',80,40,'Palácio da Elite','Liga da Glória Eterna'],

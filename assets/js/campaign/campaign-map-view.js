@@ -700,6 +700,7 @@
               ${innerImage}
             </span>
             ${badgeOverlay}
+            <span class="node-biome-plate" aria-hidden="true">${node.biomeLabel}</span>
           </button>
         `;
       }).join('');

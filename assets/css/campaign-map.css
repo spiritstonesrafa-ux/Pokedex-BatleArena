@@ -549,38 +549,40 @@
 
 .campaign-map-wild-zone {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   left: 28%;
   top: 44%;
-  transform: translate(36px, 8px);
+  transform: translate(34px, -14px);
   min-height: 28px;
-  padding: 4px 10px;
-  border: 1.2px solid rgba(234, 179, 8, 0.6);
+  padding: 4px 11px;
+  border: 1.5px solid rgba(250, 204, 21, 0.78);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(24, 32, 54, 0.92));
+  background: linear-gradient(135deg, rgba(13, 28, 36, 0.94), rgba(20, 42, 54, 0.96));
   backdrop-filter: blur(8px);
   color: #fef3c7;
   font: inherit;
   font-size: 11px;
   font-weight: 800;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65), 0 0 8px rgba(234, 179, 8, 0.2);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.72), 0 0 10px rgba(234, 179, 8, 0.25);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.campaign-map-wild-zone:hover {
-  transform: translate(36px, 6px) scale(1.04);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.75), 0 0 12px rgba(234, 179, 8, 0.4);
+.campaign-map-wild-zone:hover:not(:disabled) {
+  transform: translate(34px, -16px) scale(1.06);
+  border-color: #fde047;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.82), 0 0 14px rgba(250, 204, 21, 0.5);
 }
 
 .campaign-map-wild-zone[data-wild-point="r2-glacier"],
 .campaign-map-wild-zone[data-wild-point="r3-shrine"] {
-  transform: translate(calc(-100% - 16px), 8px);
+  transform: translate(calc(-100% - 34px), -14px);
 }
 
-.campaign-map-wild-zone[data-wild-point="r2-glacier"]:hover,
-.campaign-map-wild-zone[data-wild-point="r3-shrine"]:hover {
-  transform: translate(calc(-100% - 16px), 6px) scale(1.04);
+.campaign-map-wild-zone[data-wild-point="r2-glacier"]:hover:not(:disabled),
+.campaign-map-wild-zone[data-wild-point="r3-shrine"]:hover:not(:disabled) {
+  transform: translate(calc(-100% - 34px), -16px) scale(1.06);
 }
 
 .campaign-map-wild-zone:focus-visible {
@@ -690,8 +692,8 @@
 }
 
 @keyframes mapAvatarArrive {
-  from { opacity: 0; transform: translate(-50%, -108%) scale(0.82); }
-  to { opacity: 1; transform: translate(-50%, -92%) scale(1); }
+  from { opacity: 0; transform: translate(calc(-50% - 32px), calc(-50% - 6px)) scale(0.82); }
+  to { opacity: 1; transform: translate(calc(-50% - 32px), calc(-50% + 14px)) scale(1); }
 }
 
 .campaign-map-travel-skip {
@@ -736,16 +738,22 @@
 
 .map-route-bed {
   fill: none;
-  stroke: rgba(10, 15, 26, 0.55);
-  stroke-width: 4.5;
+  stroke: rgba(10, 15, 26, 0.62);
+  stroke-width: 5.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
+.theme-region-endgame .map-route-bed {
+  stroke: rgba(212, 175, 55, 0.28);
+  stroke-width: 11;
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.42));
+}
+
 .map-route-path {
   fill: none;
-  stroke: rgba(234, 179, 8, 0.45);
-  stroke-width: 2.2;
+  stroke: rgba(250, 204, 21, 0.58);
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 6 7;
@@ -753,17 +761,17 @@
 }
 
 .map-route-path.is-completed {
-  stroke: #d4af37;
-  stroke-width: 2.4;
+  stroke: #eab308;
+  stroke-width: 2.7;
   stroke-dasharray: 6 6;
-  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.5));
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.65));
 }
 
 .map-route-path.is-active {
-  stroke: #fbbf24;
-  stroke-width: 2.6;
+  stroke: #fde047;
+  stroke-width: 2.9;
   stroke-dasharray: 7 6;
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.75));
+  filter: drop-shadow(0 0 7px rgba(245, 158, 11, 0.85));
 }
 
 .map-route-path.is-locked {
@@ -1171,6 +1179,45 @@
   white-space: nowrap;
   pointer-events: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating Landmark Biome Nameplate under Map Medallion */
+.node-biome-plate {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(23, 33, 54, 0.94));
+  border: 1px solid rgba(254, 240, 138, 0.38);
+  color: #f8fafc;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.75);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  z-index: 4;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.campaign-map-node:hover .node-biome-plate,
+.campaign-map-node:focus-visible .node-biome-plate,
+.campaign-map-node.is-selected .node-biome-plate,
+.campaign-map-node.is-recommended .node-biome-plate {
+  border-color: #fde047;
+  color: #fef08a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85), 0 0 8px rgba(250, 204, 21, 0.35);
+}
+
+@media (max-width: 640px) {
+  .node-biome-plate {
+    font-size: 8.5px;
+    padding: 1.5px 6px;
+  }
 }
 
 /* Selection Marker Arrow */

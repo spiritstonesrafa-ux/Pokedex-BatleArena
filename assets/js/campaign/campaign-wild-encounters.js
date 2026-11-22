@@ -24,7 +24,7 @@
           zoneNodeId: 'node-grass', zonePosition: Object.freeze({ x: 28, y: 44 }),
           types: Object.freeze(['normal', 'grass', 'bug', 'water', 'flying']) }),
         Object.freeze({ id: 'r1-coast', name: 'Costa', biome: 'costa', zoneLabel: 'Explorar costa',
-          zoneNodeId: 'node-water', zonePosition: Object.freeze({ x: 52, y: 80 }),
+          zoneNodeId: 'node-water', zonePosition: Object.freeze({ x: 52, y: 68 }),
           types: Object.freeze(['water', 'flying', 'normal']) })
       ])
     }),
